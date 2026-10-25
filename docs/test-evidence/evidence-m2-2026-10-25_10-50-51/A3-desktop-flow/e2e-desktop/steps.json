@@ -1,0 +1,471 @@
+{
+  "runId": "desktop-mvnpizfl-tiqa3e",
+  "start": {
+    "sidecarVersion": "0.1.0",
+    "pythonVersion": "3.11.9",
+    "pythonExecutable": "<local-path>",
+    "sidecarPid": 42884,
+    "dpiAwareness": "per-monitor-v2",
+    "screen": {
+      "x": 0,
+      "y": 0,
+      "width": 2560,
+      "height": 1440
+    },
+    "evidenceDir": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop",
+    "screenshotsDir": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots",
+    "allowedWindows": [
+      "代掌演示表单"
+    ],
+    "startedAt": "2026-10-25T10:51:00.792Z"
+  },
+  "steps": [
+    {
+      "stepIndex": 1,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\001-focusWindow.png"
+      ],
+      "durationMs": 27,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 2,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\002-opened.png"
+      ],
+      "durationMs": 26,
+      "value": "opened",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\002-opened.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 3,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\003-focusWindow.png"
+      ],
+      "durationMs": 25,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 4,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\004-click.png"
+      ],
+      "durationMs": 184,
+      "data": {
+        "x": 473,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 5,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\005-click.png"
+      ],
+      "durationMs": 203,
+      "data": {
+        "x": 516,
+        "y": 356,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 6,
+      "action": "typeText",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\006-typeText.png"
+      ],
+      "durationMs": 70,
+      "data": {
+        "length": 4,
+        "utf16Units": 4,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 7,
+      "action": "pressKey",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\007-pressKey.png"
+      ],
+      "durationMs": 75,
+      "value": "TAB",
+      "data": {
+        "combo": "TAB",
+        "repeat": 1,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 8,
+      "action": "typeText",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\008-typeText.png"
+      ],
+      "durationMs": 63,
+      "data": {
+        "length": 4,
+        "utf16Units": 4,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 9,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\009-filled.png"
+      ],
+      "durationMs": 12,
+      "value": "filled",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\009-filled.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 10,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\010-click.png"
+      ],
+      "durationMs": 198,
+      "data": {
+        "x": 277,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 11,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\011-saved.png"
+      ],
+      "durationMs": 12,
+      "value": "saved",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\011-saved.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 12,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\012-focusWindow.png"
+      ],
+      "durationMs": 30,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 13,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\013-click.png"
+      ],
+      "durationMs": 179,
+      "data": {
+        "x": 473,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 14,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\014-click.png"
+      ],
+      "durationMs": 185,
+      "data": {
+        "x": 277,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 15,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\015-validation-failed.png"
+      ],
+      "durationMs": 33,
+      "value": "validation-failed",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\015-validation-failed.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 16,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\016-focusWindow.png"
+      ],
+      "durationMs": 37,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 17,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\017-click.png"
+      ],
+      "durationMs": 222,
+      "data": {
+        "x": 516,
+        "y": 356,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 18,
+      "action": "typeText",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\018-typeText.png"
+      ],
+      "durationMs": 53,
+      "data": {
+        "length": 3,
+        "utf16Units": 3,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 19,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\019-click.png"
+      ],
+      "durationMs": 205,
+      "data": {
+        "x": 375,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 20,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\020-validate-partial.png"
+      ],
+      "durationMs": 27,
+      "value": "validate-partial",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\020-validate-partial.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 21,
+      "action": "closeWindow",
+      "ok": true,
+      "evidence": [],
+      "durationMs": 53,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "posted": true,
+        "closed": true,
+        "waitedMs": 50
+      }
+    }
+  ],
+  "sidecarDiagnostics": 0
+}

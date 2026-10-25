@@ -1,0 +1,838 @@
+{
+  "case": "desktop-form-a3",
+  "ok": true,
+  "startedAt": "2026-10-25T10:51:00.703Z",
+  "finishedAt": "2026-10-25T10:51:05.985Z",
+  "durationMs": 5282,
+  "evidenceDir": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop",
+  "jsonPath": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\project.json",
+  "window": {
+    "hwnd": 15076256,
+    "title": "代掌演示表单",
+    "pid": 21844,
+    "processName": "python.exe",
+    "className": "TkTopLevel",
+    "rect": {
+      "x": 208,
+      "y": 208,
+      "width": 656,
+      "height": 509
+    },
+    "extendedFrame": {
+      "x": 215,
+      "y": 208,
+      "width": 642,
+      "height": 502
+    },
+    "clientRect": {
+      "x": 0,
+      "y": 0,
+      "width": 640,
+      "height": 470
+    },
+    "clientOrigin": {
+      "x": 216,
+      "y": 239
+    },
+    "dpi": 96,
+    "minimized": false,
+    "visible": true,
+    "foreground": true
+  },
+  "layout": {
+    "scale": 1,
+    "clientWidth": 640,
+    "clientHeight": 470,
+    "clientOrigin": {
+      "x": 216,
+      "y": 239
+    },
+    "clientRect": {
+      "x": 0,
+      "y": 0,
+      "width": 640,
+      "height": 470
+    },
+    "points": {
+      "customerEntry": {
+        "x": 516,
+        "y": 356
+      },
+      "projectEntry": {
+        "x": 516,
+        "y": 397
+      },
+      "saveButton": {
+        "x": 277,
+        "y": 608
+      },
+      "validateButton": {
+        "x": 375,
+        "y": 608
+      },
+      "clearButton": {
+        "x": 473,
+        "y": 608
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "桌面侧车启动（真实 Win32 能力就绪）",
+      "ok": true,
+      "detail": "sidecarPid=42884"
+    },
+    {
+      "name": "demo 进程启动成功",
+      "ok": true,
+      "detail": "pid=21844"
+    },
+    {
+      "name": "窗口标题为「代掌演示表单」",
+      "ok": true,
+      "detail": "代掌演示表单"
+    },
+    {
+      "name": "窗口属于本次 spawn 的 demo Python 进程（真实子进程）",
+      "ok": true,
+      "detail": "windowPid=21844 appPid=21844"
+    },
+    {
+      "name": "窗口可见且未最小化",
+      "ok": true,
+      "detail": "visible=true minimized=false"
+    },
+    {
+      "name": "窗口客户区尺寸有效",
+      "ok": true,
+      "detail": "{\"x\":0,\"y\":0,\"width\":640,\"height\":470}"
+    },
+    {
+      "name": "真实聚焦窗口成功（SetForegroundWindow）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "「打开」步骤截图已产出",
+      "ok": true,
+      "detail": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\002-opened.png"
+    },
+    {
+      "name": "真实鼠标点击「客户名称」输入框（点击点落在 demo 窗口内）",
+      "ok": true,
+      "detail": "点击屏幕坐标 (516,356)"
+    },
+    {
+      "name": "真实键盘输入客户名称（SendInput Unicode）",
+      "ok": true,
+      "detail": "长度=4"
+    },
+    {
+      "name": "真实键盘 TAB 切换焦点",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "真实键盘输入项目名称（中文 Unicode）",
+      "ok": true,
+      "detail": "长度=4"
+    },
+    {
+      "name": "「填表」步骤截图已产出",
+      "ok": true,
+      "detail": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\009-filled.png"
+    },
+    {
+      "name": "真实鼠标点击「保存」按钮",
+      "ok": true,
+      "detail": "点击屏幕坐标 (277,608)"
+    },
+    {
+      "name": "保存后生成真实 JSON 文件",
+      "ok": true,
+      "detail": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\project.json"
+    },
+    {
+      "name": "JSON.customer 与真实键盘输入一致",
+      "ok": true,
+      "detail": "期望 \"示例客户\"，实际 \"示例客户\""
+    },
+    {
+      "name": "JSON.project 与真实键盘输入一致",
+      "ok": true,
+      "detail": "期望 \"官网改版\"，实际 \"官网改版\""
+    },
+    {
+      "name": "JSON.saved_at 为带时区偏移的 ISO 8601",
+      "ok": true,
+      "detail": "2026-10-25T18:51:02+08:00"
+    },
+    {
+      "name": "「保存成功」步骤截图已产出",
+      "ok": true,
+      "detail": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\011-saved.png"
+    },
+    {
+      "name": "真实鼠标点击「清空」按钮",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "真实鼠标点击「保存」按钮（空表单）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "校验失败（客户名称为空）时 JSON 未被覆盖",
+      "ok": true,
+      "detail": "内容一致=true mtime一致=true"
+    },
+    {
+      "name": "「校验失败」步骤截图已产出",
+      "ok": true,
+      "detail": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\015-validation-failed.png"
+    },
+    {
+      "name": "真实鼠标点击「客户名称」（校验分支）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "真实键盘输入部分客户名称",
+      "ok": true,
+      "detail": "长度=3"
+    },
+    {
+      "name": "真实鼠标点击「校验」按钮",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "「校验」不写文件（项目名称为空时 JSON 未被覆盖）",
+      "ok": true,
+      "detail": "内容一致=true"
+    },
+    {
+      "name": "「部分校验」步骤截图已产出",
+      "ok": true,
+      "detail": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\020-validate-partial.png"
+    },
+    {
+      "name": "未检测到凭据/安全提示窗口（凭据输入一律交人）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo 进程在真实操作全程保持存活（未崩溃）",
+      "ok": true,
+      "detail": "pid=21844"
+    },
+    {
+      "name": "WM_CLOSE 真实关闭窗口",
+      "ok": true,
+      "detail": "closed=true"
+    },
+    {
+      "name": "demo 进程随窗口关闭正常退出",
+      "ok": true,
+      "detail": "exitInfo={\"code\":0,\"signal\":null,\"at\":\"2026-10-25T10:51:05.838Z\"}"
+    },
+    {
+      "name": "每个真实交互步骤都有截图证据（无截图视为失败）",
+      "ok": true,
+      "detail": "交互步骤=15 缺证据=0"
+    },
+    {
+      "name": "截图证据文件全部真实存在",
+      "ok": true,
+      "detail": "截图=20 缺失=0"
+    },
+    {
+      "name": "桌面侧车正常关闭",
+      "ok": true,
+      "detail": "sidecarExitCode=0"
+    },
+    {
+      "name": "结束清理后无残留 demo 进程",
+      "ok": true,
+      "detail": "residue=false"
+    }
+  ],
+  "steps": [
+    {
+      "name": "启动真实桌面适配器",
+      "detail": "sidecar=0.1.0 python=3.11.9 dpi=per-monitor-v2 screen=2560x1440 allowed=代掌演示表单",
+      "at": "2026-10-25T10:51:00.795Z"
+    },
+    {
+      "name": "等待桌面空闲",
+      "detail": "真人最近输入已过 91016ms（阈值 800ms）",
+      "at": "2026-10-25T10:51:00.795Z"
+    },
+    {
+      "name": "spawn demo-desktop",
+      "detail": "python -u main.py --out .\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\project.json（pid=21844）",
+      "at": "2026-10-25T10:51:00.798Z"
+    },
+    {
+      "name": "打开：真实窗口已出现",
+      "detail": "title=代掌演示表单 hwnd=15076256 pid=21844 class=TkTopLevel",
+      "at": "2026-10-25T10:51:01.066Z"
+    },
+    {
+      "name": "按 clientOrigin 换算物理坐标",
+      "detail": "client=640x470 scale=1.000 origin=(216,239)",
+      "at": "2026-10-25T10:51:01.895Z"
+    },
+    {
+      "name": "等待桌面空闲",
+      "detail": "真人最近输入已过 92110ms（阈值 600ms）",
+      "at": "2026-10-25T10:51:01.895Z"
+    },
+    {
+      "name": "真实键鼠填表并保存成功（第 1 次尝试）",
+      "detail": "{\"customer\":\"示例客户\",\"project\":\"官网改版\",\"note\":\"\",\"saved_at\":\"2026-10-25T18:51:02+08:00\"}",
+      "at": "2026-10-25T10:51:02.864Z"
+    },
+    {
+      "name": "校验失败场景验证成功（第 1 次尝试）",
+      "detail": "清空后点击保存：JSON 未被覆盖",
+      "at": "2026-10-25T10:51:04.598Z"
+    },
+    {
+      "name": "部分校验场景验证成功（第 1 次尝试）",
+      "detail": "仅填客户名称点击校验：JSON 未被覆盖",
+      "at": "2026-10-25T10:51:05.768Z"
+    }
+  ],
+  "adapterSteps": [
+    {
+      "stepIndex": 1,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\001-focusWindow.png"
+      ],
+      "durationMs": 27,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 2,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\002-opened.png"
+      ],
+      "durationMs": 26,
+      "value": "opened",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\002-opened.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 3,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\003-focusWindow.png"
+      ],
+      "durationMs": 25,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 4,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\004-click.png"
+      ],
+      "durationMs": 184,
+      "data": {
+        "x": 473,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 5,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\005-click.png"
+      ],
+      "durationMs": 203,
+      "data": {
+        "x": 516,
+        "y": 356,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 6,
+      "action": "typeText",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\006-typeText.png"
+      ],
+      "durationMs": 70,
+      "data": {
+        "length": 4,
+        "utf16Units": 4,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 7,
+      "action": "pressKey",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\007-pressKey.png"
+      ],
+      "durationMs": 75,
+      "value": "TAB",
+      "data": {
+        "combo": "TAB",
+        "repeat": 1,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 8,
+      "action": "typeText",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\008-typeText.png"
+      ],
+      "durationMs": 63,
+      "data": {
+        "length": 4,
+        "utf16Units": 4,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 9,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\009-filled.png"
+      ],
+      "durationMs": 12,
+      "value": "filled",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\009-filled.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 10,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\010-click.png"
+      ],
+      "durationMs": 198,
+      "data": {
+        "x": 277,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 11,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\011-saved.png"
+      ],
+      "durationMs": 12,
+      "value": "saved",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\011-saved.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 12,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\012-focusWindow.png"
+      ],
+      "durationMs": 30,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 13,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\013-click.png"
+      ],
+      "durationMs": 179,
+      "data": {
+        "x": 473,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 14,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\014-click.png"
+      ],
+      "durationMs": 185,
+      "data": {
+        "x": 277,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 15,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\015-validation-failed.png"
+      ],
+      "durationMs": 33,
+      "value": "validation-failed",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\015-validation-failed.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 16,
+      "action": "focusWindow",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\016-focusWindow.png"
+      ],
+      "durationMs": 37,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "pid": 21844,
+        "processName": "python.exe",
+        "clientOrigin": {
+          "x": 216,
+          "y": 239
+        },
+        "clientRect": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 470
+        },
+        "rect": {
+          "x": 208,
+          "y": 208,
+          "width": 656,
+          "height": 509
+        },
+        "focused": true,
+        "attempts": 1
+      }
+    },
+    {
+      "stepIndex": 17,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\017-click.png"
+      ],
+      "durationMs": 222,
+      "data": {
+        "x": 516,
+        "y": 356,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 18,
+      "action": "typeText",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\018-typeText.png"
+      ],
+      "durationMs": 53,
+      "data": {
+        "length": 3,
+        "utf16Units": 3,
+        "targetWindow": "代掌演示表单"
+      }
+    },
+    {
+      "stepIndex": 19,
+      "action": "click",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\019-click.png"
+      ],
+      "durationMs": 205,
+      "data": {
+        "x": 375,
+        "y": 608,
+        "button": "left",
+        "targetWindow": "代掌演示表单",
+        "windowAtPoint": {
+          "hwnd": 15076256,
+          "title": "代掌演示表单"
+        }
+      }
+    },
+    {
+      "stepIndex": 20,
+      "action": "screenshot",
+      "ok": true,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\020-validate-partial.png"
+      ],
+      "durationMs": 27,
+      "value": "validate-partial",
+      "data": {
+        "mode": "window",
+        "path": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\020-validate-partial.png",
+        "width": 642,
+        "height": 502,
+        "rect": {
+          "x": 215,
+          "y": 208,
+          "width": 642,
+          "height": 502
+        }
+      }
+    },
+    {
+      "stepIndex": 21,
+      "action": "closeWindow",
+      "ok": true,
+      "evidence": [],
+      "durationMs": 53,
+      "data": {
+        "hwnd": 15076256,
+        "title": "代掌演示表单",
+        "posted": true,
+        "closed": true,
+        "waitedMs": 50
+      }
+    }
+  ],
+  "screenshots": [
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\001-focusWindow.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\002-opened.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\003-focusWindow.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\004-click.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\005-click.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\006-typeText.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\007-pressKey.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\008-typeText.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\009-filled.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\010-click.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\011-saved.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\012-focusWindow.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\013-click.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\014-click.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\015-validation-failed.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\016-focusWindow.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\017-click.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\018-typeText.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\019-click.png",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots\\020-validate-partial.png"
+  ],
+  "app": {
+    "pid": 21844,
+    "exit": {
+      "code": 0,
+      "signal": null,
+      "at": "2026-10-25T10:51:05.838Z"
+    },
+    "spawnError": null,
+    "logPath": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\app.log"
+  },
+  "adapter": {
+    "start": {
+      "sidecarVersion": "0.1.0",
+      "pythonVersion": "3.11.9",
+      "pythonExecutable": "<local-path>",
+      "sidecarPid": 42884,
+      "dpiAwareness": "per-monitor-v2",
+      "screen": {
+        "x": 0,
+        "y": 0,
+        "width": 2560,
+        "height": 1440
+      },
+      "evidenceDir": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop",
+      "screenshotsDir": ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\screenshots",
+      "allowedWindows": [
+        "代掌演示表单"
+      ],
+      "startedAt": "2026-10-25T10:51:00.792Z"
+    },
+    "close": {
+      "closed": true,
+      "sidecarExitCode": 0,
+      "sidecarSignal": null,
+      "steps": 21,
+      "screenshots": 20,
+      "evidence": [
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\steps.json",
+        ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\sidecar.log"
+      ]
+    }
+  },
+  "interference": {
+    "fillAttempts": 1,
+    "validationAttempts": 1,
+    "retried": false
+  },
+  "cleanup": {
+    "sidecarClosed": true,
+    "appExitCode": 0,
+    "appResidue": false
+  },
+  "failures": [],
+  "error": null,
+  "evidenceFiles": [
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\project.json",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\steps.json",
+    ".\\runs\\run-20261025-185100-6a4d70\\e2e-desktop\\sidecar.log"
+  ]
+}

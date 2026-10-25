@@ -1,8 +1,8 @@
 # 交付物与验收清单 / Delivery Checklist（中文）
 
 > 每条验收 = 编号 + 命令/操作 + 证据路径 + 最近结果（证据必须能打开）。
-> M1 完成后 A1 / A2 / A4 / A5 / A6 / A12 标记为 `通过`；其余条目随里程碑完成更新为 `通过 / 未通过 / 部分`。
-> 最近一次更新：2026-10-25（M1 完成）
+> M2 完成后 A1 / A2 / A3 / A4 / A5 / A6 / A8 / A9 / A12 标记为 `通过`；其余条目随里程碑完成更新为 `通过 / 未通过 / 部分`。
+> 最近一次更新：2026-10-25（M2 完成）
 
 ## A. 阶段一（文档 1，12 条）
 
@@ -10,15 +10,15 @@
 |---|---|---|---|---|
 | A1 | 干净克隆可跑，无需付费 API | `npm install && npm run demo` | `runs/run-20261025-172017-eb9116/report.md` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md`（MockHarness，无付费 API） | ✅ 通过（2026-10-25） |
 | A2 | demo-web 登录/填表/提交/校验/截图 | `npm run acceptance`（或 `node tests/e2e-browser/login-flow.mjs --case normal`） | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/`：`e2e/normal/screenshots/001…007-*.png`（7 步 / 7 张真实截图）、`e2e/normal/result.json`、`e2e/server.log`、`report.md`；run `run-20261025-175213-9ea8ab` | ✅ 通过（2026-10-25） |
-| A3 | demo-desktop 打开/填表/保存/校验/截图 | `npm run test:desktop`（M2 实现） | `runs/<id>/screenshots/` | 未实现（M2） |
+| A3 | demo-desktop 打开/填表/保存/校验/截图 | `node tests/e2e-desktop/run.mjs`（或 `npm run acceptance:m2`） | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/`：`e2e-desktop/screenshots/001…020-*.png`（20 张逐步真实截图）、`e2e-desktop/result.json`（36/36 检查）、`e2e-desktop/project.json`（真实落盘 JSON，内容核对通过）、`steps.json`、`sidecar.log`、`report.md`、`checkpoint.json`；run `run-20261025-185100-6a4d70` | ✅ 通过（2026-10-25；真实窗口 + 真实键鼠 SendInput） |
 | A4 | 预置缺陷 → CodeTask → 补丁 → 应用 → 测试通过 | `node dist/apps/cli/src/index.js code-loop`（或 `npm run acceptance`） | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/`：`patch.diff`、`code-loop-result.json`、`e2e/login-timeout/`（4 张截图 + `result.json`）、`report.md`；run `run-20261025-175216-fe8759` | ✅ 通过（2026-10-25；第 1 轮由红转绿） |
 | A5 | 连续失败两次 → 升级，无无限循环 | `node dist/apps/cli/src/index.js code-loop --fail`（或 `npm run acceptance`） | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/`：`test.log`（两轮失败）、`code-loop-result.json`（`escalated=true`、`rounds=2`）、`e2e/login-timeout/screenshots/004-assert-timeout-recovery-fail.png`；run `run-20261025-175223-de0b95`；`codeLoopFail` exit 1 属预期 | ✅ 通过（2026-10-25） |
-| A6 | 每次运行有 prompt/patch/test.log/截图/report 且无密钥 | `npm run demo` + `npm run evidence` + `npm run acceptance` | M0：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md / events.jsonl / console.log / meta.json / code-task.json / code-result.json / goal.md）+ `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`；M1：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件，含真实 e2e 截图；`npm run check:secrets` 通过） | ✅ 通过（2026-10-25；M1 已含真实 UI 截图） |
+| A6 | 每次运行有 prompt/patch/test.log/截图/report 且无密钥 | `npm run demo` + `npm run evidence` + `npm run acceptance` + `npm run acceptance:m2` | M0：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md / events.jsonl / console.log / meta.json / code-task.json / code-result.json / goal.md）+ `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`；M1：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件，含真实 e2e 截图）；M2：`docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`（34 文件，含真实桌面截图 + `checkpoint.json` + 53/53 测试日志） | ✅ 通过（2026-10-25；M2 已含真实桌面截图与检查点） |
 | A7 | Scout ≥10 线索（来源+评分），3 条草稿未发送 | `npm run demo:scout`（M3 实现） | `scout-report.md` + 审批队列 | 未实现（M3） |
-| A8 | 停止键 5 秒；重启恢复不重复 | `npm run test:stop`（M2 实现） | 停止事件 + 恢复日志 | 未实现（M2；M0 有 StopSignal 最小实现） |
-| A9 | 分支隔离（凭据/浏览器配置） | `npm run test:isolation`（M2 实现） | 隔离用例 + events | 未实现（M2） |
+| A8 | 停止键 5 秒；重启恢复不重复 | `node dist/apps/cli/src/index.js safety-check`；运行中抢占与 resume 由 `tests/unit/m2-runtime.test.mjs`（`npm test` 内）覆盖 | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json`（`stop.ok=true`，实测 **305ms** <5000ms；`checkpoint` save/load/completed）；`m2-runtime-tests.log`（停止在 5s 内抢占、resume 跳过已完成步骤不重复执行） | ✅ 通过（2026-10-25） |
+| A9 | 分支隔离（凭据/浏览器配置） | `node dist/apps/cli/src/index.js safety-check`；`tests/unit/m2-safety.test.mjs`（`npm test` 内） | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json`：跨分支凭据读取被拒（`CrossBranchAccessError`）、脱敏输出不含引用明文、同一 profile 重复占用被拒（`ProfileBusyError`）、白名单外工具被拒；隔离用例见 `tests/unit/m2-safety.test.mjs` | ✅ 通过（2026-10-25） |
 | A10 | 新增只读 dummy 分支只靠配置 | `npm run demo:dummy-branch`（M4 实现） | 配置 + 报告 | 未实现（M4） |
-| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` | CI 日志 | 未实现（M4 全量验收；M1 已满足 lint / build / 35 测试 + CI headless E2E） |
+| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` | CI 日志 | 未实现（M4 全量验收；当前已满足 lint / build / 53 测试 + CI headless E2E + safety-check） |
 | A12 | 提示词版本化、有测试、可替换 | `npm run test:prompts` | `prompts/manifest.json`（4 角色 + sha256）+ `tests/unit/prompts.test.mjs`（5 项断言） | ✅ 通过（2026-10-25） |
 
 > **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过。`npm run check`、`npm run check:secrets`、
@@ -27,9 +27,20 @@
 >
 > **M1 验收结论（2026-10-25）**：A2 / A4 / A5 / A6 通过（本机有头真实 Chrome，`npm run acceptance` OK）。
 > A2：7 步 / 7 张真实截图；A4：第 1 轮由红转绿；A5：两轮失败后停止升级（exit 1，不无限重试）。
-> 测试 **35/35**；`npm run lint`、`npm run check`、`npm run check:secrets` 通过。证据：
+> M1 历史结论：测试 **35/35**、CLI **9 命令 + 2 占位**；`npm run lint`、`npm run check`、
+> `npm run check:secrets` 通过。证据：
 > `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
 > `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组）。
+>
+> **M2 验收结论（2026-10-25）**：A3 / A8 / A9 通过（本机真实 Windows 桌面会话，
+> `npm run acceptance:m2` OK：build + **53/53** 测试 + 桌面流程 + 停止键/检查点 + 隔离自检全部 ✅）。
+> A3：真实窗口 + 真实键鼠（SendInput）完成打开→填表→保存→校验→截图，**36/36 检查通过、20 张真实
+> 截图、JSON 内容核对通过**（run `run-20261025-185100-6a4d70`）；A8：停止键实测 **305ms**（<5000ms），
+> runtime 集成测试证明运行中停止可抢占，检查点 resume 跳过已完成步骤、不重复执行；A9：跨分支凭据
+> 不可读（`CrossBranchAccessError`）、同一 profile 不能并发占用（`ProfileBusyError`）、白名单外工具
+> 拒绝。测试 **53/53**（M1 的 35 条 + `m2-safety` 14 条 + `m2-runtime` 4 条）。CLI 现为 **11 个已实现
+> 命令 + 2 个占位**。证据：`docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` +
+> `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`（34 文件，已脱敏）。
 
 ## B. 阶段二（文档 2，8 条）
 

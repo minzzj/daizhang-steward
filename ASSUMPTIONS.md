@@ -1,7 +1,7 @@
 # Assumptions & Known Gaps / 假设与未覆盖清单
 
 > 本文件是**诚实边界**清单：实现前先写下“不知道就不猜”的部分。随里程碑更新。
-> 最后更新：2026-10-25（M1 完成）
+> 最后更新：2026-10-25（M2 完成）
 
 ## 一、环境假设
 
@@ -15,6 +15,10 @@
 6. **CI 行尾**：Windows runner 曾把 `*.patch` 转成 CRLF 导致 `git apply` 失败；已用
    `.gitattributes` 全仓 `eol=lf`（`*.patch`/`*.diff` 也强制 LF）+ `patch.ts` 归一化 CRLF 修复
    （提交 `b4ed316`），并加 CRLF 回归测试。
+7. **真实桌面适配器**：需要 **Python ≥ 3.8** 在 `PATH`（本机 3.11.9 实测；可用 `STEWARD_PYTHON`
+   指定），且必须在**真实交互 Windows 桌面会话**（未锁屏）运行——`SendInput`/`BitBlt` 依赖前台会话，
+   Session 0 / 托管 CI / RDP 断开 / UAC 安全桌面会失败。侧车是 Per-Monitor V2 DPI 感知进程，
+   点击坐标使用屏幕物理像素，操作 DPI 未感知程序需按 `clientRect.width / 逻辑宽度` 换算。
 
 ## 二、产品假设
 
@@ -25,7 +29,7 @@
 5. 30 条法律边界中，“已实现”指程序行为可拦截；“人工/不适用”按文档要求逐条标注。
 6. 通知通道阶段一用桌面通知 + 邮件 + 审批队列；短信/电话待合规评估后再接。
 
-## 三、已知未覆盖（截至 M1）
+## 三、已知未覆盖（截至 M2）
 
 - [x] M0 内核最小闭环：AgentRuntime / BranchSpec / PolicyEngine / ArtifactBus / PromptManager /
   EventLog / BudgetGuard / StopSignal、CLI 7 命令（+2 占位）、MockHarness、prompts v1、
@@ -33,13 +37,19 @@
 - [x] M1 真实浏览器回路：`steward-browser`（Playwright 有头默认 / `chrome→msedge` 回退 / 每 run 独立
   userDataDir / 逐步截图、DOM、console / 5 类失败分类 / 风控停交人）、`patch.ts` + `loop.ts`
   （隔离 git worktree、两轮升级）、`tests/e2e-browser`、CLI `browser-flow`/`code-loop`、
-  **35/35** 测试、A2/A4/A5/A6 通过（2026-10-25）。
+  A2/A4/A5/A6 通过（2026-10-25）。
 - [x] 真实浏览器 E2E 已实现（M1 完成，A2/A4/A5 通过；`tests/e2e-browser/`）。
-- [ ] 桌面 E2E、故障演练尚未实现（M2）。
+- [x] M2 真实桌面：`steward-desktop`（Python ctypes 侧车：窗口枚举/聚焦、BitBlt 截图、SendInput
+  真实鼠标 + Unicode 真实键盘、白名单默认拒绝、DPI 感知、5 类失败分类、每步截图、凭据提示停止
+  交人）、`tests/e2e-desktop/` 真实桌面 E2E、A3 通过（36/36 检查、20 张截图，2026-10-25）。
+- [x] 停止键 ≤5s、检查点恢复、分支隔离已实现（M2 完成：`stop-controller` / `checkpoint` /
+  `isolation` + runtime 集成；A8/A9 通过；`run --resume` 跳过已完成步骤不重复执行）。
 - [x] HarnessAdapter：MockHarness ✅ M0；脚本化真实补丁 + 隔离 worktree + 两轮升级 ✅ M1；
-  DSH headless / DeepSeek API 两种真实实现仍规划（M2+）。
-- [x] 停止键最小实现（StopSignal，每个动作前检查）已在 M0 落地。
-- [ ] 分支隔离、检查点恢复尚未实现（M2）。
+  DSH headless / DeepSeek API 两种真实实现仍规划（M3+）。
+- [ ] 桌面适配器的次要能力尚未实现：UIA 可访问性树、右键菜单语义、拖拽、滚轮/触控板手势、
+  剪贴板、多窗口批处理会话编排（M2 契约内后续迭代项）。
+- [ ] 故障演练尚未实现：断网、强杀恢复、账本损坏、封号、72h 失联、循环超限（`tests/fault/`，
+  后续里程碑/阶段二）。
 - [ ] Scout 线索来源清单与评分尚未实现（M3）。
 - [ ] 经营域数据模型、30 条边界规则、控制台尚未实现（Phase 2）。
 - [ ] IoT 适配器只有契约计划，无实现（Phase 2 stub）。

@@ -24,16 +24,33 @@
 
 ## 2. Desktop adapter (Windows-first)
 
-- Capabilities: list windows, focus window, screenshot, click, double-click, right-click, drag,
-  type text, key press, UIA accessibility tree.
-- Allowlist: only allowlisted processes/window titles; everything else denied by default.
-- Evidence: per-step window/full-screen screenshot + target window title + timestamp.
-- Safety: detecting a password/credential field pauses the branch and creates a handoff card; no
-  credential autofill ever.
-- Failure classes: window missing / focus lost / element unreachable / timeout / unknown result
-  (always suspend and reconcile, never guess).
-- Implementation: `packages/steward-desktop` (Windows: UIA + SendInput + screenshots); document
-  Linux/macOS paths; optional cua-driver compatibility aligned with DSH `dsh-computer-use` semantics.
+- Capabilities: list windows, focus window, screenshot, click, double-click, type text (Unicode),
+  key press, read window title / foreground state, credential/security-prompt detection. **All of the
+  above are implemented in M2**; right-click, drag, scrolling and the UIA accessibility tree remain
+  contract items for later iterations.
+- Allowlist: only allowlisted processes/window titles; everything else denied by default
+  (`DesktopAllowlistError`, `failureKind: allowlist-denied`), with a second foreground-window check
+  right before mouse/keyboard injection.
+- Evidence: per-step window screenshot + target window title + timestamp; `steps.json` records every
+  step's evidence paths and structured data.
+- Safety: detecting a password/credential or security-prompt window (password, UAC, CAPTCHA, face
+  verification keywords) stops the branch and hands off immediately; no credential autofill, read or
+  memorisation. **Known boundary: Windows cannot reliably identify a "password input field" in an
+  arbitrary window** — the guarantee is "stop on credential/security windows", not "detect every
+  password field".
+- Failure classes: window missing (`window-not-found`) / focus lost (`focus-lost`) / timeout
+  (`timeout`) / allowlist denied (`allowlist-denied`) / unknown result (`unknown` — always suspend and
+  reconcile, never guess).
+- **Implementation status: implemented in M2** as `packages/steward-desktop` (Windows: Python ctypes
+  sidecar + `SendInput` real mouse/keyboard + `BitBlt` screenshots + Per-Monitor V2 DPI awareness;
+  zero third-party dependencies). Details in
+  [`packages/steward-desktop/README.md`](../../packages/steward-desktop/README.md).
+- Evidence layout (as measured in M2): `runs/<run-id>/e2e-desktop/` with `screenshots/`,
+  `result.json`, `steps.json` and `sidecar.log`; `npm run acceptance:m2` copies the key evidence to
+  `docs/test-evidence/evidence-m2-<stamp>/` (A3 real-desktop group).
+- Platform: real-desktop acceptance runs on Windows only at this stage; Linux/macOS paths are
+  documented in the package README (section 10, X11/macOS Accessibility) — same contract, different
+  implementation layer.
 
 ## 3. Model / Harness adapters
 
@@ -46,6 +63,11 @@
 
 The Harness receives CodeTask text only and returns CodeResult; it never touches production
 credentials or performs deployments.
+
+M2 adds no new Harness implementation: `DshHeadlessHarness` / `DeepSeekApiHarness` remain planned
+(recommended from M3+); real-browser and real-desktop acceptance do not depend on a paid API. The
+core now ships three safety modules (`stop-controller` / `checkpoint` / `isolation`) reusable by any
+adapter or branch.
 
 M1 code loop: `packages/steward-harness/src/patch.ts` applies a `unified_diff` in an **isolated git
 worktree** (never touching the main workspace); `loop.ts` (`runCodeLoop`) runs the real-browser

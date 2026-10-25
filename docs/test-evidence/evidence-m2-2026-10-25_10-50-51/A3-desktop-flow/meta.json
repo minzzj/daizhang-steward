@@ -1,0 +1,12 @@
+{
+  "runId": "run-20261025-185100-6a4d70",
+  "goal": "真实 Windows 桌面执行 demo-desktop 打开→填表→保存→校验→截图（A3）",
+  "branchId": "br-operator-20261025185100-9cf4",
+  "branchRole": "operator",
+  "promptRef": "operator@1.0.0",
+  "startedAt": "2026-10-25T10:51:00.624Z",
+  "evidenceRoot": "runs/run-20261025-185100-6a4d70",
+  "finishedAt": "2026-10-25T10:51:06.000Z",
+  "ok": true,
+  "steps": 3
+}

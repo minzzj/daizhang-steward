@@ -1,19 +1,20 @@
 # Packages
 
-> 状态：**M1 已完成**，工程为**单包布局**。当前实际源码包：`steward-core`（内核）、
+> 状态：**M2 已完成**，工程为**单包布局**。当前实际源码包：`steward-core`（内核 + M2 安全三模块）、
 > `steward-harness`（MockHarness + 隔离 worktree 补丁（含 CRLF 归一化）+ 两轮编码回路）、`steward-browser`
-> （Playwright 真实浏览器适配器）；下表其余包为规划项，随 M2–M4 / 阶段二落地。
+> （Playwright 真实浏览器适配器）、`steward-desktop`（真实 Windows 桌面适配器）；下表其余包为规划项，
+> 随 M3–M4 / 阶段二落地。
 > 包职责见 [`docs/zh-CN/architecture.md`](../docs/zh-CN/architecture.md)。
 
 | 包 | 职责 | 状态 |
 |---|---|---|
-| `steward-core` | AgentRuntime、BranchSpec、ToolRegistry、PolicyEngine、ArtifactBus、PromptManager、EventLog、BudgetGuard、StopSignal | ✅ M0 已实现 |
+| `steward-core` | AgentRuntime、BranchSpec、ToolRegistry、PolicyEngine、ArtifactBus、PromptManager、EventLog、BudgetGuard、StopSignal + **M2 安全三模块**：`stop-controller`（停止键 ≤5s）、`checkpoint`（检查点/断点续跑）、`isolation`（凭据隔离 / ProfileLock / 工具白名单） | ✅ M0/M2 已实现 |
 | `steward-harness` | HarnessAdapter：MockHarness + `patch.ts`（隔离 git worktree 应用补丁，CRLF 归一化）+ `loop.ts`（`runCodeLoop` 两轮升级） | ✅ M0/M1 已实现（mock + 脚本化补丁） |
 | `steward-browser` | Playwright 真实浏览器适配器（有头默认、`chrome→msedge` 回退、独立 `userDataDir`、逐步截图/DOM/console、5 类失败分类、风控停交人） | ✅ M1 已实现 |
-| `steward-conductor` | 总调度：目标拆解、派生分支、验收、汇总、预算 | 规划（M2+；M0/M1 由 CLI/BranchManager 承担最小能力） |
-| `steward-operator` | 操作型分支：浏览器/桌面/文件/HTTP、CodeTask 编写与验收执行 | 规划（M2+；M1 由 CLI `browser-flow`/`code-loop` + `steward-browser` 覆盖最小回路） |
+| `steward-desktop` | 真实 Windows 桌面适配器（Python ctypes 侧车：窗口枚举/聚焦、BitBlt 截图、SendInput 真实鼠标与 Unicode 真实键盘；白名单默认拒绝、DPI 感知、5 类失败分类、每步截图、凭据提示停止交人；10 个 `desktop.*` ToolSpec） | ✅ M2 已实现（需 Python ≥ 3.8；真实桌面 E2E：`tests/e2e-desktop/`） |
+| `steward-conductor` | 总调度：目标拆解、派生分支、验收、汇总、预算 | 规划（M3+；M0–M2 由 CLI/BranchManager 承担最小能力） |
+| `steward-operator` | 操作型分支：浏览器/桌面/文件/HTTP、CodeTask 编写与验收执行 | 规划（M3+；M1/M2 由 CLI `browser-flow`/`desktop-flow`/`code-loop` + 适配器覆盖最小回路） |
 | `steward-scout` | 客户分支：ICP、来源清单、评分、外联草稿、审批队列、周报 | 规划（M3） |
-| `steward-desktop` | 真实桌面适配器（Windows：UIA + SendInput + 截图 + 白名单） | 规划（M2） |
 | `steward-notify` | 通知与协助适配器（Toast/邮件/Webhook/审批队列） | 规划（阶段二） |
 | `steward-domain` | 委托/预算/项目/任务/代理/证据/账本/墓碑 + 30 条边界规则 | 规划（阶段二） |
 | `steward-console` | 本地 Web 控制台（看板/审批/接管/月报/L0-L1-L2） | 规划（阶段二） |

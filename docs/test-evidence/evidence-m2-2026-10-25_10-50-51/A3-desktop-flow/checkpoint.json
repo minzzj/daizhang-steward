@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "runId": "run-20261025-185100-6a4d70",
+  "branchId": "br-operator-20261025185100-9cf4",
+  "stepIndex": 2,
+  "doneSteps": [
+    "step-0",
+    "step-1",
+    "step-2"
+  ],
+  "completed": true,
+  "updatedAt": "2026-10-25T10:51:06.002Z",
+  "state": {
+    "lastTool": "echo"
+  }
+}

@@ -1,7 +1,7 @@
 # Architecture
 
-> Status: design fixed; **M0 kernel + M1 real-browser loop implemented and verified (2026-10-25)**,
-> the rest lands through M2–M4.
+> Status: design fixed; **M0 kernel + M1 real-browser loop + M2 real Windows desktop & safety modules
+> implemented and verified (2026-10-25)**, the rest lands through M3–M4.
 > Companions: `contracts.md`, `threat-model.md`, `adapters.md`.
 
 ## 1. Design principles
@@ -34,21 +34,36 @@
 
 | Mode | Command | Purpose |
 |---|---|---|
-| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/code-loop/run/branch/report/stop/version/help` | 24/7 operation, demos, acceptance |
+| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/code-loop/run/branch/report/stop/safety-check/version/help` | 24/7 operation, demos, acceptance |
 | DSH cockpit (optional) | `dsh --profile daizhang web` | Human oversight GUI; mounts `steward-mcp` plus `dsh-browser`/`dsh-computer-use` |
 
 The core is a standalone Node/TS process; the cockpit is only an optional human interface.
 
 The repository is a **single package** (no pnpm workspace): `packages/*/src` + `apps/cli/src` are
 compiled by `tsc -p tsconfig.json` into `dist/`, and all commands use npm (`npm run build`, `npm test`,
-`npm run demo`, `npm run acceptance`). `takeover` and `approve` are still placeholder commands.
+`npm run demo`, `npm run acceptance`, `npm run acceptance:m2`). `takeover` and `approve` are still
+placeholder commands.
 
 **M1 implementation status**: `packages/steward-browser` provides the Playwright real-browser adapter
 (headed by default, `chrome→msedge` fallback, per-run `userDataDir`, per-step screenshot / DOM /
 console evidence, 5 failure classes, risk-control keywords → stop-and-hand-off);
 `packages/steward-harness/src/patch.ts` applies patches in an isolated git worktree and `loop.ts`
 (`runCodeLoop`) stops after at most two rounds and escalates; `tests/e2e-browser/` holds real-browser
-E2E (normal green / login-timeout red). Conductor / Reviewer / Scout branches are still planned (M2–M3).
+E2E (normal green / login-timeout red).
+
+**M2 implementation status**: `packages/steward-desktop` provides the real Windows desktop adapter —
+a long-lived Python ctypes sidecar makes real Win32 calls: window enumeration/focus, BitBlt
+screenshots with a self-written PNG encoder, `SendInput` real mouse and Unicode real keyboard;
+allowlist deny-by-default, Per-Monitor V2 DPI awareness, 5 failure classes, per-step screenshot
+evidence, stop-and-hand-off on credential/security prompts. `tests/e2e-desktop/` holds real-desktop
+E2E (real keyboard/mouse + 20 screenshots + JSON content assertions). Three new core safety modules:
+`stop-controller.ts` (200ms watchdog + `AbortController` + `withAbort`, stop ≤5s), `checkpoint.ts`
+(atomic checkpoints, `listResumable`, per-step `markStepDone`; `run --resume` skips completed steps)
+and `isolation.ts` (`CredentialVault` cross-branch credential isolation + redaction, `ProfileLock`
+profile exclusivity, `assertBranchToolsAllowed` allowlist assertion); the runtime integrates them and
+exposes `signal` / `locks` / `vault` in `ToolContext`. The CLI adds `desktop-flow`, `safety-check` and
+`run --resume <runId>` (11 implemented commands + 2 placeholders). Conductor / Reviewer / Scout
+branches are still planned (M3+).
 
 ## 4. Branch lifecycle
 
@@ -61,9 +76,11 @@ goal → Conductor creates BranchSpec → PolicyEngine validates budget/tools/ap
 A branch cannot spawn another branch; it submits a `BranchRequest` to the Conductor. Expired
 branches stop automatically.
 
-M1 status: the CLI assembles the operator branch (BranchSpec + tool allowlist) directly for
-`browser-flow` / `code-loop`; Conductor branch spawning, Reviewer evidence checks and the Conductor
-acceptance interface are still planned (M2+).
+M2 status: the CLI assembles the operator branch (BranchSpec + tool allowlist) directly for
+`browser-flow` / `desktop-flow` / `code-loop`; the runtime now integrates the stop controller,
+checkpoints (including `run --resume`), profile locks and per-branch credential references. Conductor
+branch spawning, Reviewer evidence checks and the Conductor acceptance interface are still planned
+(M3+).
 
 ## 5. Evidence and ledger
 
@@ -71,8 +88,11 @@ acceptance interface are still planned (M2+).
 - `runs/<run-id>/`: M0 artifacts are `prompt.md`, `report.md`, `console.log`, `meta.json`,
   `events.jsonl`, plus `code-task.json`, `code-result.json`, `patch.diff` and `test.log` from the
   MockHarness loop; from M1 real-browser runs also contain `e2e/<case>/screenshots/`,
-  `e2e/<case>/result.json` and `e2e/server.log`, copied to
-  `docs/test-evidence/evidence-m1-<stamp>/` for acceptance. `approval.json` lands with M2.
+  `e2e/<case>/result.json` and `e2e/server.log`; from M2 real-desktop runs also contain
+  `e2e-desktop/screenshots/`, `e2e-desktop/result.json`, `steps.json`, `sidecar.log`, and an atomic
+  `checkpoint.json` written after every step. Acceptance copies them to
+  `docs/test-evidence/evidence-m1-<stamp>/` and `docs/test-evidence/evidence-m2-<stamp>/`.
+  `approval.json` lands with the approval queue (later milestone).
 - The SQLite index is rebuildable by replaying events; after a crash, resume from the checkpoint
   without resending messages or double-paying.
 

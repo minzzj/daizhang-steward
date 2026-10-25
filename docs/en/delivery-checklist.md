@@ -1,8 +1,8 @@
 # Delivery & Acceptance Checklist
 
 > Each acceptance item = id + command/operation + evidence path + latest result (evidence must be openable).
-> M1 marks A1 / A2 / A4 / A5 / A6 / A12 as `pass`; the other items are updated as milestones complete (`pass / fail / partial`).
-> Last updated: 2026-10-25 (M1 complete)
+> After M2, A1 / A2 / A3 / A4 / A5 / A6 / A8 / A9 / A12 are marked `pass`; the other items are updated as milestones complete (`pass / fail / partial`).
+> Last updated: 2026-10-25 (M2 complete)
 
 ## A. Phase 1 (doc 1 — 12 items)
 
@@ -10,15 +10,15 @@
 |---|---|---|---|---|
 | A1 | Clean clone runs without paid API | `npm install && npm run demo` | `runs/run-20261025-172017-eb9116/report.md` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md` (MockHarness, no paid API) | ✅ pass (2026-10-25) |
 | A2 | demo-web login/fill/submit/verify/screenshot | `npm run acceptance` (or `node tests/e2e-browser/login-flow.mjs --case normal`) | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/`: `e2e/normal/screenshots/001…007-*.png` (7 steps / 7 real screenshots), `e2e/normal/result.json`, `e2e/server.log`, `report.md`; run `run-20261025-175213-9ea8ab` | ✅ pass (2026-10-25) |
-| A3 | demo-desktop open/fill/save/verify/screenshot | `npm run test:desktop` (M2) | `runs/<id>/screenshots/` | todo (M2) |
+| A3 | demo-desktop open/fill/save/verify/screenshot | `node tests/e2e-desktop/run.mjs` (or `npm run acceptance:m2`) | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/`: `e2e-desktop/screenshots/001…020-*.png` (20 real step screenshots), `e2e-desktop/result.json` (36/36 checks), `e2e-desktop/project.json` (real saved JSON, content verified), `steps.json`, `sidecar.log`, `report.md`, `checkpoint.json`; run `run-20261025-185100-6a4d70` | ✅ pass (2026-10-25; real window + real SendInput mouse/keyboard) |
 | A4 | Seeded defect → CodeTask → patch → apply → tests pass | `node dist/apps/cli/src/index.js code-loop` (or `npm run acceptance`) | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/`: `patch.diff`, `code-loop-result.json`, `e2e/login-timeout/` (4 screenshots + `result.json`), `report.md`; run `run-20261025-175216-fe8759` | ✅ pass (2026-10-25; red→green on round 1) |
 | A5 | Two consecutive failures → escalate, no infinite loop | `node dist/apps/cli/src/index.js code-loop --fail` (or `npm run acceptance`) | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/`: `test.log` (two failed rounds), `code-loop-result.json` (`escalated=true`, `rounds=2`), `e2e/login-timeout/screenshots/004-assert-timeout-recovery-fail.png`; run `run-20261025-175223-de0b95`; `codeLoopFail` exit 1 is expected | ✅ pass (2026-10-25) |
-| A6 | Every run has prompt/patch/test.log/screenshots/report, no secrets | `npm run demo` + `npm run evidence` + `npm run acceptance` | M0: `runs/run-20261025-172017-eb9116/` (`prompt.md` / `patch.diff` / `test.log` / `report.md` / `events.jsonl` / `console.log` / `meta.json` / `code-task.json` / `code-result.json` / `goal.md`) + `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`; M1: `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/` (45 files incl. real e2e screenshots; `npm run check:secrets` passes) | ✅ pass (2026-10-25; real UI screenshots included) |
+| A6 | Every run has prompt/patch/test.log/screenshots/report, no secrets | `npm run demo` + `npm run evidence` + `npm run acceptance` + `npm run acceptance:m2` | M0: `runs/run-20261025-172017-eb9116/` (`prompt.md` / `patch.diff` / `test.log` / `report.md` / `events.jsonl` / `console.log` / `meta.json` / `code-task.json` / `code-result.json` / `goal.md`) + `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`; M1: `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/` (45 files incl. real e2e screenshots); M2: `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/` (34 files incl. real desktop screenshots + `checkpoint.json` + 53/53 test logs) | ✅ pass (2026-10-25; M2 includes real desktop screenshots and checkpoints) |
 | A7 | Scout ≥10 leads (source+score), 3 drafts unsent | `npm run demo:scout` (M3) | `scout-report.md` + approval queue | todo (M3) |
-| A8 | Stop key within 5s; restart resumes without duplicates | `npm run test:stop` (M2) | stop event + resume log | todo (M2; minimal StopSignal in M0) |
-| A9 | Branch isolation (credentials / browser profiles) | `npm run test:isolation` (M2) | isolation test + events | todo (M2) |
+| A8 | Stop key within 5s; restart resumes without duplicates | `node dist/apps/cli/src/index.js safety-check`; in-flight preemption and resume are covered by `tests/unit/m2-runtime.test.mjs` (part of `npm test`) | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json` (`stop.ok=true`, measured **305ms** <5000ms; `checkpoint` save/load/completed); `m2-runtime-tests.log` (stop preempts within 5s, resume skips completed steps without re-running them) | ✅ pass (2026-10-25) |
+| A9 | Branch isolation (credentials / browser profiles) | `node dist/apps/cli/src/index.js safety-check`; `tests/unit/m2-safety.test.mjs` (part of `npm test`) | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json`: cross-branch credential reads denied (`CrossBranchAccessError`), redacted output contains no reference plaintext, same-profile concurrent use denied (`ProfileBusyError`), tools outside the allowlist denied; isolation cases in `tests/unit/m2-safety.test.mjs` | ✅ pass (2026-10-25) |
 | A10 | New read-only dummy branch by config only | `npm run demo:dummy-branch` (M4) | config + report | todo (M4) |
-| A11 | Tests/lint/docs/license complete, no telemetry | `npm run lint && npm test` | CI log | todo (M4 full acceptance; M1 already green on lint/build/35 tests + CI headless E2E) |
+| A11 | Tests/lint/docs/license complete, no telemetry | `npm run lint && npm test` | CI log | todo (M4 full acceptance; currently green on lint/build/53 tests + CI headless E2E + safety-check) |
 | A12 | Runtime prompts versioned, tested, replaceable | `npm run test:prompts` | `prompts/manifest.json` (4 roles + sha256) + `tests/unit/prompts.test.mjs` (5 assertions) | ✅ pass (2026-10-25) |
 
 > **M0 verdict (2026-10-25)**: A1 / A6 / A12 pass. `npm run check`, `npm run check:secrets`,
@@ -27,10 +27,22 @@
 >
 > **M1 verdict (2026-10-25)**: A2 / A4 / A5 / A6 pass (local headed real Chrome, `npm run acceptance`
 > OK). A2: 7 steps / 7 real screenshots; A4: red→green on round 1; A5: escalation after two failed
-> rounds (exit 1, no infinite retry). **35/35** tests; `npm run lint`, `npm run check` and
-> `npm run check:secrets` pass. Evidence:
+> rounds (exit 1, no infinite retry). M1 historical result: **35/35** tests, CLI **9 commands + 2
+> placeholders**; `npm run lint`, `npm run check` and `npm run check:secrets` passed. Evidence:
 > `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
 > `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/` (45 files: A2 / A4 / A5 groups).
+>
+> **M2 verdict (2026-10-25)**: A3 / A8 / A9 pass (local real Windows desktop session,
+> `npm run acceptance:m2` OK: build + **53/53** tests + desktop flow + stop-key/checkpoint + isolation
+> self-check all ✅). A3: a real window is driven with real mouse/keyboard (SendInput) through
+> open → fill → save → validate → screenshots — **36/36 checks, 20 real screenshots, JSON content
+> verified** (run `run-20261025-185100-6a4d70`); A8: stop key measured **305ms** (<5000ms), runtime
+> integration tests prove in-flight preemption and checkpoint resume skips completed steps without
+> re-running them; A9: cross-branch credentials unreadable (`CrossBranchAccessError`), same profile
+> cannot be used concurrently (`ProfileBusyError`), tools outside the allowlist denied. Tests
+> **53/53** (M1's 35 + `m2-safety` 14 + `m2-runtime` 4); the CLI now ships **11 implemented commands +
+> 2 placeholders**. Evidence: `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` +
+> `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/` (34 files, sanitized).
 
 ## B. Phase 2 (doc 2 — 8 items)
 

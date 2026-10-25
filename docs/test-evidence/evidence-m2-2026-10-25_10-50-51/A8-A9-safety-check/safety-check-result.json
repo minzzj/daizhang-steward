@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "checks": {
+    "stop": {
+      "ok": true,
+      "detail": "停止耗时 305ms（<5000ms）"
+    },
+    "checkpoint": {
+      "ok": true,
+      "detail": "读取 stepIndex=1，可恢复=true，完成后可恢复=false"
+    },
+    "credentials": {
+      "ok": true,
+      "detail": "跨分支读取被拒=true，脱敏输出不含引用明文=true"
+    },
+    "isolation": {
+      "ok": true,
+      "detail": "重复占用被拒=true，白名单外工具被拒=true"
+    }
+  },
+  "workDir": "(临时目录，已脱敏)",
+  "generatedAt": "2026-10-25T10:51:06.543Z"
+}

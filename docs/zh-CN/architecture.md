@@ -1,6 +1,7 @@
 # 架构 / Architecture（中文）
 
-> 状态：设计定稿；**M0 内核 + M1 真实浏览器回路已实现并验证（2026-10-25）**，其余随 M2–M4 落地，细节改动以 PR 为准。
+> 状态：设计定稿；**M0 内核 + M1 真实浏览器回路 + M2 真实 Windows 桌面与安全模块已实现并验证
+> （2026-10-25）**，其余随 M3–M4 落地，细节改动以 PR 为准。
 > 配套：`docs/zh-CN/contracts.md`、`docs/zh-CN/threat-model.md`、`docs/zh-CN/adapters.md`。
 
 ## 1. 设计原则
@@ -28,20 +29,31 @@
 
 | 形态 | 命令 | 用途 |
 |---|---|---|
-| 内核 CLI | `node dist/apps/cli/src/index.js demo/browser-flow/code-loop/run/branch/report/stop/version/help` | 24h 运行、演示、验收 |
+| 内核 CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/code-loop/run/branch/report/stop/safety-check/version/help` | 24h 运行、演示、验收 |
 | DSH 驾驶舱（可选） | `dsh --profile daizhang web` | 人用 DSH GUI 观察/审批/接管；挂 `steward-mcp` 与 `dsh-browser`/`dsh-computer-use` |
 
 内核是独立 Node/TS 进程；驾驶舱只是可选的“人机接口”，不参与核心决策。
 
 工程为**单包布局**（无 pnpm workspace）：`packages/*/src` + `apps/cli/src` 由
 `tsc -p tsconfig.json` 编译到 `dist/`，命令一律用 npm（`npm run build` / `npm test` / `npm run demo` /
-`npm run acceptance`）。`takeover` 与 `approve` 仍为占位命令（阶段二 / 后续里程碑）。
+`npm run acceptance` / `npm run acceptance:m2`）。`takeover` 与 `approve` 仍为占位命令（后续里程碑）。
 
 **M1 实现现状**：`packages/steward-browser` 提供 Playwright 真实浏览器适配器（有头默认、
 `chrome→msedge` 回退、每 run 独立 `userDataDir`、每步截图/DOM/console、5 类失败分类、
 风控关键词 → 停止交人）；`packages/steward-harness/src/patch.ts` 在隔离 git worktree 应用补丁，
 `loop.ts` 的 `runCodeLoop` 最多两轮、超限升级；`tests/e2e-browser/` 提供真实浏览器 E2E
-（normal 绿 / login-timeout 红）。Conductor / Reviewer / Scout 分支仍为规划（M2–M3）。
+（normal 绿 / login-timeout 红）。
+
+**M2 实现现状**：`packages/steward-desktop` 提供真实 Windows 桌面适配器——Python ctypes 侧车
+（长驻）执行真实 Win32 调用：窗口枚举/聚焦、BitBlt 截图 + 自写 PNG 编码、`SendInput` 真实鼠标与
+Unicode 真实键盘；白名单默认拒绝、Per-Monitor V2 DPI 感知、5 类失败分类、每步截图证据、凭据/安全
+提示命中即停止交人。`tests/e2e-desktop/` 提供真实桌面 E2E（真实键鼠 + 20 张截图 + JSON 内容断言）。
+内核侧新增三个安全模块：`stop-controller.ts`（200ms watchdog + `AbortController` + `withAbort`，
+停止 ≤5s）、`checkpoint.ts`（原子写检查点、`listResumable`、每步 `markStepDone`，`run --resume`
+跳过已完成步骤）、`isolation.ts`（`CredentialVault` 跨分支凭据隔离 + 脱敏、`ProfileLock` profile
+独占、`assertBranchToolsAllowed` 工具白名单断言）；runtime 集成这些模块并在 `ToolContext` 中提供
+`signal` / `locks` / `vault`。CLI 新增 `desktop-flow`、`safety-check`、`run --resume <runId>`
+（共 11 个已实现命令 + 2 个占位）。Conductor / Reviewer / Scout 分支仍为规划（M3+）。
 
 ## 4. 分支生命周期
 
@@ -53,16 +65,20 @@
 
 分支不得自行再开分支；需要扩展时提交 `BranchRequest` 由 Conductor 决定。过期自动停止。
 
-M1 现状：CLI 直接装配 operator 分支（BranchSpec + 工具白名单）跑 `browser-flow` / `code-loop`；
-Conductor 的分支派生、Reviewer 证据复核与 Conductor 验收接口仍是规划（M2+）。
+M2 现状：CLI 直接装配 operator 分支（BranchSpec + 工具白名单）跑 `browser-flow` / `desktop-flow` /
+`code-loop`；runtime 已接入停止控制器、检查点（支持 `run --resume`）、profile 锁与按分支隔离的凭据
+引用。Conductor 的分支派生、Reviewer 证据复核与 Conductor 验收接口仍是规划（M3+）。
 
 ## 5. 证据与账本
 
 - `events.jsonl`：只追加、带 `seq` 与哈希链，字段见 contracts.md；密钥脱敏。
 - `runs/<run-id>/`：M0 产物为 `prompt.md`、`report.md`、`console.log`、`meta.json`、`events.jsonl`，
   以及 MockHarness 回路的 `code-task.json`、`code-result.json`、`patch.diff`、`test.log`；M1 起
-  真实浏览器运行另含 `e2e/<case>/screenshots/`、`e2e/<case>/result.json`、`e2e/server.log`；
-  验收时复制到 `docs/test-evidence/evidence-m1-<stamp>/`。`approval.json` 随 M2 落地。
+  真实浏览器运行另含 `e2e/<case>/screenshots/`、`e2e/<case>/result.json`、`e2e/server.log`；M2 起
+  真实桌面运行另含 `e2e-desktop/screenshots/`、`e2e-desktop/result.json`、`steps.json`、
+  `sidecar.log`，并每步原子写 `checkpoint.json`；验收时复制到
+  `docs/test-evidence/evidence-m1-<stamp>/` 与 `docs/test-evidence/evidence-m2-<stamp>/`。
+  `approval.json` 随审批队列（后续里程碑）落地。
 - SQLite 索引可从事件重放重建；崩溃后用检查点恢复，不重复发送/扣款。
 
 ## 6. 摘要层级

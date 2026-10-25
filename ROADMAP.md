@@ -10,8 +10,8 @@
 | 0 | S0 脚手架 | 仓库、许可证、治理文件、双语文档骨架、CI 自检、目标与路线图 | `npm run check` 绿、CI 绿 | ✅ 完成（2026-10-25，GitHub 仓库已发布） |
 | 1 | M0 骨架 | 内核最小闭环：AgentRuntime/BranchSpec/PolicyEngine/ArtifactBus/PromptManager/EventLog/BudgetGuard/StopSignal；CLI（7 命令 + 2 占位）；MockHarness；demo-web/demo-desktop；prompts v1；单包构建；CI | A1、A6、A12 | ✅ 完成（2026-10-25；A1/A6/A12 通过，证据 `runs/run-20261025-172017-eb9116/` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md`） |
 | 1 | M1 浏览器回路 | 真实浏览器回路：`steward-browser`（Playwright 有头/回退）、CodeTask→补丁→隔离 worktree→真实浏览器验收、失败两轮升级、`tests/e2e-browser`、CLI `browser-flow`/`code-loop`、Windows CI CRLF 修复（`b4ed316`） | A2、A4、A5、A6 | ✅ 完成（2026-10-25；A2/A4/A5/A6 通过，`npm run acceptance` OK；证据 `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`） |
-| 1 | M2 桌面与安全 | Windows 桌面适配器；PolicyEngine；停止键；审计；检查点恢复；分支隔离 | A3、A8、A9 | ⏳ 下一步 |
-| 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ⏳ |
+| 1 | M2 桌面与安全 | Windows 桌面适配器；PolicyEngine；停止键；审计；检查点恢复；分支隔离 | A3、A8、A9 | ✅ 完成（2026-10-25；A3/A8/A9 通过，`npm run acceptance:m2` OK；证据 `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`） |
+| 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ⏳ 下一步 |
 | 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ⏳ |
 | — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ⏳ |
 | 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ⏳ |
@@ -38,6 +38,18 @@
 > （提交 `b4ed316`：`.gitattributes` 全仓 `eol=lf` + `patch.ts` 归一化 CRLF + CRLF 回归测试）。证据：
 > `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
 > `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组截图与日志，已脱敏）。
+>
+> **M2 验收结论（2026-10-25）**：A3 / A8 / A9 通过（本机真实 Windows 桌面会话，`npm run acceptance:m2` OK；
+> build + **53/53** 测试 + 桌面流程 + 停止键/检查点 + 隔离自检全部 ✅）。A3 真实桌面
+> `run-20261025-185100-6a4d70`：真实 Windows 窗口 + 真实键鼠（SendInput）完成
+> 打开→填表→保存→校验→截图，36/36 检查通过、20 张逐步截图、`project.json` 内容核对通过；
+> A8 停止键实测 **305ms**（<5000ms），runtime 集成测试证明运行中停止可抢占，检查点 resume 跳过已完成
+> 步骤、不重复执行；A9 跨分支凭据不可读（`CrossBranchAccessError`）、同一 profile 不能并发占用
+> （`ProfileBusyError`）、白名单外工具拒绝。测试 **53/53**（M1 的 35 条 + `m2-safety` 14 条 +
+> `m2-runtime` 4 条）；CLI 现为 **11 个已实现命令 + 2 个占位**（新增 `desktop-flow`、`safety-check`、
+> `run --resume`）。证据：`docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` +
+> `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`（34 文件：A3 截图与结果、A8/A9 自检结果、
+> 测试日志，已脱敏）。
 
 ## 每个里程碑的 Definition of Done
 
@@ -60,4 +72,4 @@
 - 阶段一完成 → 输出 HANDOFF → **结束会话**；阶段二在新会话从 HANDOFF 继续。
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
-_Last updated: 2026-10-25 (M1 complete)._
+_Last updated: 2026-10-25 (M2 complete; next milestone M3 customer branch)._

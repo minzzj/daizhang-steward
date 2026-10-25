@@ -51,6 +51,11 @@ export interface ToolContext {
   runId: string;
   branchId: string;
   evidenceDir: string;
+  /** Aborted when the global stop key fires (tools should abort long-running work). */
+  signal?: AbortSignal;
+  /** Branch isolation helpers: profile locks + per-branch credential references. */
+  locks?: import("./isolation.js").ProfileLock;
+  vault?: import("./isolation.js").CredentialVault;
 }
 
 export interface PlannedStep {

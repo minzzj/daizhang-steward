@@ -5,15 +5,24 @@
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   AgentRuntime,
   ArtifactBus,
   BranchManager,
+  CheckpointStore,
+  CredentialVault,
+  CrossBranchAccessError,
+  ProfileBusyError,
+  ProfileLock,
   PromptManager,
+  StopController,
+  StoppedError,
   StopSignal,
   ToolRegistry,
+  assertBranchToolsAllowed,
   findRepoRoot,
   stewardPaths,
   type BranchSpec,
@@ -24,7 +33,7 @@ import {
 } from "../../../packages/steward-core/src/index.js";
 import { MockHarness, demoCodeTask, runCodeLoop } from "../../../packages/steward-harness/src/index.js";
 
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -66,9 +75,11 @@ function printHelp(): void {
   steward demo [--json]                       跑通 M0 空回路（MockHarness，无需付费 API）
   steward browser-flow [--case normal|login-timeout] [--headless] [--json]
                                               真实浏览器（本机 Chrome/Edge）执行 demo-web 流程并截图留证（A2）
+  steward desktop-flow [--json]              真实 Windows 桌面键鼠执行 demo-desktop 流程并截图留证（A3）
   steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
-  steward run --goal "<目标>" [--role operator] [--json]
-                                              在 Mock 计划下执行一个分支
+  steward run --goal "<目标>" [--role operator] [--resume <runId>] [--json]
+                                              在 Mock 计划下执行一个分支；--resume 从检查点跳过已完成步骤
+  steward safety-check [--json]               停止键≤5s / 检查点恢复 / 分支隔离自检（A8/A9）
   steward branch --role operator --goal "<目标>" [--json]
                                               只生成 BranchSpec（不执行）
   steward report [--run <id|latest>] [--json] 查看运行报告
@@ -171,6 +182,42 @@ function createTools(root: string): ToolRegistry {
           run.status === 0
             ? `真实浏览器流程通过（case=${caseName}），截图见 ${e2eDir}`
             : `真实浏览器流程失败（case=${caseName}, exit=${run.status}），详见 ${logPath}`,
+        evidence,
+      };
+    },
+  );
+
+  registry.register(
+    {
+      name: "desktop.flow",
+      description: "真实 Windows 桌面：打开 demo-desktop、真实键鼠填表/保存/校验并逐步截图",
+      risk: "medium",
+      requiresApproval: false,
+      evidence: true,
+    },
+    async (_args, ctx): Promise<ToolResult> => {
+      const e2eDir = join(ctx.evidenceDir, "e2e-desktop");
+      const script = join(root, "tests", "e2e-desktop", "run.mjs");
+      if (!existsSync(script)) {
+        return { ok: false, summary: `真实桌面 E2E 脚本缺失：${script}` };
+      }
+      const run = spawnSync(process.execPath, [script, "--evidence-dir", e2eDir], {
+        cwd: root,
+        encoding: "utf8",
+        timeout: 300_000,
+        env: { ...process.env, NO_COLOR: "1" },
+      });
+      const output = `${run.stdout ?? ""}${run.stderr ?? ""}`;
+      const logPath = join(ctx.evidenceDir, "test.log");
+      await writeFile(logPath, output, "utf8");
+      const resultPath = join(e2eDir, "result.json");
+      const evidence = [logPath, ...(existsSync(resultPath) ? [resultPath] : []), e2eDir];
+      return {
+        ok: run.status === 0,
+        summary:
+          run.status === 0
+            ? `真实桌面流程通过（真实键鼠），截图见 ${e2eDir}`
+            : `真实桌面流程失败（exit=${run.status}），详见 ${logPath}`,
         evidence,
       };
     },
@@ -321,9 +368,14 @@ async function cmdRun(parsed: ParsedArgs): Promise<number> {
   const plan: PlannedStep[] = [
     { tool: "echo", description: "接收目标", args: { message: `目标：${goal}` } },
     { tool: "write.artifact", description: "记录计划", args: { name: "plan.md", content: `# 计划\n\n目标：${goal}\n分支：${branch.id}\n` } },
-    { tool: "echo", description: "汇总", args: { message: "计划执行完成（M0 空回路；真实工具在 M1/M2 接入）" } },
+    { tool: "echo", description: "汇总", args: { message: "计划执行完成（空回路；真实工具已接入 browser-flow/desktop-flow/code-loop）" } },
   ];
-  const result = await runtime.run({ branch, plan });
+  const resumeRunId = flagString(parsed.flags, "resume");
+  const result = await runtime.run({
+    branch,
+    plan,
+    ...(resumeRunId ? { runId: resumeRunId, resume: true } : {}),
+  });
   printRunResult(result, root, parsed.flags.json === true);
   return result.ok ? 0 : 1;
 }
@@ -343,6 +395,26 @@ async function cmdBrowserFlow(parsed: ParsedArgs): Promise<number> {
     { tool: "echo", description: "写验收检查", args: { message: "验收：真实 Chrome/Edge 有头模式完成登录、填表、提交、校验，每步截图" } },
     { tool: "browser.flow", description: "运行真实浏览器流程", args: { case: caseName, headless: parsed.flags.headless === true } },
     { tool: "echo", description: "汇总", args: { message: "真实浏览器证据已写入本次 run 目录的 e2e/" } },
+  ];
+  const result = await runtime.run({ branch, plan });
+  printRunResult(result, root, parsed.flags.json === true);
+  return result.ok ? 0 : 1;
+}
+
+async function cmdDesktopFlow(parsed: ParsedArgs): Promise<number> {
+  const root = findRepoRoot();
+  const prompts = await loadPrompts();
+  const runtime = new AgentRuntime({ root, tools: createTools(root), ...(prompts ? { prompts } : {}) });
+  const manager = new BranchManager();
+  const branch = manager.create({
+    role: "operator",
+    goal: "真实 Windows 桌面执行 demo-desktop 打开→填表→保存→校验→截图（A3）",
+    tools: ["echo", "desktop.flow"],
+  });
+  const plan: PlannedStep[] = [
+    { tool: "echo", description: "写验收检查", args: { message: "验收：真实窗口+真实键鼠完成打开/填表/保存/校验，JSON 内容正确，每步截图" } },
+    { tool: "desktop.flow", description: "运行真实桌面流程", args: {} },
+    { tool: "echo", description: "汇总", args: { message: "真实桌面证据已写入本次 run 目录的 e2e-desktop/" } },
   ];
   const result = await runtime.run({ branch, plan });
   printRunResult(result, root, parsed.flags.json === true);
@@ -373,6 +445,118 @@ async function cmdCodeLoop(parsed: ParsedArgs): Promise<number> {
   return result.ok ? 0 : 1;
 }
 
+async function cmdSafetyCheck(parsed: ParsedArgs): Promise<number> {
+  const root = findRepoRoot();
+  const workDir = await mkdtemp(join(tmpdir(), "steward-safety-check-"));
+  const checks: Record<string, { ok: boolean; detail: string }> = {};
+
+  // --- A8-1: 停止键 ≤5s（对 10s 慢操作发起停止） ---
+  {
+    const controller = new StopController(join(workDir, "STOP"));
+    controller.start();
+    const started = Date.now();
+    const slow = controller.withAbort(
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10_000));
+        return "late";
+      },
+      15_000,
+    );
+    setTimeout(() => {
+      void controller.request("safety-check");
+    }, 300);
+    let latencyMs = -1;
+    let stopped = false;
+    try {
+      await slow;
+    } catch (error) {
+      latencyMs = Date.now() - started;
+      stopped = error instanceof StoppedError;
+    }
+    controller.dispose();
+    checks.stop = {
+      ok: stopped && latencyMs >= 0 && latencyMs < 5_000,
+      detail: stopped ? `停止耗时 ${latencyMs}ms（<5000ms）` : "停止未生效",
+    };
+  }
+
+  // --- A8-2: 检查点 save/load/resume/completed ---
+  {
+    const store = new CheckpointStore(workDir);
+    const runId = "run-safety-check";
+    await store.save({ runId, branchId: "br-safety", stepIndex: 1, doneSteps: ["step-0", "step-1"], completed: false });
+    const loaded = await store.load(runId);
+    const resumableBefore = (await store.listResumable()).some((r) => r.runId === runId);
+    await store.markCompleted(runId);
+    const resumableAfter = (await store.listResumable()).some((r) => r.runId === runId);
+    checks.checkpoint = {
+      ok: Boolean(loaded && loaded.stepIndex === 1 && resumableBefore && !resumableAfter),
+      detail: loaded
+        ? `读取 stepIndex=${loaded.stepIndex}，可恢复=${resumableBefore}，完成后可恢复=${resumableAfter}`
+        : "检查点读取失败",
+    };
+  }
+
+  // --- A9-1: 跨分支凭据隔离 + 脱敏 ---
+  {
+    const vault = new CredentialVault();
+    vault.set("br-operator", "api", "env:OPERATOR_API_KEY");
+    let crossDenied = false;
+    try {
+      vault.get("br-scout", "api");
+    } catch (error) {
+      crossDenied = error instanceof CrossBranchAccessError;
+    }
+    const redacted = JSON.stringify(vault.redactFor("br-operator"));
+    checks.credentials = {
+      ok: crossDenied && !redacted.includes("OPERATOR_API_KEY"),
+      detail: `跨分支读取被拒=${crossDenied}，脱敏输出不含引用明文=${!redacted.includes("OPERATOR_API_KEY")}`,
+    };
+  }
+
+  // --- A9-2: 同一 profile 不能并发占用 + 工具白名单 ---
+  {
+    const locks = new ProfileLock(workDir);
+    const info = locks.acquire("browser-demo");
+    let busy = false;
+    try {
+      locks.acquire("browser-demo");
+    } catch (error) {
+      busy = error instanceof ProfileBusyError;
+    }
+    locks.release("browser-demo", info.token);
+    let allowlistOk = false;
+    try {
+      assertBranchToolsAllowed(["echo"], "payment");
+    } catch {
+      allowlistOk = true;
+    }
+    checks.isolation = {
+      ok: busy && allowlistOk,
+      detail: `重复占用被拒=${busy}，白名单外工具被拒=${allowlistOk}`,
+    };
+  }
+
+  const ok = Object.values(checks).every((c) => c.ok);
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").slice(0, 19);
+  const runDir = join(root, "runs", `run-safety-check-${stamp}`);
+  await mkdir(runDir, { recursive: true });
+  const resultPath = join(runDir, "safety-check-result.json");
+  await writeFile(resultPath, JSON.stringify({ ok, checks, workDir: "(临时目录，已脱敏)", generatedAt: new Date().toISOString() }, null, 2) + "\n", "utf8");
+
+  if (parsed.flags.json === true) {
+    console.log(JSON.stringify({ ok, checks, resultPath }, null, 2));
+  } else {
+    console.log("");
+    console.log(`安全自检 ${ok ? "通过 ✅" : "未通过 ❌"}`);
+    for (const [key, value] of Object.entries(checks)) {
+      console.log(`  - ${key}: ${value.ok ? "ok" : "failed"} — ${value.detail}`);
+    }
+    console.log(`结果: ${resultPath.replaceAll("\\", "/")}`);
+  }
+  return ok ? 0 : 1;
+}
+
 async function cmdBranch(parsed: ParsedArgs): Promise<number> {
   const goal = flagString(parsed.flags, "goal") ?? "示例目标";
   const role = (flagString(parsed.flags, "role") ?? "operator") as "operator" | "dummy" | "conductor" | "scout" | "reviewer";
@@ -387,7 +571,8 @@ async function cmdReport(parsed: ParsedArgs): Promise<number> {
   const paths = stewardPaths(root);
   const bus = new ArtifactBus(paths.runs);
   const want = flagString(parsed.flags, "run") ?? "latest";
-  const runs = await bus.listRuns();
+  // 只考虑有 report.md 的运行（safety-check 等辅助目录不参与 report 选择）
+  const runs = (await bus.listRuns()).filter((r) => existsSync(join(r.dir, "report.md")));
   const picked = want === "latest" ? runs[0] : runs.find((r) => r.runId === want);
   if (!picked) {
     console.error(`找不到运行：${want}`);
@@ -434,9 +619,14 @@ async function main(): Promise<number> {
       return cmdReport(parsed);
     case "stop":
       return cmdStop(parsed);
+    case "safety-check":
+      return cmdSafetyCheck(parsed);
     case "browser-flow":
     case "demo-browser":
       return cmdBrowserFlow(parsed);
+    case "desktop-flow":
+    case "demo-desktop":
+      return cmdDesktopFlow(parsed);
     case "code-loop":
     case "demo-code-loop":
       return cmdCodeLoop(parsed);

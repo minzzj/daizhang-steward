@@ -10,5 +10,8 @@ export * from "./branch.js";
 export * from "./prompts.js";
 export * from "./tools.js";
 export * from "./stop.js";
+export * from "./stop-controller.js";
+export * from "./checkpoint.js";
+export * from "./isolation.js";
 export * from "./report.js";
 export * from "./runtime.js";

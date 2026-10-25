@@ -5,8 +5,7 @@
 
 ## [Unreleased]
 
-### Planned — Phase 1 (M2–M4)
-- M2 桌面与安全：Windows 桌面适配器、PolicyEngine、停止键、审计、检查点
+### Planned — Phase 1 (M3–M4)
 - M3 客户分支：Scout、来源清单、评分、外联草稿、审批队列、ScoutReport
 - M4 开源发布：双语文档、LICENSE/COMMERCIAL/NOTICE、CI 绿、Release、5 个 good-first-issue
 
@@ -17,6 +16,50 @@
 - 30 条法律与合规边界规则 + 个人/企业两种模式
 - IoT 适配器契约（stub）+ MCP server
 - v1.0.0 发布 + 宣传片（BGM/静音双版本）
+
+## [0.3.0] — 2026-10-25
+
+### Added — M2 真实桌面与安全模块（验收 A3 / A8 / A9 通过）
+
+- **真实 Windows 桌面适配器 `packages/steward-desktop`**：Python ctypes 侧车（长驻）实现真实 Win32
+  调用——`EnumWindows` 窗口枚举、`SetForegroundWindow` 聚焦、`BitBlt` + 自写 PNG 编码截图、
+  `SendInput` 真实鼠标与 **Unicode 真实键盘**（中文直送，不走剪贴板）；白名单默认拒绝
+  （`DesktopAllowlistError`）、Per-Monitor V2 DPI 感知、5 类失败分类（`window-not-found` /
+  `focus-lost` / `timeout` / `allowlist-denied` / `unknown`）、每步截图证据、凭据/安全提示命中即
+  停止交人；导出 10 个 `desktop.*` ToolSpec + 编排级 `desktop.flow`。契约见
+  `docs/*/adapters.md` 第 2 节，细节见 `packages/steward-desktop/README.md`。
+- **真实桌面 E2E `tests/e2e-desktop/`**：`run.mjs` 用 `examples/demo-desktop` 真实 tkinter 窗口 +
+  真实键鼠完成打开→填表→保存→校验→截图，断言真实 JSON 内容与校验失败不写文件；A3 实测
+  **36/36 检查通过、20 张逐步截图、15 个交互步骤全部有截图**。
+- **停止键 `packages/steward-core/src/stop-controller.ts`**：200ms watchdog 轮询 + `AbortController`
+  即时 abort + `withAbort` 兜底（≤5s），CLI `safety-check` 实测停止耗时 **305ms**。
+- **检查点 `packages/steward-core/src/checkpoint.ts`**：`checkpoint.json` 原子写、
+  `listResumable`、`markStepDone`/`markCompleted`；runtime 每步落检查点，`run --resume <runId>`
+  跳过已完成步骤、不重复执行。
+- **分支隔离 `packages/steward-core/src/isolation.ts`**：`CredentialVault` 按分支隔离凭据引用 +
+  脱敏（跨分支读取抛 `CrossBranchAccessError`）、`ProfileLock` 同一 profile 独占
+  （并发占用抛 `ProfileBusyError`）、`assertBranchToolsAllowed` 工具白名单断言。
+- **runtime 集成**：StopController 运行中抢占、每步 checkpoint、resume、`ToolContext` 提供
+  `signal` / `locks` / `vault`。
+- **CLI 新增命令**：`desktop-flow`（别名 `demo-desktop`）、`safety-check`、`run --resume <runId>`；
+  命令数 9 → **11 个已实现 + 2 个占位**（`takeover`、`approve` 仍为占位）。
+- **`npm run acceptance:m2`**：一键本机真实验收（build + 53 测试 + A3 桌面流程 + A8 停止键/检查点 +
+  A8 resume runtime + A9 隔离），生成
+  `docs/test-evidence/m2-acceptance-<stamp>.{md,json}` 并把证据复制到
+  `docs/test-evidence/evidence-m2-<stamp>/`（本次 34 文件，已脱敏）。
+- **测试**：35 → **53/53** 通过（新增 `tests/unit/m2-safety.test.mjs` 14 条 +
+  `tests/unit/m2-runtime.test.mjs` 4 条；共 10 个测试文件）。
+- **CI**：新增 `safety-check` 步骤（停止键 ≤5s / 检查点 / 分支隔离）；真实桌面 E2E 只能本机跑。
+
+### Changed
+- `package.json` 版本 0.2.0 → **0.3.0**（M2 交付版本）。
+- `steward-core` 公开入口新增 `stop-controller` / `checkpoint` / `isolation` 三个模块；
+  `AgentRuntime` 内置停止控制器、检查点存储、profile 锁与凭据 vault。
+- 验收：A3 / A8 / A9 通过；累计 A1/A2/A3/A4/A5/A6/A8/A9/A12 通过。证据
+  `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` +
+  `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`（34 文件）；A3 run
+  `run-20261025-185100-6a4d70`，A8/A9 自检
+  `evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json`。
 
 ## [0.2.0] — 2026-10-25
 
@@ -94,7 +137,8 @@
 - 双语文档骨架：architecture / contracts / threat-model / adapters / runtime-prompts / delivery-checklist
 - 脚手架自检 `pnpm check`、密钥扫描 `pnpm check:secrets`、交付同步脚本 `scripts/sync-delivery.ps1`
 
-[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.3.0
 [0.2.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.2.0
 [0.1.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.1.0
 [0.0.1]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.0.1

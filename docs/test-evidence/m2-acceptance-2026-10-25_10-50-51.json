@@ -1,0 +1,81 @@
+{
+  "stamp": "2026-10-25_10-50-51",
+  "ok": true,
+  "checks": {
+    "build": true,
+    "unitTests": true,
+    "a3DesktopFlow": true,
+    "a8StopAndCheckpoint": true,
+    "a8ResumeRuntimeTests": true,
+    "a9Isolation": true
+  },
+  "testSummary": {
+    "tests": 53,
+    "pass": 53,
+    "fail": 0
+  },
+  "runs": {
+    "desktopFlow": "run-20261025-185100-6a4d70",
+    "safetyCheck": "runs/run-safety-check-2026-10-25_10-51-06/safety-check-result.json"
+  },
+  "evidence": {
+    "desktopFlow": [
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/prompt.md",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/meta.json",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/console.log",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/events.jsonl",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/001-focusWindow.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/002-opened.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/003-focusWindow.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/004-click.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/005-click.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/006-typeText.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/007-pressKey.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/008-typeText.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/009-filled.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/010-click.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/011-saved.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/012-focusWindow.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/013-click.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/014-click.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/015-validation-failed.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/016-focusWindow.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/017-click.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/018-typeText.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/019-click.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/screenshots/020-validate-partial.png",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/sidecar.log",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/steps.json",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/project.json",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/e2e-desktop/result.json",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/test.log",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/checkpoint.json",
+      "docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/report.md"
+    ],
+    "safetyCheck": "A8-A9-safety-check/safety-check-result.json",
+    "unitTestsLog": "unit-tests.log",
+    "resumeTestsLog": "m2-runtime-tests.log"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 1185
+    },
+    "unitTests": {
+      "exitCode": 0,
+      "durationMs": 8201
+    },
+    "desktopFlow": {
+      "exitCode": 0,
+      "durationMs": 5479
+    },
+    "safetyCheck": {
+      "exitCode": 0,
+      "durationMs": 10068
+    },
+    "resumeTests": {
+      "exitCode": 0,
+      "durationMs": 8138
+    }
+  }
+}

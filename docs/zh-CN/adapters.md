@@ -20,13 +20,24 @@
 
 ## 2. 桌面适配器（Windows 优先）
 
-- 能力：列出窗口、聚焦窗口、截图、点击、双击、右键、拖拽、输入文本、按键、UIA 可访问性树。
-- 白名单：只允许操作白名单进程/窗口标题；默认拒绝其他应用。
-- 证据：每步全屏/窗口截图 + 目标窗口标题 + 时间戳。
-- 安全：检测到密码框/凭据输入框 → 暂停并生成协助卡，由人输入；不做凭据代填。
-- 失败分类：窗口不存在 / 焦点丢失 / 元素不可达 / 超时 / 未知结果（一律暂停核对，不猜）。
-- 实现：`packages/steward-desktop`（Windows：UIA + SendInput + 截图）；文档化 Linux/macOS 路径；
-  可选兼容 cua-driver（与 DSH `dsh-computer-use` 语义对齐）。
+- 能力：列出窗口、聚焦窗口、截图、点击、双击、输入文本（Unicode）、按键、读窗口标题/前台状态、
+  凭据/安全提示检测。**M2 已实现上述能力**；右键、拖拽、滚轮、UIA 可访问性树为契约内后续迭代项。
+- 白名单：只允许操作白名单进程/窗口标题；默认拒绝其他应用（`DesktopAllowlistError`，
+  `failureKind: allowlist-denied`），键鼠注入前还有前台窗口双重校验。
+- 证据：每步窗口截图 + 目标窗口标题 + 时间戳；`steps.json` 记录每步证据路径与结构化数据。
+- 安全：检测到凭据/安全提示窗口（密码、UAC、验证码、人脸等关键词）→ 立即停止交人，不代填、
+  不读取、不记忆凭据；**已知边界：Windows 无法从任意窗口可靠识别「密码输入框」**，保证是
+  「检测到凭据/安全窗口就停」。
+- 失败分类：窗口不存在（`window-not-found`）/ 焦点丢失（`focus-lost`）/ 超时（`timeout`）/
+  白名单拒绝（`allowlist-denied`）/ 未知结果（`unknown`，一律暂停核对，不猜）。
+- **实现状态：M2 已实现** `packages/steward-desktop`（Windows：Python ctypes 侧车 + `SendInput`
+  真实键鼠 + `BitBlt` 截图 + Per-Monitor V2 DPI 感知；零第三方依赖）。细节见
+  [`packages/steward-desktop/README.md`](../../packages/steward-desktop/README.md)。
+- 证据布局（M2 实测）：`runs/<run-id>/e2e-desktop/` 下 `screenshots/`、`result.json`、`steps.json`、
+  `sidecar.log`；`npm run acceptance:m2` 会把关键证据复制到
+  `docs/test-evidence/evidence-m2-<stamp>/`（A3 真实桌面组）。
+- 平台：本阶段真实桌面验收只在 Windows 执行；Linux/macOS 路径见包 README 第 10 节
+  （X11/macOS Accessibility），契约语义不变、按平台替换实现层。
 
 ## 3. 模型 / Harness 适配器
 
@@ -38,6 +49,10 @@
 | `DeepSeekApiHarness` | 直连 API 的备选路径（联调用） | 环境变量 key | 规划（未实现） |
 
 Harness 只接收 CodeTask 文本，返回 CodeResult；不接触生产凭据、不执行部署。
+
+M2 未引入新的 Harness 实现：`DshHeadlessHarness` / `DeepSeekApiHarness` 仍为规划（建议 M3+ 接入）；
+真实浏览器与真实桌面验收均不依赖付费 API。核心已具备三个安全模块（`stop-controller` /
+`checkpoint` / `isolation`）供任何适配器/分支复用。
 
 M1 编码回路：`packages/steward-harness/src/patch.ts` 在**隔离 git worktree** 应用 `unified_diff`
 （不碰主工作区）；`loop.ts` 的 `runCodeLoop` 每轮跑真实浏览器验收，最多两轮，超限写
