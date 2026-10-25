@@ -1,10 +1,9 @@
 # 交付物与验收清单 / Delivery Checklist（中文）
 
 > 每条验收 = 编号 + 命令/操作 + 证据路径 + 最近结果（证据必须能打开）。
-> **阶段一（M0–M4）已完成并以 v0.5.0 发布：A1–A12 全部 `通过`。阶段二已完成并发布 v0.8.0：
-> P1 个人版 MVP（v0.6.0）B1/B2/B5/B6/B7 通过；P2 故障演练**短跑 + 真实长跑均通过**（B3/B4）；
-> P3 企业版 MVP（v0.8.0）B8 通过 + 30 条边界双模式表 —— 阶段二 B1–B8 全部通过。**
-> 最近一次更新：2026-10-26（阶段二 P2 长跑完成，v0.8.0 已发布）
+> **两阶段交付完成：阶段一（M0–M4）v0.5.0 —— A1–A12 全部 `通过`；阶段二 v0.6.0（P1）/ v0.8.0（P2+P3）
+> —— B1–B8 全部通过（B3/B4 含真实长跑）。最终发布 v1.0.0（GitHub Release，Latest，2026-10-26）。**
+> 最近一次更新：2026-10-26（v1.0.0 已发布 —— 两阶段交付完成）
 
 ## A. 阶段一（文档 1，12 条）
 
@@ -106,6 +105,13 @@
 > profile/entity/seal/dual-review/invoice/org-approval/dual-mode-orders/boundary-table/fixture-checks +
 > `unit-tests.log`，已脱敏）。
 
+> **最终验收结论（2026-10-26，v1.0.0 已发布 —— 两阶段交付完成）**：`package.json`/CLI **1.0.0**、
+> **151/151** 测试（16 文件）、**19 业务命令 + `help`**、**A1–A12 + B1–B8 全部通过**；GitHub Release
+> **v1.0.0**（Latest，tag `1e3b89f`，名称「v1.0.0 — 两阶段交付完成 / Two-Phase Delivery Complete」）
+> + **真实截图宣传片 3 个 Release Assets**（BGM 12,947,989 B / silent 10,169,266 B / poster 85,200 B；
+> 110s / 1280×720@30fps）；发布验证 `docs/test-evidence/release-v1.0.0-check.md` +
+> `docs/images/release-v1.0.0.png`；发布说明 `docs/RELEASE_NOTES_v1.0.0.md`。**项目交付完成。**
+
 ## B. 阶段二（文档 2，8 条）
 
 > P1（个人版 MVP）覆盖 **B1 / B2 / B5 / B6 / B7**（已通过）；**P2 故障演练覆盖 B3 / B4（短跑 +
@@ -126,14 +132,14 @@
 
 | # | 要求 | 证据 | 状态 |
 |---|---|---|---|
-| U1 | 全部 UI 测试真实浏览器/真实桌面，不用 API 代替 | E2E 截图（M1 A2/A4/A5、M2 A3，P1 控制台 `tests/e2e-console` 9 步/73 检查）+ CI 无头真实浏览器 E2E | ✅ 已满足（阶段一 + P1；CI 规则检查可在 P2 加强） |
-| U2 | 通知与协助（审批卡/handoff/接管） | 通知日志 + 协助卡截图 | 部分满足（P1 已有审批卡/接管键 + 交接包；Toast/邮件/Webhook 待 P3/P4） |
-| U3 | IoT 预留（契约 + 模拟 fixture） | 契约文档 + fixture 测试 | 未实现（P3/P4 stub） |
-| U4 | GitHub minzzj 发布、NC-SA 许可、双语文档 | 仓库 https://github.com/minzzj/daizhang-steward + LICENSE（CC BY-NC-SA 4.0）+ 双语文档 + **v0.8.0 Release（Latest，2026-10-26）**；v0.5.0/v0.6.0 为历史版本 | ✅ 已完成（v0.8.0） |
-| U5 | 宣传片（真实截图、双版本） | 成片 + STORYBOARD/FACTS | 未实现（P4；当前以真实命令演示脚本替代） |
-| U6 | 阶段一完成输出 HANDOFF 并停会话 | [HANDOFF.md](../../HANDOFF.md) 已更新到「阶段二 P2+P3 完成，v0.8.0 已发布」，阶段一/二均按约定交接 | ✅ 已完成 |
+| U1 | 全部 UI 测试真实浏览器/真实桌面，不用 API 代替 | E2E 截图（M1 A2/A4/A5、M2 A3，P1 控制台 `tests/e2e-console` 9 步/73 检查）+ CI 无头真实浏览器 E2E + 宣传片素材全部来自真实 E2E 截图 | ✅ 已满足（阶段一 + P1 + 宣传片） |
+| U2 | 通知与协助（审批卡/handoff/接管） | 通知日志 + 协助卡截图 | 部分满足（P1 审批卡/接管键/交接包；P2 本地通知文件留痕；Toast/邮件/Webhook 为可选后续扩展） |
+| U3 | IoT 预留（契约 + 模拟 fixture） | 契约文档 + fixture 测试 | 未实现（可选后续扩展 stub；v1.0.0 不含） |
+| U4 | GitHub minzzj 发布、NC-SA 许可、双语文档 | 仓库 https://github.com/minzzj/daizhang-steward + LICENSE（CC BY-NC-SA 4.0）+ 双语文档 + **v1.0.0 Release（Latest，最终版，2026-10-26）**；v0.5.0/v0.6.0/v0.8.0 为历史版本 | ✅ 已完成（v1.0.0） |
+| U5 | 宣传片（真实截图、双版本） | 成片 + STORYBOARD/FACTS | ✅ 已完成（v1.0.0 Release Assets：BGM 12,947,989 B / silent 10,169,266 B / poster 85,200 B，110s/1280×720@30fps；工程 `docs/media/promo/`） |
+| U6 | 阶段一完成输出 HANDOFF 并停会话 | [HANDOFF.md](../../HANDOFF.md) 已更新到最终版「v1.0.0 已发布，两阶段交付完成」，两阶段均按约定交接 | ✅ 已完成 |
 | U7 | 测试 key 不入库、日志脱敏、可轮换 | `npm run check:secrets` 通过；证据包已脱敏 | ✅ 已满足 |
-| U8 | 按 DSH 插件体系实现并复用插件 | 复用清单 + 依赖锁 | 设计完成（P3/P4 落地 MCP/插件集成） |
+| U8 | 按 DSH 插件体系实现并复用插件 | 复用清单 + 依赖锁 | 设计完成（MCP/插件集成为可选后续扩展） |
 
 ## D. 证据规范
 

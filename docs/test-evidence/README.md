@@ -26,7 +26,8 @@ docs/test-evidence/
 │                                             #   invoice/org-approval/dual-mode-orders/boundary-table/fixture-checks）
 ├── release-v0.5.0-check.md                   # v0.5.0 Release 发布验证记录
 ├── release-v0.6.0-check.md                   # v0.6.0 Release 发布验证记录
-├── release-v0.8.0-check.md                   # v0.8.0 Release 发布验证记录（P2+P3，Latest）
+├── release-v0.8.0-check.md                   # v0.8.0 Release 发布验证记录（P2+P3）
+├── release-v1.0.0-check.md                   # v1.0.0 Release 发布验证记录（最终版，Latest，含宣传片 Assets）
 ├── 2026-10-25-repo-publish.md                # GitHub 仓库发布验证记录
 └── README.md
 ```
@@ -54,7 +55,8 @@ docs/test-evidence/
 | [evidence-p3-2026-10-25_15-23-46/](evidence-p3-2026-10-25_15-23-46/) | P3 验收证据副本（18 文件）：`enterprise-run/`（`profile.json`、`entity-validation.json`、`seal-flow.json`、`dual-review.json`、`invoice-validation.json`、`org-approval.json`、`dual-mode-orders.json`、`boundary-table.{md,json}`（30 条）、`boundary-checks.json`、`fixture-checks.json`、`report.md`、`checkpoint.json` 等）+ `unit-tests.log`（151/151） |
 | [release-v0.5.0-check.md](release-v0.5.0-check.md) | v0.5.0 GitHub Release 发布验证记录（API + 真实浏览器截图） |
 | [release-v0.6.0-check.md](release-v0.6.0-check.md) | v0.6.0 GitHub Release 发布验证记录（API + 真实浏览器截图） |
-| [release-v0.8.0-check.md](release-v0.8.0-check.md) | **v0.8.0 GitHub Release 发布验证记录**（P2+P3 合并发布，Latest，tag `95b609a`；API + 真实浏览器截图，截图见 [`../images/release-v0.8.0.png`](../images/release-v0.8.0.png)） |
+| [release-v0.8.0-check.md](release-v0.8.0-check.md) | **v0.8.0 GitHub Release 发布验证记录**（P2+P3 合并发布，tag `95b609a`；API + 真实浏览器截图，截图见 [../images/release-v0.8.0.png](../images/release-v0.8.0.png)） |
+| [release-v1.0.0-check.md](release-v1.0.0-check.md) | **v1.0.0 GitHub Release 发布验证记录（最终版，Latest —— 两阶段交付完成）**：tag 1e3b89f、名称「v1.0.0 — 两阶段交付完成 / Two-Phase Delivery Complete」、非 draft/prerelease；**宣传片 3 个 Assets**（bgm 12,947,989 B / silent 10,169,266 B / poster 85,200 B，state=uploaded 且大小/SHA256 一致）；API + 真实浏览器截图，截图见 [../images/release-v1.0.0.png](../images/release-v1.0.0.png) |
 | [2026-10-25-repo-publish.md](2026-10-25-repo-publish.md) | GitHub 公开发布验证（REST API + 真实浏览器 + CI #1/#2） |
 
 - 截图与日志本体在 `runs/<run-id>/`（gitignored），测试结果文件引用其相对路径。
@@ -84,8 +86,12 @@ docs/test-evidence/
 - **v0.8.0 Release 验证**：[`release-v0.8.0-check.md`](release-v0.8.0-check.md) + 截图
   [`../images/release-v0.8.0.png`](../images/release-v0.8.0.png)（Release 页面 Latest、tag、说明与
   B1–B8 对照均由真实浏览器核对）。
+- **v1.0.0 Release 验证（最终版）**：[`release-v1.0.0-check.md`](release-v1.0.0-check.md) + 截图
+  [`../images/release-v1.0.0.png`](../images/release-v1.0.0.png)（API + 真实浏览器双通道：Latest、
+  tag `1e3b89f`、双语说明、A1–A12/B1–B8 对照、宣传片 3 Assets）；宣传片工程与分镜见
+  [`../media/promo/`](../media/promo/)。
 - M1–M4 / P1/P2/P3 acceptance bundle 复制进仓库前用 `scripts/sanitize.mjs` 脱敏（替换本机绝对路径与临时
   worktree 路径），因此 `evidence-m1-*`…`evidence-p3-*` 内不含本机路径；
   `scripts/sanitize-evidence.mjs` 仅用于对既有 bundle 做一次性脱敏。
 
-_最后更新：2026-10-26（阶段二 P2 长跑完成 + P3 企业版，v0.8.0 已发布；B1–B8 全部通过）。_
+_最后更新：2026-10-26（两阶段交付完成，v1.0.0 已发布（Latest）；含真实截图宣传片 3 Assets）。_

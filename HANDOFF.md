@@ -1,22 +1,18 @@
 # HANDOFF / 交接状态
 
 > 给下一次会话（或下一位执行者）的现状交接。每次里程碑结束更新。
-> 最后更新：2026-10-26（**阶段二 P2 + P3 完成，v0.8.0 已发布**；
-> 下一步 P4 v1.0.0/宣传片）
+> 最后更新：2026-10-26（**v1.0.0 已发布 —— 两阶段交付完成（Latest）**；项目交付完成，
+> 之后仅按需做可选扩展）
 
 ## 当前状态（一句话）
 
-**阶段二 P2（故障演练）+ P3（企业版）已完成，v0.8.0 已发布（GitHub Release，Latest）**：
-在阶段一内核（A1–A12 通过）与 P1 个人版（v0.6.0）之上，新增
-`packages/steward-fault` 故障演练（真实 localhost HTTP 断网/封禁、离线承诺闸门、幂等 Outbox 重放、
-替代方案 + 本地通知；**短跑 11/11 + 真实长跑均通过**：断网 120min → 1435 次承诺被拒/0 新增、
-1435 条动作全部补记、`duplicates_found=0`；封禁 15min → 9ms 检测、180 次尝试 0 成功、5 条替代方案）、
-`packages/steward-enterprise` 企业版（主体/授权/用印、对公账户、专票校验、发票/申报仅草稿、
-双人复核、组织审批链、AI 不代签、B8 双模式 6 类不一致阻断、30 条边界双模式表）、
-`examples/demo-platform` 与 `examples/demo-enterprise`；CLI 新增 `fault-drill`、`enterprise-demo` →
-**19 个已实现命令 + 0 个占位**。**151/151** 测试（16 个文件）；阶段二 **B1–B8 全部通过**
-（P3 验收 12/12 检查）；代码已推送 GitHub `main`（v0.8.0 tag `95b609a`）；**下一步 P4
-（v1.0.0 + 宣传片）**。
+**v1.0.0 已发布（GitHub Release，Latest，两阶段交付完成）**：阶段一（v0.5.0）操作型 AI 内核
+（A1–A12 全部通过）+ 阶段二经营代理（v0.6.0 P1 个人版、v0.8.0 P2 真实故障演练 / P3 企业版，
+B1–B8 全部通过）。最终版本 **1.0.0**（package.json/CLI 同步）、**151/151** 测试（16 文件）、
+**19 个已实现命令 + `help`**（0 占位）、中英双语文档、CC BY-NC-SA 4.0 许可证、完整证据归档，并附
+**真实截图宣传片 3 个 Release Assets**（BGM / silent / poster；110s / 1280×720@30fps，工程与分镜
+`docs/media/promo/`）；发布验证 `docs/test-evidence/release-v1.0.0-check.md` +
+`docs/images/release-v1.0.0.png`，发布说明 `docs/RELEASE_NOTES_v1.0.0.md`。**项目交付完成；后续仅可选扩展。**
 
 ## M0 已完成清单（2026-10-25）
 
@@ -198,6 +194,26 @@
 - [x] P2/P3 提交已推送 `main`（P2 `a41fe68`、P3 `0185e50`）；**`package.json` 与 CLI 已升 0.8.0，
   P2+P3 已通过 GitHub Release v0.8.0 发布（tag `95b609a`）**
 
+## P4 已完成清单（2026-10-26，最终发布 → **v1.0.0 已发布，两阶段交付完成**）
+
+- [x] **版本 1.0.0**：`package.json` + CLI `VERSION` 同步 1.0.0；全量 **151/151** 测试（16 文件）、
+  **19 个业务命令 + `help`**、0 占位
+- [x] **最终双语文档终审**：README 中英、docs/zh-CN + docs/en 配对、`enterprise.md` 中英、
+  `RELEASE_NOTES_v1.0.0.md` 双语；A1–A12 / B1–B8 验收对照完整写入发布说明
+- [x] **真实截图宣传片**：HyperFrames（HTML/GSAP）+ 代码合成 BGM（120 BPM、无人声、无外部素材/字体/
+  网络请求），素材为 M1 真实浏览器 / M2 真实 Windows 桌面 / P1 控制台真实 E2E 截图（15 张，无重绘）；
+  `hyperframes check` ok:true（lint 0/0、runtime 0、layout 0、motion 0、contrast 45/45 WCAG AA）——
+  `daizhang-steward-promo-v1.0-bgm.mp4` 12,947,989 B / `-silent.mp4` 10,169,266 B /
+  `-poster.jpg` 85,200 B（110s / 1280×720@30fps / H.264+AAC）；工程与分镜 `docs/media/promo/`
+- [x] **GitHub Release v1.0.0（Latest，两阶段交付完成）**：tag 指向 `1e3b89f`，名称
+  「v1.0.0 — 两阶段交付完成 / Two-Phase Delivery Complete」，非 draft/prerelease；3 个宣传片 Assets
+  `state=uploaded`，大小/SHA256 与本地渲染一致；发布说明 `docs/RELEASE_NOTES_v1.0.0.md`
+- [x] 发布验证：`docs/test-evidence/release-v1.0.0-check.md` + `docs/images/release-v1.0.0.png`
+  （GitHub REST API + 真实浏览器双通道核对 Release 页面/Assets）
+- [x] 文档全量更新到「v1.0.0 已发布 / 两阶段交付完成」：README 中英、ROADMAP、HANDOFF、
+  CHANGELOG `[1.0.0]`、delivery-checklist 中英、architecture 中英、docs/README、
+  test-evidence/README、images/README、packages/apps/tests/examples README、ASSUMPTIONS
+
 ## 现在能做什么
 
 | 操作 | 命令 | 说明 |
@@ -251,10 +267,11 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
 （只起草，不发送）；`console` 支持 `--port <端口>`（默认 4180）；`takeover --resume` 恢复运行；
 `fault-drill --case net-outage|platform-ban` 支持 `--outage-minutes` / `--ban-minutes`。
 
-## 还不能做什么
+## 还不能做什么（v1.0.0 已交付；以下为**可选后续扩展**，不属于本次交付）
 
-- **P4 尚未开始**：v1.0.0、最终 GitHub Release、验收包、真实截图宣传片（BGM+静音）属于 P4；
-  阶段一以真实命令演示脚本（`docs/demo-script.*`）替代宣传片，正式宣传片计划 P4。
+- **可选扩展**：通知通道（Windows Toast/邮件/Webhook/交接流程）、IoT 适配器（stub）、MCP server、
+  真实 DSH/DeepSeek Harness 接入、真实银行/税务/CA/电子签章系统对接、企业专属 UI、
+  强杀恢复/72h 失联/循环超限等扩展故障演练——均为交付后的可选增强，v1.0.0 不包含。
 - 桌面适配器暂无 **UIA 可访问性树**、拖拽、滚轮/触控板手势、右键菜单语义、剪贴板、多窗口批处理
   会话编排——M2 已实现真实键鼠 + 截图 + 白名单的核心能力，其余按契约留待后续迭代。
 - Scout **没有真实来源抓取与真实发送通道**（按产品边界：M3 只做 fixture 驱动、只起草不发送；
@@ -265,13 +282,13 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
   无头 E2E、Scout/business/boundary/fault/enterprise demo、`dummy-branch`、`safety-check` 与 build）。
 - 不能调用真实 DSH / DeepSeek Harness——目前用 MockHarness + 脚本化补丁（真实浏览器/桌面/Scout/
   经营域/故障演练/企业版验收已跑通）。
-- **版本与发布已完成**：`package.json` 与 CLI 均为 **0.8.0**；P2+P3 已通过 GitHub Release **v0.8.0**
-  发布（tag `95b609a`，Latest）；v0.5.0 / v0.6.0 为历史版本。剩余工作只有 P4（v1.0.0 + 宣传片）。
+- **版本与发布已完成**：`package.json` 与 CLI 均为 **1.0.0**；v1.0.0 已通过 GitHub Release 发布
+  （Latest）；v0.5.0 / v0.6.0 / v0.8.0 为历史版本。**项目交付完成、无阻塞待办。**
 
 ## 代码在哪
 
 - **权威仓库（唯一开发位置）**：`H:\minzzj文件\技术部\项目\官方\代掌\daizhang-steward`
-  （GitHub `main` 分支；**v0.8.0 tag 指向提交 `95b609a`**；后续发布验证提交 `78aee5f`；
+  （GitHub `main` 分支；**v1.0.0 tag 指向提交 `1e3b89f`**；发布验证提交 `ae6618f`；
   不要 git commit，除非用户明确要求）
 - **C: 旧副本为归档**：`C:\daizhang-build\daizhang-steward` 只读参考，**不要再在这里改文件**。
 - **方案文档**：`H:\minzzj文件\技术部\项目\官方\代掌\代掌-实施总方案-v0.1.md`
@@ -279,21 +296,32 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
   `tsconfig.json` 把 `packages/*/src` + `apps/cli/src` 编译到 `dist/`，所有命令用 **npm**。
 - H: exFAT 的写入限制见下方「本机踩坑」第 3/4 条。
 
-## 发布状态（2026-10-26）
+## 发布状态（2026-10-26，最终）
 
 - **GitHub 公开仓库**：https://github.com/minzzj/daizhang-steward（2026-10-25 创建；发布验证见
   [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)）
-- **v0.8.0 Release（Latest）**：https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0
-  （阶段二 P2+P3 合并发布，2026-10-26；tag `95b609a`；发布说明
-  [`docs/RELEASE_NOTES_v0.8.0.md`](docs/RELEASE_NOTES_v0.8.0.md)；验证
-  [`docs/test-evidence/release-v0.8.0-check.md`](docs/test-evidence/release-v0.8.0-check.md) +
-  [`docs/images/release-v0.8.0.png`](docs/images/release-v0.8.0.png)）
-- **v0.5.0 Release（历史）**：https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0
-  （阶段一发布，2026-10-25；发布说明见 [`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md)）
+- **v1.0.0 Release（Latest，最终版 —— 两阶段交付完成）**：
+  https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0 （2026-10-26；tag 指向提交
+  `1e3b89f`；名称「v1.0.0 — 两阶段交付完成 / Two-Phase Delivery Complete」；非 draft/prerelease；
+  发布说明 [`docs/RELEASE_NOTES_v1.0.0.md`](docs/RELEASE_NOTES_v1.0.0.md)；验证
+  [`docs/test-evidence/release-v1.0.0-check.md`](docs/test-evidence/release-v1.0.0-check.md) +
+  [`docs/images/release-v1.0.0.png`](docs/images/release-v1.0.0.png)）
+  - **宣传片 3 个 Release Assets（真实截图）**：
+    [`daizhang-steward-promo-v1.0-bgm.mp4`](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-bgm.mp4)
+    （12,947,989 B，110s / 1280×720@30fps，H.264+AAC）·
+    [`silent`](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-silent.mp4)
+    （10,169,266 B，无音轨）·
+    [`poster`](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-poster.jpg)
+    （85,200 B）；工程与分镜 [`docs/media/promo/`](docs/media/promo/)（README/STORYBOARD/FACTS/poster.jpg）
+- **v0.8.0 Release（历史）**：https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0
+  （阶段二 P2+P3 合并发布，2026-10-26；验证
+  [`docs/test-evidence/release-v0.8.0-check.md`](docs/test-evidence/release-v0.8.0-check.md)）
 - **v0.6.0（P1，历史）**：已发布并验证（见 [`docs/test-evidence/release-v0.6.0-check.md`](docs/test-evidence/release-v0.6.0-check.md)、
   [`docs/RELEASE_NOTES_v0.6.0.md`](docs/RELEASE_NOTES_v0.6.0.md)）
-- **代码位置**：GitHub `main` 分支（v0.8.0 tag `95b609a`；当前 `package.json` 版本 **0.8.0**，
-  CLI `VERSION` 同步 0.8.0；**P2/P3 已随 v0.8.0 发布**）。
+- **v0.5.0 Release（历史，阶段一）**：https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0
+  （发布说明 [`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md)）
+- **代码位置**：GitHub `main` 分支（v1.0.0 tag `1e3b89f`；当前 `package.json` 版本 **1.0.0**，
+  CLI `VERSION` 同步 1.0.0；**两阶段交付完成，无后续发版计划**）。
 - **M0 验证证据**：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md /
   events.jsonl / code-task.json / code-result.json 等）与
   [`docs/test-evidence/test-result-2026-10-25_09-52-08.md`](docs/test-evidence/test-result-2026-10-25_09-52-08.md)
@@ -390,21 +418,20 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
     发票与申报只出草稿，用印 `ai_may_sign=false`；不要把 fixture 用于真实签约/收款/开票/申报。
     CI 只跑 `enterprise-demo`（B8 + 30 条边界），有头/真实数据验收仅本机。
 
-## 下一步（按序执行）
+## 下一步（顺序可选，均为交付后增强）
 
-0. **推送状态**：阶段一（v0.5.0）与阶段二 P1（v0.6.0）/ P2+P3（v0.8.0）均已推送并发布；
-   `main` 最新发布验证提交 `78aee5f`，v0.8.0 tag `95b609a`（Latest）。**阶段二 P2/P3 已全部完成。**
-1. **P4 发布与宣传片（下一步）**：双语文档终审、30 条边界与 8 条验收完整对照、真实截图宣传片
-   （BGM/静音双版本）、v1.0.0 版本号 + GitHub Release + 发布验证。
-2. 按用户要求继续（或视额度停会话）；新会话从本文件 + [ROADMAP.md](ROADMAP.md) 续。
+0. **推送状态**：两阶段全部完成并发布——v0.5.0 / v0.6.0 / v0.8.0 / **v1.0.0（最终版，Latest）**；
+   `main` 最新发布验证提交 `ae6618f`，v1.0.0 tag `1e3b89f`。**项目交付完成。**
+1. **可选后续扩展（非必须）**：通知通道（Toast/邮件/Webhook）、IoT 适配器（stub）、MCP server、
+   真实 DSH/DeepSeek Harness 接入、真实银行/税务/CA/电子签章对接、企业专属 UI、扩展故障演练
+   （强杀恢复/72h 失联/循环超限）——按用户新需求再启动，不属于 v1.0.0 范围。
+2. 新会话从本文件 + [ROADMAP.md](ROADMAP.md) 续。
 
-## 等待用户确认的事项
+## 等待用户确认的事项（最终）
 
-- [ ] 是否继续 P4（v1.0.0/宣传片）——默认按 ROADMAP 继续
-- [ ] 测试 key 仅用于联调（默认是；建议联调后轮换）
+- [x] **两阶段交付完成，v1.0.0 已发布（Latest）**
 - [x] GitHub 认证（已通过本机凭据完成建仓与推送；令牌未落盘）
 - [x] 仓库名（`minzzj/daizhang-steward` 已创建）
-- [x] 第一阶段发布平台（GitHub public 仓库已发布；v0.5.0 Release 已创建）
 - [x] M0 验收（2026-10-25：A1/A6/A12 通过）
 - [x] M1 验收（2026-10-25：A2/A4/A5/A6 通过；`npm run acceptance` OK）
 - [x] M2 验收（2026-10-25：A3/A8/A9 通过；`npm run acceptance:m2` OK）
@@ -414,15 +441,16 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
 - [x] P2 验收 / 阶段二故障演练（2026-10-26：B3/B4 短跑 11/11 + 真实长跑通过；v0.8.0）
 - [x] P3 验收 / 阶段二企业版 MVP（2026-10-25：B8 通过 + 30 条边界；`npm run acceptance:p3` OK，
   151/151 测试，v0.8.0）
-- [x] 阶段二发布（2026-10-26：GitHub Release **v0.8.0** 已发布并验证，Latest）
-- [ ] P4 v1.0.0 发布与宣传片
+- [x] 阶段二发布（2026-10-26：GitHub Release **v0.8.0** 已发布并验证）
+- [x] **最终发布（2026-10-26：GitHub Release v1.0.0 已发布并验证，Latest；宣传片 3 Assets 上传完成）**
+- [ ] （可选）后续增强的需求与优先级（通知/IoT/MCP/真实系统对接/企业 UI 等）——按需再启动
 
 ## 已知风险
 
 见 [ASSUMPTIONS.md](ASSUMPTIONS.md) 与方案 §11：DSH RC 版本漂移、Windows 桌面自动化稳定性、
 GitHub 认证、非商用许可预期、法律边界需人工复核、额度控制。
 
-## 交接给后续阶段（P4 及以后）的内容
+## 交接给后续（可选扩展）的内容
 
 - [x] M0 验收证据索引：`runs/run-20261025-172017-eb9116/` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md`
 - [x] M1 验收证据索引：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
@@ -449,5 +477,7 @@ GitHub 认证、非商用许可预期、法律边界需人工复核、额度控�
   申报草稿/组织审批链；`docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`；
   `docs/zh-CN/enterprise.md` + `docs/en/enterprise.md`）
 - [x] 阶段二发布验证：`docs/test-evidence/release-v0.8.0-check.md` + `docs/images/release-v0.8.0.png`
-  （v0.8.0 Release，Latest，tag `95b609a`）
-- [ ] P4 v1.0.0 发布与宣传片（BGM/静音双版本）
+- [x] **最终发布（v1.0.0）**：`docs/test-evidence/release-v1.0.0-check.md` +
+  `docs/images/release-v1.0.0.png`；发布说明 `docs/RELEASE_NOTES_v1.0.0.md`；宣传片 3 Assets
+  （BGM/silent/poster，工程与分镜 `docs/media/promo/`）；**两阶段交付完成**
+- [ ] 可选后续扩展（通知通道、IoT、MCP、真实 DSH Harness、真实银行/税务/CA 对接、企业 UI、扩展故障演练）

@@ -1,6 +1,6 @@
 # 企业版 / Enterprise Edition（中文）
 
-> 状态：**阶段二 P2+P3（企业版 MVP）已完成并通过验收（B8 通过），v0.8.0 已发布（2026-10-26，GitHub Release Latest）**；交付版本 **v0.8.0**（[Release](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0)）。实现：`packages/steward-enterprise`；验收：
+> 状态：**阶段二 P2+P3（企业版 MVP）已完成并通过验收（B8 通过）；两阶段已最终发布 v1.0.0（2026-10-26，GitHub Release Latest）；本模块随 v0.8.0 发布**。实现：`packages/steward-enterprise`；验收：
 > [`p3-acceptance-2026-10-25_15-23-46.{md,json}`](../test-evidence/p3-acceptance-2026-10-25_15-23-46.md)
 > + [`evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/)（18 文件，已脱敏）。
 > **纯本地、全部数据为虚构**：不连接真实银行/税务/CA/电子签章平台，不产生真实资金、发票与申报；
@@ -130,4 +130,4 @@ build、**151/151** 测试、B8 双模式、B8 六类阻断、30 条边界表、
 - 模块文档：[`packages/steward-enterprise/README.md`](../../packages/steward-enterprise/README.md)
 - 验收证据：[`docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/)
 
-_最后更新：2026-10-26（P2+P3 完成，v0.8.0 已发布）。/ Last updated: 2026-10-26 (P2+P3 complete; v0.8.0 released)._
+_最后更新：2026-10-26（两阶段交付完成，v1.0.0 已发布；本模块随 v0.8.0 发布）。/ Last updated: 2026-10-26 (two-phase delivery complete; v1.0.0 released; this module shipped in v0.8.0)._

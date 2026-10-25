@@ -5,14 +5,44 @@
 
 ## [Unreleased]
 
-### Planned — Phase 2 (remaining → P4)
-- **P4 发布**：v1.0.0 + GitHub Release + 验收包 + 真实截图宣传片（BGM/静音双版本）+ 双语文档终审 +
-  30 条边界与 8 条验收完整对照
+### Planned — 交付后的可选后续扩展（不属于 v1.0.0 范围）
 - 强杀恢复、72h 失联、循环超限等扩展故障演练（`tests/fault/` 端到端）
 - 通知与协助：Windows Toast / 邮件 / Webhook / 交接流程
 - IoT 适配器契约（stub）+ MCP server
+- 真实 DSH / DeepSeek Harness 接入
 - 企业专属 UI（企业看板/工作流页面）
-- 真实银行/税务/CA/电子签章系统对接（P4 后）
+- 真实银行/税务/CA/电子签章系统对接
+
+## [1.0.0] — 2026-10-26
+
+### Added — 最终发布：两阶段交付完成（Two-Phase Delivery Complete）
+
+- **版本 1.0.0**：`package.json` 与 CLI `VERSION` 同步 `1.0.0`；全量 **151/151** 单元+集成测试通过
+  （16 个测试文件）；CLI **19 个已实现命令 + `help` 入口**（0 占位）。
+- **GitHub Release v1.0.0（Latest，两阶段交付完成）**：
+  https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0 （tag 指向提交 `1e3b89f`；名称
+  「v1.0.0 — 两阶段交付完成 / Two-Phase Delivery Complete」；非 draft/prerelease；发布说明
+  `docs/RELEASE_NOTES_v1.0.0.md` 中英双语）。
+- **真实截图宣传片（Release Assets，3 个）**：`daizhang-steward-promo-v1.0-bgm.mp4`
+  （12,947,989 B，110s / 1280×720@30fps / H.264+AAC 立体声）、`daizhang-steward-promo-v1.0-silent.mp4`
+  （10,169,266 B，静音无音轨）、`daizhang-steward-promo-v1.0-poster.jpg`（85,200 B）；制作
+  HyperFrames（HTML/GSAP）+ 代码合成 BGM（120 BPM、无人声、无外部素材/字体/网络请求），素材全部为
+  M1 真实浏览器 / M2 真实 Windows 桌面 / P1 控制台真实 E2E 截图（15 张，无重绘），
+  `hyperframes check` ok:true（lint 0 error/0 warning、contrast 45/45 WCAG AA）。
+- **媒体工程 `docs/media/promo/`**：README / STORYBOARD / FACTS / poster.jpg（分镜与事实核对，
+  可复现制作过程）。
+- **发布验证**：`docs/test-evidence/release-v1.0.0-check.md` + `docs/images/release-v1.0.0.png`
+  （GitHub REST API + 真实浏览器双通道：Release 页面、Latest 徽标、tag/提交、双语说明、3 个 Assets
+  state=uploaded 且大小/SHA256 与本地一致）。
+- **交付结论**：阶段一 **A1–A12 全部通过**（v0.5.0）、阶段二 **B1–B8 全部通过**（v0.6.0 P1 /
+  v0.8.0 P2+P3）；中英双语文档、CC BY-NC-SA 4.0 许可证、完整证据归档（M0–M4 + P1/P2/P3 + 真实长跑 +
+  发布验证）；**两阶段交付完成**。
+
+### Changed
+- 文档全量更新到「v1.0.0 已发布 / 两阶段交付完成」最终状态：README 中英（Release + 宣传片 3 个
+  Assets 链接 + 两阶段全 ✅）、ROADMAP（P4 ✅ + 完成结论块 + 后续可选扩展）、HANDOFF（最终版）、
+  CHANGELOG `[1.0.0]`、delivery-checklist 中英（最终结论 + U 表）、architecture 中英、
+  docs/README、test-evidence/README、images/README、packages/apps/tests/examples README、ASSUMPTIONS。
 
 ## [0.8.0] — 2026-10-26
 
@@ -307,7 +337,8 @@
 - 双语文档骨架：architecture / contracts / threat-model / adapters / runtime-prompts / delivery-checklist
 - 脚手架自检 `pnpm check`、密钥扫描 `pnpm check:secrets`、交付同步脚本 `scripts/sync-delivery.ps1`
 
-[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0
 [0.8.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0
 [0.7.0]: https://github.com/minzzj/daizhang-steward/compare/v0.6.0...a41fe68
 [0.6.0]: https://github.com/minzzj/daizhang-steward/compare/v0.5.0...2db8da3

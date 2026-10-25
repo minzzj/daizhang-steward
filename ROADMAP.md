@@ -17,7 +17,7 @@
 | 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ✅ 完成（2026-10-25；B1/B2/B5/B6/B7 通过，`npm run acceptance:p1` OK，**v0.6.0**；证据 `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` + `evidence-p1-2026-10-25_14-18-54/`） |
 | 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ✅ 完成（2026-10-26；**B3/B4 短跑 + 真实长跑均通过**：断网 120min → 1435 次承诺被拒/0 新增、1435 条动作全部补记、`duplicates_found=0`；封禁 15min → 9ms 检测、180 次尝试 0 成功、5 条替代方案；`npm run acceptance:p2` 短跑 11/11 OK、`npm run drill:long` 长跑通过；证据 `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` + `evidence-p2-2026-10-25_15-02-52/`（短跑）与 `long-drill-2026-10-25_15-02-52.{md,json}` + `evidence-long-drill-2026-10-25_15-02-52/`（长跑，11 文件）；已随 **v0.8.0** 发布） |
 | 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ✅ 完成（2026-10-25；**B8 通过** + 30 条边界双模式表，`npm run acceptance:p3` OK，**v0.8.0 已发布**；证据 `docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` + `evidence-p3-2026-10-25_15-23-46/`；边界表全文见 `docs/zh-CN/enterprise.md`） |
-| 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ 下一步（v0.8.0 已发布，P4 冲刺 v1.0.0） |
+| 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ✅ 完成（2026-10-26；**v1.0.0 已发布（Latest，两阶段交付完成）**；宣传片 3 个 Release Assets：BGM 12,947,989 B / silent 10,169,266 B / poster 85,200 B，110s / 1280×720@30fps，真实 E2E 截图；工程与分镜 `docs/media/promo/`；发布验证 `docs/test-evidence/release-v1.0.0-check.md` + `docs/images/release-v1.0.0.png`；发布说明 `docs/RELEASE_NOTES_v1.0.0.md`） |
 
 > **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过；`npm run check`、`npm run check:secrets`、
 > `npm test`（30/30）、`npm run demo`、`npm run evidence` 全部退出码 0。证据：
@@ -123,6 +123,22 @@
 > `docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`（18 文件：enterprise-run 的
 > profile/entity/seal/dual-review/invoice/org-approval/dual-mode-orders/boundary-table/fixture-checks +
 > `unit-tests.log`，已脱敏）。
+>
+> **P4 验收结论（2026-10-26，最终发布，v1.0.0）**：**v1.0.0 已公开发布**（
+> [GitHub Release](https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0)，Latest，tag 指向
+> 提交 `1e3b89f`，名称「v1.0.0 — 两阶段交付完成 / Two-Phase Delivery Complete」，非 draft/prerelease）。
+> 发布内容：版本 **1.0.0**（package.json/CLI 同步）、**151/151** 测试（16 文件）、**19 业务命令 +
+> `help`**、阶段一 **A1–A12** 与阶段二 **B1–B8 全部通过**、中英双语文档、CC BY-NC-SA 4.0 许可证、
+> 完整证据归档；**真实截图宣传片 3 个 Release Assets**（`daizhang-steward-promo-v1.0-bgm.mp4`
+> 12,947,989 B / `daizhang-steward-promo-v1.0-silent.mp4` 10,169,266 B / `daizhang-steward-promo-v1.0-poster.jpg`
+> 85,200 B；110s / 1280×720 / 30fps，HyperFrames + 代码合成 BGM，素材为真实 E2E 截图，
+> `hyperframes check` ok:true、WCAG AA 对比度 45/45）；工程与分镜 `docs/media/promo/`。发布验证
+> `docs/test-evidence/release-v1.0.0-check.md` + `docs/images/release-v1.0.0.png`（API + 真实浏览器双通道，
+> 3 个资产 state=uploaded 且大小/SHA256 一致）。**两阶段交付完成。**
+>
+> **后续可选扩展（不属于 v1.0.0 交付范围，未来按需推进）**：通知通道（Toast/邮件/Webhook）、
+> IoT 适配器（stub）、MCP server、真实 DSH/DeepSeek Harness 接入、真实银行/税务/CA/电子签章系统对接、
+> 企业专属 UI、强杀恢复/72h 失联/循环超限等扩展故障演练。
 
 ## 每个里程碑的 Definition of Done
 
@@ -145,7 +161,8 @@
 
 - 每个里程碑完成即汇报，等用户确认（或用户明确“连续做完阶段二”）。
 - 阶段一完成 → 输出 HANDOFF → **结束会话**；阶段二在新会话从 HANDOFF 继续。
-- 当前：阶段一 v0.5.0、P1 v0.6.0、P2+P3（v0.8.0）均已发布；**P4 v1.0.0/宣传片**是剩余步骤。
+- 当前：**两阶段全部完成**——阶段一 v0.5.0、阶段二 v0.6.0（P1）/ v0.8.0（P2+P3）/ **v1.0.0（最终版，Latest）**；
+  v1.0.0 之后仅按需做可选扩展。
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
-_Last updated: 2026-10-26 (Phase 2 P2 + P3 complete — v0.8.0 released; B3/B4 real long run passed; next: P4 v1.0.0 + promo video)._
+_Last updated: 2026-10-26 (v1.0.0 released — two-phase delivery complete; optional future extensions only)._

@@ -1,12 +1,12 @@
 # Apps
 
-> 状态：**阶段一 v0.5.0 已完成；阶段二 P1（v0.6.0）、P2 故障演练（短跑 + 真实 120min/15min 长跑）与
-> P3 企业版（v0.8.0）已全部完成并合并发布 v0.8.0**：`apps/cli` 已实现 `steward` 命令（**19 个业务命令 +
-> `help` 入口，0 个占位**）；`profile`（DSH 驾驶舱）仍为规划（可选，P4 阶段接入即可）。
+> 状态：**两阶段交付完成，最终发布 v1.0.0（Latest，2026-10-26）**：阶段一 v0.5.0 + 阶段二 P1（v0.6.0）/
+> P2 故障演练（短跑 + 真实 120min/15min 长跑）/ P3 企业版（v0.8.0）；`apps/cli` 已实现 `steward` 命令
+> （**19 个业务命令 + `help` 入口，0 个占位**）；`profile`（DSH 驾驶舱）仍为规划（可选后续扩展）。
 
 | App | 说明 | 状态 |
 |---|---|---|
-| `cli` | `steward` 命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-branch` / `business` / `console` / `boundary-check` / `fault-drill` / `enterprise-demo` / `approve` / `takeover` / `code-loop` / `run` / `branch` / `report` / `stop` / `safety-check` / `version`（别名 `demo-browser` / `demo-code-loop` / `demo-desktop` / `demo-dummy` / `demo-business` / `demo-enterprise`；`help` 为入口命令）。`run` 支持 `--resume <runId>` 从检查点恢复，`scout` 支持 `--fixture <path>`（只起草、不发送），`console` 支持 `--port <端口>`（默认 4180，只监听 127.0.0.1），`takeover --resume` 恢复运行，`fault-drill` 支持 `--case net-outage\|platform-ban` 与 `--outage-minutes`/`--ban-minutes`；`takeover`/`approve` 自 P1 起为真实人工命令。阶段一 + 阶段二主接口。 | ✅ M0–P3 已实现（v0.8.0 已发布） |
+| `cli` | `steward` 命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-branch` / `business` / `console` / `boundary-check` / `fault-drill` / `enterprise-demo` / `approve` / `takeover` / `code-loop` / `run` / `branch` / `report` / `stop` / `safety-check` / `version`（别名 `demo-browser` / `demo-code-loop` / `demo-desktop` / `demo-dummy` / `demo-business` / `demo-enterprise`；`help` 为入口命令）。`run` 支持 `--resume <runId>` 从检查点恢复，`scout` 支持 `--fixture <path>`（只起草、不发送），`console` 支持 `--port <端口>`（默认 4180，只监听 127.0.0.1），`takeover --resume` 恢复运行，`fault-drill` 支持 `--case net-outage\|platform-ban` 与 `--outage-minutes`/`--ban-minutes`；`takeover`/`approve` 自 P1 起为真实人工命令。阶段一 + 阶段二主接口。 | ✅ M0–P4 已实现（随 v1.0.0 最终交付） |
 | `profile` | 可选「DSH 驾驶舱」：`dsh --profile daizhang web`，挂载 `steward-mcp` + `dsh-browser` + `dsh-computer-use` + Agent Teams，供人观察/审批/接管。 | 规划（P4 可选） |
 
 v0.8.0（已发布）构建与运行（单包布局，命令用 npm，不用 pnpm）：

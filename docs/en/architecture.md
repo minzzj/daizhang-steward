@@ -1,10 +1,9 @@
 # Architecture
 
-> Status: design fixed; **Phase 1 (M0–M4) is fully implemented and released as v0.5.0; Phase 2 P1
-> personal-edition MVP was delivered as v0.6.0; P2 fault drills are complete (short run + the real
-> 120-minute outage / 15-minute ban long run both passed); P3 enterprise MVP is implemented and
-> Phase 2 was released together as v0.8.0 (2026-10-26)**;
-> P4 (v1.0.0 + promo video) proceeds per the ROADMAP.
+> Status: design fixed; **two-phase delivery complete — Phase 1 (M0–M4) v0.5.0 (A1–A12 all pass);
+> Phase 2 v0.6.0 (P1) / v0.8.0 (P2 fault drills incl. the real long run, P3 enterprise edition;
+> B1–B8 all pass); final release v1.0.0 (Latest, 2026-10-26, with the real-screenshot promo video)**.
+> Only optional future extensions remain — see the ROADMAP.
 > Companions: `contracts.md`, `threat-model.md`, `adapters.md`, `docs/en/enterprise.md` (enterprise
 > edition + the 30-rule dual-mode boundary table).
 

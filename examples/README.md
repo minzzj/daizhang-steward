@@ -1,9 +1,8 @@
 # Examples
 
-> 状态：**阶段一 v0.5.0 已完成 + 阶段二 P1 v0.6.0 / P2（短跑 + 真实长跑）/ P3 v0.8.0（已发布，
-> Latest）已交付** — demo-web / demo-desktop / mock-harness（M0）、scout-fixtures（M3）、
-> **demo-business（P1）**、**demo-platform（P2）** 与 **demo-enterprise（P3）**；全部为本地可跑演示
-> 素材，不依赖真实客户与真实资金。
+> 状态：**两阶段交付完成，最终发布 v1.0.0（Latest，2026-10-26）** — demo-web / demo-desktop /
+> mock-harness（M0）、scout-fixtures（M3）、**demo-business（P1）**、**demo-platform（P2）** 与
+> **demo-enterprise（P3）**；全部为本地可跑演示素材，不依赖真实客户与真实资金。
 
 | 目录 | 内容 | 用于 | 状态 |
 |---|---|---|---|
@@ -13,7 +12,7 @@
 | `scout-fixtures/` | **14 条纯虚构合规线索**（`leads.json`，含来源 URL/信号/评分/合规依据；保留域名、无真实个人信息）+ README.zh-CN | A7 Scout 验收与 `scout` CLI 演示 | ✅ M3 已实现 |
 | `demo-business/` | **P1 仿真个人版业务线**（`business-line.json` + README.zh-CN，20 个顶层 section）：3 条候选业务线 / 客户询价 / 报价 / 9 任务 / 7 消息 / 交付物 / 收款 / 发票 / 支出 / 月报；含八概念映射与虚构性声明 | B1/B2/B5/B6/B7 验收与 `business` CLI / 控制台演示 | ✅ P1 已实现（v0.6.0） |
 | `demo-platform/` | **P2 真实 localhost 故障注入平台**（`server.mjs` + `run-drill-helper.mjs` + README.zh-CN）：主端口 `/health`/`/quote`/`/message`（幂等 `idempotency_key`）+ 控制端口 `/admin/outage`、`/admin/ban`，可真实制造 `ECONNREFUSED` 断网与 `403 + x-platform-ban` 封禁 | B3/B4 故障演练与 `fault-drill` CLI 演示 | ✅ P2 已实现（v0.7.0（随 v0.8.0 发布）） |
-| `demo-enterprise/` | **P3 企业版仿真 fixtures**（`enterprise.json` + `orders.json` + README.zh-CN）：主体/授权书/用印/对公账户/税号/双人复核/3 档组织审批链/多代理串行；8 条订单 = 2 正常 + 6 不一致（全部纯虚构） | B8 双模式验收与 `enterprise-demo` CLI 演示 | ✅ P3 已实现（v0.8.0 已发布） |
+| `demo-enterprise/` | **P3 企业版仿真 fixtures**（`enterprise.json` + `orders.json` + README.zh-CN）：主体/授权书/用印/对公账户/税号/双人复核/3 档组织审批链/多代理串行；8 条订单 = 2 正常 + 6 不一致（全部纯虚构） | B8 双模式验收与 `enterprise-demo` CLI 演示 | ✅ P3 已实现（随 v1.0.0 最终交付，v0.8.0 首发） |
 
 自检方式（**不能替代**真实 UI 验收）：
 

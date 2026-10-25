@@ -1,7 +1,8 @@
 # Enterprise Edition（English）
 
-> Status: **Phase 2 P3 (enterprise MVP) is implemented and acceptance-verified (2026-10-25, B8 passes)**;
-> delivery version **v0.8.0**, released together with P2 as [v0.8.0](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0) (Latest, 2026-10-26).
+> Status: **Phase 2 P3 (enterprise MVP) is implemented and acceptance-verified (B8 passes); the two phases
+> have now shipped the final [v1.0.0](https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0)
+> (Latest, 2026-10-26); this module was released in v0.8.0**.
 > Implementation: `packages/steward-enterprise`; acceptance:
 > [`p3-acceptance-2026-10-25_15-23-46.{md,json}`](../test-evidence/p3-acceptance-2026-10-25_15-23-46.md)
 > + [`evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/) (18 files, sanitized).
@@ -152,4 +153,4 @@ enterprise boundary hand-off (employment/qualification → human), enterprise fi
 - Module docs: [`packages/steward-enterprise/README.md`](../../packages/steward-enterprise/README.md)
 - Acceptance evidence: [`docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/)
 
-_Last updated: 2026-10-26 (P2+P3 complete; v0.8.0 released)._
+_Last updated: 2026-10-26 (two-phase delivery complete; v1.0.0 released; this module shipped in v0.8.0)._

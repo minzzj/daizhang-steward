@@ -1,11 +1,10 @@
 # Delivery & Acceptance Checklist
 
 > Each acceptance item = id + command/operation + evidence path + latest result (evidence must be openable).
-> **Phase 1 (M0–M4) is complete and released as v0.5.0: A1–A12 all `pass`. Phase 2 is complete and
-> released as v0.8.0: P1 personal-edition MVP (v0.6.0) B1/B2/B5/B6/B7 pass; P2 fault drills —
-> **short run + real long run both passed** (B3/B4); P3 enterprise MVP — B8 passes + 30-rule dual-mode
-> boundary table — Phase-2 B1–B8 all pass.**
-> Last updated: 2026-10-26 (Phase 2 P2 long run complete, v0.8.0 released)
+> **Two-phase delivery complete: Phase 1 (M0–M4) v0.5.0 — A1–A12 all `pass`; Phase 2 v0.6.0 (P1) /
+> v0.8.0 (P2+P3) — B1–B8 all pass (B3/B4 include the real long run). Final release v1.0.0 (GitHub
+> Release, Latest, 2026-10-26).**
+> Last updated: 2026-10-26 (v1.0.0 released — two-phase delivery complete)
 
 ## A. Phase 1 (doc 1 — 12 items)
 
@@ -127,6 +126,14 @@
 > profile/entity/seal/dual-review/invoice/org-approval/dual-mode-orders/boundary-table/fixture-checks +
 > `unit-tests.log`, sanitized).
 
+> **Final acceptance verdict (2026-10-26, v1.0.0 released — two-phase delivery complete)**:
+> `package.json`/CLI **1.0.0**, **151/151** tests (16 files), **19 implemented commands + `help`**,
+> **A1–A12 + B1–B8 all pass**; GitHub Release **v1.0.0** (Latest, tag `1e3b89f`, "v1.0.0 — Two-Phase
+> Delivery Complete") with the **real-screenshot promo video as 3 release assets** (BGM 12,947,989 B /
+> silent 10,169,266 B / poster 85,200 B; 110 s / 1280×720 @30 fps); release verification
+> `docs/test-evidence/release-v1.0.0-check.md` + `docs/images/release-v1.0.0.png`; release notes
+> `docs/RELEASE_NOTES_v1.0.0.md`. **Project delivery complete.**
+
 ## B. Phase 2 (doc 2 — 8 items)
 
 > P1 (personal-edition MVP) covers **B1 / B2 / B5 / B6 / B7** (all pass); **P2 fault drills cover
@@ -147,14 +154,14 @@
 
 | # | Requirement | Evidence | Status |
 |---|---|---|---|
-| U1 | All UI tests are real browser/real desktop, never API substitutes | E2E screenshots (M1 A2/A4/A5, M2 A3, P1 console `tests/e2e-console` 9 steps/73 checks) + CI headless real-browser E2E | ✅ met (Phase 1 + P1; CI rule check can be strengthened in P2) |
-| U2 | Notifications & assistance (approval card/handoff/takeover) | notification log + card screenshots | partial (P1 ships approval cards, takeover key and pack; Toast/email/webhook pending P3/P4) |
-| U3 | IoT reserved (contract + simulated fixture) | contract doc + fixture tests | todo (P3/P4 stub) |
-| U4 | GitHub minzzj release, NC-SA license, bilingual docs | https://github.com/minzzj/daizhang-steward + LICENSE (CC BY-NC-SA 4.0) + bilingual docs + **v0.8.0 Release (Latest, 2026-10-26)**; v0.5.0/v0.6.0 are historical | ✅ done (v0.8.0) |
-| U5 | Promo video (real screenshots, two versions) | video + STORYBOARD/FACTS | todo (P4; real-command demo script for now) |
-| U6 | Phase 1 ends with HANDOFF and session stop | [HANDOFF.md](../../HANDOFF.md) updated to "Phase 2 P2+P3 complete, v0.8.0 released"; Phase 1/2 handed over as agreed | ✅ done |
+| U1 | All UI tests are real browser/real desktop, never API substitutes | E2E screenshots (M1 A2/A4/A5, M2 A3, P1 console `tests/e2e-console` 9 steps/73 checks) + CI headless real-browser E2E + promo video uses real E2E screenshots only | ✅ met (phases 1–2 + promo video) |
+| U2 | Notifications & assistance (approval card/handoff/takeover) | notification log + card screenshots | partial (P1 approval cards/takeover key/pack; P2 local notification files; Toast/email/webhook are optional future extensions) |
+| U3 | IoT reserved (contract + simulated fixture) | contract doc + fixture tests | todo (optional future stub; not in v1.0.0) |
+| U4 | GitHub minzzj release, NC-SA license, bilingual docs | https://github.com/minzzj/daizhang-steward + LICENSE (CC BY-NC-SA 4.0) + bilingual docs + **v1.0.0 Release (Latest, final, 2026-10-26)**; v0.5.0/v0.6.0/v0.8.0 are historical | ✅ done (v1.0.0) |
+| U5 | Promo video (real screenshots, two versions) | video + STORYBOARD/FACTS | ✅ done (v1.0.0 release assets: BGM 12,947,989 B / silent 10,169,266 B / poster 85,200 B, 110s/1280×720@30fps; project in `docs/media/promo/`) |
+| U6 | Phase 1 ends with HANDOFF and session stop | [HANDOFF.md](../../HANDOFF.md) updated to the final "v1.0.0 released — two-phase delivery complete"; phases 1–2 handed over as agreed | ✅ done |
 | U7 | Test key never committed, logs redacted, rotatable | `npm run check:secrets` passes; evidence bundles sanitized | ✅ met |
-| U8 | Built on DSH plugin ecosystem with reuse | reuse matrix + pinned deps | designed (MCP/plugin integration in P3/P4) |
+| U8 | Built on DSH plugin ecosystem with reuse | reuse matrix + pinned deps | designed (MCP/plugin integration is an optional future extension) |
 
 ## D. Evidence rules
 

@@ -3,30 +3,29 @@
 **A composable, evidence-first operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations.
 
-> Status: **Phase 2 P2 + P3 complete — v0.8.0 released** (2026-10-26). Building on the phase-1
-> operating-AI core (real headed browser A2/A4/A5, real Windows desktop A3, safety modules A8/A9, Scout
-> A7, A10 dummy branch, A11 release readiness, A12 prompts) and the phase-2 personal-edition MVP
-> (P1: business-domain engine, simulated business line, local-only web console, approvals/takeover/monthly
-> report, 18 personal-mode boundary rules), phase 2 now adds:
-> **P2 fault drills (complete — short run + real 2-hour/15-minute long run)** — real localhost HTTP fault
-> injection (real `ECONNREFUSED` network outage and real `403` platform ban), an offline promise gate, an
-> idempotent outbox/replay with zero double-booking, and alternative-plan notifications. Long run: outage
-> **120 minutes (7215 s)** → **1435 promises blocked, 0 new**, 1435 actions queued and **all replayed**,
-> **`duplicates_found=0`**, second reconciliation `entries_added=0`; ban **15 minutes (900 s)** → detected
-> in **9 ms**, **180 attempts with 0 successes**, actions stopped, **5 alternative items**, notifications,
-> recovery after unban;
-> **P3 enterprise edition** — company entity & authorization checks (license/tax number/human-signed
-> authorization letter/human seal), corporate account, VAT special invoices with title/tax/contract
-> validation, **invoice drafts pending a human**, tax-filing drafts the AI never submits, **dual review**
-> (one reviewer ineffective, two different roles required), org approval chain (1/2/3 levels by amount),
-> **the AI never signs** (`ai_may_sign=false`), employment/qualification hand-offs, multi-agent
-> serialization, **B8 dual-mode consistency with all 6 mismatch classes blocked**, and a **30-rule
-> dual-mode boundary table**.
+> Status: **v1.0.0 released — two-phase delivery complete (Latest, 2026-10-26)**. Steward is a
+> composable, evidence-first operating-AI steward delivered in two phases.
+> **Phase 1 — open-source operating-AI core** (v0.5.0): real headed browser operator (A2/A4/A5), real
+> Windows desktop operator (A3), safety modules (A8/A9), Scout customer branch (A7), A10 dummy branch,
+> A11 release readiness and A12 prompts — **A1–A12 all pass**.
+> **Phase 2 — business steward** (v0.6.0 / v0.8.0, shipped in the final v1.0.0): the **personal-edition MVP** (P1: business-domain engine,
+> simulated business line, local-only web console, approvals/takeover/monthly report; B1/B2/B5/B6/B7,
+> v0.6.0), the **real fault drills** (P2: short run + **real 120-minute outage / 15-minute ban long run** —
+> outage: **1435 promises blocked / 0 new**, 1435 actions queued and **all replayed**,
+> **`duplicates_found=0`**; ban: detected in **9 ms**, **180 attempts / 0 successes**, **5 alternatives**,
+> notifications, recovery; B3/B4) and the **enterprise edition** (P3: entity/authorization/human seal,
+> corporate account, VAT special invoices with validation, invoice & tax-filing drafts the AI never
+> submits, dual review, org approval chain, **the AI never signs**, **B8 dual-mode consistency with all
+> 6 mismatch classes blocked**, **30-rule dual-mode boundary table**) — **B1–B8 all pass**.
 > **151/151** unit + integration tests pass (16 test files); the CLI ships **19 implemented commands +
-> 0 placeholders**. Acceptance **A1–A12 pass** and phase-2 **B1–B8 all pass** (B3/B4 include the real
-> long-run drills). **GitHub Release
-> [v0.8.0](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0) (Latest)** — next: P4
-> (v1.0.0 + promo video). See
+> `help`** (0 placeholders).
+> **GitHub Release [v1.0.0](https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0) (Latest,
+> two-phase delivery complete)** ships the real-screenshot promo video as release assets:
+> [`daizhang-steward-promo-v1.0-bgm.mp4`](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-bgm.mp4) ·
+> [`silent`](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-silent.mp4) ·
+> [`poster`](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-poster.jpg)
+> (110 s, 1280×720 @30 fps, real E2E screenshots only; project & storyboard in
+> [`docs/media/promo/`](docs/media/promo/)). See
 > [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md) / [`docs/en/enterprise.md`](docs/en/enterprise.md),
 > [ROADMAP.md](ROADMAP.md) and [`docs/en/delivery-checklist.md`](docs/en/delivery-checklist.md).
 > 中文说明见 [README.zh-CN.md](README.zh-CN.md).
@@ -63,14 +62,15 @@ CAPTCHAs, 2FA and face verification always hand off to a human.
 
 | Phase | Scope | Status |
 |---|---|---|
-| Phase 1 | Open-source "operating-AI core": Operator + Harness code loop + Scout + Conductor; 12 reproducible acceptance checks | ✅ **Complete (v0.5.0, A1–A12 pass)** |
-| Phase 2 | Steward business agent: **personal edition first** (one simulated business line end-to-end), then enterprise edition; 8 acceptance checks + 30 legal/compliance boundaries | ✅ **Complete (v0.8.0, B1–B8 all pass) — P1 personal edition (v0.6.0); P2 fault drills incl. real 120-min outage + 15-min ban long run; P3 enterprise edition (B8 + 30 boundaries)**; P4 (v1.0.0 + promo video) next |
+| Phase 1 | Open-source "operating-AI core": Operator + Harness code loop + Scout + Conductor; 12 reproducible acceptance checks | ✅ **Complete (v0.5.0, A1–A12 all pass)** |
+| Phase 2 | Steward business agent: **personal edition first** (one simulated business line end-to-end), then enterprise edition; 8 acceptance checks + 30 legal/compliance boundaries | ✅ **Complete (v0.8.0, B1–B8 all pass) — P1 personal edition (v0.6.0); P2 fault drills incl. real 120-min outage + 15-min ban long run; P3 enterprise edition (B8 + 30 boundaries)** |
+| Release | Final release v1.0.0 with bilingual docs, real-screenshot promo video, evidence index | ✅ **Released (v1.0.0, Latest — two-phase delivery complete)** |
 
-Phase 1 is complete and released as **v0.5.0**; phase 2 delivered the **P1 personal-edition MVP (v0.6.0)**,
-the **P2 fault drills** (short run + the real 120-minute outage / 15-minute ban long run, both passed) and
-the **P3 enterprise MVP**, all released together as **v0.8.0**
-([GitHub Release](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0)); **B1–B8 all pass** and
-**P4 (v1.0.0 + promo video) is next** — see [ROADMAP.md](ROADMAP.md).
+Both phases are complete: phase 1 was released as **v0.5.0**, phase 2 as **v0.6.0 (P1)** and **v0.8.0
+(P2+P3)**, and the final **v1.0.0** release
+([GitHub Release, Latest](https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0)) ships the
+two-phase delivery with **A1–A12 and B1–B8 all passing**, bilingual docs, an evidence archive and a
+**real-screenshot promo video** (3 release assets; project & storyboard in [`docs/media/promo/`](docs/media/promo/)).
 
 ## Architecture at a glance
 
@@ -143,10 +143,10 @@ runs/       per-run artifacts (gitignored; evidence lives here)
 dist/       build output (gitignored; single-package build)
 ```
 
-## Quickstart (M0 → v0.8.0)
+## Quickstart (M0 → v1.0.0)
 
-Phase 1 is complete and phase 2 P1/P2/P3 are delivered and released as **v0.8.0**; every milestone can be
-reproduced locally and offline. M0 runs with no paid API (MockHarness); M1 adds a real-browser loop;
+Both phases are complete and the final **v1.0.0** is released (Latest); every milestone can be reproduced
+locally and offline. M0 runs with no paid API (MockHarness); M1 adds a real-browser loop;
 M2 adds the real Windows desktop loop and safety modules; M3 adds the fixture-driven Scout customer
 branch; M4 adds the A10 read-only dummy branch and release-readiness acceptance; **P1 adds the business
 domain, the local web console and the simulated business line (B1/B2/B5/B6/B7)**; **P2 adds real
@@ -267,6 +267,20 @@ queued in the outbox and **all replayed** on recovery, **`duplicates_found=0`**,
 `entries_added=0`; **B4 real ban 15 min / 900 s** → detected in **9 ms**, **180 attempts, 0 successes**,
 actions stopped, **5 alternative items**, notifications, recovery after unban. **B1–B8 all pass.**
 
+Final **v1.0.0** release — **two-phase delivery complete** (2026-10-26, Latest):
+[GitHub Release v1.0.0](https://github.com/minzzj/daizhang-steward/releases/tag/v1.0.0) ships the
+real-screenshot promo video (HyperFrames + code-synthesized BGM, real M1/M2/P1 E2E screenshots; 110 s,
+1280×720 @30 fps; `hyperframes check` ok:true with WCAG AA contrast 45/45):
+[**BGM version**](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-bgm.mp4)
+(12,947,989 B) ·
+[**silent version**](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-silent.mp4)
+(10,169,266 B) ·
+[**poster**](https://github.com/minzzj/daizhang-steward/releases/download/v1.0.0/daizhang-steward-promo-v1.0-poster.jpg)
+(85,200 B); project & storyboard in [`docs/media/promo/`](docs/media/promo/). Release notes:
+[`docs/RELEASE_NOTES_v1.0.0.md`](docs/RELEASE_NOTES_v1.0.0.md); release verification:
+[`docs/test-evidence/release-v1.0.0-check.md`](docs/test-evidence/release-v1.0.0-check.md) +
+[`docs/images/release-v1.0.0.png`](docs/images/release-v1.0.0.png).
+
 Latest M4 phase-1 release acceptance (2026-10-25, `npm run acceptance:m4` OK, 10/10 checks): checks A10
 read-only `dummy-branch`, A11 release readiness (CC BY-NC-SA 4.0 license text, third-party NOTICE,
 commercial notice, bilingual docs, no telemetry, `package.json`/CLI version consistency, release docs)
@@ -275,7 +289,8 @@ and the full **80/80** suite. Evidence:
 (· [`.json`](docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.json)) +
 [`docs/test-evidence/evidence-m4-2026-10-25_13-43-07/`](docs/test-evidence/evidence-m4-2026-10-25_13-43-07/).
 Release notes: [`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md) (later releases:
-[`v0.6.0`](docs/RELEASE_NOTES_v0.6.0.md) P1, [`v0.8.0`](docs/RELEASE_NOTES_v0.8.0.md) P2+P3).
+[`v0.6.0`](docs/RELEASE_NOTES_v0.6.0.md) P1, [`v0.8.0`](docs/RELEASE_NOTES_v0.8.0.md) P2+P3,
+[`v1.0.0`](docs/RELEASE_NOTES_v1.0.0.md) final).
 
 Latest M3 acceptance (2026-10-25, local fixture-driven Scout run — no network, `npm run acceptance:m3`
 OK, 12/12 checks): [`docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md`](docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md)
@@ -352,17 +367,18 @@ runs before every commit/CI. See [`SECURITY.md`](SECURITY.md).
 
 ## Docs
 
-- [ROADMAP.md](ROADMAP.md) — milestones and approval gates (Phase 1 complete; Phase 2 P1/P2/P3 complete and released as v0.8.0; P4 next)
-- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) · [docs/RELEASE_NOTES_v0.6.0.md](docs/RELEASE_NOTES_v0.6.0.md) · [docs/RELEASE_NOTES_v0.8.0.md](docs/RELEASE_NOTES_v0.8.0.md) — phase-1 / P1 / P2+P3 release notes (bilingual; v0.8.0 released)
+- [ROADMAP.md](ROADMAP.md) — milestones and approval gates (both phases complete; **v1.0.0 released**)
+- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) · [v0.6.0](docs/RELEASE_NOTES_v0.6.0.md) · [v0.8.0](docs/RELEASE_NOTES_v0.8.0.md) · [**v1.0.0**](docs/RELEASE_NOTES_v1.0.0.md) — release notes (bilingual; v1.0.0 is the final release)
 - [docs/zh-CN/enterprise.md](docs/zh-CN/enterprise.md) · [docs/en/enterprise.md](docs/en/enterprise.md) — P3 enterprise edition + the 30-rule dual-mode boundary table
+- [docs/media/promo/README.md](docs/media/promo/README.md) — **v1.0.0 real-screenshot promo video** (assets on the GitHub Release; storyboard & facts here)
 - [docs/demo-script.md](docs/demo-script.md) · [docs/demo-script.zh-CN.md](docs/demo-script.zh-CN.md) — 3-minute demo script
 - [docs/good-first-issues.md](docs/good-first-issues.md) — 5 good first issues (bilingual)
 - [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — acceptance items with evidence
-  (A1–A12 pass; phase 2 B1–B8 all pass, including the real P2 long run)
+  (**A1–A12 + B1–B8 all pass**; final v1.0.0 verdict)
 - [docs/test-evidence/](docs/test-evidence/) — evidence archive (`test-result-*`, `m1-acceptance-*` …
   `m4-acceptance-*`, `p1-acceptance-*` + `evidence-p1-*`, `p2-acceptance-*` + `evidence-p2-*` (short run),
   `long-drill-2026-10-25_15-02-52.*` + `evidence-long-drill-2026-10-25_15-02-52/` (real long run),
-  `p3-acceptance-*` + `evidence-p3-*`, and `release-v0.5.0/v0.6.0/v0.8.0-check.md`)
+  `p3-acceptance-*` + `evidence-p3-*`, and `release-v0.5.0/v0.6.0/v0.8.0/v1.0.0-check.md`)
 - [docs/en/architecture.md](docs/en/architecture.md) · [docs/en/adapters.md](docs/en/adapters.md)
   · [docs/en/contracts.md](docs/en/contracts.md) · [docs/en/threat-model.md](docs/en/threat-model.md)
 - [packages/steward-desktop/README.md](packages/steward-desktop/README.md) — real Windows desktop adapter

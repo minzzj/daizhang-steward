@@ -11,7 +11,7 @@
 - 封面/宣传片素材从这里的真实截图取用，不另做“漂亮版”UI。
 
 _当前存放发布验证截图：`repo-home-2026-10-25.png`、`ci-actions-2026-10-25.png`、
-`release-v0.5.0.png`、`release-v0.6.0.png`、**`release-v0.8.0.png`（P2+P3，Latest）**；
+`release-v0.5.0.png`、`release-v0.6.0.png`、**`release-v0.8.0.png`（P2+P3）、`release-v1.0.0.png`（最终版，Latest，两阶段交付完成）**；
 各里程碑的真实 E2E 截图为更好地归档与脱敏，保存在 `docs/test-evidence/`：_
 - _M1：`evidence-m1-<stamp>/`（A2/A4/A5 三组，真实浏览器截图）；_
 - _M2：`evidence-m2-<stamp>/A3-desktop-flow/`（20 张真实 Windows 桌面截图）；_
@@ -21,5 +21,5 @@ _当前存放发布验证截图：`repo-home-2026-10-25.png`、`ci-actions-2026-
   `console-cli/`（CLI 启动控制台的看板/账本截图）；_
 - _P2：`evidence-p2-<stamp>/`（短跑）与 `evidence-long-drill-<stamp>/`（真实长跑，日志/JSON 证据，无 UI 截图）；_
 - _P3：`evidence-p3-<stamp>/enterprise-run/`（企业版 JSON 证据，无 UI 截图）；发布验证截图见
-  `release-v0.8.0.png`。_
+  `release-v0.8.0.png`；最终发布验证见 `release-v1.0.0.png`（含真实截图宣传片 Assets）。_
 _本目录只保留发布/文档用截图；演示录屏请按 `docs/demo-script.zh-CN.md` / `docs/demo-script.md` 用真实命令生成。_

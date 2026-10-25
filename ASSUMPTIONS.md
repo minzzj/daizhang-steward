@@ -1,7 +1,7 @@
 # Assumptions & Known Gaps / 假设与未覆盖清单
 
 > 本文件是**诚实边界**清单：实现前先写下“不知道就不猜”的部分。随里程碑更新。
-> 最后更新：2026-10-26（阶段二 P2 + P3 完成，v0.8.0 已发布（Latest）；P2 真实长跑通过）
+> 最后更新：2026-10-26（**两阶段交付完成，v1.0.0 已发布（Latest）**；之后仅可选后续扩展）
 
 ## 一、环境假设
 
@@ -39,10 +39,11 @@
 5. 30 条法律边界中，“已实现”指程序行为可拦截；“人工/不适用”按文档要求逐条标注。
 6. 通知通道阶段一用桌面通知 + 邮件 + 审批队列；短信/电话待合规评估后再接。
 
-## 三、已知未覆盖（截至 P3 / 阶段二完成，v0.8.0 已发布）
+## 三、已知未覆盖（截至 v1.0.0 最终发布 —— 两阶段交付完成）
 
-> 阶段一（M0–M4，v0.5.0）与阶段二 P1（v0.6.0）/ P2（故障演练，短跑 + 真实长跑）/ P3（企业版，
-> v0.8.0 已发布）均已完成；以下未覆盖项保留为 **P4（v1.0.0）与后续输入**。
+> 阶段一（M0–M4，v0.5.0）与阶段二 P1（v0.6.0）/ P2（故障演练，短跑 + 真实长跑）/ P3（企业版，v0.8.0）
+> 均已完成，最终 **v1.0.0 已发布（Latest，两阶段交付完成）**；以下未覆盖项均为**交付后的可选扩展**
+> （不属于 v1.0.0 交付范围，按需再推进）。
 
 - [x] M0 内核最小闭环：AgentRuntime / BranchSpec / PolicyEngine / ArtifactBus / PromptManager /
   EventLog / BudgetGuard / StopSignal、CLI 7 命令（+2 占位）、MockHarness、prompts v1、
@@ -93,19 +94,22 @@
   → **9ms 检测**、**180 次尝试 0 成功**、停止动作 + **5 条替代方案** + 通知、解禁恢复。证据
   `docs/test-evidence/long-drill-2026-10-25_15-02-52.{md,json}` +
   `docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/`（11 文件，已脱敏）。
-- [ ] **P2 扩展故障演练尚未实现**：强杀恢复、账本损坏、72h 失联、循环超限（`tests/fault/` 端到端用例）。
-- [ ] **P4 尚未开始**：v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM/静音双版本）。
+- [ ] **P2 扩展故障演练尚未实现（可选扩展）**：强杀恢复、账本损坏、72h 失联、循环超限（`tests/fault/` 端到端用例）。
+- [x] **最终发布 P4 已完成（2026-10-26）**：v1.0.0 已发布（GitHub Release，Latest，tag `1e3b89f`，
+  两阶段交付完成）；真实截图宣传片 3 个 Release Assets（BGM 12,947,989 B / silent 10,169,266 B /
+  poster 85,200 B，110s / 1280×720@30fps；工程与分镜 `docs/media/promo/`）；发布验证
+  `docs/test-evidence/release-v1.0.0-check.md` + `docs/images/release-v1.0.0.png`；双语文档终审完成。
 - [ ] 桌面适配器的次要能力尚未实现：UIA 可访问性树、右键菜单语义、拖拽、滚轮/触控板手势、
   剪贴板、多窗口批处理会话编排（M2 契约内后续迭代项）。
 - [ ] Scout 的真实来源抓取与真实发送通道尚未实现（按产品边界：M3 只做 fixture 驱动、只起草不发送；
   真实发送必须由审批后的人工流程完成，留给后续里程碑/阶段）。
-- [ ] 通知与协助（Toast/邮件/Webhook/交接流程）、IoT 适配器契约（stub）与 MCP server 尚未实现（P4/后续）；
+- [ ] 通知与协助（Toast/邮件/Webhook/交接流程）、IoT 适配器契约（stub）与 MCP server 尚未实现（可选扩展）；
   P2 已有本地通知文件留痕，但尚无真实推送通道。
 - [ ] 企业版未接真实银行/税务/CA/电子签章系统；无企业专属 UI；企业特有流程（授权书生成、真实用印、
   属地税务差异）仍需人工复核。
-- [x] **版本与发布已完成**：`package.json` 与 CLI 均为 **0.8.0**；P2+P3 已通过 GitHub Release
-  **v0.8.0** 发布（tag `95b609a`，Latest）；v0.5.0/v0.6.0 为历史版本；发布验证
-  `docs/test-evidence/release-v0.8.0-check.md` + `docs/images/release-v0.8.0.png`。
+- [x] **版本与发布已完成**：`package.json` 与 CLI 均为 **1.0.0**；**v1.0.0 已通过 GitHub Release
+  发布（Latest，两阶段交付完成，tag `1e3b89f`）**；v0.5.0/v0.6.0/v0.8.0 为历史版本；发布验证
+  `docs/test-evidence/release-v1.0.0-check.md` + `docs/images/release-v1.0.0.png`。
 
 ## 四、取证与合规边界
 
@@ -125,12 +129,11 @@
    `packages/*/src` + `apps/cli/src` → `dist/`，契约不变。
 6. 测试命令用 glob 形式：`node --test "tests/unit/*.test.mjs"`（引号由 shell 处理，跨平台一致）。
 
-## 六、待用户拍板后更新的项
+## 六、发布后状态（两阶段交付完成）
 
 - [x] 仓库名（`daizhang-steward`）、GitHub 认证方式（本机凭据，令牌未落盘）
-- [x] “第一阶段发布平台”（GitHub public 仓库已发布；v0.5.0 / v0.6.0 / v0.8.0 Release 已创建）
+- [x] GitHub public 仓库与 Release：v0.5.0 / v0.6.0 / v0.8.0 / **v1.0.0（Latest，最终版）**
 - [x] P2 长跑（120min 断网 + 15min 封禁）完成确认与 `long-drill-*` 证据入库（2026-10-26）
-- [x] v0.8.0（P2+P3）版本升级与 GitHub Release（已发布，Latest，tag `95b609a`）
-- [ ] P4 v1.0.0 发布与宣传片（双语文档终审、30 条边界与 8 条验收对照、真实截图宣传片）
-- [ ] 正式商用联系方式（`COMMERCIAL.md` 占位）
-- [ ] 是否在阶段一即产出预热短片（阶段一以真实命令演示脚本替代；正式宣传片计划 P4）
+- [x] **P4：v1.0.0 发布 + 真实截图宣传片（3 Assets）+ 双语文档终审 + A1–A12 / B1–B8 对照**（2026-10-26）
+- [ ] （可选）正式商用联系方式（`COMMERCIAL.md` 占位）
+- [ ] （可选）后续增强的需求与优先级（通知/IoT/MCP/真实系统对接/企业 UI/扩展故障演练等）

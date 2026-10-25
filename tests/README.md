@@ -1,9 +1,9 @@
 # Tests
 
-> 状态：**阶段一 v0.5.0 + 阶段二 P1 v0.6.0 / P2（短跑 + 真实长跑）/ P3 v0.8.0（已发布，Latest）已落地
-> `unit/`（16 个文件 / 151 条测试全部通过）、`e2e-browser/`（真实浏览器 E2E）、`e2e-desktop/`（真实
-> Windows 桌面 E2E）、`e2e-console/`（真实浏览器控制台 E2E）、`tests/fault` 逻辑在
-> `packages/steward-fault`（P2）**；`contract/`、扩展故障用例随 P4/后续实现。UI 验收必须真实操作。
+> 状态：**两阶段交付完成，最终发布 v1.0.0（Latest，2026-10-26）**：已落地 `unit/`（16 个文件 /
+> 151 条测试全部通过）、`e2e-browser/`（真实浏览器 E2E）、`e2e-desktop/`（真实 Windows 桌面 E2E）、
+> `e2e-console/`（真实浏览器控制台 E2E）、`tests/fault` 逻辑在 `packages/steward-fault`（P2）；
+> `contract/`、扩展故障用例为可选后续扩展。UI 验收必须真实操作。
 
 ## 运行 / Running
 
