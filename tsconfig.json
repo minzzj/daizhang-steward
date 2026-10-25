@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/steward-core" },
+    { "path": "packages/steward-harness" },
+    { "path": "apps/cli" }
+  ]
+}

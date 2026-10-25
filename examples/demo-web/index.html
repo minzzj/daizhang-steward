@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>代掌演示站 · 登录与项目提交</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>代掌演示站</h1>
+      <p class="subtitle">本地离线的真实浏览器演示素材：登录 → 提交项目（预置 1 个缺陷，见 README.zh-CN.md）</p>
+    </header>
+
+    <main class="panel">
+      <!-- 登录视图 -->
+      <section id="login-view" class="view" aria-labelledby="login-title">
+        <h2 id="login-title">登录</h2>
+        <p class="hint">演示账号密码可任意填写（非空即可，不校验真实身份）。</p>
+
+        <form id="login-form" novalidate>
+          <label for="account">账号</label>
+          <input id="account" name="account" type="text" autocomplete="username" placeholder="例如：demo" />
+
+          <label for="password">密码</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="任意非空密码"
+          />
+
+          <label class="slow-mode" for="slow-mode">
+            <input id="slow-mode" name="slow-mode" type="checkbox" />
+            模拟网络慢（服务端 4 秒才返回 504，用于复现登录超时缺陷）
+          </label>
+
+          <button id="submit" type="submit">登录</button>
+
+          <p id="login-error" class="error" role="alert" hidden></p>
+          <p id="login-status" class="hint status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <!-- 提交项目视图（登录成功后显示，同页切换） -->
+      <section id="project-view" class="view" aria-labelledby="project-title" hidden>
+        <h2 id="project-title">提交项目</h2>
+        <p id="welcome" class="hint"></p>
+
+        <form id="project-form" novalidate>
+          <label for="project-name">项目名称（必填）</label>
+          <input id="project-name" name="project-name" type="text" placeholder="例如：示例客户官网改版" />
+
+          <label for="project-note">备注（可选）</label>
+          <textarea id="project-note" name="project-note" rows="4" placeholder="补充说明，可不填"></textarea>
+
+          <button id="create" type="submit">创建项目</button>
+
+          <p id="project-error" class="error" role="alert" hidden></p>
+          <p id="project-result" class="success" role="status" aria-live="polite"></p>
+        </form>
+
+        <button id="back-to-login" type="button" class="link-button">返回登录</button>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>零依赖 · 仅监听 127.0.0.1 · 不加载任何外网字体、CDN 或图片。数据仅存内存，重启即清空。</p>
+    </footer>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

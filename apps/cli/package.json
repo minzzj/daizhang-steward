@@ -1,0 +1,20 @@
+{
+  "name": "@daizhang/steward-cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "steward CLI: run / branch / report / stop / takeover / demo.",
+  "license": "CC-BY-NC-SA-4.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "steward": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@daizhang/steward-core": "workspace:*",
+    "@daizhang/steward-harness": "workspace:*"
+  }
+}
