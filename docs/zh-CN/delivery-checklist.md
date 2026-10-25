@@ -1,29 +1,35 @@
 # 交付物与验收清单 / Delivery Checklist（中文）
 
 > 每条验收 = 编号 + 命令/操作 + 证据路径 + 最近结果（证据必须能打开）。
-> M0 完成后 A1 / A6 / A12 标记为 `通过`；其余条目随里程碑完成更新为 `通过 / 未通过 / 部分`。
-> 最近一次更新：2026-10-25（M0 完成）
+> M1 完成后 A1 / A2 / A4 / A5 / A6 / A12 标记为 `通过`；其余条目随里程碑完成更新为 `通过 / 未通过 / 部分`。
+> 最近一次更新：2026-10-25（M1 完成）
 
 ## A. 阶段一（文档 1，12 条）
 
 | # | 验收 | 命令/操作 | 证据 | 状态 |
 |---|---|---|---|---|
-| A1 | 干净克隆可跑，无需付费 API | `npm install && npm run demo` | `runs/run-20261025-172017-eb9116/report.md` + `docs/test-evidence/test-result-2026-10-25_09-20-15.md`（MockHarness，无付费 API） | ✅ 通过（2026-10-25） |
-| A2 | demo-web 登录/填表/提交/校验/截图 | `npm run test:e2e`（M1 实现） | `runs/<id>/screenshots/` | 未实现（M1） |
+| A1 | 干净克隆可跑，无需付费 API | `npm install && npm run demo` | `runs/run-20261025-172017-eb9116/report.md` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md`（MockHarness，无付费 API） | ✅ 通过（2026-10-25） |
+| A2 | demo-web 登录/填表/提交/校验/截图 | `npm run acceptance`（或 `node tests/e2e-browser/login-flow.mjs --case normal`） | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/`：`e2e/normal/screenshots/001…007-*.png`（7 步 / 7 张真实截图）、`e2e/normal/result.json`、`e2e/server.log`、`report.md`；run `run-20261025-175213-9ea8ab` | ✅ 通过（2026-10-25） |
 | A3 | demo-desktop 打开/填表/保存/校验/截图 | `npm run test:desktop`（M2 实现） | `runs/<id>/screenshots/` | 未实现（M2） |
-| A4 | 预置缺陷 → CodeTask → 补丁 → 应用 → 测试通过 | `npm run demo:code-loop`（M1 实现） | `runs/<id>/code-task.json` 等 | 未实现（M1；M0 已有 MockHarness 骨架） |
-| A5 | 连续失败两次 → 升级，无无限循环 | 同上（注入失败） | 两轮日志 + 升级事件 | 未实现（M1） |
-| A6 | 每次运行有 prompt/patch/test.log/截图/report 且无密钥 | `npm run demo` + `npm run evidence` | `runs/run-20261025-172017-eb9116/`：`prompt.md` / `patch.diff` / `test.log` / `report.md` / `events.jsonl` / `console.log` / `meta.json` / `code-task.json` / `code-result.json` / `goal.md`；索引 `docs/test-evidence/test-result-2026-10-25_09-20-15.{md,json}` | ✅ 通过（2026-10-25；真实 UI 截图随 M1 补齐） |
+| A4 | 预置缺陷 → CodeTask → 补丁 → 应用 → 测试通过 | `node dist/apps/cli/src/index.js code-loop`（或 `npm run acceptance`） | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/`：`patch.diff`、`code-loop-result.json`、`e2e/login-timeout/`（4 张截图 + `result.json`）、`report.md`；run `run-20261025-175216-fe8759` | ✅ 通过（2026-10-25；第 1 轮由红转绿） |
+| A5 | 连续失败两次 → 升级，无无限循环 | `node dist/apps/cli/src/index.js code-loop --fail`（或 `npm run acceptance`） | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/`：`test.log`（两轮失败）、`code-loop-result.json`（`escalated=true`、`rounds=2`）、`e2e/login-timeout/screenshots/004-assert-timeout-recovery-fail.png`；run `run-20261025-175223-de0b95`；`codeLoopFail` exit 1 属预期 | ✅ 通过（2026-10-25） |
+| A6 | 每次运行有 prompt/patch/test.log/截图/report 且无密钥 | `npm run demo` + `npm run evidence` + `npm run acceptance` | M0：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md / events.jsonl / console.log / meta.json / code-task.json / code-result.json / goal.md）+ `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`；M1：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件，含真实 e2e 截图；`npm run check:secrets` 通过） | ✅ 通过（2026-10-25；M1 已含真实 UI 截图） |
 | A7 | Scout ≥10 线索（来源+评分），3 条草稿未发送 | `npm run demo:scout`（M3 实现） | `scout-report.md` + 审批队列 | 未实现（M3） |
 | A8 | 停止键 5 秒；重启恢复不重复 | `npm run test:stop`（M2 实现） | 停止事件 + 恢复日志 | 未实现（M2；M0 有 StopSignal 最小实现） |
 | A9 | 分支隔离（凭据/浏览器配置） | `npm run test:isolation`（M2 实现） | 隔离用例 + events | 未实现（M2） |
 | A10 | 新增只读 dummy 分支只靠配置 | `npm run demo:dummy-branch`（M4 实现） | 配置 + 报告 | 未实现（M4） |
-| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` | CI 日志 | 未实现（M4 全量验收；M0 已满足 lint / build / 30 测试） |
+| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` | CI 日志 | 未实现（M4 全量验收；M1 已满足 lint / build / 34 测试 + CI headless E2E） |
 | A12 | 提示词版本化、有测试、可替换 | `npm run test:prompts` | `prompts/manifest.json`（4 角色 + sha256）+ `tests/unit/prompts.test.mjs`（5 项断言） | ✅ 通过（2026-10-25） |
 
 > **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过。`npm run check`、`npm run check:secrets`、
 > `npm test`（30/30）、`npm run demo`、`npm run evidence` 全部退出码 0；证据文件由
 > `npm run evidence` 自动生成，不手工编辑。
+>
+> **M1 验收结论（2026-10-25）**：A2 / A4 / A5 / A6 通过（本机有头真实 Chrome，`npm run acceptance` OK）。
+> A2：7 步 / 7 张真实截图；A4：第 1 轮由红转绿；A5：两轮失败后停止升级（exit 1，不无限重试）。
+> 测试 **34/34**；`npm run lint`、`npm run check`、`npm run check:secrets` 通过。证据：
+> `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
+> `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组）。
 
 ## B. 阶段二（文档 2，8 条）
 

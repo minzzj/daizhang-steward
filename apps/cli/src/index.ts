@@ -3,6 +3,8 @@
  * steward CLI — phase-1 entrypoint.
  * Commands: demo | run | branch | report | stop | takeover | approve | version | help
  */
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
@@ -20,9 +22,9 @@ import {
   type RunResult,
   type ToolResult,
 } from "../../../packages/steward-core/src/index.js";
-import { MockHarness, demoCodeTask } from "../../../packages/steward-harness/src/index.js";
+import { MockHarness, demoCodeTask, runCodeLoop } from "../../../packages/steward-harness/src/index.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -62,6 +64,9 @@ function printHelp(): void {
 
 用法 / Usage:
   steward demo [--json]                       跑通 M0 空回路（MockHarness，无需付费 API）
+  steward browser-flow [--case normal|login-timeout] [--headless] [--json]
+                                              真实浏览器（本机 Chrome/Edge）执行 demo-web 流程并截图留证（A2）
+  steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
   steward run --goal "<目标>" [--role operator] [--json]
                                               在 Mock 计划下执行一个分支
   steward branch --role operator --goal "<目标>" [--json]
@@ -80,7 +85,7 @@ function printHelp(): void {
 `);
 }
 
-function createTools(): ToolRegistry {
+function createTools(root: string): ToolRegistry {
   const registry = new ToolRegistry();
   const harness = new MockHarness();
 
@@ -134,6 +139,83 @@ function createTools(): ToolRegistry {
     },
   );
 
+  registry.register(
+    {
+      name: "browser.flow",
+      description: "真实浏览器（本机 Chrome/Edge，有头默认）执行 demo-web 登录/提交/校验流程并逐步截图留证",
+      risk: "medium",
+      requiresApproval: false,
+      evidence: true,
+    },
+    async (args, ctx): Promise<ToolResult> => {
+      const caseName = String(args.case ?? "normal");
+      const headless = args.headless === true ? "1" : "0";
+      const e2eDir = join(ctx.evidenceDir, "e2e");
+      const script = join(root, "tests", "e2e-browser", "login-flow.mjs");
+      if (!existsSync(script)) {
+        return { ok: false, summary: `真实浏览器 E2E 脚本缺失：${script}` };
+      }
+      const run = spawnSync(
+        process.execPath,
+        [script, "--case", caseName, "--headless", headless, "--workdir", join(root, "examples", "demo-web"), "--evidence-dir", e2eDir],
+        { cwd: root, encoding: "utf8", timeout: 240_000, env: { ...process.env, NO_COLOR: "1" } },
+      );
+      const output = `${run.stdout ?? ""}${run.stderr ?? ""}`;
+      const logPath = join(ctx.evidenceDir, "test.log");
+      await writeFile(logPath, output, "utf8");
+      const resultPath = join(e2eDir, "result.json");
+      const evidence = [logPath, ...(existsSync(resultPath) ? [resultPath] : []), e2eDir];
+      return {
+        ok: run.status === 0,
+        summary:
+          run.status === 0
+            ? `真实浏览器流程通过（case=${caseName}），截图见 ${e2eDir}`
+            : `真实浏览器流程失败（case=${caseName}, exit=${run.status}），详见 ${logPath}`,
+        evidence,
+      };
+    },
+  );
+
+  registry.register(
+    {
+      name: "code.loop",
+      description: "CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收；最多两轮，超限升级人类",
+      risk: "medium",
+      requiresApproval: false,
+      evidence: true,
+    },
+    async (args, ctx): Promise<ToolResult> => {
+      const useBroken = args.fail === true;
+      const patchFile = join(root, "examples", "mock-harness", useBroken ? "broken-login-timeout.patch" : "fix-login-timeout.patch");
+      if (!existsSync(patchFile)) return { ok: false, summary: `Mock 补丁缺失：${patchFile}` };
+      const e2eScript = join(root, "tests", "e2e-browser", "login-flow.mjs");
+      if (!existsSync(e2eScript)) return { ok: false, summary: `真实浏览器 E2E 脚本缺失：${e2eScript}` };
+      const harnessWithPatch = new MockHarness({ patch: readFileSync(patchFile, "utf8") });
+      const task = demoCodeTask(REPO_SLUG);
+      const e2eDir = join(ctx.evidenceDir, "e2e");
+      const testLogPath = join(ctx.evidenceDir, "test.log");
+      await writeFile(testLogPath, "", "utf8");
+      const result = await runCodeLoop({
+        task,
+        harness: harnessWithPatch,
+        repoRoot: root,
+        acceptanceCommand: `node "${e2eScript}" --case login-timeout --headless 0 --workdir "{worktree}/examples/demo-web" --evidence-dir "${e2eDir}"`,
+        evidenceDir: e2eDir,
+        testLogPath,
+        maxRounds: 2,
+      });
+      const patchPath = join(ctx.evidenceDir, "patch.diff");
+      const resultPath = join(ctx.evidenceDir, "code-loop-result.json");
+      await writeFile(patchPath, result.patch, "utf8");
+      await writeFile(resultPath, JSON.stringify(result, null, 2) + "\n", "utf8");
+      return {
+        ok: result.ok,
+        summary: result.summary,
+        evidence: [patchPath, testLogPath, resultPath],
+      };
+    },
+  );
+
   return registry;
 }
 
@@ -180,7 +262,7 @@ function printRunResult(result: RunResult, root: string, json: boolean): void {
 async function cmdDemo(parsed: ParsedArgs): Promise<number> {
   const root = findRepoRoot();
   const prompts = await loadPrompts();
-  const runtime = new AgentRuntime({ root, tools: createTools(), ...(prompts ? { prompts } : {}) });
+  const runtime = new AgentRuntime({ root, tools: createTools(root), ...(prompts ? { prompts } : {}) });
   const manager = new BranchManager();
   const branch: BranchSpec = manager.create({
     role: "operator",
@@ -228,7 +310,7 @@ async function cmdRun(parsed: ParsedArgs): Promise<number> {
     return 2;
   }
   const prompts = await loadPrompts();
-  const runtime = new AgentRuntime({ root, tools: createTools(), ...(prompts ? { prompts } : {}) });
+  const runtime = new AgentRuntime({ root, tools: createTools(root), ...(prompts ? { prompts } : {}) });
   const manager = new BranchManager();
   const branch = manager.create({
     role: roleFlag as "operator" | "dummy" | "conductor",
@@ -240,6 +322,51 @@ async function cmdRun(parsed: ParsedArgs): Promise<number> {
     { tool: "echo", description: "接收目标", args: { message: `目标：${goal}` } },
     { tool: "write.artifact", description: "记录计划", args: { name: "plan.md", content: `# 计划\n\n目标：${goal}\n分支：${branch.id}\n` } },
     { tool: "echo", description: "汇总", args: { message: "计划执行完成（M0 空回路；真实工具在 M1/M2 接入）" } },
+  ];
+  const result = await runtime.run({ branch, plan });
+  printRunResult(result, root, parsed.flags.json === true);
+  return result.ok ? 0 : 1;
+}
+
+async function cmdBrowserFlow(parsed: ParsedArgs): Promise<number> {
+  const root = findRepoRoot();
+  const prompts = await loadPrompts();
+  const runtime = new AgentRuntime({ root, tools: createTools(root), ...(prompts ? { prompts } : {}) });
+  const manager = new BranchManager();
+  const branch = manager.create({
+    role: "operator",
+    goal: "真实浏览器执行 demo-web 登录→提交项目流程并留证（A2）",
+    tools: ["echo", "browser.flow"],
+  });
+  const caseName = flagString(parsed.flags, "case") ?? "normal";
+  const plan: PlannedStep[] = [
+    { tool: "echo", description: "写验收检查", args: { message: "验收：真实 Chrome/Edge 有头模式完成登录、填表、提交、校验，每步截图" } },
+    { tool: "browser.flow", description: "运行真实浏览器流程", args: { case: caseName, headless: parsed.flags.headless === true } },
+    { tool: "echo", description: "汇总", args: { message: "真实浏览器证据已写入本次 run 目录的 e2e/" } },
+  ];
+  const result = await runtime.run({ branch, plan });
+  printRunResult(result, root, parsed.flags.json === true);
+  return result.ok ? 0 : 1;
+}
+
+async function cmdCodeLoop(parsed: ParsedArgs): Promise<number> {
+  const root = findRepoRoot();
+  const prompts = await loadPrompts();
+  const runtime = new AgentRuntime({ root, tools: createTools(root), ...(prompts ? { prompts } : {}) });
+  const manager = new BranchManager();
+  const branch = manager.create({
+    role: "operator",
+    goal: "CodeTask→补丁→隔离 worktree→真实浏览器验收回路（A4；--fail 时验证 A5 两轮升级）",
+    tools: ["echo", "code.loop"],
+  });
+  const plan: PlannedStep[] = [
+    {
+      tool: "echo",
+      description: "写验收检查",
+      args: { message: "验收：真实浏览器 login-timeout 用例从红转绿；最多两轮，超限升级人类" },
+    },
+    { tool: "code.loop", description: "运行编码回路", args: { fail: parsed.flags.fail === true } },
+    { tool: "echo", description: "汇总", args: { message: "回路证据已写入本次 run 目录（patch.diff / test.log / code-loop-result.json / e2e/）" } },
   ];
   const result = await runtime.run({ branch, plan });
   printRunResult(result, root, parsed.flags.json === true);
@@ -307,6 +434,12 @@ async function main(): Promise<number> {
       return cmdReport(parsed);
     case "stop":
       return cmdStop(parsed);
+    case "browser-flow":
+    case "demo-browser":
+      return cmdBrowserFlow(parsed);
+    case "code-loop":
+    case "demo-code-loop":
+      return cmdCodeLoop(parsed);
     case "takeover":
       console.error("takeover 属阶段二交付（M0 为占位）。见 ROADMAP.md。");
       return 2;

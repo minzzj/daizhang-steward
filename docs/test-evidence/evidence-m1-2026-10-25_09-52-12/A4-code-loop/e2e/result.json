@@ -1,0 +1,238 @@
+{
+  "suite": "e2e-browser/login-flow",
+  "case": "login-timeout",
+  "ok": true,
+  "headless": false,
+  "browser": {
+    "channel": "chrome",
+    "version": "155.0.8059.85",
+    "fallbacks": [],
+    "headless": false
+  },
+  "server": {
+    "url": "http://127.0.0.1:4173",
+    "port": 4173
+  },
+  "expectations": [
+    {
+      "case": "login-timeout",
+      "expected": "green",
+      "actual": "green",
+      "ok": true
+    }
+  ],
+  "cases": [
+    {
+      "case": "login-timeout",
+      "ok": true,
+      "steps": [
+        {
+          "action": "open-slow-login-page",
+          "ok": true,
+          "evidence": [
+            "screenshots/001-open-slow-login-page.png"
+          ],
+          "durationMs": 259,
+          "checks": [
+            {
+              "ok": true,
+              "message": "/login?timeout=1 应返回 HTTP 200，实际 200"
+            },
+            {
+              "ok": true,
+              "message": "/login?timeout=1 应自动勾选 #slow-mode（页面进入慢网模式）"
+            },
+            {
+              "ok": true,
+              "message": "#submit 初始文案应为「登录」"
+            }
+          ]
+        },
+        {
+          "action": "fill-credentials",
+          "ok": true,
+          "evidence": [
+            "screenshots/002-fill-credentials.png"
+          ],
+          "durationMs": 144,
+          "checks": [
+            {
+              "ok": true,
+              "message": "#account 应回填演示账号"
+            },
+            {
+              "ok": true,
+              "message": "#password 应回填演示密码（值不写入日志）"
+            }
+          ]
+        },
+        {
+          "action": "click-login",
+          "ok": true,
+          "evidence": [
+            "screenshots/003-click-login.png"
+          ],
+          "durationMs": 184,
+          "checks": [
+            {
+              "ok": true,
+              "message": "#submit 点击后应进入禁用 loading 态"
+            },
+            {
+              "ok": true,
+              "message": "#submit 加载文案应包含「登录中…」"
+            },
+            {
+              "ok": true,
+              "message": "请求进行中 #login-error 应为 hidden"
+            }
+          ]
+        },
+        {
+          "action": "assert-timeout-recovery",
+          "ok": true,
+          "evidence": [
+            "screenshots/004-assert-timeout-recovery.png"
+          ],
+          "durationMs": 4603,
+          "checks": [
+            {
+              "ok": true,
+              "message": "#submit 超时后应恢复可用（disabled=false），实际 disabled=false，文案「登录」"
+            },
+            {
+              "ok": true,
+              "message": "#login-error 超时后应可见（必须给用户提示），实际仍 hidden"
+            },
+            {
+              "ok": true,
+              "message": "#login-error 文本应包含「请求超时，请重试」，实际「请求超时，请重试」"
+            },
+            {
+              "ok": true,
+              "message": "#submit 文案应恢复为「登录」，实际「登录」"
+            },
+            {
+              "ok": true,
+              "message": "#login-status 应清空，实际「」"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        "screenshots/001-open-slow-login-page.png",
+        "screenshots/002-fill-credentials.png",
+        "screenshots/003-click-login.png",
+        "screenshots/004-assert-timeout-recovery.png"
+      ],
+      "durationMs": 5397,
+      "failures": []
+    }
+  ],
+  "steps": [
+    {
+      "case": "login-timeout",
+      "action": "open-slow-login-page",
+      "ok": true,
+      "evidence": [
+        "screenshots/001-open-slow-login-page.png"
+      ],
+      "durationMs": 259,
+      "checks": [
+        {
+          "ok": true,
+          "message": "/login?timeout=1 应返回 HTTP 200，实际 200"
+        },
+        {
+          "ok": true,
+          "message": "/login?timeout=1 应自动勾选 #slow-mode（页面进入慢网模式）"
+        },
+        {
+          "ok": true,
+          "message": "#submit 初始文案应为「登录」"
+        }
+      ]
+    },
+    {
+      "case": "login-timeout",
+      "action": "fill-credentials",
+      "ok": true,
+      "evidence": [
+        "screenshots/002-fill-credentials.png"
+      ],
+      "durationMs": 144,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#account 应回填演示账号"
+        },
+        {
+          "ok": true,
+          "message": "#password 应回填演示密码（值不写入日志）"
+        }
+      ]
+    },
+    {
+      "case": "login-timeout",
+      "action": "click-login",
+      "ok": true,
+      "evidence": [
+        "screenshots/003-click-login.png"
+      ],
+      "durationMs": 184,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#submit 点击后应进入禁用 loading 态"
+        },
+        {
+          "ok": true,
+          "message": "#submit 加载文案应包含「登录中…」"
+        },
+        {
+          "ok": true,
+          "message": "请求进行中 #login-error 应为 hidden"
+        }
+      ]
+    },
+    {
+      "case": "login-timeout",
+      "action": "assert-timeout-recovery",
+      "ok": true,
+      "evidence": [
+        "screenshots/004-assert-timeout-recovery.png"
+      ],
+      "durationMs": 4603,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#submit 超时后应恢复可用（disabled=false），实际 disabled=false，文案「登录」"
+        },
+        {
+          "ok": true,
+          "message": "#login-error 超时后应可见（必须给用户提示），实际仍 hidden"
+        },
+        {
+          "ok": true,
+          "message": "#login-error 文本应包含「请求超时，请重试」，实际「请求超时，请重试」"
+        },
+        {
+          "ok": true,
+          "message": "#submit 文案应恢复为「登录」，实际「登录」"
+        },
+        {
+          "ok": true,
+          "message": "#login-status 应清空，实际「」"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    "login-timeout/screenshots/001-open-slow-login-page.png",
+    "login-timeout/screenshots/002-fill-credentials.png",
+    "login-timeout/screenshots/003-click-login.png",
+    "login-timeout/screenshots/004-assert-timeout-recovery.png"
+  ],
+  "durationMs": 6208,
+  "resultFile": ".\\runs\\run-20261025-175216-fe8759\\e2e\\result.json"
+}

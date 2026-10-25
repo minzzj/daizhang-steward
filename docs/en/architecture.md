@@ -1,7 +1,7 @@
 # Architecture
 
-> Status: design fixed; **M0 kernel loop implemented and verified (2026-10-25)**, the rest lands
-> through M1–M4.
+> Status: design fixed; **M0 kernel + M1 real-browser loop implemented and verified (2026-10-25)**,
+> the rest lands through M2–M4.
 > Companions: `contracts.md`, `threat-model.md`, `adapters.md`.
 
 ## 1. Design principles
@@ -34,14 +34,21 @@
 
 | Mode | Command | Purpose |
 |---|---|---|
-| Core CLI | `node dist/apps/cli/src/index.js demo/run/branch/report/stop/version/help` | 24/7 operation, demos, acceptance |
+| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/code-loop/run/branch/report/stop/version/help` | 24/7 operation, demos, acceptance |
 | DSH cockpit (optional) | `dsh --profile daizhang web` | Human oversight GUI; mounts `steward-mcp` plus `dsh-browser`/`dsh-computer-use` |
 
 The core is a standalone Node/TS process; the cockpit is only an optional human interface.
 
 The repository is a **single package** (no pnpm workspace): `packages/*/src` + `apps/cli/src` are
 compiled by `tsc -p tsconfig.json` into `dist/`, and all commands use npm (`npm run build`, `npm test`,
-`npm run demo`). `takeover` and `approve` are placeholder commands at M0.
+`npm run demo`, `npm run acceptance`). `takeover` and `approve` are still placeholder commands.
+
+**M1 implementation status**: `packages/steward-browser` provides the Playwright real-browser adapter
+(headed by default, `chrome→msedge` fallback, per-run `userDataDir`, per-step screenshot / DOM /
+console evidence, 5 failure classes, risk-control keywords → stop-and-hand-off);
+`packages/steward-harness/src/patch.ts` applies patches in an isolated git worktree and `loop.ts`
+(`runCodeLoop`) stops after at most two rounds and escalates; `tests/e2e-browser/` holds real-browser
+E2E (normal green / login-timeout red). Conductor / Reviewer / Scout branches are still planned (M2–M3).
 
 ## 4. Branch lifecycle
 
@@ -54,12 +61,18 @@ goal → Conductor creates BranchSpec → PolicyEngine validates budget/tools/ap
 A branch cannot spawn another branch; it submits a `BranchRequest` to the Conductor. Expired
 branches stop automatically.
 
+M1 status: the CLI assembles the operator branch (BranchSpec + tool allowlist) directly for
+`browser-flow` / `code-loop`; Conductor branch spawning, Reviewer evidence checks and the Conductor
+acceptance interface are still planned (M2+).
+
 ## 5. Evidence and ledger
 
 - `events.jsonl`: append-only with `seq` and a hash chain; fields in `contracts.md`; secrets redacted.
-- `runs/<run-id>/`: at M0 each run writes `prompt.md`, `report.md`, `console.log`, `meta.json`,
+- `runs/<run-id>/`: M0 artifacts are `prompt.md`, `report.md`, `console.log`, `meta.json`,
   `events.jsonl`, plus `code-task.json`, `code-result.json`, `patch.diff` and `test.log` from the
-  MockHarness loop; `screenshots/` (real E2E from M1) and `approval.json` (from M1) are filled later.
+  MockHarness loop; from M1 real-browser runs also contain `e2e/<case>/screenshots/`,
+  `e2e/<case>/result.json` and `e2e/server.log`, copied to
+  `docs/test-evidence/evidence-m1-<stamp>/` for acceptance. `approval.json` lands with M2.
 - The SQLite index is rebuildable by replaying events; after a crash, resume from the checkpoint
   without resending messages or double-paying.
 

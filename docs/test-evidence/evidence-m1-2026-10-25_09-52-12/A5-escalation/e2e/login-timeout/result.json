@@ -1,0 +1,114 @@
+{
+  "case": "login-timeout",
+  "ok": false,
+  "steps": [
+    {
+      "action": "open-slow-login-page",
+      "ok": true,
+      "evidence": [
+        "screenshots/001-open-slow-login-page.png"
+      ],
+      "durationMs": 340,
+      "checks": [
+        {
+          "ok": true,
+          "message": "/login?timeout=1 应返回 HTTP 200，实际 200"
+        },
+        {
+          "ok": true,
+          "message": "/login?timeout=1 应自动勾选 #slow-mode（页面进入慢网模式）"
+        },
+        {
+          "ok": true,
+          "message": "#submit 初始文案应为「登录」"
+        }
+      ]
+    },
+    {
+      "action": "fill-credentials",
+      "ok": true,
+      "evidence": [
+        "screenshots/002-fill-credentials.png"
+      ],
+      "durationMs": 107,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#account 应回填演示账号"
+        },
+        {
+          "ok": true,
+          "message": "#password 应回填演示密码（值不写入日志）"
+        }
+      ]
+    },
+    {
+      "action": "click-login",
+      "ok": true,
+      "evidence": [
+        "screenshots/003-click-login.png"
+      ],
+      "durationMs": 161,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#submit 点击后应进入禁用 loading 态"
+        },
+        {
+          "ok": true,
+          "message": "#submit 加载文案应包含「登录中…」"
+        },
+        {
+          "ok": true,
+          "message": "请求进行中 #login-error 应为 hidden"
+        }
+      ]
+    },
+    {
+      "action": "assert-timeout-recovery",
+      "ok": false,
+      "evidence": [
+        "screenshots/004-assert-timeout-recovery-fail.png",
+        "dom/005-assert-timeout-recovery-fail.html"
+      ],
+      "durationMs": 4599,
+      "checks": [
+        {
+          "ok": false,
+          "message": "#submit 超时后应恢复可用（disabled=false），实际 disabled=true，文案「登录中…」"
+        },
+        {
+          "ok": false,
+          "message": "#login-error 超时后应可见（必须给用户提示），实际仍 hidden"
+        },
+        {
+          "ok": false,
+          "message": "#login-error 文本应包含「请求超时，请重试」，实际「」"
+        },
+        {
+          "ok": false,
+          "message": "#submit 文案应恢复为「登录」，实际「登录中…」"
+        },
+        {
+          "ok": false,
+          "message": "#login-status 应清空，实际「正在登录，请稍候…」"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    "screenshots/001-open-slow-login-page.png",
+    "screenshots/002-fill-credentials.png",
+    "screenshots/003-click-login.png",
+    "screenshots/004-assert-timeout-recovery-fail.png",
+    "dom/005-assert-timeout-recovery-fail.html"
+  ],
+  "durationMs": 5352,
+  "failures": [
+    "[assert-timeout-recovery] #submit 超时后应恢复可用（disabled=false），实际 disabled=true，文案「登录中…」",
+    "[assert-timeout-recovery] #login-error 超时后应可见（必须给用户提示），实际仍 hidden",
+    "[assert-timeout-recovery] #login-error 文本应包含「请求超时，请重试」，实际「」",
+    "[assert-timeout-recovery] #submit 文案应恢复为「登录」，实际「登录中…」",
+    "[assert-timeout-recovery] #login-status 应清空，实际「正在登录，请稍候…」"
+  ]
+}

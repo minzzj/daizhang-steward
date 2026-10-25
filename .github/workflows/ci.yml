@@ -42,6 +42,9 @@ jobs:
       - name: Acceptance evidence (`steward demo`, MockHarness — no paid API)
         run: npm run evidence
 
-# M1+ jobs:
-#   e2e-browser: real headless Chromium against examples/demo-web
-#   desktop E2E: local/self-hosted only (hosted CI has no interactive desktop)
+      - name: Real-browser E2E (headless Chrome/Edge, demo-web normal flow)
+        run: node tests/e2e-browser/login-flow.mjs --case normal --headless 1 --evidence-dir runs/ci-e2e
+
+# Local-only (hosted CI has no interactive desktop):
+#   npm run acceptance  — headed real browser: A2 browser flow + A4 code loop + A5 escalation
+#   tests/e2e-desktop/  — real Windows UI automation (M2)

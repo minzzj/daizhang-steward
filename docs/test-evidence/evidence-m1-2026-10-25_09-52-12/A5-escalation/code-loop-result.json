@@ -1,0 +1,26 @@
+{
+  "ok": false,
+  "escalated": true,
+  "rounds": [
+    {
+      "round": 1,
+      "patchAvailable": true,
+      "patchApplied": true,
+      "acceptanceExit": 1,
+      "acceptanceOutput": "========================================================================\n代掌 Steward · 真实浏览器 E2E（demo-web 登录 → 提交项目）\n模式    : login-timeout\n浏览器  : 有头（默认，产品验收必须）；通道 chrome → msedge\n工作目录: <worktree>\\examples\\demo-web\n证据目录: .\\runs\\run-20261025-175223-de0b95\\e2e\n========================================================================\n\n[demo-web] 已启动：http://127.0.0.1:4173/（pid 4572，/health 200）\n[browser] chrome 155.0.8059.85 已启动（headed）\n\n--- case: login-timeout ---\n  ✓ open-slow-login-page（249ms）\n  ✓ fill-credentials（101ms）\n  ✓ click-login（154ms）\n  ✗ assert-timeout-recovery（4603ms）\n      ✗ #submit 超时后应恢复可用（disabled=false），实际 disabled=true，文案「登录中…」\n      ✗ #login-error 超时后应可见（必须给用户提示），实际仍 hidden\n      ✗ #login-error 文本应包含「请求超时，请重试」，实际「」\n      ✗ #submit 文案应恢复为「登录」，实际「登录中…」\n      ✗ #login-status 应清空，实际「正在登录，请稍候…」\n--- case login-timeout: FAIL（红），4 步，5 个证据，5.3s ---\n    ✗ [assert-timeout-recovery] #submit 超时后应恢复可用（disabled=false），实际 disabled=true，文案「登录中…」\n    ✗ [assert-timeout-recovery] #login-error 超时后应可见（必须给用户提示），实际仍 hidden\n    ✗ [assert-timeout-recovery] #login-error 文本应包含「请求超时，请重试」，实际「」\n    ✗ [assert-timeout-recovery] #submit 文案应恢复为「登录」，实际「登录中…」\n    ✗ [assert-timeout-recovery] #login-status 应清空，实际「正在登录，请稍候…」\n\n[demo-web] 已停止（pid 4572，端口已释放，已强制结束）\n\n========================================================================\n结果汇总\n  浏览器: chrome 155.0.8059.85（headed）\n  ✗ case login-timeout：期望 绿，实际 红（失败）\n  证据  : .\\runs\\run-20261025-175223-de0b95\\e2e\n  结果  : .\\runs\\run-20261025-175223-de0b95\\e2e\\result.json\n  耗时  : 6.2s\n  结论  : 不符合预期 → 退出码 1\n\n  提示：login-timeout 是复现「登录超时无提示」预置缺陷的 red test，默认退出码 1 属预期；\n        修复前验收缺陷复现可加 --expect-red login-timeout（缺陷按预期复现则退出码 0）；\n        只验证正常流程用 --case normal（应为退出码 0）。\n========================================================================",
+      "note": "验收未通过"
+    },
+    {
+      "round": 2,
+      "patchAvailable": true,
+      "patchApplied": true,
+      "acceptanceExit": 1,
+      "acceptanceOutput": "========================================================================\n代掌 Steward · 真实浏览器 E2E（demo-web 登录 → 提交项目）\n模式    : login-timeout\n浏览器  : 有头（默认，产品验收必须）；通道 chrome → msedge\n工作目录: <worktree>\\examples\\demo-web\n证据目录: .\\runs\\run-20261025-175223-de0b95\\e2e\n========================================================================\n\n[demo-web] 已启动：http://127.0.0.1:4173/（pid 34880，/health 200）\n[browser] chrome 155.0.8059.85 已启动（headed）\n\n--- case: login-timeout ---\n  ✓ open-slow-login-page（340ms）\n  ✓ fill-credentials（107ms）\n  ✓ click-login（161ms）\n  ✗ assert-timeout-recovery（4599ms）\n      ✗ #submit 超时后应恢复可用（disabled=false），实际 disabled=true，文案「登录中…」\n      ✗ #login-error 超时后应可见（必须给用户提示），实际仍 hidden\n      ✗ #login-error 文本应包含「请求超时，请重试」，实际「」\n      ✗ #submit 文案应恢复为「登录」，实际「登录中…」\n      ✗ #login-status 应清空，实际「正在登录，请稍候…」\n--- case login-timeout: FAIL（红），4 步，5 个证据，5.4s ---\n    ✗ [assert-timeout-recovery] #submit 超时后应恢复可用（disabled=false），实际 disabled=true，文案「登录中…」\n    ✗ [assert-timeout-recovery] #login-error 超时后应可见（必须给用户提示），实际仍 hidden\n    ✗ [assert-timeout-recovery] #login-error 文本应包含「请求超时，请重试」，实际「」\n    ✗ [assert-timeout-recovery] #submit 文案应恢复为「登录」，实际「登录中…」\n    ✗ [assert-timeout-recovery] #login-status 应清空，实际「正在登录，请稍候…」\n\n[demo-web] 已停止（pid 34880，端口已释放，已强制结束）\n\n========================================================================\n结果汇总\n  浏览器: chrome 155.0.8059.85（headed）\n  ✗ case login-timeout：期望 绿，实际 红（失败）\n  证据  : .\\runs\\run-20261025-175223-de0b95\\e2e\n  结果  : .\\runs\\run-20261025-175223-de0b95\\e2e\\result.json\n  耗时  : 6.1s\n  结论  : 不符合预期 → 退出码 1\n\n  提示：login-timeout 是复现「登录超时无提示」预置缺陷的 red test，默认退出码 1 属预期；\n        修复前验收缺陷复现可加 --expect-red login-timeout（缺陷按预期复现则退出码 0）；\n        只验证正常流程用 --case normal（应为退出码 0）。\n========================================================================",
+      "note": "验收未通过"
+    }
+  ],
+  "patch": "diff --git a/examples/demo-web/app.js b/examples/demo-web/app.js\nindex 86390fd..b95d15e 100644\n--- a/examples/demo-web/app.js\n+++ b/examples/demo-web/app.js\n@@ -150,7 +150,7 @@ els.loginForm.addEventListener(\"submit\", async (event) => {\n     //\n     // 注意：修复时不要删除这段注释的警示作用说明，并保持选择器不变，\n     // 以免破坏 tests/e2e-browser 中基于 #submit / #login-error 的断言。\n-    console.warn(\"[demo-web][已知缺陷] 登录请求失败/超时，但页面未显示任何错误提示：\", error);\n+    console.warn(\"[demo-web][第 1 轮尝试] 登录请求失败/超时（本轮补丁未修复 UI 提示）：\", error);\n   } finally {\n     window.clearTimeout(timer);\n   }\n",
+  "summary": "连续 2 轮未通过，已停止并升级人类（不无限重试）。最后补丁说明：MockHarness 生成示例补丁：修复 demo-web 登录页在 4 秒超时后不显示错误提示",
+  "testLog": ".\\runs\\run-20261025-175223-de0b95\\test.log",
+  "evidence": []
+}

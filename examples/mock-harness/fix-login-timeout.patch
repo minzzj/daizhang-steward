@@ -1,0 +1,14 @@
+diff --git a/examples/demo-web/app.js b/examples/demo-web/app.js
+index 86390fd..b75f13f 100644
+--- a/examples/demo-web/app.js
++++ b/examples/demo-web/app.js
+@@ -150,6 +150,9 @@ els.loginForm.addEventListener("submit", async (event) => {
+     //
+     // 注意：修复时不要删除这段注释的警示作用说明，并保持选择器不变，
+     // 以免破坏 tests/e2e-browser 中基于 #submit / #login-error 的断言。
++    loginPending = false;
++    setLoginLoading(false);
++    showLoginError("请求超时，请重试");
+     console.warn("[demo-web][已知缺陷] 登录请求失败/超时，但页面未显示任何错误提示：", error);
+   } finally {
+     window.clearTimeout(timer);

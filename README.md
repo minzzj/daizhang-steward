@@ -3,10 +3,11 @@
 **A composable, evidence-first operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations.
 
-> Status: **M0 complete** — minimal kernel loop verified (2026-10-25): the `steward` CLI runs an
-> end-to-end empty loop with MockHarness (no paid API), **30/30** unit + integration tests pass, and
-> **4** versioned runtime prompts ship with a sha256-checked manifest. Acceptance items A1/A6/A12
-> pass — see [ROADMAP.md](ROADMAP.md) and the evidence in
+> Status: **M1 complete** — real-browser code loop verified (2026-10-25): headed Chrome runs the
+> demo-web flow (A2), repairs the seeded login-timeout defect through CodeTask → patch → isolated
+> worktree → real browser red→green (A4), and escalates after two failed rounds (A5). **34/34** unit +
+> integration tests pass; the CLI ships **9 commands + 2 placeholders**. Acceptance A1/A2/A4/A5/A6 and
+> A12 pass — see [ROADMAP.md](ROADMAP.md) and
 > [`docs/en/delivery-checklist.md`](docs/en/delivery-checklist.md).
 > 中文说明见 [README.zh-CN.md](README.zh-CN.md).
 
@@ -69,44 +70,59 @@ The repository is a **single package** (no pnpm workspace): `tsconfig.json` comp
 
 ```text
 packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts;
-            steward-harness: MockHarness)
-apps/       CLI entry (steward: demo/run/branch/report/stop/version/help)
+            steward-harness: MockHarness + isolated-worktree patch + two-round code loop;
+            steward-browser: Playwright real-browser adapter)
+apps/       CLI entry (steward: demo/browser-flow/code-loop/run/branch/report/stop/version/help)
 prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
-examples/   demo-web, demo-desktop, mock-harness, scout-fixtures, demo-business
-tests/      unit tests (30 implemented at M0); contract / e2e / fault drills land later
+examples/   demo-web, demo-desktop, mock-harness (scripted patches), scout-fixtures, demo-business
+tests/      unit tests (34 at M1) + e2e-browser real-browser E2E; contract / desktop / fault drills later
 docs/       bilingual docs (en/ and zh-CN/) + test evidence
-scripts/    check/build helpers, secret scan, evidence bundle, delivery sync
+scripts/    check/build helpers, secret scan, evidence + acceptance runners, delivery sync
 runs/       per-run artifacts (gitignored; evidence lives here)
 dist/       build output (gitignored; single-package build)
 ```
 
-## Quickstart (M0)
+## Quickstart (M0 → M1)
 
-M0 runs offline once cloned — no paid API (MockHarness):
+M0 runs offline once cloned — no paid API (MockHarness); M1 adds a real-browser loop:
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
 cd daizhang-steward
-# Node.js >= 22.18, npm
+# Node.js >= 22.18, npm; local Chrome/Edge for real-browser acceptance
 npm install
 npm run check          # repo/config check
 npm run check:secrets  # secret scan
 npm run build          # tsc -p tsconfig.json → dist/
-npm test               # 30/30 unit + integration tests
-npm run demo           # empty loop → runs/<run-id>/ + report.md (MockHarness)
+npm test               # 34/34 unit + integration tests
+npm run demo           # M0 empty loop → runs/<run-id>/ + report.md (MockHarness)
 npm run test:prompts   # prompt versioning/safety tests (acceptance A12)
-npm run evidence       # evidence bundle → docs/test-evidence/test-result-<stamp>.{md,json}
+npm run evidence       # offline evidence bundle → docs/test-evidence/test-result-<stamp>.{md,json}
+npm run acceptance     # M1 headed real-browser acceptance (A2/A4/A5) → docs/test-evidence/m1-acceptance-<stamp>.*
 ```
 
-What M0 can do: the CLI implements `demo`, `run`, `branch`, `report`, `stop`, `version` and `help`
-(`takeover` and `approve` are placeholders for Phase 2 / M1). Every run writes its evidence bundle to
-`runs/<run-id>/`: `prompt.md`, `report.md`, `console.log`, `meta.json`, `events.jsonl` (hash-chained
-ledger), plus `patch.diff`, `test.log`, `code-task.json` and `code-result.json` from the MockHarness
-loop, and an (empty until M1) `screenshots/` directory. The built CLI can also be invoked directly:
-`node dist/apps/cli/src/index.js demo`.
+CI runs the headless real-browser normal flow (`node tests/e2e-browser/login-flow.mjs --case normal
+--headless 1`); headed `npm run acceptance` is local-only (hosted CI has no interactive desktop).
 
-Latest verified M0 run: `runs/run-20261025-172017-eb9116/` — evidence in
-[`docs/test-evidence/test-result-2026-10-25_09-20-15.md`](docs/test-evidence/test-result-2026-10-25_09-20-15.md).
+What M1 can do: the CLI implements `demo`, `browser-flow`, `code-loop`, `run`, `branch`, `report`,
+`stop`, `version` and `help` (`takeover` and `approve` are placeholders). `browser-flow` drives the
+real demo-web login/project flow in headed Chrome with per-step screenshots; `code-loop` runs
+CodeTask → patch → isolated git worktree → real-browser acceptance, and `code-loop --fail` injects a
+broken patch and escalates after two rounds. Every run writes its evidence bundle to
+`runs/<run-id>/`: `prompt.md`, `report.md`, `console.log`, `meta.json`, `events.jsonl`
+(hash-chained ledger), plus `patch.diff`, `test.log`, `code-task.json`, `code-result.json` and
+`e2e/<case>/screenshots/`. The built CLI can also be invoked directly:
+`node dist/apps/cli/src/index.js help`.
+
+Latest M1 acceptance (2026-10-25, local headed Chrome, `npm run acceptance` OK):
+[`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.md`](docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.md)
+(· [`.json`](docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.json)); evidence bundle
+[`docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`](docs/test-evidence/evidence-m1-2026-10-25_09-52-12/)
+(45 files: A2 / A4 / A5 screenshots + logs); runs `run-20261025-175213-9ea8ab` (A2),
+`run-20261025-175216-fe8759` (A4), `run-20261025-175223-de0b95` (A5).
+
+Latest M0 offline loop run: `runs/run-20261025-172017-eb9116/` — evidence in
+[`docs/test-evidence/test-result-2026-10-25_09-52-08.md`](docs/test-evidence/test-result-2026-10-25_09-52-08.md).
 
 ## Real-test pledge
 
@@ -114,7 +130,9 @@ Latest verified M0 run: `runs/run-20261025-172017-eb9116/` — evidence in
   mouse/keyboard input** — never API calls or fake DOM as a stand-in.
 - Every external action is screenshotted; failures keep their scene; at most two retries, then
   escalation to a human.
-- CI uses a mock harness (no paid keys). Before release, the full suite is re-run from a clean path.
+- CI uses a mock harness (no paid keys) and runs the headless real-browser normal flow; headed
+  acceptance (`npm run acceptance`) is local-only. Before release, the full suite is re-run from a
+  clean path.
 
 ## License
 
@@ -132,7 +150,7 @@ runs before every commit/CI. See [`SECURITY.md`](SECURITY.md).
 
 - [ROADMAP.md](ROADMAP.md) — milestones and approval gates
 - [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — acceptance items with evidence
-- [docs/test-evidence/](docs/test-evidence/) — evidence archive (`test-result-*.{md,json}`)
+- [docs/test-evidence/](docs/test-evidence/) — evidence archive (`test-result-*`, `m1-acceptance-*`, `evidence-m1-*`)
 - [docs/en/architecture.md](docs/en/architecture.md) · [docs/en/contracts.md](docs/en/contracts.md)
   · [docs/en/threat-model.md](docs/en/threat-model.md)
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — assumptions and known gaps

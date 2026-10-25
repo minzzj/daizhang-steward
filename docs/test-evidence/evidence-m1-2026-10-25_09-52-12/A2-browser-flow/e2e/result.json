@@ -1,0 +1,327 @@
+{
+  "suite": "e2e-browser/login-flow",
+  "case": "normal",
+  "ok": true,
+  "headless": false,
+  "browser": {
+    "channel": "chrome",
+    "version": "155.0.8059.85",
+    "fallbacks": [],
+    "headless": false
+  },
+  "server": {
+    "url": "http://127.0.0.1:4173",
+    "port": 4173
+  },
+  "expectations": [
+    {
+      "case": "normal",
+      "expected": "green",
+      "actual": "green",
+      "ok": true
+    }
+  ],
+  "cases": [
+    {
+      "case": "normal",
+      "ok": true,
+      "steps": [
+        {
+          "action": "open-login-page",
+          "ok": true,
+          "evidence": [
+            "screenshots/001-open-login-page.png"
+          ],
+          "durationMs": 387,
+          "checks": [
+            {
+              "ok": true,
+              "message": "首页应返回 HTTP 200，实际 200"
+            },
+            {
+              "ok": true,
+              "message": "#login-view 登录视图应可见"
+            },
+            {
+              "ok": true,
+              "message": "#account 账号输入框应可见"
+            },
+            {
+              "ok": true,
+              "message": "#submit 登录按钮应可用"
+            }
+          ]
+        },
+        {
+          "action": "fill-credentials",
+          "ok": true,
+          "evidence": [
+            "screenshots/002-fill-credentials.png"
+          ],
+          "durationMs": 113,
+          "checks": [
+            {
+              "ok": true,
+              "message": "#account 应回填演示账号"
+            },
+            {
+              "ok": true,
+              "message": "#password 应回填演示密码（值不写入日志）"
+            }
+          ]
+        },
+        {
+          "action": "click-login",
+          "ok": true,
+          "evidence": [
+            "screenshots/003-click-login.png"
+          ],
+          "durationMs": 186,
+          "checks": []
+        },
+        {
+          "action": "wait-project-view",
+          "ok": true,
+          "evidence": [
+            "screenshots/004-wait-project-view.png"
+          ],
+          "durationMs": 348,
+          "checks": [
+            {
+              "ok": true,
+              "message": "登录成功后 #login-view 应隐藏"
+            },
+            {
+              "ok": true,
+              "message": "#project-name 项目名称输入框应可见"
+            },
+            {
+              "ok": true,
+              "message": "#project-result 结果区域应存在"
+            },
+            {
+              "ok": true,
+              "message": "正常登录后 #login-error 应保持 hidden"
+            }
+          ]
+        },
+        {
+          "action": "fill-project",
+          "ok": true,
+          "evidence": [
+            "screenshots/005-fill-project.png"
+          ],
+          "durationMs": 103,
+          "checks": [
+            {
+              "ok": true,
+              "message": "#project-name 应回填项目名称"
+            },
+            {
+              "ok": true,
+              "message": "#project-note 应回填备注"
+            }
+          ]
+        },
+        {
+          "action": "click-create",
+          "ok": true,
+          "evidence": [
+            "screenshots/006-click-create.png"
+          ],
+          "durationMs": 122,
+          "checks": []
+        },
+        {
+          "action": "assert-project-submitted",
+          "ok": true,
+          "evidence": [
+            "screenshots/007-assert-project-submitted.png"
+          ],
+          "durationMs": 188,
+          "checks": [
+            {
+              "ok": true,
+              "message": "#project-result 文本应包含「已提交」，实际「已提交：示例客户官网改版」"
+            },
+            {
+              "ok": true,
+              "message": "#project-result 应回显项目名称「示例客户官网改版」，实际「已提交：示例客户官网改版」"
+            },
+            {
+              "ok": true,
+              "message": "#project-error 不应显示（提交成功）"
+            },
+            {
+              "ok": true,
+              "message": "#create 提交成功后应恢复可用"
+            }
+          ]
+        }
+      ],
+      "evidence": [
+        "screenshots/001-open-login-page.png",
+        "screenshots/002-fill-credentials.png",
+        "screenshots/003-click-login.png",
+        "screenshots/004-wait-project-view.png",
+        "screenshots/005-fill-project.png",
+        "screenshots/006-click-create.png",
+        "screenshots/007-assert-project-submitted.png"
+      ],
+      "durationMs": 1708,
+      "failures": []
+    }
+  ],
+  "steps": [
+    {
+      "case": "normal",
+      "action": "open-login-page",
+      "ok": true,
+      "evidence": [
+        "screenshots/001-open-login-page.png"
+      ],
+      "durationMs": 387,
+      "checks": [
+        {
+          "ok": true,
+          "message": "首页应返回 HTTP 200，实际 200"
+        },
+        {
+          "ok": true,
+          "message": "#login-view 登录视图应可见"
+        },
+        {
+          "ok": true,
+          "message": "#account 账号输入框应可见"
+        },
+        {
+          "ok": true,
+          "message": "#submit 登录按钮应可用"
+        }
+      ]
+    },
+    {
+      "case": "normal",
+      "action": "fill-credentials",
+      "ok": true,
+      "evidence": [
+        "screenshots/002-fill-credentials.png"
+      ],
+      "durationMs": 113,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#account 应回填演示账号"
+        },
+        {
+          "ok": true,
+          "message": "#password 应回填演示密码（值不写入日志）"
+        }
+      ]
+    },
+    {
+      "case": "normal",
+      "action": "click-login",
+      "ok": true,
+      "evidence": [
+        "screenshots/003-click-login.png"
+      ],
+      "durationMs": 186,
+      "checks": []
+    },
+    {
+      "case": "normal",
+      "action": "wait-project-view",
+      "ok": true,
+      "evidence": [
+        "screenshots/004-wait-project-view.png"
+      ],
+      "durationMs": 348,
+      "checks": [
+        {
+          "ok": true,
+          "message": "登录成功后 #login-view 应隐藏"
+        },
+        {
+          "ok": true,
+          "message": "#project-name 项目名称输入框应可见"
+        },
+        {
+          "ok": true,
+          "message": "#project-result 结果区域应存在"
+        },
+        {
+          "ok": true,
+          "message": "正常登录后 #login-error 应保持 hidden"
+        }
+      ]
+    },
+    {
+      "case": "normal",
+      "action": "fill-project",
+      "ok": true,
+      "evidence": [
+        "screenshots/005-fill-project.png"
+      ],
+      "durationMs": 103,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#project-name 应回填项目名称"
+        },
+        {
+          "ok": true,
+          "message": "#project-note 应回填备注"
+        }
+      ]
+    },
+    {
+      "case": "normal",
+      "action": "click-create",
+      "ok": true,
+      "evidence": [
+        "screenshots/006-click-create.png"
+      ],
+      "durationMs": 122,
+      "checks": []
+    },
+    {
+      "case": "normal",
+      "action": "assert-project-submitted",
+      "ok": true,
+      "evidence": [
+        "screenshots/007-assert-project-submitted.png"
+      ],
+      "durationMs": 188,
+      "checks": [
+        {
+          "ok": true,
+          "message": "#project-result 文本应包含「已提交」，实际「已提交：示例客户官网改版」"
+        },
+        {
+          "ok": true,
+          "message": "#project-result 应回显项目名称「示例客户官网改版」，实际「已提交：示例客户官网改版」"
+        },
+        {
+          "ok": true,
+          "message": "#project-error 不应显示（提交成功）"
+        },
+        {
+          "ok": true,
+          "message": "#create 提交成功后应恢复可用"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    "normal/screenshots/001-open-login-page.png",
+    "normal/screenshots/002-fill-credentials.png",
+    "normal/screenshots/003-click-login.png",
+    "normal/screenshots/004-wait-project-view.png",
+    "normal/screenshots/005-fill-project.png",
+    "normal/screenshots/006-click-create.png",
+    "normal/screenshots/007-assert-project-submitted.png"
+  ],
+  "durationMs": 2685,
+  "resultFile": ".\\runs\\run-20261025-175213-9ea8ab\\e2e\\result.json"
+}

@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "escalated": false,
+  "rounds": [
+    {
+      "round": 1,
+      "patchAvailable": true,
+      "patchApplied": true,
+      "acceptanceExit": 0,
+      "acceptanceOutput": "========================================================================\n代掌 Steward · 真实浏览器 E2E（demo-web 登录 → 提交项目）\n模式    : login-timeout\n浏览器  : 有头（默认，产品验收必须）；通道 chrome → msedge\n工作目录: <worktree>\\examples\\demo-web\n证据目录: .\\runs\\run-20261025-175216-fe8759\\e2e\n========================================================================\n\n[demo-web] 已启动：http://127.0.0.1:4173/（pid 35400，/health 200）\n[browser] chrome 155.0.8059.85 已启动（headed）\n\n--- case: login-timeout ---\n  ✓ open-slow-login-page（259ms）\n  ✓ fill-credentials（144ms）\n  ✓ click-login（184ms）\n  ✓ assert-timeout-recovery（4603ms）\n--- case login-timeout: PASS（绿），4 步，4 个证据，5.4s ---\n\n[demo-web] 已停止（pid 35400，端口已释放，已强制结束）\n\n========================================================================\n结果汇总\n  浏览器: chrome 155.0.8059.85（headed）\n  ✓ case login-timeout：期望 绿，实际 绿（通过）\n  证据  : .\\runs\\run-20261025-175216-fe8759\\e2e\n  结果  : .\\runs\\run-20261025-175216-fe8759\\e2e\\result.json\n  耗时  : 6.2s\n  结论  : 符合预期 → 退出码 0\n========================================================================",
+      "note": "验收通过"
+    }
+  ],
+  "patch": "diff --git a/examples/demo-web/app.js b/examples/demo-web/app.js\nindex 86390fd..b75f13f 100644\n--- a/examples/demo-web/app.js\n+++ b/examples/demo-web/app.js\n@@ -150,6 +150,9 @@ els.loginForm.addEventListener(\"submit\", async (event) => {\n     //\n     // 注意：修复时不要删除这段注释的警示作用说明，并保持选择器不变，\n     // 以免破坏 tests/e2e-browser 中基于 #submit / #login-error 的断言。\n+    loginPending = false;\n+    setLoginLoading(false);\n+    showLoginError(\"请求超时，请重试\");\n     console.warn(\"[demo-web][已知缺陷] 登录请求失败/超时，但页面未显示任何错误提示：\", error);\n   } finally {\n     window.clearTimeout(timer);\n",
+  "summary": "第 1 轮通过：MockHarness 生成示例补丁：修复 demo-web 登录页在 4 秒超时后不显示错误提示",
+  "testLog": ".\\runs\\run-20261025-175216-fe8759\\test.log",
+  "evidence": []
+}

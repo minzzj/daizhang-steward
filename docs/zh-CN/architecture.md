@@ -1,6 +1,6 @@
 # 架构 / Architecture（中文）
 
-> 状态：设计定稿；**M0 内核最小闭环已实现并验证（2026-10-25）**，其余随 M1–M4 落地，细节改动以 PR 为准。
+> 状态：设计定稿；**M0 内核 + M1 真实浏览器回路已实现并验证（2026-10-25）**，其余随 M2–M4 落地，细节改动以 PR 为准。
 > 配套：`docs/zh-CN/contracts.md`、`docs/zh-CN/threat-model.md`、`docs/zh-CN/adapters.md`。
 
 ## 1. 设计原则
@@ -28,14 +28,20 @@
 
 | 形态 | 命令 | 用途 |
 |---|---|---|
-| 内核 CLI | `node dist/apps/cli/src/index.js demo/run/branch/report/stop/version/help` | 24h 运行、演示、验收 |
+| 内核 CLI | `node dist/apps/cli/src/index.js demo/browser-flow/code-loop/run/branch/report/stop/version/help` | 24h 运行、演示、验收 |
 | DSH 驾驶舱（可选） | `dsh --profile daizhang web` | 人用 DSH GUI 观察/审批/接管；挂 `steward-mcp` 与 `dsh-browser`/`dsh-computer-use` |
 
 内核是独立 Node/TS 进程；驾驶舱只是可选的“人机接口”，不参与核心决策。
 
 工程为**单包布局**（无 pnpm workspace）：`packages/*/src` + `apps/cli/src` 由
-`tsc -p tsconfig.json` 编译到 `dist/`，命令一律用 npm（`npm run build` / `npm test` / `npm run demo`）。
-`takeover` 与 `approve` 在 M0 为占位命令。
+`tsc -p tsconfig.json` 编译到 `dist/`，命令一律用 npm（`npm run build` / `npm test` / `npm run demo` /
+`npm run acceptance`）。`takeover` 与 `approve` 仍为占位命令（阶段二 / 后续里程碑）。
+
+**M1 实现现状**：`packages/steward-browser` 提供 Playwright 真实浏览器适配器（有头默认、
+`chrome→msedge` 回退、每 run 独立 `userDataDir`、每步截图/DOM/console、5 类失败分类、
+风控关键词 → 停止交人）；`packages/steward-harness/src/patch.ts` 在隔离 git worktree 应用补丁，
+`loop.ts` 的 `runCodeLoop` 最多两轮、超限升级；`tests/e2e-browser/` 提供真实浏览器 E2E
+（normal 绿 / login-timeout 红）。Conductor / Reviewer / Scout 分支仍为规划（M2–M3）。
 
 ## 4. 分支生命周期
 
@@ -47,12 +53,16 @@
 
 分支不得自行再开分支；需要扩展时提交 `BranchRequest` 由 Conductor 决定。过期自动停止。
 
+M1 现状：CLI 直接装配 operator 分支（BranchSpec + 工具白名单）跑 `browser-flow` / `code-loop`；
+Conductor 的分支派生、Reviewer 证据复核与 Conductor 验收接口仍是规划（M2+）。
+
 ## 5. 证据与账本
 
 - `events.jsonl`：只追加、带 `seq` 与哈希链，字段见 contracts.md；密钥脱敏。
-- `runs/<run-id>/`：M0 实际产物为 `prompt.md`、`report.md`、`console.log`、`meta.json`、`events.jsonl`，
-  以及 MockHarness 回路的 `code-task.json`、`code-result.json`、`patch.diff`、`test.log`；
-  `screenshots/`（M1 起由真实 E2E 生成）与 `approval.json`（M1 起）随里程碑补齐。
+- `runs/<run-id>/`：M0 产物为 `prompt.md`、`report.md`、`console.log`、`meta.json`、`events.jsonl`，
+  以及 MockHarness 回路的 `code-task.json`、`code-result.json`、`patch.diff`、`test.log`；M1 起
+  真实浏览器运行另含 `e2e/<case>/screenshots/`、`e2e/<case>/result.json`、`e2e/server.log`；
+  验收时复制到 `docs/test-evidence/evidence-m1-<stamp>/`。`approval.json` 随 M2 落地。
 - SQLite 索引可从事件重放重建；崩溃后用检查点恢复，不重复发送/扣款。
 
 ## 6. 摘要层级

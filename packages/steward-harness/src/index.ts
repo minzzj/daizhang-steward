@@ -120,9 +120,14 @@ export function demoCodeTask(repo: string): CodeTask {
     expected: "页面显示「请求超时，请重试」，按钮恢复可点击",
     actual: "按钮一直转圈，没有任何错误提示（预置缺陷）",
     files: ["examples/demo-web/app.js"],
-    acceptance: ["node tests/e2e-browser/run.mjs --case login-timeout"],
+    acceptance: ["node tests/e2e-browser/login-flow.mjs --case login-timeout"],
     constraints: ["不引入第三方依赖", "不修改 API 契约"],
     forbidden: ["examples/demo-web/server.mjs"],
     output: "unified_diff",
   };
 }
+
+export * from "./patch.js";
+export type { CodeLoopOptions, CodeLoopResult, CodeLoopRound } from "./loop.js";
+export { runCodeLoop } from "./loop.js";
+

@@ -1,0 +1,13 @@
+diff --git a/examples/demo-web/app.js b/examples/demo-web/app.js
+index 86390fd..b95d15e 100644
+--- a/examples/demo-web/app.js
++++ b/examples/demo-web/app.js
+@@ -150,7 +150,7 @@ els.loginForm.addEventListener("submit", async (event) => {
+     //
+     // 注意：修复时不要删除这段注释的警示作用说明，并保持选择器不变，
+     // 以免破坏 tests/e2e-browser 中基于 #submit / #login-error 的断言。
+-    console.warn("[demo-web][已知缺陷] 登录请求失败/超时，但页面未显示任何错误提示：", error);
++    console.warn("[demo-web][第 1 轮尝试] 登录请求失败/超时（本轮补丁未修复 UI 提示）：", error);
+   } finally {
+     window.clearTimeout(timer);
+   }

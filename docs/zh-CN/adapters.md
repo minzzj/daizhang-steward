@@ -8,9 +8,15 @@
 - 能力：打开/导航、点击、输入、选择、滚屏、截图、DOM 快照、控制台日志、下载、上传、多标签、
   有头/无头、网络与超时配置、配置目录隔离。
 - 证据：每步截图 + 页面 URL + DOM 快照路径 + 控制台日志文件。
-- 失败分类：元素找不到 / 页面加载超时 / 权限拒绝 / 风控拦截（→ 停止交人）/ 未知（→ 暂停待核）。
+- 失败分类（5 类）：元素找不到 / 页面加载超时 / 权限拒绝 / 风控拦截 / 未知；其中风控关键词命中抛
+  `RiskControlStopError` → **停止交人**，未知 → 暂停待核。
 - 铁律：**UI 验收必须真实 Chromium/Edge 有头模式**，禁止 mock DOM 或 API 代替。
-- 实现：`packages/steward-browser`；参考 `dsh-browser`（MIT）模式并扩展缺失能力。
+- **实现状态：M1 已实现** `packages/steward-browser`（参考 `dsh-browser` MIT 模式并扩展）：
+  有头默认、`chrome → msedge` 回退、每 run 独立 `userDataDir`、每步截图 / DOM / console 证据；
+  adapter-smoke **28/28 PASS**。下载/上传/多标签/滚屏等能力按本文契约在后续迭代补齐。
+- 证据布局（M1 实测）：`runs/<run-id>/e2e/<case>/` 下 `screenshots/`、`result.json`、
+  `console.log`、`server.log`；`npm run acceptance` 会把关键证据复制到
+  `docs/test-evidence/evidence-m1-<stamp>/`（A2 / A4 / A5 三组）。
 
 ## 2. 桌面适配器（Windows 优先）
 
@@ -24,13 +30,19 @@
 
 ## 3. 模型 / Harness 适配器
 
-| 实现 | 用途 | 依赖 |
-|---|---|---|
-| `MockHarness` | CI、离线演示、失败注入 | 无 |
-| `DshHeadlessHarness` | 真实编码协作，生成补丁 | `@deepseek-ai/dsh`（锁定版本） |
-| `DeepSeekApiHarness` | 直连 API 的备选路径（联调用） | 环境变量 key |
+| 实现 | 用途 | 依赖 | 状态 |
+|---|---|---|---|
+| `MockHarness` | CI、离线演示、失败注入 | 无 | ✅ M0 已实现 |
+| 脚本化补丁（`examples/mock-harness/*.patch`） | M1 真实修复补丁 / 失败注入 | git | ✅ M1 已实现 |
+| `DshHeadlessHarness` | 真实编码协作，生成补丁 | `@deepseek-ai/dsh`（锁定版本） | 规划（未实现） |
+| `DeepSeekApiHarness` | 直连 API 的备选路径（联调用） | 环境变量 key | 规划（未实现） |
 
 Harness 只接收 CodeTask 文本，返回 CodeResult；不接触生产凭据、不执行部署。
+
+M1 编码回路：`packages/steward-harness/src/patch.ts` 在**隔离 git worktree** 应用 `unified_diff`
+（不碰主工作区）；`loop.ts` 的 `runCodeLoop` 每轮跑真实浏览器验收，最多两轮，超限写
+`escalated=true` 并以退出码 1 结束（不无限重试）；CLI `code-loop` 暴露该回路，`--fail` 使用坏补丁
+验证升级路径。
 
 ## 4. 通知适配器
 

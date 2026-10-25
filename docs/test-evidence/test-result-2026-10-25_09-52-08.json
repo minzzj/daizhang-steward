@@ -1,5 +1,5 @@
 {
-  "stamp": "2026-10-25_09-20-15",
+  "stamp": "2026-10-25_09-52-08",
   "ok": true,
   "env": {
     "node": "v24.15.0",
@@ -9,33 +9,33 @@
   "steps": {
     "build": {
       "exitCode": 0,
-      "durationMs": 925
+      "durationMs": 1154
     },
     "tests": {
       "exitCode": 0,
-      "durationMs": 830
+      "durationMs": 2353
     },
     "demo": {
       "exitCode": 0,
-      "durationMs": 144
+      "durationMs": 127
     }
   },
   "summary": {
-    "tests": 30,
-    "pass": 30,
+    "tests": 34,
+    "pass": 34,
     "fail": 0,
     "skipped": 0
   },
   "demo": {
     "ok": true,
-    "runId": "run-20261025-172017-eb9116",
-    "reportPath": "runs/run-20261025-172017-eb9116/report.md",
+    "runId": "run-20261025-175211-feffd3",
+    "reportPath": "runs/run-20261025-175211-feffd3/report.md",
     "steps": 4
   },
   "artifacts": [
     {
-      "runId": "run-20261025-172017-eb9116",
-      "dir": "runs/run-20261025-172017-eb9116",
+      "runId": "run-20261025-175211-feffd3",
+      "dir": "runs/run-20261025-175211-feffd3",
       "files": [
         {
           "name": "screenshots",
@@ -63,11 +63,11 @@
         },
         {
           "name": "code-task.json",
-          "size": 893
+          "size": 900
         },
         {
           "name": "code-result.json",
-          "size": 735
+          "size": 742
         },
         {
           "name": "patch.diff",
@@ -75,7 +75,7 @@
         },
         {
           "name": "test.log",
-          "size": 306
+          "size": 313
         },
         {
           "name": "report.md",

@@ -3,13 +3,14 @@
 **可托管的 AI 经营代理 / A composable operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations · evidence-first.
 
-> 状态：**M0 已完成** — 内核最小闭环已验证（2026-10-25）：`steward` CLI 用 MockHarness 跑通端到端空回路
-> （**无需付费 API**），**30/30** 单元+集成测试通过，**4** 份运行时提示词带 sha256 校验的 manifest；
-> 验收 **A1 / A6 / A12 通过**（见 [ROADMAP.md](ROADMAP.md) 与
-> [`docs/zh-CN/delivery-checklist.md`](docs/zh-CN/delivery-checklist.md) 中的证据）。
-> Status: **M0 complete** — minimal kernel loop verified (2026-10-25): the `steward` CLI runs an
-> end-to-end empty loop with MockHarness (no paid API), 30/30 unit + integration tests pass, and
-> 4 versioned runtime prompts ship with a sha256-checked manifest; acceptance A1/A6/A12 pass.
+> 状态：**M1 已完成** — 真实浏览器编码回路已验证（2026-10-25）：本机有头 Chrome 跑通 demo-web 流程（A2）；
+> CodeTask → 补丁 → 隔离 worktree → 真实浏览器把 login-timeout 由红转绿（A4）；坏补丁两轮失败后升级人类（A5）。
+> **34/34** 单元+集成测试通过，CLI 现为 **9 个命令 + 2 个占位**；验收 **A1/A2/A4/A5/A6 与 A12 通过**
+> （见 [ROADMAP.md](ROADMAP.md) 与 [`docs/zh-CN/delivery-checklist.md`](docs/zh-CN/delivery-checklist.md) 中的证据）。
+> Status: **M1 complete** — real-browser code loop verified (2026-10-25): headed Chrome runs the demo-web
+> flow (A2), repairs the seeded login-timeout defect via CodeTask → patch → isolated worktree → real
+> browser red→green (A4), and escalates after two failed rounds (A5); 34/34 unit + integration tests
+> pass; the CLI ships 9 commands + 2 placeholders; acceptance A1/A2/A4/A5/A6 and A12 pass.
 
 ---
 
@@ -69,51 +70,64 @@ are denied by default and CAPTCHAs/2FA/human-verification always hand off to a h
 
 ```text
 packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts;
-            steward-harness: MockHarness)
-apps/       CLI entry (steward: demo/run/branch/report/stop/version/help)
+            steward-harness: MockHarness + 隔离 worktree 补丁 + 两轮编码回路;
+            steward-browser: Playwright 真实浏览器适配器)
+apps/       CLI entry (steward: demo/browser-flow/code-loop/run/branch/report/stop/version/help)
 prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
-examples/   demo-web, demo-desktop, mock-harness, scout-fixtures, demo-business
-tests/      unit tests (M0 实现 30 条); contract / e2e / fault drills 后续里程碑
+examples/   demo-web, demo-desktop, mock-harness（脚本化补丁）, scout-fixtures, demo-business
+tests/      unit tests（M1 共 34 条）+ e2e-browser 真实浏览器 E2E；contract / desktop / fault 后续里程碑
 docs/       双语文档（en/ 与 zh-CN/）+ 测试证据
-scripts/    校验/构建辅助、密钥扫描、证据包、交付同步
+scripts/    校验/构建辅助、密钥扫描、证据包 / 验收脚本、交付同步
 runs/       每次运行的产物（gitignored；证据在此）
 dist/       构建输出（gitignored；单包构建）
 ```
 
-## 快速开始 / Quickstart（M0）
+## 快速开始 / Quickstart（M0 → M1）
 
-> 克隆后即可离线运行，无需付费 API（MockHarness）：
-> M0 runs offline once cloned — no paid API (MockHarness):
+> M0 克隆后即可离线运行（MockHarness，无需付费 API）；M1 增加真实浏览器回路：
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
 cd daizhang-steward
-# Node.js >= 22.18, npm
+# Node.js >= 22.18, npm；真实浏览器验收需本机 Chrome/Edge
 npm install
 npm run check          # 校验仓库配置 / repo-config check
 npm run check:secrets  # 密钥扫描 / secret scan
 npm run build          # tsc -p tsconfig.json → dist/
-npm test               # 30/30 单元+集成测试 / unit + integration tests
-npm run demo           # 空回路 → runs/<run-id>/ + report.md（MockHarness）
+npm test               # 34/34 单元+集成测试 / unit + integration tests
+npm run demo           # M0 空回路 → runs/<run-id>/ + report.md（MockHarness）
 npm run test:prompts   # 提示词版本/安全测试（验收 A12）
-npm run evidence       # 证据包 → docs/test-evidence/test-result-<stamp>.{md,json}
+npm run evidence       # 离线证据包 → docs/test-evidence/test-result-<stamp>.{md,json}
+npm run acceptance     # M1 本机有头真实浏览器验收（A2/A4/A5）→ docs/test-evidence/m1-acceptance-<stamp>.*
 ```
 
-M0 能跑什么：CLI 已实现 `demo`、`run`、`branch`、`report`、`stop`、`version`、`help`
-（`takeover`、`approve` 为 M1/阶段二占位）。每次运行把证据写入 `runs/<run-id>/`：
-`prompt.md`、`report.md`、`console.log`、`meta.json`、`events.jsonl`（哈希链账本），以及
-MockHarness 回路产生的 `patch.diff`、`test.log`、`code-task.json`、`code-result.json`，
-另有 `screenshots/` 目录（M1 起由真实 E2E 填充）。也可直接调用构建产物：
-`node dist/apps/cli/src/index.js demo`。
+CI 只跑无头真实浏览器 normal 流程（`node tests/e2e-browser/login-flow.mjs --case normal --headless 1`）；
+有头 `npm run acceptance` 仅本机运行（托管 CI 无交互桌面）。
 
-最新验证运行：`runs/run-20261025-172017-eb9116/` — 证据见
-[`docs/test-evidence/test-result-2026-10-25_09-20-15.md`](docs/test-evidence/test-result-2026-10-25_09-20-15.md)。
+M1 能跑什么：CLI 已实现 `demo`、`browser-flow`、`code-loop`、`run`、`branch`、`report`、`stop`、
+`version`、`help`（`takeover`、`approve` 为占位）。`browser-flow` 在有头 Chrome 里跑真实 demo-web
+登录/项目流程并逐步截图；`code-loop` 跑 CodeTask → 补丁 → 隔离 git worktree → 真实浏览器验收，
+`code-loop --fail` 注入坏补丁并在两轮失败后升级。每次运行把证据写入 `runs/<run-id>/`：
+`prompt.md`、`report.md`、`console.log`、`meta.json`、`events.jsonl`（哈希链账本），以及
+`patch.diff`、`test.log`、`code-task.json`、`code-result.json` 与 `e2e/<case>/screenshots/`。
+也可直接调用构建产物：`node dist/apps/cli/src/index.js help`。
+
+最新 M1 验收（2026-10-25，本机有头 Chrome，`npm run acceptance` OK）：
+[`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.md`](docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.md)
+（· [`.json`](docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.json)）；证据包
+[`docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`](docs/test-evidence/evidence-m1-2026-10-25_09-52-12/)
+（45 个文件：A2 / A4 / A5 三组截图与日志）；run `run-20261025-175213-9ea8ab`（A2）、
+`run-20261025-175216-fe8759`（A4）、`run-20261025-175223-de0b95`（A5）。
+
+最新 M0 离线空回路运行：`runs/run-20261025-172017-eb9116/` — 证据见
+[`docs/test-evidence/test-result-2026-10-25_09-52-08.md`](docs/test-evidence/test-result-2026-10-25_09-52-08.md)。
 
 ## 真实测试承诺 / Real-test pledge
 
 - UI 验收使用**真实 Chromium/Edge（有头）**与**真实 Windows 窗口真实键鼠**，不用 API 或假 DOM 代替；
 - 每个对外动作自动截图，失败保留现场；重试最多两轮，超限升级人类；
-- CI 使用 MockHarness，无需付费密钥；发布前在干净路径重跑全量。
+- CI 使用 MockHarness（无需付费密钥）并跑无头真实浏览器 normal 流程；有头 `npm run acceptance` 仅本地；
+  发布前在干净路径重跑全量。
 
 ## 许可证 / License
 
@@ -134,7 +148,7 @@ share-alike on distribution. Third-party components keep their MIT/Apache-2.0 li
 
 - [ROADMAP.md](ROADMAP.md) — 里程碑与批准门
 - [docs/zh-CN/delivery-checklist.md](docs/zh-CN/delivery-checklist.md) / [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — 验收条目与证据
-- [docs/test-evidence/](docs/test-evidence/) — 测试证据归档（`test-result-*.{md,json}`）
+- [docs/test-evidence/](docs/test-evidence/) — 测试证据归档（`test-result-*`、`m1-acceptance-*`、`evidence-m1-*`）
 - [docs/zh-CN/architecture.md](docs/zh-CN/architecture.md) / [docs/en/architecture.md](docs/en/architecture.md)
 - [docs/zh-CN/contracts.md](docs/zh-CN/contracts.md) / [docs/en/contracts.md](docs/en/contracts.md)
 - [docs/zh-CN/threat-model.md](docs/zh-CN/threat-model.md) / [docs/en/threat-model.md](docs/en/threat-model.md)

@@ -1,0 +1,86 @@
+{
+  "stamp": "2026-10-25_09-52-12",
+  "ok": true,
+  "checks": {
+    "build": true,
+    "a2BrowserFlow": true,
+    "a4CodeLoop": true,
+    "a5Escalation": true
+  },
+  "runs": {
+    "browserFlow": "run-20261025-175213-9ea8ab",
+    "codeLoop": "run-20261025-175216-fe8759",
+    "codeLoopFail": "run-20261025-175223-de0b95"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 1383
+    },
+    "browserFlow": {
+      "exitCode": 0,
+      "durationMs": 3157
+    },
+    "codeLoop": {
+      "exitCode": 0,
+      "durationMs": 7043
+    },
+    "codeLoopFail": {
+      "exitCode": 1,
+      "durationMs": 13693
+    }
+  },
+  "evidence": {
+    "browserFlow": [
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/prompt.md",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/meta.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/console.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/screenshots/001-open-login-page.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/screenshots/002-fill-credentials.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/screenshots/003-click-login.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/screenshots/004-wait-project-view.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/screenshots/005-fill-project.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/screenshots/006-click-create.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/screenshots/007-assert-project-submitted.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/normal/result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/server.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/e2e/result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/test.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A2-browser-flow/report.md"
+    ],
+    "codeLoop": [
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/prompt.md",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/meta.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/console.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/test.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/login-timeout/screenshots/001-open-slow-login-page.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/login-timeout/screenshots/002-fill-credentials.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/login-timeout/screenshots/003-click-login.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/login-timeout/screenshots/004-assert-timeout-recovery.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/login-timeout/result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/login-timeout/console.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/server.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/e2e/result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/patch.diff",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/code-loop-result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/report.md"
+    ],
+    "codeLoopFail": [
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/prompt.md",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/meta.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/console.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/test.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/login-timeout/screenshots/001-open-slow-login-page.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/login-timeout/screenshots/002-fill-credentials.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/login-timeout/screenshots/003-click-login.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/login-timeout/screenshots/004-assert-timeout-recovery-fail.png",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/login-timeout/result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/login-timeout/console.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/server.log",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/e2e/result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/patch.diff",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/code-loop-result.json",
+      "docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/report.md"
+    ]
+  }
+}

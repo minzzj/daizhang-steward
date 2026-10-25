@@ -10,11 +10,17 @@
 - Capabilities: open/navigate, click, type, select, scroll, screenshot, DOM snapshot, console logs,
   downloads, uploads, tabs, headed/headless, network/timeout config, profile isolation.
 - Evidence: per-step screenshot + page URL + DOM snapshot path + console log file.
-- Failure classes: element-not-found / navigation timeout / permission denied / risk-control block
-  (→ stop and hand off) / unknown (→ suspend and reconcile).
+- Failure classes (5): element-not-found / navigation timeout / permission denied / risk-control
+  block / unknown; a risk-control keyword throws `RiskControlStopError` → **stop and hand off**,
+  unknown → suspend and reconcile.
 - Hard rule: **UI acceptance runs real headed Chromium/Edge**; no mock DOM or API substitutes.
-- Implementation: `packages/steward-browser`; borrows patterns from `dsh-browser` (MIT) and extends
-  the missing capabilities.
+- **Implementation status: implemented in M1** as `packages/steward-browser` (borrows `dsh-browser`
+  MIT patterns and extends them): headed by default, `chrome → msedge` fallback, per-run
+  `userDataDir`, per-step screenshot / DOM / console evidence; adapter-smoke **28/28 PASS**.
+  Downloads / uploads / tabs / scrolling and similar capabilities are added in later iterations.
+- Evidence layout (as measured in M1): `runs/<run-id>/e2e/<case>/` with `screenshots/`,
+  `result.json`, `console.log` and `server.log`; `npm run acceptance` copies the key evidence to
+  `docs/test-evidence/evidence-m1-<stamp>/` (A2 / A4 / A5 groups).
 
 ## 2. Desktop adapter (Windows-first)
 
@@ -31,14 +37,20 @@
 
 ## 3. Model / Harness adapters
 
-| Implementation | Purpose | Dependency |
-|---|---|---|
-| `MockHarness` | CI, offline demos, failure injection | none |
-| `DshHeadlessHarness` | real coding loop producing patches | `@deepseek-ai/dsh` (pinned) |
-| `DeepSeekApiHarness` | direct API fallback for integration tests | env-var key |
+| Implementation | Purpose | Dependency | Status |
+|---|---|---|---|
+| `MockHarness` | CI, offline demos, failure injection | none | ✅ M0 done |
+| Scripted patches (`examples/mock-harness/*.patch`) | M1 real fix patch / failure injection | git | ✅ M1 done |
+| `DshHeadlessHarness` | real coding loop producing patches | `@deepseek-ai/dsh` (pinned) | planned (not implemented) |
+| `DeepSeekApiHarness` | direct API fallback for integration tests | env-var key | planned (not implemented) |
 
 The Harness receives CodeTask text only and returns CodeResult; it never touches production
 credentials or performs deployments.
+
+M1 code loop: `packages/steward-harness/src/patch.ts` applies a `unified_diff` in an **isolated git
+worktree** (never touching the main workspace); `loop.ts` (`runCodeLoop`) runs the real-browser
+acceptance per round, at most two rounds, then writes `escalated=true` and exits 1 (no infinite
+retry); the CLI `code-loop` command exposes it, and `--fail` uses a broken patch to verify escalation.
 
 ## 4. Notification adapters
 

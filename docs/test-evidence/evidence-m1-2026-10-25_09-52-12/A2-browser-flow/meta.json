@@ -1,0 +1,12 @@
+{
+  "runId": "run-20261025-175213-9ea8ab",
+  "goal": "真实浏览器执行 demo-web 登录→提交项目流程并留证（A2）",
+  "branchId": "br-operator-20261025175213-c18c",
+  "branchRole": "operator",
+  "promptRef": "operator@1.0.0",
+  "startedAt": "2026-10-25T09:52:13.739Z",
+  "evidenceRoot": "runs/run-20261025-175213-9ea8ab",
+  "finishedAt": "2026-10-25T09:52:16.777Z",
+  "ok": true,
+  "steps": 3
+}

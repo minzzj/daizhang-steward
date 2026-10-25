@@ -1,0 +1,12 @@
+{
+  "runId": "run-20261025-175223-de0b95",
+  "goal": "CodeTask→补丁→隔离 worktree→真实浏览器验收回路（A4；--fail 时验证 A5 两轮升级）",
+  "branchId": "br-operator-20261025175223-6e29",
+  "branchRole": "operator",
+  "promptRef": "operator@1.0.0",
+  "startedAt": "2026-10-25T09:52:23.953Z",
+  "evidenceRoot": "runs/run-20261025-175223-de0b95",
+  "finishedAt": "2026-10-25T09:52:37.511Z",
+  "ok": false,
+  "steps": 2
+}
