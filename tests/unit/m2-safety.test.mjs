@@ -31,6 +31,25 @@ async function makeRoot(prefix) {
   return mkdtemp(join(tmpdir(), prefix));
 }
 
+/**
+ * Race a promise against a **referenced** timeout and always clear the timer.
+ * Avoid `.unref()` here: on Node 22 (CI) an unref'd timer can let the test-runner event loop
+ * drain while the promise is still pending, which cancels the whole file ("cancelledByParent").
+ */
+async function withTimeout(promise, ms, message) {
+  let timer;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 1) StopController（A8：停止键 5 秒内生效）
 // ---------------------------------------------------------------------------
@@ -92,12 +111,9 @@ test("StopController：watchdog 自动感知外部写入的停止文件（≤1s�
       JSON.stringify({ reason: "外部 CLI 停止", requestedAt: new Date().toISOString() }, null, 2),
       "utf8",
     );
-    const event = await Promise.race([
-      wait,
-      new Promise((_resolve, reject) => {
-        setTimeout(() => reject(new Error("watchdog 2s 内未感知停止文件")), 2_000).unref();
-      }),
-    ]);
+    // 主动唤醒一次 watchdog：不依赖定时器 tick（CI/Node 22 上事件循环可能在 tick 前结束）
+    await controller.pollOnce();
+    const event = await withTimeout(wait, 2_000, "watchdog 2s 内未感知停止文件");
     assert.equal(controller.isStopped, true);
     assert.equal(event.source, "watchdog");
     assert.equal(event.reason, "外部 CLI 停止");
