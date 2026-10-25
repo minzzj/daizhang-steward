@@ -1,6 +1,6 @@
 # Examples
 
-> 状态：**M3 已完成** — demo-web / demo-desktop / mock-harness（M0）与 scout-fixtures（M3）；
+> 状态：**阶段一 v0.5.0 已完成** — demo-web / demo-desktop / mock-harness（M0）与 scout-fixtures（M3）；
 > `demo-business`（阶段二）仍待实现。全部为本地可跑演示素材，不依赖真实客户与真实资金。
 
 | 目录 | 内容 | 用于 | 状态 |

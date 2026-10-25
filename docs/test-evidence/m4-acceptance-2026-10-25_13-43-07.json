@@ -1,0 +1,57 @@
+{
+  "stamp": "2026-10-25_13-43-07",
+  "ok": true,
+  "checks": {
+    "build": true,
+    "unitTests": true,
+    "a10DummyBranch": true,
+    "licenseCcByNcSa": true,
+    "thirdPartyNotice": true,
+    "commercialNotice": true,
+    "bilingualDocs": true,
+    "noTelemetry": true,
+    "versionConsistent": true,
+    "releaseDocs": true
+  },
+  "testSummary": {
+    "tests": 80,
+    "pass": 80,
+    "fail": 0
+  },
+  "version": "0.5.0",
+  "coverage": {
+    "zhDocs": 6,
+    "enDocs": 6,
+    "missingEn": [],
+    "goodFirstIssues": 10,
+    "telemetryHits": []
+  },
+  "runs": {
+    "dummy": "run-20261025-214317-446d40"
+  },
+  "evidence": {
+    "dummyBranch": [
+      "docs/test-evidence/evidence-m4-2026-10-25_13-43-07/A10-dummy-branch/prompt.md",
+      "docs/test-evidence/evidence-m4-2026-10-25_13-43-07/A10-dummy-branch/meta.json",
+      "docs/test-evidence/evidence-m4-2026-10-25_13-43-07/A10-dummy-branch/console.log",
+      "docs/test-evidence/evidence-m4-2026-10-25_13-43-07/A10-dummy-branch/events.jsonl",
+      "docs/test-evidence/evidence-m4-2026-10-25_13-43-07/A10-dummy-branch/checkpoint.json",
+      "docs/test-evidence/evidence-m4-2026-10-25_13-43-07/A10-dummy-branch/report.md"
+    ],
+    "unitTestsLog": "unit-tests.log"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 1365
+    },
+    "unitTests": {
+      "exitCode": 0,
+      "durationMs": 8214
+    },
+    "dummy": {
+      "exitCode": 0,
+      "durationMs": 123
+    }
+  }
+}

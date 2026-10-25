@@ -1,0 +1,12 @@
+{
+  "runId": "run-20261025-214317-446d40",
+  "goal": "只读 dummy 分支：验证新增分支只需配置与提示词、不改核心（A10）",
+  "branchId": "br-dummy-20261025214317-9df2",
+  "branchRole": "dummy",
+  "promptRef": "reviewer@1.0.0",
+  "startedAt": "2026-10-25T13:43:17.693Z",
+  "evidenceRoot": "runs/run-20261025-214317-446d40",
+  "finishedAt": "2026-10-25T13:43:17.704Z",
+  "ok": true,
+  "steps": 2
+}

@@ -12,9 +12,9 @@
 | 1 | M1 浏览器回路 | 真实浏览器回路：`steward-browser`（Playwright 有头/回退）、CodeTask→补丁→隔离 worktree→真实浏览器验收、失败两轮升级、`tests/e2e-browser`、CLI `browser-flow`/`code-loop`、Windows CI CRLF 修复（`b4ed316`） | A2、A4、A5、A6 | ✅ 完成（2026-10-25；A2/A4/A5/A6 通过，`npm run acceptance` OK；证据 `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`） |
 | 1 | M2 桌面与安全 | Windows 桌面适配器；PolicyEngine；停止键；审计；检查点恢复；分支隔离 | A3、A8、A9 | ✅ 完成（2026-10-25；A3/A8/A9 通过，`npm run acceptance:m2` OK；证据 `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`） |
 | 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ✅ 完成（2026-10-25；A7 通过，`npm run acceptance:m3` OK；证据 `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` + `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`） |
-| 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ⏳ 下一步 |
-| — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ⏳ |
-| 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ⏳ |
+| 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ✅ 完成（2026-10-25；阶段一收尾，**v0.5.0 已发布**；`npm run acceptance:m4` OK；证据 `docs/test-evidence/m4-acceptance-<stamp>.{md,json}` + `evidence-m4-<stamp>/`；Release https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0） |
+| — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ✅ 完成（2026-10-25 v0.5.0 发布；HANDOFF 已更新，等待阶段二启动） |
+| 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ⏳ 下一步（阶段二第一步） |
 | 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ⏳ |
 | 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ⏳ |
 | 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ |
@@ -61,6 +61,25 @@
 > `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` +
 > `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`（15 文件：scout-run 证据 + `unit-tests.log`，
 > 已脱敏）。
+>
+> **M4 验收结论（2026-10-25，阶段一收尾）**：A10 / A11 / A12 通过，`npm run acceptance:m4` OK。
+> A10：`steward dummy-branch --json` 只读 dummy 分支（`role=dummy`、`tools=[echo]`、复用
+> `reviewer@1.0.0` 提示词，核心 runtime/CLI 分支机制未改动）；A11：发布就绪检查全部通过
+> （CC BY-NC-SA 4.0 许可证全文 + 非商用条款、NOTICE 第三方声明、COMMERCIAL 商用说明、中英双语文档
+> 配对、源码无遥测、`package.json` 与 CLI `VERSION` 均为 **0.5.0**、发布文档齐全）；A12：提示词版本化
+> 与测试不变。测试 **80/80**（M1–M3 的 74 条 + `tests/unit/m4-release.test.mjs` 6 条，共 12 个测试文件）；
+> CLI 现为 **13 个已实现命令 + 2 个占位**（M4 新增 `dummy-branch`）。CI #10 在 Windows + Ubuntu 全绿。
+> 证据：`docs/test-evidence/m4-acceptance-<stamp>.{md,json}` + `evidence-m4-<stamp>/`（由
+> `npm run acceptance:m4` 生成、已脱敏）。
+>
+> **阶段一验收结论（2026-10-25，v0.5.0）**：**A1–A12 全部通过**，阶段一（M0–M4）完成并发布
+> **v0.5.0**。交付物：Operator（真实浏览器 A2/A4/A5 + 真实 Windows 桌面 A3）、Harness 编码回路、
+> Scout 客户分支（A7，只起草不发送）、安全三模块（A8/A9）、prompts v1（A12）、只读 dummy 分支
+> （A10）、发布就绪（A11）；**80/80** 测试、**13 命令 + 2 占位**、双语文档与证据体系齐全。
+> 证据索引：M0 `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`；M1/M2/M3 acceptance
+> 证据包（见上）；M4 `m4-acceptance-*` + `evidence-m4-*`。发布说明
+> `docs/RELEASE_NOTES_v0.5.0.md`，3 分钟演示 `docs/demo-script.zh-CN.md` / `docs/demo-script.md`，
+> Good First Issues `docs/good-first-issues.md`。下一步：阶段二 P1 个人版 MVP。
 
 ## 每个里程碑的 Definition of Done
 
@@ -83,4 +102,4 @@
 - 阶段一完成 → 输出 HANDOFF → **结束会话**；阶段二在新会话从 HANDOFF 继续。
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
-_Last updated: 2026-10-25 (M3 complete; next milestone M4 open-source release)._
+_Last updated: 2026-10-25 (Phase 1 complete — v0.5.0 released; next milestone: Phase 2 P1 personal-edition MVP)._

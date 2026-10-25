@@ -38,7 +38,7 @@ import {
   type ScoutReport,
 } from "../../../packages/steward-scout/src/index.js";
 
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -82,6 +82,7 @@ function printHelp(): void {
                                               真实浏览器（本机 Chrome/Edge）执行 demo-web 流程并截图留证（A2）
   steward desktop-flow [--json]              真实 Windows 桌面键鼠执行 demo-desktop 流程并截图留证（A3）
   steward scout [--fixture <path>] [--json]  Scout 客户分支：fixture → ICP/评分/3 条草稿/审批队列（不发送，A7）
+  steward dummy-branch [--json]              只读 dummy 分支：仅配置+已有 reviewer 提示词，不改核心（A10）
   steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
   steward run --goal "<目标>" [--role operator] [--resume <runId>] [--json]
                                               在 Mock 计划下执行一个分支；--resume 从检查点跳过已完成步骤
@@ -691,6 +692,56 @@ async function cmdScout(parsed: ParsedArgs): Promise<number> {
   return result.ok ? 0 : 1;
 }
 
+async function cmdDummyBranch(parsed: ParsedArgs): Promise<number> {
+  const root = findRepoRoot();
+  const prompts = await loadPrompts();
+  const runtime = new AgentRuntime({ root, tools: createTools(root), ...(prompts ? { prompts } : {}) });
+  const manager = new BranchManager();
+  // A10：新增只读分支仅需 BranchSpec（role/tools/prompt_ref）+ 已有提示词，不改核心代码。
+  const branch = manager.create({
+    role: "dummy",
+    goal: "只读 dummy 分支：验证新增分支只需配置与提示词、不改核心（A10）",
+    tools: ["echo"],
+    promptRef: "reviewer@1.0.0", // 复用只读复核提示词；新分支无需新增核心代码
+  });
+  const plan: PlannedStep[] = [
+    {
+      tool: "echo",
+      description: "只读检查",
+      args: { message: `dummy 分支 ${branch.id} 已创建：role=dummy，tools=[echo]，prompt_ref=${branch.prompt_ref}` },
+    },
+    {
+      tool: "echo",
+      description: "汇总",
+      args: { message: "A10 通过：分支由 BranchSpec+提示词+工具白名单组成，核心 runtime/CLI 分支机制未改动" },
+    },
+  ];
+  const result = await runtime.run({ branch, plan });
+  if (parsed.flags.json === true) {
+    console.log(
+      JSON.stringify(
+        {
+          ok: result.ok,
+          runId: result.runId,
+          branchId: result.branchId,
+          role: branch.role,
+          tools: branch.tools,
+          promptRef: branch.prompt_ref,
+          reportPath: result.reportPath,
+          artifacts: result.artifacts,
+          steps: result.steps,
+        },
+        null,
+        2,
+      ),
+    );
+  } else {
+    printRunResult(result, root, false);
+    console.log(`分支配置: role=${branch.role} tools=[${branch.tools.join(", ")}] prompt_ref=${branch.prompt_ref}`);
+  }
+  return result.ok ? 0 : 1;
+}
+
 async function cmdBranch(parsed: ParsedArgs): Promise<number> {
   const goal = flagString(parsed.flags, "goal") ?? "示例目标";
   const role = (flagString(parsed.flags, "role") ?? "operator") as "operator" | "dummy" | "conductor" | "scout" | "reviewer";
@@ -763,6 +814,9 @@ async function main(): Promise<number> {
       return cmdDesktopFlow(parsed);
     case "scout":
       return cmdScout(parsed);
+    case "dummy-branch":
+    case "demo-dummy":
+      return cmdDummyBranch(parsed);
     case "code-loop":
     case "demo-code-loop":
       return cmdCodeLoop(parsed);

@@ -1,7 +1,8 @@
 # Architecture
 
-> Status: design fixed; **M0 kernel + M1 real-browser loop + M2 real Windows desktop & safety modules +
-> M3 Scout customer branch implemented and verified (2026-10-25)**, the rest lands through M4.
+> Status: design fixed; **Phase 1 (M0 kernel + M1 real browser + M2 real desktop & safety + M3 Scout +
+> M4 release close-out) is fully implemented and verified, released as v0.5.0 (2026-10-25)**; Phase 2
+> (personal → enterprise) proceeds per the ROADMAP.
 > Companions: `contracts.md`, `threat-model.md`, `adapters.md`.
 
 ## 1. Design principles
@@ -34,15 +35,15 @@
 
 | Mode | Command | Purpose |
 |---|---|---|
-| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/code-loop/run/branch/report/stop/safety-check/version/help` | 24/7 operation, demos, acceptance |
+| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/dummy-branch/code-loop/run/branch/report/stop/safety-check/version/help` | 24/7 operation, demos, acceptance |
 | DSH cockpit (optional) | `dsh --profile daizhang web` | Human oversight GUI; mounts `steward-mcp` plus `dsh-browser`/`dsh-computer-use` |
 
 The core is a standalone Node/TS process; the cockpit is only an optional human interface.
 
 The repository is a **single package** (no pnpm workspace): `packages/*/src` + `apps/cli/src` are
 compiled by `tsc -p tsconfig.json` into `dist/`, and all commands use npm (`npm run build`, `npm test`,
-`npm run demo`, `npm run acceptance`, `npm run acceptance:m2`, `npm run acceptance:m3`). `takeover` and
-`approve` are still placeholder commands.
+`npm run demo`, `npm run acceptance`, `npm run acceptance:m2`, `npm run acceptance:m3`,
+`npm run acceptance:m4`). `takeover` and `approve` are still placeholder commands (Phase 2).
 
 **M1 implementation status**: `packages/steward-browser` provides the Playwright real-browser adapter
 (headed by default, `chrome→msedge` fallback, per-run `userDataDir`, per-step screenshot / DOM /
@@ -74,7 +75,17 @@ reply/meeting stats, and `ScoutReport`. The module is **pure logic, zero depende
 I/O**: `markSent` only records state and never sends; fixtures live in `examples/scout-fixtures/`
 (14 fictional compliant leads). The CLI adds `scout` (fixture-driven; writes `scout-report.md/.json`,
 `leads-scored.json`, `drafts.json`, `approval-queue.json`, `outreach-drafts/`), taking the command count
-from 11 to **12 implemented + 2 placeholders**. Conductor / Reviewer are still planned (M4+).
+from 11 to **12 implemented + 2 placeholders**.
+
+**M4 implementation status**: A10 adds the CLI command `dummy-branch` (alias `demo-dummy`) — a read-only
+dummy branch consisting only of a BranchSpec (role/tools/prompt_ref) + the existing `reviewer@1.0.0`
+prompt; **no change to the core runtime/CLI branch mechanism**. Command count 12 → **13 implemented +
+2 placeholders**. A11 release readiness is a single `npm run acceptance:m4` check (build, 80 tests, A10,
+CC BY-NC-SA 4.0 license text, NOTICE/COMMERCIAL, bilingual doc pairing, no telemetry,
+`package.json`/CLI version consistency 0.5.0, release docs present) and produces
+`m4-acceptance-*` + `evidence-m4-*`. Phase 1 is released as **v0.5.0** (release notes
+`docs/RELEASE_NOTES_v0.5.0.md`, demo script `docs/demo-script.*`, good first issues
+`docs/good-first-issues.md`). Full Conductor/Reviewer orchestration remains Phase 2.
 
 ## 4. Branch lifecycle
 
@@ -87,11 +98,12 @@ goal → Conductor creates BranchSpec → PolicyEngine validates budget/tools/ap
 A branch cannot spawn another branch; it submits a `BranchRequest` to the Conductor. Expired
 branches stop automatically.
 
-M3 status: the CLI assembles the operator branch (BranchSpec + tool allowlist) directly for
-`browser-flow` / `desktop-flow` / `code-loop`, and the scout branch for `scout` (drafts only, approval
-queue, never sends); the runtime integrates the stop controller, checkpoints (including `run
---resume`), profile locks and per-branch credential references. Conductor branch spawning, Reviewer
-evidence checks and the Conductor acceptance interface are still planned (M4+).
+M4 status: the CLI assembles the operator branch (BranchSpec + tool allowlist) directly for
+`browser-flow` / `desktop-flow` / `code-loop`, the scout branch for `scout` (drafts only, approval
+queue, never sends) and the dummy branch for `dummy-branch` (read-only, config + existing prompt only);
+the runtime integrates the stop controller, checkpoints (including `run --resume`), profile locks and
+per-branch credential references. Conductor branch spawning, Reviewer evidence checks and the Conductor
+acceptance interface remain Phase 2 work.
 
 ## 5. Evidence and ledger
 
@@ -102,9 +114,10 @@ evidence checks and the Conductor acceptance interface are still planned (M4+).
   `e2e/<case>/result.json` and `e2e/server.log`; from M2 real-desktop runs also contain
   `e2e-desktop/screenshots/`, `e2e-desktop/result.json`, `steps.json`, `sidecar.log`, and an atomic
   `checkpoint.json` written after every step; from M3 Scout runs also contain `scout-report.md/.json`,
-  `leads-scored.json`, `drafts.json`, `approval-queue.json` and `outreach-drafts/`. Acceptance copies
-  them to `docs/test-evidence/evidence-m1-<stamp>/`, `evidence-m2-<stamp>/` and
-  `evidence-m3-<stamp>/`. `approval.json` lands with the formal approval queue (later milestone).
+  `leads-scored.json`, `drafts.json`, `approval-queue.json` and `outreach-drafts/`; from M4 dummy-branch
+  runs the report also carries `role` / `tools` / `prompt_ref`. Acceptance copies them to
+  `docs/test-evidence/evidence-m1-<stamp>/`, `evidence-m2-<stamp>/`, `evidence-m3-<stamp>/` and
+  `evidence-m4-<stamp>/`. `approval.json` lands with the Phase-2 formal approval queue.
 - The SQLite index is rebuildable by replaying events; after a crash, resume from the checkpoint
   without resending messages or double-paying.
 

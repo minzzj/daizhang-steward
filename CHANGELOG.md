@@ -5,9 +5,6 @@
 
 ## [Unreleased]
 
-### Planned — Phase 1 (M4)
-- M4 开源发布：双语文档、LICENSE/COMMERCIAL/NOTICE、CI 绿、Release、5 个 good-first-issue
-
 ### Planned — Phase 2 (personal → enterprise)
 - 经营域：委托/预算/项目/任务/代理/证据/账本/墓碑 + 置信度 + L0/L1/L2 摘要
 - 本地 Web 控制台：看板、审批卡、接管键、月报
@@ -15,6 +12,33 @@
 - 30 条法律与合规边界规则 + 个人/企业两种模式
 - IoT 适配器契约（stub）+ MCP server
 - v1.0.0 发布 + 宣传片（BGM/静音双版本）
+
+## [0.5.0] — 2026-10-25
+
+### Added — M4 开源发布收尾（阶段一完成，验收 A10 / A11 / A12 通过）
+
+- **发布文档**：新增 `docs/good-first-issues.md`（5 个 good-first-issue，中英双语，均可离线验证）、
+  `docs/demo-script.zh-CN.md` + `docs/demo-script.md`（3 分钟真实命令演示脚本）、
+  `docs/RELEASE_NOTES_v0.5.0.md`（阶段一 v0.5.0 发布说明，中英双语：亮点、A1–A12 验收对照、
+  安装与快速开始、许可证、已知限制、下一步）。
+- **A10 只读 dummy 分支**：CLI 新增命令 `dummy-branch`——新增只读分支只需 BranchSpec +
+  已有 `reviewer@1.0.0` 提示词，**不改核心**；命令数 12 → **13 个已实现 + 2 个占位**
+  （`takeover`、`approve` 仍为占位）。
+- **A11 发布就绪**：`npm run acceptance:m4` 一键检查——build、**80/80** 测试、A10 dummy 分支、
+  CC BY-NC-SA 4.0 许可证全文 + 非商用条款、NOTICE 第三方声明、COMMERCIAL 商用说明、中英双语文档配对、
+  源码无遥测、`package.json` 与 CLI `VERSION` 一致（0.5.0）、发布文档齐全。
+- **测试**：74 → **80/80** 通过（新增 `tests/unit/m4-release.test.mjs` 6 条：A10 dummy 分支、
+  A11 许可证/第三方声明/双语文档/无遥测/发布文档、版本一致性；共 12 个测试文件）。
+- **CI**：新增 A10 `dummy-branch` 演示步骤；CI #10（Windows + Ubuntu）全绿。
+
+### Changed
+- `package.json` 版本 0.4.0 → **0.5.0**；CLI `VERSION` 同步 `0.5.0`；发布 GitHub Release
+  [v0.5.0](https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0)。
+- 验收：A10 / A11 / A12 通过；**A1–A12 全部通过**，阶段一（M0–M4）完成。证据索引
+  `docs/test-evidence/`（M0 test-result、M1/M2/M3 acceptance + M4 `m4-acceptance-<stamp>.{md,json}` /
+  `evidence-m4-<stamp>/`，由 `npm run acceptance:m4` 生成）。
+- 文档同步：README 中英、ROADMAP、HANDOFF、ASSUMPTIONS、docs/README、delivery-checklist 中英、
+  architecture 中英、packages/apps/tests/examples README 更新到「阶段一完成 / v0.5.0」。
 
 ## [0.4.0] — 2026-10-25
 
@@ -166,7 +190,8 @@
 - 双语文档骨架：architecture / contracts / threat-model / adapters / runtime-prompts / delivery-checklist
 - 脚手架自检 `pnpm check`、密钥扫描 `pnpm check:secrets`、交付同步脚本 `scripts/sync-delivery.ps1`
 
-[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0
 [0.4.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.4.0
 [0.3.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.3.0
 [0.2.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.2.0
