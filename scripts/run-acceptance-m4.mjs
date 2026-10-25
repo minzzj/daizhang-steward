@@ -145,7 +145,10 @@ const checks = {
   commercialNotice: /商用|Commercial/i.test(commercial),
   bilingualDocs: missingEn.length === 0 && missingZh.length === 0 && zhDocs.length >= 6,
   noTelemetry: telemetryHits.length === 0,
-  versionConsistent: pkg.version === "0.5.0" && /const VERSION = "0\.5\.0"/.test(cliSource),
+  versionConsistent: (() => {
+    const match = cliSource.match(/const VERSION = "([^"]+)"/);
+    return Boolean(match) && match[1] === pkg.version;
+  })(),
   releaseDocs: gfiCount >= 5 && Boolean(demoZh) && Boolean(demoEn) && Boolean(releaseNotes),
 };
 const ok = Object.values(checks).every(Boolean);

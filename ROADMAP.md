@@ -12,10 +12,10 @@
 | 1 | M1 浏览器回路 | 真实浏览器回路：`steward-browser`（Playwright 有头/回退）、CodeTask→补丁→隔离 worktree→真实浏览器验收、失败两轮升级、`tests/e2e-browser`、CLI `browser-flow`/`code-loop`、Windows CI CRLF 修复（`b4ed316`） | A2、A4、A5、A6 | ✅ 完成（2026-10-25；A2/A4/A5/A6 通过，`npm run acceptance` OK；证据 `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`） |
 | 1 | M2 桌面与安全 | Windows 桌面适配器；PolicyEngine；停止键；审计；检查点恢复；分支隔离 | A3、A8、A9 | ✅ 完成（2026-10-25；A3/A8/A9 通过，`npm run acceptance:m2` OK；证据 `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`） |
 | 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ✅ 完成（2026-10-25；A7 通过，`npm run acceptance:m3` OK；证据 `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` + `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`） |
-| 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ✅ 完成（2026-10-25；阶段一收尾，**v0.5.0 已发布**；`npm run acceptance:m4` OK；证据 `docs/test-evidence/m4-acceptance-<stamp>.{md,json}` + `evidence-m4-<stamp>/`；Release https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0） |
-| — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ✅ 完成（2026-10-25 v0.5.0 发布；HANDOFF 已更新，等待阶段二启动） |
-| 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ⏳ 下一步（阶段二第一步） |
-| 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ⏳ |
+| 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ✅ 完成（2026-10-25；阶段一收尾，**v0.5.0 已发布**；`npm run acceptance:m4` OK；证据 `docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.{md,json}` + `evidence-m4-2026-10-25_13-43-07/`；Release https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0） |
+| — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ✅ 完成（2026-10-25 v0.5.0 发布；阶段二已启动） |
+| 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ✅ 完成（2026-10-25；B1/B2/B5/B6/B7 通过，`npm run acceptance:p1` OK，**v0.6.0**；证据 `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` + `evidence-p1-2026-10-25_14-18-54/`） |
+| 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ⏳ 下一步（阶段二第二步） |
 | 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ⏳ |
 | 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ |
 
@@ -79,7 +79,22 @@
 > 证据索引：M0 `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`；M1/M2/M3 acceptance
 > 证据包（见上）；M4 `m4-acceptance-*` + `evidence-m4-*`。发布说明
 > `docs/RELEASE_NOTES_v0.5.0.md`，3 分钟演示 `docs/demo-script.zh-CN.md` / `docs/demo-script.md`，
-> Good First Issues `docs/good-first-issues.md`。下一步：阶段二 P1 个人版 MVP。
+> Good First Issues `docs/good-first-issues.md`。
+>
+> **P1 验收结论（2026-10-25，阶段二个人版 MVP，v0.6.0）**：B1 / B2 / B5 / B6 / B7 通过，
+> `npm run acceptance:p1` OK（**12/12 检查全 ✅**；build + **113/113** 测试 + 阶段二业务 + 控制台 E2E）。
+> B1 选题：3 条候选业务线（来源 URL 可查）+ 提案；B2 账本 2 笔、6 要素全齐；B5 承诺授权链 3 段
+> （对话原文→委托条款→项目，未记录=未授权）；B6 接管 `stop_ms=3`（≤10000）且 6 类接管包（含凭据引用）；
+> B7 18 条个人模式边界规则、四类越界 4/4 拒绝（deny）、支付→human、报价→draft_only。真实浏览器
+> （有头 Chrome）：控制台 E2E **9 步 / 73 项检查 / 9 张截图**，浏览器实测接管停止 **88ms**；
+> CLI 控制台真实浏览器打开（看板 + 账本 6 要素，`console-cli/ledger.png`）；审批/接管命令人工批准生效；
+> 月报 收入 ¥20000 / 成本 ¥0 / 毛利 ¥20000 / 预算余 ¥50000。测试 **113/113**（阶段一 80 +
+> domain 30 + phase2-cli 3，共 14 个测试文件）；CLI 现为 **18 个已实现命令 + 0 个占位**（新增
+> `business`、`boundary-check`、`console`、`approve`、`takeover`）。**B3（断网 2h）/ B4（封号 15min）
+> → P2 故障演练；B8（个人/企业双模式）→ P3 企业版**。证据：
+> `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` +
+> `docs/test-evidence/evidence-p1-2026-10-25_14-18-54/`（39 文件：business-run / boundary-run /
+> console-e2e / console-cli / takeover-result / unit-tests.log，已脱敏）。
 
 ## 每个里程碑的 Definition of Done
 
@@ -102,4 +117,4 @@
 - 阶段一完成 → 输出 HANDOFF → **结束会话**；阶段二在新会话从 HANDOFF 继续。
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
-_Last updated: 2026-10-25 (Phase 1 complete — v0.5.0 released; next milestone: Phase 2 P1 personal-edition MVP)._
+_Last updated: 2026-10-25 (Phase 2 P1 personal-edition MVP complete — v0.6.0; next milestone: P2 fault drills B3/B4)._

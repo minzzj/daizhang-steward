@@ -1,8 +1,9 @@
 # Architecture
 
 > Status: design fixed; **Phase 1 (M0 kernel + M1 real browser + M2 real desktop & safety + M3 Scout +
-> M4 release close-out) is fully implemented and verified, released as v0.5.0 (2026-10-25)**; Phase 2
-> (personal → enterprise) proceeds per the ROADMAP.
+> M4 release close-out) is fully implemented and verified, released as v0.5.0; Phase 2 P1
+> personal-edition MVP is implemented and delivered as v0.6.0 (2026-10-25)**; Phase 2 P2–P4 proceeds
+> per the ROADMAP.
 > Companions: `contracts.md`, `threat-model.md`, `adapters.md`.
 
 ## 1. Design principles
@@ -22,20 +23,22 @@
 ## 2. Layers
 
 ```text
-┌ Interface ─ Phase-1 CLI / Phase-2 local web console / notification channels / MCP
-├ Orchestration ─ Conductor (goal decomposition, branch lifecycle, budget, acceptance)
+┌ Interface ─ CLI / local web console (P1, binds 127.0.0.1 only + token-protected writes) / notification channels / MCP
+├ Orchestration ─ Conductor (goal decomposition, branch lifecycle, budget, acceptance) / steward-domain business engine
 ├ Execution ─ AgentRuntime (plan-act-observe-reflect-report) → Operator / Scout / Reviewer
 ├ Capability ─ ToolRegistry (browser, desktop, fs, HTTP, messaging, code exec, payment[disabled])
 │              HarnessAdapter (mock / DSH headless / DeepSeek API)
-├ Governance ─ PolicyEngine, budget gates, stop key, checkpoints, audit
+├ Governance ─ PolicyEngine, budget gates, stop key, checkpoints, audit, boundary rules (P1: 18 personal-mode)
 └ Data ─ SQLite (WAL) + events.jsonl (hash chain) + runs/ artifacts + versioned prompts/
+      + <root>/domain/state.json + domain/events.jsonl (P1 business domain; atomic, append-only, redacted)
 ```
 
 ## 3. Run modes
 
 | Mode | Command | Purpose |
 |---|---|---|
-| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/dummy-branch/code-loop/run/branch/report/stop/safety-check/version/help` | 24/7 operation, demos, acceptance |
+| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/dummy-branch/business/boundary-check/console/approve/takeover/code-loop/run/branch/report/stop/safety-check/version/help` | 24/7 operation, demos, acceptance |
+| Local web console (P1) | `node dist/apps/cli/src/index.js console [--port 4180]` | Dashboard / project timeline / ledger six facts / approval cards / takeover key / monthly report; binds 127.0.0.1 only |
 | DSH cockpit (optional) | `dsh --profile daizhang web` | Human oversight GUI; mounts `steward-mcp` plus `dsh-browser`/`dsh-computer-use` |
 
 The core is a standalone Node/TS process; the cockpit is only an optional human interface.
@@ -43,7 +46,8 @@ The core is a standalone Node/TS process; the cockpit is only an optional human 
 The repository is a **single package** (no pnpm workspace): `packages/*/src` + `apps/cli/src` are
 compiled by `tsc -p tsconfig.json` into `dist/`, and all commands use npm (`npm run build`, `npm test`,
 `npm run demo`, `npm run acceptance`, `npm run acceptance:m2`, `npm run acceptance:m3`,
-`npm run acceptance:m4`). `takeover` and `approve` are still placeholder commands (Phase 2).
+`npm run acceptance:m4`, `npm run acceptance:p1`). **Since P1, `takeover` and `approve` are real human
+commands** (18 implemented commands + 0 placeholders).
 
 **M1 implementation status**: `packages/steward-browser` provides the Playwright real-browser adapter
 (headed by default, `chrome→msedge` fallback, per-run `userDataDir`, per-step screenshot / DOM /
@@ -85,7 +89,32 @@ CC BY-NC-SA 4.0 license text, NOTICE/COMMERCIAL, bilingual doc pairing, no telem
 `package.json`/CLI version consistency 0.5.0, release docs present) and produces
 `m4-acceptance-*` + `evidence-m4-*`. Phase 1 is released as **v0.5.0** (release notes
 `docs/RELEASE_NOTES_v0.5.0.md`, demo script `docs/demo-script.*`, good first issues
-`docs/good-first-issues.md`). Full Conductor/Reviewer orchestration remains Phase 2.
+`docs/good-first-issues.md`).
+
+**P1 implementation status (Phase 2 personal-edition MVP, v0.6.0)**:
+- `packages/steward-domain`: business-domain engine — 8 concepts (mandate / three-level budget /
+  project / task / agent / evidence / ledger / tombstone + four confidence levels); topic proposals
+  (≥3 business lines with checkable sources); ledger with mandatory six facts; promise tracing
+  (conversation text → mandate clause → project); approval cards (default pending, expired = suspended,
+  never auto-approved); takeover key + 6-section takeover pack; monthly report; L0/L1/L2 summaries;
+  18 personal-mode boundary rules (catalog of 20); one simulated business line end to end; persistence
+  in `<root>/domain/state.json` (atomic write) + `domain/events.jsonl` (append-only audit, redacted
+  detail). Pure logic, zero dependencies, no network, no real money.
+- `packages/steward-console`: local web console — Node's built-in `http` + plain HTML/CSS/JS (zero
+  third-party dependencies), **binds 127.0.0.1 only** (any other host throws `ConsoleSecurityError`),
+  writes require `X-Steward-Token`, no CDN/external links/inline scripts (CSP); pages: dashboard /
+  project timeline / ledger six-facts drawer / approval cards / takeover key (stop + resume) / monthly
+  report / `/health` + JSON API.
+- `tests/e2e-console/`: real-browser E2E (headed Chrome, 9 steps / 73 checks / 9 screenshots,
+  browser-measured takeover stop **88 ms** ≤10000 ms; asserts local-only binding, 401 on writes without
+  token, same-origin requests only, no page JS errors).
+- `examples/demo-business/`: one purely fictional simulated personal-edition business line (3 candidate
+  business lines / customer inquiry / quote / 9 tasks / 7 messages / deliverables / payment / invoice /
+  expenses / monthly report; reserved domains, no real personal data).
+- The CLI adds `business`, `boundary-check`, `console`, `approve` (real approval) and `takeover` (real
+  takeover/resume) → command count **13 → 18 implemented + 0 placeholders**; `npm run acceptance:p1` is
+  a one-command acceptance (12 checks, local headed Chrome). **B3/B4 (fault drills) → P2, B8
+  (enterprise) → P3; full Conductor/Reviewer orchestration remains later work.**
 
 ## 4. Branch lifecycle
 
@@ -98,12 +127,15 @@ goal → Conductor creates BranchSpec → PolicyEngine validates budget/tools/ap
 A branch cannot spawn another branch; it submits a `BranchRequest` to the Conductor. Expired
 branches stop automatically.
 
-M4 status: the CLI assembles the operator branch (BranchSpec + tool allowlist) directly for
+P1 status: the CLI assembles the operator branch (BranchSpec + tool allowlist) directly for
 `browser-flow` / `desktop-flow` / `code-loop`, the scout branch for `scout` (drafts only, approval
 queue, never sends) and the dummy branch for `dummy-branch` (read-only, config + existing prompt only);
-the runtime integrates the stop controller, checkpoints (including `run --resume`), profile locks and
-per-branch credential references. Conductor branch spawning, Reviewer evidence checks and the Conductor
-acceptance interface remain Phase 2 work.
+the business command runs the domain engine (project → tasks → delivery → payment/invoice → monthly
+report) and `console` provides the human interface (dashboard / approval cards / takeover key / monthly
+report); the runtime integrates the stop controller, checkpoints (including `run --resume`), profile
+locks and per-branch credential references. Conductor branch spawning, Reviewer evidence checks and the
+Conductor acceptance interface remain later work; in P1 approvals/takeover are handled by the domain
+engine + human commands/console.
 
 ## 5. Evidence and ledger
 
@@ -115,9 +147,16 @@ acceptance interface remain Phase 2 work.
   `e2e-desktop/screenshots/`, `e2e-desktop/result.json`, `steps.json`, `sidecar.log`, and an atomic
   `checkpoint.json` written after every step; from M3 Scout runs also contain `scout-report.md/.json`,
   `leads-scored.json`, `drafts.json`, `approval-queue.json` and `outreach-drafts/`; from M4 dummy-branch
-  runs the report also carries `role` / `tools` / `prompt_ref`. Acceptance copies them to
-  `docs/test-evidence/evidence-m1-<stamp>/`, `evidence-m2-<stamp>/`, `evidence-m3-<stamp>/` and
-  `evidence-m4-<stamp>/`. `approval.json` lands with the Phase-2 formal approval queue.
+  runs the report also carries `role` / `tools` / `prompt_ref`; **from P1 `business` runs they also
+  contain `proposal.json`, `business-result.json`, `ledger-facts.json` (six facts),
+  `promise-traces.json`, `takeover-pack.json`, `boundary-check.json`, `monthly-report.{json,md}` and
+  `summaries.json`**; console E2E runs also contain `result.json` + 9 step screenshots +
+  `console-server.log`. Acceptance copies them to `docs/test-evidence/evidence-m1-<stamp>/` …
+  `evidence-m4-<stamp>/` and `evidence-p1-<stamp>/`.
+- Business-domain state is persisted separately in `<root>/domain/state.json` (atomic write) +
+  `domain/events.jsonl` (append-only audit, redacted detail); approval cards, takeover state and the
+  monthly report are produced by the domain engine, and `approve` / `takeover` commands share the same
+  state as the console (human decisions, never auto-approved).
 - The SQLite index is rebuildable by replaying events; after a crash, resume from the checkpoint
   without resending messages or double-paying.
 
@@ -129,6 +168,10 @@ acceptance interface remain Phase 2 work.
   compliance events, next-month proposals.
 
 Each level states "as of when" and "coverage (complete / partial / not covered)".
+
+P1 status: `steward-domain`'s `summaries()` produces L0/L1/L2 and `buildMonthlyReport("YYYY-MM")`
+produces the L2 monthly report (income/expense/margin/budget headroom/compliance events/next-month
+proposals/as_of/coverage); the console consumes them via `/api/summary?level=` and the `/report` page.
 
 ## 7. Extension points
 
@@ -143,5 +186,5 @@ Each level states "as of when" and "coverage (complete / partial / not covered)"
 
 ## 8. Explicit non-goals
 
-Multi-tenant SaaS, billing, heavy frontend (phase 1), unapproved payments/contracts/account-permission
-changes, bypassing CAPTCHAs or risk controls.
+Multi-tenant SaaS, billing, heavy frontend (phase 1; P1 only ships a zero-dependency local web console),
+unapproved payments/contracts/account-permission changes, bypassing CAPTCHAs or risk controls.

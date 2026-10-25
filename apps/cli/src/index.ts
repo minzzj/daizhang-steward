@@ -105,8 +105,6 @@ function printHelp(): void {
   steward report [--run <id|latest>] [--json] 查看运行报告
   steward stop [--reason "<原因>"]            触发停止键（5 秒内生效于下一步前检查）
   steward stop --clear                        清除停止键
-  steward takeover                            阶段二交付（当前为占位）
-  steward approve                             审批队列（M1 交付；当前为占位）
   steward version | help
 
 约定：

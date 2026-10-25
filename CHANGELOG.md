@@ -5,13 +5,53 @@
 
 ## [Unreleased]
 
-### Planned — Phase 2 (personal → enterprise)
-- 经营域：委托/预算/项目/任务/代理/证据/账本/墓碑 + 置信度 + L0/L1/L2 摘要
-- 本地 Web 控制台：看板、审批卡、接管键、月报
+### Planned — Phase 2 (P2–P4)
+- P2 个人版故障演练：断网 2h 不产生新承诺 + 恢复 10 分钟补记账本不重复（B3）、模拟平台封禁 15 分钟
+  停止并出替代方案（B4）、强杀恢复、72h 失联、循环超限
+- P3 企业版：对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性 + 30 条边界（B8）
+- P4 发布：v1.0.0 + GitHub Release + 验收包 + 真实截图宣传片（BGM/静音双版本）
 - 通知与协助：Windows Toast / 邮件 / Webhook / 交接流程
-- 30 条法律与合规边界规则 + 个人/企业两种模式
 - IoT 适配器契约（stub）+ MCP server
-- v1.0.0 发布 + 宣传片（BGM/静音双版本）
+
+## [0.6.0] — 2026-10-25
+
+### Added — 阶段二 P1 个人版 MVP（验收 B1 / B2 / B5 / B6 / B7 通过）
+
+- **经营域引擎 `packages/steward-domain`**：8 概念数据模型（委托 / 预算三层 / 项目 / 任务 / 代理 / 证据 /
+  账本 / 墓碑 + 置信度四档）；选题提案（≥3 条业务线、来源可查）；账本**6 要素**（金额/收付方/依据/
+  审批人/回执/所属项目）；承诺追溯（对话原文→委托条款→项目，未记录=未授权）；审批卡超时挂起
+  （不自动放行）；接管键 + **6 类接管包**（含凭据引用）；月报；L0/L1/L2 摘要；**18 条个人模式边界规则**
+  （全目录 20 条，企业模式 19 条）；仿真业务线端到端；`domain/state.json` 原子写 +
+  `domain/events.jsonl` 只追加审计（detail 脱敏）。纯逻辑、零第三方依赖、无网络、无真实资金。
+- **本地 Web 控制台 `packages/steward-console`**：零第三方依赖（Node 内置 `http` + 原生 HTML/CSS/JS）；
+  **只监听 127.0.0.1**、写操作需 `X-Steward-Token`、无 CDN/外链/内联脚本（CSP）；页面：看板 / 项目
+  时间线 / 账本 6 要素抽屉 / 审批卡（批准/驳回）/ 接管键（停止 + 6 类接管包 + 恢复）/ 月报 /
+  `/health` + JSON API。
+- **真实浏览器 E2E `tests/e2e-console/`**：有头 Chrome，9 步 / 73 项检查 / 9 张截图，浏览器实测接管
+  停止 **88ms**（≤10000ms）；断言只监听本机、写操作无 token → 401、同源无外链、无页面 JS 错误。
+- **仿真业务线 `examples/demo-business/`**：一条纯虚构个人版业务线（3 条候选业务线 / 客户询价 / 报价 /
+  9 任务 / 7 消息 / 交付物 / 收款 / 发票 / 支出 / 月报；保留域名、无真实个人信息）。
+- **CLI 新增命令**：`business`（选题/仿真业务线/账本 6 要素/承诺追溯/接管包/月报/边界）、
+  `boundary-check`（18 条边界规则自检）、`console`（本地 Web 控制台，`--port` 默认 4180）、
+  `approve`（真实人工审批，超时挂起不自动放行）、`takeover`（真实接管/恢复，`--resume`）→
+  命令数 13 → **18 个已实现 + 0 个占位**（原 `takeover`/`approve` 占位转真实实现）。
+- **`npm run acceptance:p1`**：一键验收（build + 113 测试 + business/boundary-check + 控制台真实浏览器
+  E2E + CLI 控制台真实浏览器 + 人工审批），生成 `docs/test-evidence/p1-acceptance-<stamp>.{md,json}`
+  并把 business-run / boundary-run / console-e2e / console-cli / takeover 证据 + `unit-tests.log`
+  复制到 `docs/test-evidence/evidence-p1-<stamp>/`（本次 39 文件，已脱敏）。
+- **测试**：80 → **113/113** 通过（新增 `tests/unit/domain.test.mjs` 30 条 +
+  `tests/unit/phase2-cli.test.mjs` 3 条；共 14 个测试文件）。
+- **CI**：新增 Phase-2 `business` / `boundary-check` 步骤 + Console E2E（无头真实浏览器）。
+
+### Changed
+- `package.json` 版本 0.5.0 → **0.6.0**；CLI `VERSION` 同步 0.6.0。
+- 验收：B1 / B2 / B5 / B6 / B7 通过（P1 验收 12/12 检查；B6 `stop_ms=3` ≤10000 + 6 类接管包；
+  B7 18 条规则、四类越界 4/4 拒绝、支付→human、报价→draft_only）；**B3/B4 延后 P2、B8 延后 P3**。
+  证据 `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` +
+  `docs/test-evidence/evidence-p1-2026-10-25_14-18-54/`（39 文件）；runs `run-20261025-221904-b56b1a`
+  （business）、`run-20261025-221904-89b2f3`（boundary）。
+- 文档同步：README 中英、ROADMAP、HANDOFF、ASSUMPTIONS、docs/README、delivery-checklist 中英、
+  architecture 中英、packages/apps/tests/examples README 更新到「阶段二 P1 完成 / v0.6.0」。
 
 ## [0.5.0] — 2026-10-25
 
@@ -191,6 +231,7 @@
 - 脚手架自检 `pnpm check`、密钥扫描 `pnpm check:secrets`、交付同步脚本 `scripts/sync-delivery.ps1`
 
 [Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.5.0...HEAD
+[0.6.0]: https://github.com/minzzj/daizhang-steward/compare/v0.5.0...2db8da3
 [0.5.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0
 [0.4.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.4.0
 [0.3.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.3.0

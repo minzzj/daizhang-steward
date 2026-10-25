@@ -1,8 +1,9 @@
 # 交付物与验收清单 / Delivery Checklist（中文）
 
 > 每条验收 = 编号 + 命令/操作 + 证据路径 + 最近结果（证据必须能打开）。
-> **阶段一（M0–M4）已完成并以 v0.5.0 发布：A1–A12 全部 `通过`。** 阶段二 B1–B8 / U1–U8 随阶段二更新。
-> 最近一次更新：2026-10-25（M4 / 阶段一完成，v0.5.0 发布）
+> **阶段一（M0–M4）已完成并以 v0.5.0 发布：A1–A12 全部 `通过`。阶段二 P1（个人版 MVP）已完成并以
+> v0.6.0 交付：B1/B2/B5/B6/B7 通过；B3/B4 待 P2、B8 待 P3。**
+> 最近一次更新：2026-10-25（阶段二 P1 完成，v0.6.0）
 
 ## A. 阶段一（文档 1，12 条）
 
@@ -17,8 +18,8 @@
 | A7 | Scout ≥10 线索（来源+评分），3 条草稿未发送 | `node dist/apps/cli/src/index.js scout --json`（或 `npm run acceptance:m3`） | `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/`：`scout-report.json`（`leads_total=14`、`leads_discarded=4`、`qualified_count=8`、`drafts_count=3`、`pending_approval=3`、`sent_count=0`、`rejected_reasons` 4 条、`scenarios` 3 个）、`leads-scored.json`、`drafts.json`（110–113 字 ≤150、`cites_signal=true`）、`approval-queue.json`（3 条全 `pending`）、`outreach-drafts/lead-001.md`/`lead-004.md`/`lead-006.md`、`scout-report.md`、`report.md`；run `run-20261025-200457-17b4e7` | ✅ 通过（2026-10-25；fixture 驱动、无网络、0 发送） |
 | A8 | 停止键 5 秒；重启恢复不重复 | `node dist/apps/cli/src/index.js safety-check`；运行中抢占与 resume 由 `tests/unit/m2-runtime.test.mjs`（`npm test` 内）覆盖 | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json`（`stop.ok=true`，实测 **305ms** <5000ms；`checkpoint` save/load/completed）；`m2-runtime-tests.log`（停止在 5s 内抢占、resume 跳过已完成步骤不重复执行） | ✅ 通过（2026-10-25） |
 | A9 | 分支隔离（凭据/浏览器配置） | `node dist/apps/cli/src/index.js safety-check`；`tests/unit/m2-safety.test.mjs`（`npm test` 内） | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json`：跨分支凭据读取被拒（`CrossBranchAccessError`）、脱敏输出不含引用明文、同一 profile 重复占用被拒（`ProfileBusyError`）、白名单外工具被拒；隔离用例见 `tests/unit/m2-safety.test.mjs` | ✅ 通过（2026-10-25） |
-| A10 | 新增只读 dummy 分支只靠配置 | `node dist/apps/cli/src/index.js dummy-branch [--json]`（或 `npm run acceptance:m4`） | `docs/test-evidence/m4-acceptance-<stamp>.{md,json}` 的 A10 检查 + `evidence-m4-<stamp>/A10-dummy-branch/`（dummy 分支运行产物）；`tests/unit/m4-release.test.mjs`（断言 `role=dummy`、`tools=[echo]`、`promptRef=reviewer@1.0.0`、有运行报告）；复用 `prompts/reviewer.md`，核心未改 | ✅ 通过（2026-10-25；仅配置 + 已有 reviewer 提示词） |
-| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` + `npm run acceptance:m4` | `docs/test-evidence/m4-acceptance-<stamp>.{md,json}` 的 A11 检查（CC BY-NC-SA 4.0 许可证全文 + 非商用、NOTICE 第三方声明、COMMERCIAL 商用说明、中英双语文档配对、无遥测、版本一致 0.5.0、发布文档齐全）+ `tests/unit/m4-release.test.mjs` + CI #10（Windows + Ubuntu 全绿）+ 80/80 测试 | ✅ 通过（2026-10-25；v0.5.0 发布就绪） |
+| A10 | 新增只读 dummy 分支只靠配置 | `node dist/apps/cli/src/index.js dummy-branch [--json]`（或 `npm run acceptance:m4`） | `docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.{md,json}` 的 A10 检查 + `evidence-m4-2026-10-25_13-43-07/A10-dummy-branch/`（dummy 分支运行产物）；`tests/unit/m4-release.test.mjs`（断言 `role=dummy`、`tools=[echo]`、`promptRef=reviewer@1.0.0`、有运行报告）；复用 `prompts/reviewer.md`，核心未改 | ✅ 通过（2026-10-25；仅配置 + 已有 reviewer 提示词） |
+| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` + `npm run acceptance:m4` | `docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.{md,json}` 的 A11 检查（CC BY-NC-SA 4.0 许可证全文 + 非商用、NOTICE 第三方声明、COMMERCIAL 商用说明、中英双语文档配对、无遥测、版本一致 0.5.0、发布文档齐全）+ `tests/unit/m4-release.test.mjs` + CI #10（Windows + Ubuntu 全绿）+ 80/80 测试 | ✅ 通过（2026-10-25；v0.5.0 发布就绪） |
 | A12 | 提示词版本化、有测试、可替换 | `npm run test:prompts` | `prompts/manifest.json`（4 角色 + sha256）+ `tests/unit/prompts.test.mjs`（5 项断言） | ✅ 通过（2026-10-25） |
 
 > **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过。`npm run check`、`npm run check:secrets`、
@@ -62,38 +63,48 @@
 > `docs/test-evidence/m4-acceptance-<stamp>.{md,json}` + `evidence-m4-<stamp>/`（由
 > `npm run acceptance:m4` 生成、已脱敏）。
 >
-> **阶段一验收结论（2026-10-25，v0.5.0）**：**A1–A12 全部通过**；阶段一（M0–M4）完成并发布
-> **v0.5.0**。交付物：Operator（真实浏览器 A2/A4/A5 + 真实 Windows 桌面 A3）、Harness 编码回路、
-> Scout 客户分支（A7，只起草不发送）、安全三模块（A8/A9）、A10 只读 dummy 分支、A11 发布就绪、
-> prompts v1（A12）；**80/80** 测试、**13 命令 + 2 占位**。发布说明
-> `docs/RELEASE_NOTES_v0.5.0.md`、演示脚本 `docs/demo-script.*`、Good First Issues
-> `docs/good-first-issues.md`。下一步：阶段二 P1 个人版 MVP。
+> **P1 验收结论（2026-10-25，阶段二个人版 MVP，v0.6.0）**：B1 / B2 / B5 / B6 / B7 通过，
+> `npm run acceptance:p1` OK（**12/12 检查全 ✅**；build + **113/113** 测试 + 业务 + 控制台 E2E）。
+> B1：3 条候选业务线（来源 URL 可查）+ 提案；B2：账本 2 笔、**6 要素**全齐；B5：承诺授权链 **3 段**
+> （对话原文→委托条款→项目；未记录=未授权）；B6：接管 `stop_ms=3`（≤10000）+ **6 类接管包**（含凭据
+> 引用）；B7：**18 条个人模式边界规则**、四类越界 **4/4 拒绝**（deny）、支付→human、报价→draft_only。
+> 真实浏览器（有头 Chrome）：控制台 E2E **9 步 / 73 项检查 / 9 张截图**，浏览器实测接管停止 **88ms**；
+> CLI 控制台真实浏览器打开（看板 + 账本 6 要素，`console-cli/ledger.png`）；审批/接管命令人工批准生效；
+> 月报 收入 ¥20000 / 成本 ¥0 / 毛利 ¥20000 / 预算余 ¥50000。测试 **113/113**（阶段一 80 +
+> domain 30 + phase2-cli 3，共 14 个测试文件）；CLI 现为 **18 个已实现命令 + 0 个占位**（新增
+> `business`/`boundary-check`/`console`/`approve`/`takeover`）。**B3/B4 待 P2 故障演练、B8 待 P3
+> 企业版**。证据：`docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` +
+> `docs/test-evidence/evidence-p1-2026-10-25_14-18-54/`（39 文件：business-run / boundary-run /
+> console-e2e / console-cli / takeover-result / unit-tests.log，已脱敏）。
 
 ## B. 阶段二（文档 2，8 条）
 
+> P1（个人版 MVP）覆盖 **B1 / B2 / B5 / B6 / B7**（均已通过）；**B3 / B4 → P2 故障演练**，
+> **B8 → P3 企业版**。
+
 | # | 验收 | 场景 | 证据 | 状态 |
 |---|---|---|---|---|
-| B1 | 选题：5 万预算 30 天 ≥3 条业务线，30 秒打开来源 | 仿真业务线提案 | 提案页 + 来源链接 | 未实现 |
-| B2 | 记账：一笔支出 30 秒看到 6 要素 | 账本详情 | 账本 UI 截图 | 未实现 |
-| B3 | 断网 2 小时不出新承诺，恢复 10 分钟补记 | 真实断网演练 | 缺口清单 + 补记日志 | 未实现 |
-| B4 | 平台 B 封禁 15 分钟停止并出替代方案 | 封号故障注入 | 停止事件 + 替代方案 | 未实现 |
-| B5 | 对外承诺可追溯到对话原文与授权条款 | 承诺追溯 | 追溯页截图 | 未实现 |
-| B6 | 接管键 10 秒停止 + 30 分钟接管包 | 接管演练 | 接管包 + 计时 | 未实现 |
-| B7 | 四类越界 100% 拒绝、理由可读留痕 | 边界测试 | 拒绝记录 | 未实现 |
-| B8 | 个人/企业模式各跑一单，不一致阻断 | 双模式端到端 | 两单证据 | 未实现 |
+| B1 | 选题：5 万预算 30 天 ≥3 条业务线，30 秒打开来源 | 仿真业务线提案 | `evidence-p1-2026-10-25_14-18-54/business-run/proposal.json`（3 条合格、来源 URL 可查、proposal=true；business 命令 157ms）；run `run-20261025-221904-b56b1a` | ✅ 通过（2026-10-25，P1） |
+| B2 | 记账：一笔支出 30 秒看到 6 要素 | 账本详情 | `evidence-p1-2026-10-25_14-18-54/business-run/ledger-facts.json`（2 笔 × 6 要素全齐）；控制台 `/ledger` 详情抽屉 + `console-e2e/screenshots/004-ledger-facts.png` | ✅ 通过（2026-10-25，P1） |
+| B3 | 断网 2 小时不出新承诺，恢复 10 分钟补记 | 真实断网演练 | 缺口清单 + 补记日志 | 未实现（P2 故障演练） |
+| B4 | 平台 B 封禁 15 分钟停止并出替代方案 | 封号故障注入 | 停止事件 + 替代方案 | 未实现（P2 故障演练） |
+| B5 | 对外承诺可追溯到对话原文与授权条款 | 承诺追溯 | `evidence-p1-.../business-run/promise-traces.json`（授权链 3 段：对话原文→委托条款→项目；未记录返回“未授权”） | ✅ 通过（2026-10-25，P1） |
+| B6 | 接管键 10 秒停止 + 30 分钟接管包 | 接管演练 | `evidence-p1-.../takeover-result.json`（`stop_ms=3` ≤10000）+ `business-run/takeover-pack.json`（6 类：开放订单/待处理对话/应付款/凭据引用/风险/覆盖度）；控制台 E2E `006-takeover-stop.png` / `007-takeover-resume.png`（浏览器实测 88ms） | ✅ 通过（2026-10-25，P1） |
+| B7 | 四类越界 100% 拒绝、理由可读留痕 | 边界测试 | `evidence-p1-.../business-run/boundary-check.json` + `boundary-run/boundary-rules.json`（18 条个人模式规则；四类越界 4/4 deny、支付→human、报价→draft_only，均含可读 user_message） | ✅ 通过（2026-10-25，P1） |
+| B8 | 个人/企业模式各跑一单，不一致阻断 | 双模式端到端 | 两单证据 | 未实现（P3 企业版） |
 
 ## C. 用户增量要求（U1–U8）
 
 | # | 要求 | 证据 | 状态 |
 |---|---|---|---|
-| U1 | 全部 UI 测试真实浏览器/真实桌面，不用 API 代替 | E2E 截图（M1 A2/A4/A5、M2 A3）+ CI 无头真实浏览器 E2E | ✅ 已满足（阶段一；CI 规则检查可在阶段二加强） |
-| U2 | 通知与协助（审批卡/handoff/接管） | 通知日志 + 协助卡截图 | 未实现（阶段二） |
-| U3 | IoT 预留（契约 + 模拟 fixture） | 契约文档 + fixture 测试 | 未实现（阶段二 stub） |
+| U1 | 全部 UI 测试真实浏览器/真实桌面，不用 API 代替 | E2E 截图（M1 A2/A4/A5、M2 A3，P1 控制台 `tests/e2e-console` 9 步/73 检查）+ CI 无头真实浏览器 E2E | ✅ 已满足（阶段一 + P1；CI 规则检查可在 P2 加强） |
+| U2 | 通知与协助（审批卡/handoff/接管） | 通知日志 + 协助卡截图 | 部分满足（P1 已有审批卡/接管键 + 交接包；Toast/邮件/Webhook 待 P3/P4） |
+| U3 | IoT 预留（契约 + 模拟 fixture） | 契约文档 + fixture 测试 | 未实现（P3/P4 stub） |
 | U4 | GitHub minzzj 发布、NC-SA 许可、双语文档 | 仓库 https://github.com/minzzj/daizhang-steward + LICENSE（CC BY-NC-SA 4.0）+ 双语文档 + Release v0.5.0 | ✅ 已完成（2026-10-25，v0.5.0） |
-| U5 | 宣传片（真实截图、双版本） | 成片 + STORYBOARD/FACTS | 未实现（阶段二 P4；阶段一以真实命令演示脚本替代） |
-| U6 | 阶段一完成输出 HANDOFF 并停会话 | [HANDOFF.md](../../HANDOFF.md) 已更新到「阶段一完成，v0.5.0」；按用户要求停会话 | ✅ 已完成（2026-10-25） |
+| U5 | 宣传片（真实截图、双版本） | 成片 + STORYBOARD/FACTS | 未实现（P4；当前以真实命令演示脚本替代） |
+| U6 | 阶段一完成输出 HANDOFF 并停会话 | [HANDOFF.md](../../HANDOFF.md) 已更新到「阶段二 P1 完成，v0.6.0」，阶段一已按约定交接 | ✅ 已完成（2026-10-25） |
 | U7 | 测试 key 不入库、日志脱敏、可轮换 | `npm run check:secrets` 通过；证据包已脱敏 | ✅ 已满足 |
-| U8 | 按 DSH 插件体系实现并复用插件 | 复用清单 + 依赖锁 | 设计完成（阶段二落地 MCP/插件集成） |
+| U8 | 按 DSH 插件体系实现并复用插件 | 复用清单 + 依赖锁 | 设计完成（P3/P4 落地 MCP/插件集成） |
 
 ## D. 证据规范
 

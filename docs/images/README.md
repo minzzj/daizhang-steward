@@ -16,4 +16,6 @@ _当前存放发布验证截图（`repo-home-2026-10-25.png`、`ci-actions-2026-
 - _M2：`evidence-m2-<stamp>/A3-desktop-flow/`（20 张真实 Windows 桌面截图）；_
 - _M3：Scout 以 JSON/日志证据为主（`evidence-m3-<stamp>/scout-run/`），无 UI 截图；_
 - _M4：`evidence-m4-<stamp>/`（A10 dummy 分支运行产物；发布就绪检查）；_
+- _P1：`evidence-p1-<stamp>/console-e2e/screenshots/`（本地 Web 控制台 9 张真实浏览器截图）+
+  `console-cli/`（CLI 启动控制台的看板/账本截图）；_
 _本目录只保留发布/文档用截图；演示录屏请按 `docs/demo-script.zh-CN.md` / `docs/demo-script.md` 用真实命令生成。_
