@@ -9,7 +9,7 @@ M2 真实 Windows 桌面 + 安全模块已完成并验收：真实窗口 + 真�
 （打开→填表→保存→校验→截图，36/36 检查、20 张截图）、停止键 ≤5s（实测 305ms）+ 检查点
 save/load/resume（A8）、分支凭据/profile 锁/工具白名单隔离（A9）；**53/53** 测试通过，
 CLI **11 命令 + 2 占位**。累计 A1/A2/A3/A4/A5/A6/A8/A9/A12 验收通过。代码在 GitHub `main`
-分支（M1 最后推送 `25ef167`；M2 交付在其后提交）。
+分支（M2 已推送 `6603b04`；M1 最后 `25ef167`）。
 
 ## M0 已完成清单（2026-10-25）
 
@@ -115,13 +115,13 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` /
   `safety-check` 与 build）。
 - 不能调用真实 DSH / DeepSeek Harness——目前用 MockHarness + 脚本化补丁（真实浏览器/桌面验收已跑通）。
 - 没有 `approve` 审批队列与 `takeover` 接管包——当前 CLI 为占位命令（M3/M4 或阶段二）。
-- 不能发布 GitHub Release——M4；代码已推送 `main`（M1 最后 `25ef167`，M2 交付在其后提交）。
+- 不能发布 GitHub Release——M4；代码已推送 `main`（M2 `6603b04`，M1 `25ef167`）。
 - 不能生成宣传片——Phase 2 后（阶段一可选 3 分钟演示）。
 
 ## 代码在哪
 
 - **权威仓库（唯一开发位置）**：`H:\minzzj文件\技术部\项目\官方\代掌\daizhang-steward`
-  （GitHub `main` 分支；M1 最后推送 `25ef167`，M2 交付在其后提交；不要 git commit，除非用户明确要求）
+  （GitHub `main` 分支；M2 已推送 `6603b04`；不要 git commit，除非用户明确要求）
 - **C: 旧副本为归档**：`C:\daizhang-build\daizhang-steward` 只读参考，**不要再在这里改文件**。
 - **方案文档**：`H:\minzzj文件\技术部\项目\官方\代掌\代掌-实施总方案-v0.1.md`
 - 工程已从 pnpm workspace 改为**单包布局**（H: 为 exFAT，不支持符号链接，pnpm workspace 装不起来）：
@@ -133,7 +133,7 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` /
 - **GitHub 公开仓库**：https://github.com/minzzj/daizhang-steward（2026-10-25 发布验证，见
   [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)；
   当时 CI #1/#2 均 success，许可证识别 `Other/NOASSERTION` 属预期）
-- **代码位置**：GitHub `main` 分支（M1 最后推送 `25ef167`；M2 交付随本次里程碑提交；M4 统一发版；
+- **代码位置**：GitHub `main` 分支（M2 已推送 `6603b04`；M4 统一发版；
   当前 `package.json` 版本 `0.3.0`）。
 - **M0 验证证据**：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md /
   events.jsonl / code-task.json / code-result.json 等）与
@@ -180,7 +180,7 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` /
 
 ## 下一步（按序执行）
 
-0. **推送状态**：M0/M1 已推送 GitHub `main`（M1 最后 `25ef167`）；M2 交付随本次里程碑提交；GitHub Release 留给 M4。
+0. **推送状态**：M0/M1/M2 已推送 GitHub `main`（最新 `6603b04`）；GitHub Release 留给 M4。
 1. **M3 客户分支（下一步）**：Scout——ICP、来源清单、评分、外联草稿、审批队列、ScoutReport（A7）；
    保留真实浏览器/真实桌面 E2E 回归。
 2. **M4**：双语文档刷新 + GitHub Release + CI（A10/A11/A12）；`main` 继续按里程碑推送。
