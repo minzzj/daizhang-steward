@@ -18,16 +18,16 @@
 
 ## 三、开发约定
 
-- 语言：TypeScript（Node ≥ 22.18，pnpm workspace）；桌面辅助可用 Python 侧车（Windows UIA/SendInput）。
+- 语言：TypeScript（Node ≥ 22.18，单包布局、npm）；桌面辅助可用 Python 侧车（Windows UIA/SendInput）。
 - 每步操作写事件账本；高风险动作走 PolicyEngine 的 `approve/deny` 出口。
 - 运行时提示词放在 `prompts/`，必须版本化、有测试，**禁止硬编码进业务代码**。
 - 新分支 = BranchSpec + 提示词 + 工具白名单；不改核心代码。
-- 密钥只从环境变量读；提交前跑 `pnpm check:secrets`。
+- 密钥只从环境变量读；提交前跑 `npm run check:secrets`。
 - 提交信息：`<type>(<scope>): <summary>`（type: feat/fix/test/docs/chore/refactor）。
 
 ## 四、PR 检查清单
 
-- [ ] `pnpm lint && pnpm test` 通过
+- [ ] `npm run lint && npm test` 通过
 - [ ] 涉及 UI 的改动附真实浏览器/桌面截图证据（路径写进 PR 描述）
 - [ ] 契约字段只增不减；如必须改动，先改 `docs/*/contracts.md` 并说明迁移
 - [ ] 无密钥、无本机绝对路径、无内网资料
@@ -38,4 +38,4 @@
 标题前缀：`[bug]` / `[feat]` / `[docs]` / `[commercial]`；正文写：环境、复现步骤、期望/实际、
 证据（截图/日志）、是否涉及真实外部账号。
 
-_Last updated: 2026-10-25 (scaffold)._
+_Last updated: 2026-10-25._

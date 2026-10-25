@@ -32,7 +32,7 @@ Branches cannot spawn branches; they submit a `BranchRequest` to the Conductor.
   "expected": "show 'Request timed out, please retry'",
   "actual": "spinner spins forever, no message",
   "files": ["examples/demo-web/src/login.ts"],
-  "acceptance": ["pnpm test:e2e -- --grep login-timeout"],
+  "acceptance": ["npm run test:e2e -- --grep login-timeout"],
   "constraints": ["no public API changes", "no paid dependencies"],
   "forbidden": ["packages/steward-core/auth/**"],
   "output": "unified_diff"
@@ -48,7 +48,7 @@ A task without an executable acceptance check never enters the code loop.
   "task_id": "ct-20261025-001",
   "patch": "diff --git a/... b/...",
   "summary": "add timeout branch in api.ts, render error in login.ts",
-  "tests_run": ["pnpm test:e2e -- --grep login-timeout"],
+  "tests_run": ["npm run test:e2e -- --grep login-timeout"],
   "risks": ["mobile layout not covered"],
   "uncovered": ["real network jitter"]
 }

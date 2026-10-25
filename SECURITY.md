@@ -24,10 +24,10 @@ Please **do not** open public issues containing exploit details. Use GitHub Secu
 
 ## Supported versions / 支持版本
 
-项目处于 scaffold 阶段；首个受支持版本将在 Phase 1 Release 时公布（`v0.1.0` 起）。
+项目处于阶段一开发中（**M0 内核最小闭环已完成并验证**，2026-10-25）；首个受支持版本将在 Phase 1 Release 时公布（`v0.1.0` 起）。
 
 ## Disclosure / 披露
 
 修复发布后 7 天内公开（除非报告者要求更晚）；修复版本与致谢写入 `CHANGELOG.md`。
 
-_Last updated: 2026-10-25 (scaffold)._
+_Last updated: 2026-10-25._

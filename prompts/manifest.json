@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-10-25",
+  "prompts": [
+    {
+      "id": "conductor",
+      "file": "conductor.md",
+      "version": "conductor@1.0.0",
+      "sha256": "ff415bc7ade05370f2e0c30573edd2284bb7a1dd2550592568333af0437a9639"
+    },
+    {
+      "id": "operator",
+      "file": "operator.md",
+      "version": "operator@1.0.0",
+      "sha256": "93ee1da09d5c4080e0272d17bcfac51d2a977577090ca977e7715ca9fb21d426"
+    },
+    {
+      "id": "scout",
+      "file": "scout.md",
+      "version": "scout@1.0.0",
+      "sha256": "eee6c87d019b6823023099c1f931f5b5c2d1896d942e778a4d2a8fd3ce6b30b4"
+    },
+    {
+      "id": "reviewer",
+      "file": "reviewer.md",
+      "version": "reviewer@1.0.0",
+      "sha256": "6880d2ae922f710933970e573e300787112eded71023045067855bd935e0b6f6"
+    }
+  ]
+}

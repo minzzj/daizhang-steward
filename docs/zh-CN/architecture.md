@@ -1,6 +1,6 @@
 # 架构 / Architecture（中文）
 
-> 状态：设计定稿（脚手架阶段）。实现随 M0–M4 落地，细节改动以 PR 为准。
+> 状态：设计定稿；**M0 内核最小闭环已实现并验证（2026-10-25）**，其余随 M1–M4 落地，细节改动以 PR 为准。
 > 配套：`docs/zh-CN/contracts.md`、`docs/zh-CN/threat-model.md`、`docs/zh-CN/adapters.md`。
 
 ## 1. 设计原则
@@ -28,10 +28,14 @@
 
 | 形态 | 命令 | 用途 |
 |---|---|---|
-| 内核 CLI | `pnpm steward run/branch/report/stop/takeover` | 24h 运行、演示、验收 |
+| 内核 CLI | `node dist/apps/cli/src/index.js demo/run/branch/report/stop/version/help` | 24h 运行、演示、验收 |
 | DSH 驾驶舱（可选） | `dsh --profile daizhang web` | 人用 DSH GUI 观察/审批/接管；挂 `steward-mcp` 与 `dsh-browser`/`dsh-computer-use` |
 
 内核是独立 Node/TS 进程；驾驶舱只是可选的“人机接口”，不参与核心决策。
+
+工程为**单包布局**（无 pnpm workspace）：`packages/*/src` + `apps/cli/src` 由
+`tsc -p tsconfig.json` 编译到 `dist/`，命令一律用 npm（`npm run build` / `npm test` / `npm run demo`）。
+`takeover` 与 `approve` 在 M0 为占位命令。
 
 ## 4. 分支生命周期
 
@@ -46,7 +50,9 @@
 ## 5. 证据与账本
 
 - `events.jsonl`：只追加、带 `seq` 与哈希链，字段见 contracts.md；密钥脱敏。
-- `runs/<run-id>/`：`prompt.md`、`patch.diff`、`test.log`、`screenshots/`、`console.log`、`report.md`、`approval.json`。
+- `runs/<run-id>/`：M0 实际产物为 `prompt.md`、`report.md`、`console.log`、`meta.json`、`events.jsonl`，
+  以及 MockHarness 回路的 `code-task.json`、`code-result.json`、`patch.diff`、`test.log`；
+  `screenshots/`（M1 起由真实 E2E 生成）与 `approval.json`（M1 起）随里程碑补齐。
 - SQLite 索引可从事件重放重建；崩溃后用检查点恢复，不重复发送/扣款。
 
 ## 6. 摘要层级

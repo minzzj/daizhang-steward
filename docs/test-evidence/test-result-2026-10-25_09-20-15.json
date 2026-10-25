@@ -1,0 +1,87 @@
+{
+  "stamp": "2026-10-25_09-20-15",
+  "ok": true,
+  "env": {
+    "node": "v24.15.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 925
+    },
+    "tests": {
+      "exitCode": 0,
+      "durationMs": 830
+    },
+    "demo": {
+      "exitCode": 0,
+      "durationMs": 144
+    }
+  },
+  "summary": {
+    "tests": 30,
+    "pass": 30,
+    "fail": 0,
+    "skipped": 0
+  },
+  "demo": {
+    "ok": true,
+    "runId": "run-20261025-172017-eb9116",
+    "reportPath": "runs/run-20261025-172017-eb9116/report.md",
+    "steps": 4
+  },
+  "artifacts": [
+    {
+      "runId": "run-20261025-172017-eb9116",
+      "dir": "runs/run-20261025-172017-eb9116",
+      "files": [
+        {
+          "name": "screenshots",
+          "size": 0
+        },
+        {
+          "name": "prompt.md",
+          "size": 5599
+        },
+        {
+          "name": "meta.json",
+          "size": 465
+        },
+        {
+          "name": "console.log",
+          "size": 958
+        },
+        {
+          "name": "events.jsonl",
+          "size": 2799
+        },
+        {
+          "name": "goal.md",
+          "size": 450
+        },
+        {
+          "name": "code-task.json",
+          "size": 893
+        },
+        {
+          "name": "code-result.json",
+          "size": 735
+        },
+        {
+          "name": "patch.diff",
+          "size": 322
+        },
+        {
+          "name": "test.log",
+          "size": 306
+        },
+        {
+          "name": "report.md",
+          "size": 2022
+        }
+      ]
+    }
+  ]
+}

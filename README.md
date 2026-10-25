@@ -3,8 +3,11 @@
 **A composable, evidence-first operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations.
 
-> Status: **scaffold** — foundation only (2026-10-25): license, governance, bilingual doc skeleton,
-> roadmap and scaffold checks. Feature code lands milestone by milestone (see [ROADMAP.md](ROADMAP.md)).
+> Status: **M0 complete** — minimal kernel loop verified (2026-10-25): the `steward` CLI runs an
+> end-to-end empty loop with MockHarness (no paid API), **30/30** unit + integration tests pass, and
+> **4** versioned runtime prompts ship with a sha256-checked manifest. Acceptance items A1/A6/A12
+> pass — see [ROADMAP.md](ROADMAP.md) and the evidence in
+> [`docs/en/delivery-checklist.md`](docs/en/delivery-checklist.md).
 > 中文说明见 [README.zh-CN.md](README.zh-CN.md).
 
 ---
@@ -61,30 +64,49 @@ See [`docs/en/architecture.md`](docs/en/architecture.md) / [`docs/zh-CN/architec
 
 ## Repository layout
 
+The repository is a **single package** (no pnpm workspace): `tsconfig.json` compiles
+`packages/*/src` and `apps/cli/src` into `dist/` with `tsc -p tsconfig.json`. All commands use npm.
+
 ```text
-packages/   core packages (steward-core, steward-conductor, steward-operator, ...)
-apps/       CLI and optional DSH profile ("cockpit")
-prompts/    versioned runtime prompts (loaded by PromptManager, tested)
+packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts;
+            steward-harness: MockHarness)
+apps/       CLI entry (steward: demo/run/branch/report/stop/version/help)
+prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
 examples/   demo-web, demo-desktop, mock-harness, scout-fixtures, demo-business
-tests/      unit / contract / e2e-browser / e2e-desktop / fault drills
-docs/       bilingual docs (en/ and zh-CN/)
-scripts/    dev/demo/test/lint, secret scan, delivery sync
-runs/       runtime artifacts (gitignored; evidence lives here)
+tests/      unit tests (30 implemented at M0); contract / e2e / fault drills land later
+docs/       bilingual docs (en/ and zh-CN/) + test evidence
+scripts/    check/build helpers, secret scan, evidence bundle, delivery sync
+runs/       per-run artifacts (gitignored; evidence lives here)
+dist/       build output (gitignored; single-package build)
 ```
 
-## Quickstart
+## Quickstart (M0)
 
-Only scaffold checks run today (no network, no paid API needed):
+M0 runs offline once cloned — no paid API (MockHarness):
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
 cd daizhang-steward
-# Node.js >= 22.18, pnpm >= 10
-pnpm check          # verify scaffold
-pnpm check:secrets  # secret scan
+# Node.js >= 22.18, npm
+npm install
+npm run check          # repo/config check
+npm run check:secrets  # secret scan
+npm run build          # tsc -p tsconfig.json → dist/
+npm test               # 30/30 unit + integration tests
+npm run demo           # empty loop → runs/<run-id>/ + report.md (MockHarness)
+npm run test:prompts   # prompt versioning/safety tests (acceptance A12)
+npm run evidence       # evidence bundle → docs/test-evidence/test-result-<stamp>.{md,json}
 ```
 
-Feature commands (`pnpm dev`, `pnpm demo`, `pnpm test`) become available after milestone M0.
+What M0 can do: the CLI implements `demo`, `run`, `branch`, `report`, `stop`, `version` and `help`
+(`takeover` and `approve` are placeholders for Phase 2 / M1). Every run writes its evidence bundle to
+`runs/<run-id>/`: `prompt.md`, `report.md`, `console.log`, `meta.json`, `events.jsonl` (hash-chained
+ledger), plus `patch.diff`, `test.log`, `code-task.json` and `code-result.json` from the MockHarness
+loop, and an (empty until M1) `screenshots/` directory. The built CLI can also be invoked directly:
+`node dist/apps/cli/src/index.js demo`.
+
+Latest verified M0 run: `runs/run-20261025-172017-eb9116/` — evidence in
+[`docs/test-evidence/test-result-2026-10-25_09-20-15.md`](docs/test-evidence/test-result-2026-10-25_09-20-15.md).
 
 ## Real-test pledge
 
@@ -109,6 +131,8 @@ runs before every commit/CI. See [`SECURITY.md`](SECURITY.md).
 ## Docs
 
 - [ROADMAP.md](ROADMAP.md) — milestones and approval gates
+- [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — acceptance items with evidence
+- [docs/test-evidence/](docs/test-evidence/) — evidence archive (`test-result-*.{md,json}`)
 - [docs/en/architecture.md](docs/en/architecture.md) · [docs/en/contracts.md](docs/en/contracts.md)
   · [docs/en/threat-model.md](docs/en/threat-model.md)
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — assumptions and known gaps

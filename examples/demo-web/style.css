@@ -1,0 +1,242 @@
+/* 代掌 Steward · demo-web 样式
+ * 纯本地 CSS：不引用外网字体、CDN 或图片，所有样式都内联在本文件中。
+ * 字体优先使用系统已安装字体，离线环境也能正常显示中文。 */
+
+:root {
+  --color-bg: #eef2f7;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-primary: #2563eb;
+  --color-primary-active: #1d4ed8;
+  --color-border: #cbd5e1;
+  --color-error-bg: #fef2f2;
+  --color-error-border: #fecaca;
+  --color-error-text: #b91c1c;
+  --color-success-text: #15803d;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  padding: 40px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(160deg, #f8fafc 0%, #e2e8f0 100%);
+  color: var(--color-text);
+  font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.site-header {
+  width: 100%;
+  max-width: 680px;
+  text-align: left;
+}
+
+.site-header h1 {
+  margin: 0 0 4px;
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.panel {
+  width: 100%;
+  max-width: 680px;
+  padding: 28px 32px 32px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.45);
+}
+
+.view h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #334155;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--color-text);
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+  background: #ffffff;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+label.slow-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 2px;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+button {
+  font: inherit;
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+button[type="submit"] {
+  margin-top: 6px;
+  padding: 11px 18px;
+  align-self: flex-start;
+  min-width: 132px;
+  color: #ffffff;
+  background: var(--color-primary);
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+/* 按钮 loading：文字后追加一个纯 CSS 旋转圈（无图片、无外网资源） */
+button.is-loading::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  vertical-align: -2px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: demo-spin 0.8s linear infinite;
+}
+
+@keyframes demo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.status:not(:empty) {
+  color: #475569;
+}
+
+.error {
+  margin: 8px 0 0;
+  padding: 9px 12px;
+  color: var(--color-error-text);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.success:not(:empty) {
+  margin: 8px 0 0;
+  padding: 9px 12px;
+  color: var(--color-success-text);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+button.link-button {
+  margin-top: 18px;
+  padding: 6px 2px;
+  color: var(--color-primary);
+  background: transparent;
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+.site-footer {
+  max-width: 680px;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+@media (max-width: 520px) {
+  body {
+    padding-top: 24px;
+  }
+
+  .panel {
+    padding: 22px 20px 26px;
+  }
+
+  .site-header h1 {
+    font-size: 24px;
+  }
+}
