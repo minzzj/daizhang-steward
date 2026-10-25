@@ -1,0 +1,80 @@
+[
+  {
+    "case": 1,
+    "request": {
+      "kind": "business_scope",
+      "text": "客户要求承接需要《建筑智能化资质》的施工项目，先无证开工",
+      "requires_license": true
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-01",
+      "user_message": "该业务需要经营资质，个人模式下不承接无证业务。已拒绝；请先取得资质，或改做无需资质的业务线（可在选题里换一条）。"
+    }
+  },
+  {
+    "case": 2,
+    "request": {
+      "kind": "business_scope",
+      "text": "借用合作方资质去投标，中标后再补手续",
+      "requires_license": false
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-02",
+      "user_message": "借用、挂靠或租用他人资质接单属于违法经营，已拒绝。请以自己或授权主体的真实资质开展业务。"
+    }
+  },
+  {
+    "case": 3,
+    "request": {
+      "kind": "outreach",
+      "text": "按陌生号码名单批量外呼推销",
+      "is_unknown_outreach": true
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-03",
+      "user_message": "陌生外呼/陌生名单触达属于骚扰与合规高风险行为，已拒绝。只允许对明确同意或既有客户关系触达，且需人工确认。"
+    }
+  },
+  {
+    "case": 4,
+    "request": {
+      "kind": "expense",
+      "text": "单笔支付 20000 元给外包，先付后补合同",
+      "amount_cny": 20000
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-04",
+      "user_message": "该请求金额超出委托预算（单笔或本月剩余额度），已拒绝并留痕。如确需继续，请授权人先调整委托预算或提高单笔额度。"
+    }
+  },
+  {
+    "case": 5,
+    "request": {
+      "kind": "payment",
+      "text": "把合同款直接转到客户指定的私人账户",
+      "amount_cny": 3000
+    },
+    "result": {
+      "decision": "human",
+      "rule_id": "B-08",
+      "user_message": "支付、退款与转账必须由授权人本人在审批卡上确认后执行，AI 不直接发起资金动作。已生成待办，等待你处理。"
+    }
+  },
+  {
+    "case": 6,
+    "request": {
+      "kind": "quote",
+      "text": "给客户报一个 3000 元的报价",
+      "amount_cny": 3000
+    },
+    "result": {
+      "decision": "draft_only",
+      "rule_id": "B-18",
+      "user_message": "对外报价只生成草稿，需你确认价格与条款后再发送；AI 不自动报价。"
+    }
+  }
+]

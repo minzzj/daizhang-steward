@@ -37,8 +37,16 @@ import {
   type ScoutFixtureLead,
   type ScoutReport,
 } from "../../../packages/steward-scout/src/index.js";
+import {
+  cmdApprove,
+  cmdConsole,
+  cmdPhase2BoundaryCheck,
+  cmdPhase2Business,
+  cmdTakeover,
+  registerPhase2Tools,
+} from "./phase2.js";
 
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -83,6 +91,11 @@ function printHelp(): void {
   steward desktop-flow [--json]              真实 Windows 桌面键鼠执行 demo-desktop 流程并截图留证（A3）
   steward scout [--fixture <path>] [--json]  Scout 客户分支：fixture → ICP/评分/3 条草稿/审批队列（不发送，A7）
   steward dummy-branch [--json]              只读 dummy 分支：仅配置+已有 reviewer 提示词，不改核心（A10）
+  steward business [--json]                  阶段二：选题/仿真业务线/账本6要素/承诺追溯/接管包/月报/边界（B1/B2/B5/B6/B7）
+  steward boundary-check [--json]            阶段二：边界规则自检（四类越界 100% 拒绝，B7）
+  steward console [--port 4180]              阶段二：本地 Web 控制台（只监听 127.0.0.1）
+  steward approve [--id <cardId> --decision approve|reject] [--json]  审批队列（超时挂起，不自动放行）
+  steward takeover [--resume] [--json]       接管键：停止新动作并生成 6 类接管包
   steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
   steward run --goal "<目标>" [--role operator] [--resume <runId>] [--json]
                                               在 Mock 计划下执行一个分支；--resume 从检查点跳过已完成步骤
@@ -368,6 +381,8 @@ function createTools(root: string): ToolRegistry {
       };
     },
   );
+
+  registerPhase2Tools(registry);
 
   return registry;
 }
@@ -821,11 +836,16 @@ async function main(): Promise<number> {
     case "demo-code-loop":
       return cmdCodeLoop(parsed);
     case "takeover":
-      console.error("takeover 属阶段二交付（M0 为占位）。见 ROADMAP.md。");
-      return 2;
+      return cmdTakeover(parsed);
     case "approve":
-      console.error("审批队列属 M1 交付（M0 为占位）。见 ROADMAP.md。");
-      return 2;
+      return cmdApprove(parsed);
+    case "business":
+    case "demo-business":
+      return cmdPhase2Business(parsed);
+    case "boundary-check":
+      return cmdPhase2BoundaryCheck(parsed);
+    case "console":
+      return cmdConsole(parsed);
     case "version":
       console.log(`steward ${VERSION} (node ${process.version})`);
       return 0;

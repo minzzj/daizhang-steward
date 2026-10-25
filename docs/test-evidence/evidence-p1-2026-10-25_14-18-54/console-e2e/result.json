@@ -1,0 +1,807 @@
+{
+  "suite": "e2e-console",
+  "ok": true,
+  "as_of": "2026-10-25T14:19:08.917Z",
+  "headless": false,
+  "browser": {
+    "channel": "chrome",
+    "version": "155.0.8059.85",
+    "fallbacks": [],
+    "headless": false
+  },
+  "console": {
+    "url": "http://127.0.0.1:59152",
+    "host": "127.0.0.1",
+    "port": 59152,
+    "provider": "demo"
+  },
+  "stop_limit_ms": 10000,
+  "measured_stop_ms": 88,
+  "steps": [
+    {
+      "action": "open-console",
+      "ok": true,
+      "durationMs": 295,
+      "evidence": [
+        "screenshots/001-open-console.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "控制台首页 HTTP 200（实际 200）"
+        },
+        {
+          "ok": true,
+          "message": "页面标题含「本地控制台」"
+        }
+      ]
+    },
+    {
+      "action": "dashboard-load",
+      "ok": true,
+      "durationMs": 137,
+      "evidence": [
+        "screenshots/002-dashboard-load.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "看板应返回 HTTP 200，实际 200"
+        },
+        {
+          "ok": true,
+          "message": "全局显示「只监听 127.0.0.1」"
+        },
+        {
+          "ok": true,
+          "message": "全局显示「本地模式」"
+        },
+        {
+          "ok": true,
+          "message": "预算条：月度预算可见",
+          "detail": "月度预算 已用 ¥18,600.00 / ¥50,000.00（剩 ¥31,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "预算条：项目预算可见",
+          "detail": "项目预算（本月项目支出） 已用 ¥8,600.00 / ¥20,000.00（剩 ¥11,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "预算条：单笔上限可见",
+          "detail": "单笔上限 上限 ¥15,000.00 · 本月最大单笔 ¥12,000.00"
+        },
+        {
+          "ok": true,
+          "message": "预算条元素可见"
+        },
+        {
+          "ok": true,
+          "message": "项目卡 ≥3（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "项目卡含客户与进度"
+        },
+        {
+          "ok": true,
+          "message": "任务列表非空（实际 10 条）"
+        },
+        {
+          "ok": true,
+          "message": "任务数文案与任务行一致（文案「共 10 个任务」，列表 10 条）"
+        },
+        {
+          "ok": true,
+          "message": "任务按代理分组（实际 4 组）"
+        },
+        {
+          "ok": true,
+          "message": "代理状态行 ≥4（实际 4）"
+        },
+        {
+          "ok": true,
+          "message": "L0 摘要可见",
+          "detail": "本月 3 个项目；待批 3 张；预算余量 ¥31,400.00"
+        }
+      ]
+    },
+    {
+      "action": "project-timeline",
+      "ok": true,
+      "durationMs": 198,
+      "evidence": [
+        "screenshots/003-project-timeline.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "项目标题非空（示例客户官网改版）"
+        },
+        {
+          "ok": true,
+          "message": "项目时间线 ≥5 条（实际 6）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含证据入口（实际 2 个）"
+        },
+        {
+          "ok": true,
+          "message": "证据路径可见（runs/run-20261023-101500-demo1/screenshots/007-homepage.png）"
+        },
+        {
+          "ok": true,
+          "message": "证据类型可见（screenshot）"
+        },
+        {
+          "ok": true,
+          "message": "证据置信度可见（certain）"
+        },
+        {
+          "ok": true,
+          "message": "置信度取值合理"
+        }
+      ]
+    },
+    {
+      "action": "ledger-facts",
+      "ok": true,
+      "durationMs": 189,
+      "evidence": [
+        "screenshots/004-ledger-facts.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "账本 ≥4 笔（实际 5）"
+        },
+        {
+          "ok": true,
+          "message": "账本详情抽屉已打开"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：金额 有值",
+          "detail": "¥2,800.00"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：收付方 有值",
+          "detail": "示例设计素材工作室（供应商）"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：依据 有值",
+          "detail": "审批卡 ap-001：官网素材采购（图标与插画包）"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：审批人 有值",
+          "detail": "客户 王示例（书面确认）"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：回执 有值",
+          "detail": "rcpt-20261022-001"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：所属项目 有值",
+          "detail": "示例客户官网改版 · prj-001"
+        }
+      ]
+    },
+    {
+      "action": "approvals-decide",
+      "ok": true,
+      "durationMs": 317,
+      "evidence": [
+        "screenshots/005-approvals-decide.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "待批准审批卡 ≥2（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "审批卡含金额与证据"
+        },
+        {
+          "ok": true,
+          "message": "审批卡含到期倒计时",
+          "detail": "剩余 01:59:58"
+        },
+        {
+          "ok": true,
+          "message": "批准后状态即时更新（ap-001 → 已批准）"
+        },
+        {
+          "ok": true,
+          "message": "驳回后状态即时更新（ap-002 → 已驳回）"
+        },
+        {
+          "ok": true,
+          "message": "刷新后 approved 状态仍在（服务端状态）"
+        },
+        {
+          "ok": true,
+          "message": "刷新后 rejected 状态仍在（服务端状态）"
+        }
+      ]
+    },
+    {
+      "action": "takeover-stop",
+      "ok": true,
+      "durationMs": 235,
+      "evidence": [
+        "screenshots/006-takeover-stop.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "初始状态 halted=false"
+        },
+        {
+          "ok": true,
+          "message": "接管大按钮可见"
+        },
+        {
+          "ok": true,
+          "message": "接管停止实测 88ms ≤ 10000ms"
+        },
+        {
+          "ok": true,
+          "message": "measured_stop_ms 有效（88）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：开放订单 有内容（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：待处理对话 有内容（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：应付款 有内容（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：凭据引用 有内容（1 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：风险 有内容（3 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包覆盖度可见（部分覆盖（partial））"
+        },
+        {
+          "ok": true,
+          "message": "接管计时可见（已停止 00:00:02）"
+        },
+        {
+          "ok": true,
+          "message": "页面显示实测停止耗时（实测停止耗时 15 ms（要求 ≤10000 ms））"
+        },
+        {
+          "ok": true,
+          "message": "halted 后全局显示接管横幅"
+        }
+      ]
+    },
+    {
+      "action": "takeover-resume",
+      "ok": true,
+      "durationMs": 103,
+      "evidence": [
+        "screenshots/007-takeover-resume.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "resume 后恢复空闲态（halted=false）"
+        },
+        {
+          "ok": true,
+          "message": "resume 后全局接管横幅消失"
+        },
+        {
+          "ok": true,
+          "message": "显示恢复时间（已于 2026-10-25 22:19 恢复运行（halted=false））"
+        }
+      ]
+    },
+    {
+      "action": "monthly-report",
+      "ok": true,
+      "durationMs": 145,
+      "evidence": [
+        "screenshots/008-monthly-report.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "月报：收入 可见（¥32,000.00）"
+        },
+        {
+          "ok": true,
+          "message": "月报：成本 可见（¥18,600.00）"
+        },
+        {
+          "ok": true,
+          "message": "月报：毛利 可见（¥13,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "月报：预算余量 可见（¥31,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "合规事件 ≥2 条（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "下月提案 ≥2 条（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "as_of 可见（2026-10-25 22:19）"
+        },
+        {
+          "ok": true,
+          "message": "coverage 可见（部分覆盖（partial））"
+        }
+      ]
+    },
+    {
+      "action": "local-only",
+      "ok": true,
+      "durationMs": 1570,
+      "evidence": [
+        "screenshots/009-local-only.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "页面文本含 127.0.0.1"
+        },
+        {
+          "ok": true,
+          "message": "页面文本含「本地」"
+        },
+        {
+          "ok": true,
+          "message": "服务端只绑定 127.0.0.1（实际 127.0.0.1）"
+        },
+        {
+          "ok": true,
+          "message": "控制台 host=127.0.0.1（实际 127.0.0.1）"
+        },
+        {
+          "ok": true,
+          "message": "局域网地址 192.168.3.123:59152 不可访问（只监听回环）"
+        },
+        {
+          "ok": true,
+          "message": "无 X-Steward-Token 写操作被拒（实际 401）"
+        },
+        {
+          "ok": true,
+          "message": "读接口无需 token（/api/overview → 200）"
+        },
+        {
+          "ok": true,
+          "message": "无外链请求（30 个请求全部同源 127.0.0.1）",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "message": "同源静态资源已加载（16 个 /assets/ 请求）"
+        },
+        {
+          "ok": true,
+          "message": "无页面 JS 错误（实际 0）",
+          "detail": ""
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "step": "open-console",
+      "ok": true,
+      "message": "控制台首页 HTTP 200（实际 200）"
+    },
+    {
+      "step": "open-console",
+      "ok": true,
+      "message": "页面标题含「本地控制台」"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "看板应返回 HTTP 200，实际 200"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "全局显示「只监听 127.0.0.1」"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "全局显示「本地模式」"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条：月度预算可见",
+      "detail": "月度预算 已用 ¥18,600.00 / ¥50,000.00（剩 ¥31,400.00）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条：项目预算可见",
+      "detail": "项目预算（本月项目支出） 已用 ¥8,600.00 / ¥20,000.00（剩 ¥11,400.00）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条：单笔上限可见",
+      "detail": "单笔上限 上限 ¥15,000.00 · 本月最大单笔 ¥12,000.00"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条元素可见"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "项目卡 ≥3（实际 3）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "项目卡含客户与进度"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "任务列表非空（实际 10 条）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "任务数文案与任务行一致（文案「共 10 个任务」，列表 10 条）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "任务按代理分组（实际 4 组）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "代理状态行 ≥4（实际 4）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "L0 摘要可见",
+      "detail": "本月 3 个项目；待批 3 张；预算余量 ¥31,400.00"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "项目标题非空（示例客户官网改版）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "项目时间线 ≥5 条（实际 6）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "时间线含证据入口（实际 2 个）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "证据路径可见（runs/run-20261023-101500-demo1/screenshots/007-homepage.png）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "证据类型可见（screenshot）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "证据置信度可见（certain）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "置信度取值合理"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "账本 ≥4 笔（实际 5）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "账本详情抽屉已打开"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：金额 有值",
+      "detail": "¥2,800.00"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：收付方 有值",
+      "detail": "示例设计素材工作室（供应商）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：依据 有值",
+      "detail": "审批卡 ap-001：官网素材采购（图标与插画包）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：审批人 有值",
+      "detail": "客户 王示例（书面确认）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：回执 有值",
+      "detail": "rcpt-20261022-001"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：所属项目 有值",
+      "detail": "示例客户官网改版 · prj-001"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "待批准审批卡 ≥2（实际 3）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "审批卡含金额与证据"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "审批卡含到期倒计时",
+      "detail": "剩余 01:59:58"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "批准后状态即时更新（ap-001 → 已批准）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "驳回后状态即时更新（ap-002 → 已驳回）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "刷新后 approved 状态仍在（服务端状态）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "刷新后 rejected 状态仍在（服务端状态）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "初始状态 halted=false"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管大按钮可见"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管停止实测 88ms ≤ 10000ms"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "measured_stop_ms 有效（88）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：开放订单 有内容（2 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：待处理对话 有内容（2 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：应付款 有内容（2 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：凭据引用 有内容（1 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：风险 有内容（3 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包覆盖度可见（部分覆盖（partial））"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管计时可见（已停止 00:00:02）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "页面显示实测停止耗时（实测停止耗时 15 ms（要求 ≤10000 ms））"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "halted 后全局显示接管横幅"
+    },
+    {
+      "step": "takeover-resume",
+      "ok": true,
+      "message": "resume 后恢复空闲态（halted=false）"
+    },
+    {
+      "step": "takeover-resume",
+      "ok": true,
+      "message": "resume 后全局接管横幅消失"
+    },
+    {
+      "step": "takeover-resume",
+      "ok": true,
+      "message": "显示恢复时间（已于 2026-10-25 22:19 恢复运行（halted=false））"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：收入 可见（¥32,000.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：成本 可见（¥18,600.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：毛利 可见（¥13,400.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：预算余量 可见（¥31,400.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "合规事件 ≥2 条（实际 3）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "下月提案 ≥2 条（实际 3）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "as_of 可见（2026-10-25 22:19）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "coverage 可见（部分覆盖（partial））"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "页面文本含 127.0.0.1"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "页面文本含「本地」"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "服务端只绑定 127.0.0.1（实际 127.0.0.1）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "控制台 host=127.0.0.1（实际 127.0.0.1）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "局域网地址 192.168.3.123:59152 不可访问（只监听回环）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "无 X-Steward-Token 写操作被拒（实际 401）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "读接口无需 token（/api/overview → 200）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "无外链请求（30 个请求全部同源 127.0.0.1）",
+      "detail": ""
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "同源静态资源已加载（16 个 /assets/ 请求）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "无页面 JS 错误（实际 0）",
+      "detail": ""
+    },
+    {
+      "step": "post-run",
+      "ok": true,
+      "message": "close() 后控制台端口已释放（无残留）"
+    }
+  ],
+  "failures": [],
+  "evidence": [
+    "screenshots/001-open-console.png",
+    "screenshots/002-dashboard-load.png",
+    "screenshots/003-project-timeline.png",
+    "screenshots/004-ledger-facts.png",
+    "screenshots/005-approvals-decide.png",
+    "screenshots/006-takeover-stop.png",
+    "screenshots/007-takeover-resume.png",
+    "screenshots/008-monthly-report.png",
+    "screenshots/009-local-only.png"
+  ],
+  "screenshot_count": 9,
+  "durationMs": 4129
+}

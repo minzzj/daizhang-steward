@@ -1,0 +1,12 @@
+{
+  "runId": "run-20261025-221904-b56b1a",
+  "goal": "经营域仿真业务线端到端（选题/账本/承诺/接管/边界/月报，B1/B2/B5/B6/B7）",
+  "branchId": "br-conductor-20261025221904-d2b1",
+  "branchRole": "conductor",
+  "promptRef": "conductor@1.0.0",
+  "startedAt": "2026-10-25T14:19:04.183Z",
+  "evidenceRoot": "runs/run-20261025-221904-b56b1a",
+  "finishedAt": "2026-10-25T14:19:04.212Z",
+  "ok": true,
+  "steps": 3
+}

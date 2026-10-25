@@ -1,0 +1,123 @@
+{
+  "stamp": "2026-10-25_14-18-54",
+  "ok": true,
+  "checks": {
+    "build": true,
+    "unitTests": true,
+    "b1TopicSelection": true,
+    "b2LedgerSixFacts": true,
+    "b5PromiseTrace": true,
+    "b6TakeoverKey": true,
+    "b7Boundaries": true,
+    "monthlyReport": true,
+    "consoleE2E": true,
+    "cliConsoleRealBrowser": true,
+    "approveDecide": true,
+    "deferredB3B4B8": true
+  },
+  "phase": "P1 personal edition MVP",
+  "testSummary": {
+    "tests": 113,
+    "pass": 113,
+    "fail": 0
+  },
+  "businessRunMs": 157,
+  "b1": {
+    "lines": 3,
+    "sourcesOk": true,
+    "proposal": true
+  },
+  "b2": {
+    "entries": 2
+  },
+  "b5": {
+    "authorized": true,
+    "chain": 3
+  },
+  "b6": {
+    "stop_ms": 3,
+    "hardLimitMs": 10000,
+    "packOk": true
+  },
+  "b7": {
+    "rules": 18,
+    "denied": 4,
+    "cases": 6
+  },
+  "console": {
+    "e2e": true,
+    "stop_ms": 88,
+    "cliUrl": "http://127.0.0.1:4193",
+    "cliBrowser": true,
+    "screenshot": "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-cli/ledger.png"
+  },
+  "runs": {
+    "business": "run-20261025-221904-b56b1a",
+    "boundary": "run-20261025-221904-89b2f3"
+  },
+  "evidence": {
+    "businessRun": [
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/prompt.md",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/meta.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/console.log",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/events.jsonl",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/proposal.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/business-result.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/ledger-facts.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/promise-traces.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/takeover-pack.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/boundary-check.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/summaries.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/monthly-report.json",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/monthly-report.md",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/report.md",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/business-run/checkpoint.json"
+    ],
+    "boundaryRun": "boundary-run/",
+    "consoleE2E": [
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/001-open-console.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/002-dashboard-load.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/003-project-timeline.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/004-ledger-facts.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/005-approvals-decide.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/006-takeover-stop.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/007-takeover-resume.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/008-monthly-report.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/screenshots/009-local-only.png",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/console-server.log",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/console.log",
+      "docs/test-evidence/evidence-p1-2026-10-25_14-18-54/console-e2e/result.json"
+    ],
+    "consoleCli": "console-cli/",
+    "unitTestsLog": "unit-tests.log",
+    "takeover": "takeover-result.json"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 1531
+    },
+    "unitTests": {
+      "exitCode": 0,
+      "durationMs": 8225
+    },
+    "business": {
+      "exitCode": 0,
+      "durationMs": 157
+    },
+    "boundary": {
+      "exitCode": 0,
+      "durationMs": 152
+    },
+    "consoleE2E": {
+      "exitCode": 0,
+      "durationMs": 4767
+    },
+    "takeover": {
+      "exitCode": 0
+    },
+    "approve": {
+      "exitCode": 0
+    }
+  }
+}

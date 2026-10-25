@@ -1,0 +1,12 @@
+{
+  "runId": "run-20261025-221904-89b2f3",
+  "goal": "边界规则自检（四类越界 100% 拒绝，B7）",
+  "branchId": "br-reviewer-20261025221904-56f1",
+  "branchRole": "reviewer",
+  "promptRef": "reviewer@1.0.0",
+  "startedAt": "2026-10-25T14:19:04.398Z",
+  "evidenceRoot": "runs/run-20261025-221904-89b2f3",
+  "finishedAt": "2026-10-25T14:19:04.416Z",
+  "ok": true,
+  "steps": 3
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "request": {
+      "kind": "business_scope",
+      "text": "承接需要资质的无证业务",
+      "requires_license": true
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-01",
+      "user_message": "该业务需要经营资质，个人模式下不承接无证业务。已拒绝；请先取得资质，或改做无需资质的业务线（可在选题里换一条）。"
+    }
+  },
+  {
+    "request": {
+      "kind": "business_scope",
+      "text": "借用他人资质投标",
+      "requires_license": false
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-02",
+      "user_message": "借用、挂靠或租用他人资质接单属于违法经营，已拒绝。请以自己或授权主体的真实资质开展业务。"
+    }
+  },
+  {
+    "request": {
+      "kind": "outreach",
+      "text": "陌生名单批量外呼",
+      "is_unknown_outreach": true
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-03",
+      "user_message": "陌生外呼/陌生名单触达属于骚扰与合规高风险行为，已拒绝。只允许对明确同意或既有客户关系触达，且需人工确认。"
+    }
+  },
+  {
+    "request": {
+      "kind": "expense",
+      "text": "超预算单笔支付",
+      "amount_cny": 30000
+    },
+    "result": {
+      "decision": "deny",
+      "rule_id": "B-04",
+      "user_message": "该请求金额超出委托预算（单笔或本月剩余额度），已拒绝并留痕。如确需继续，请授权人先调整委托预算或提高单笔额度。"
+    }
+  }
+]

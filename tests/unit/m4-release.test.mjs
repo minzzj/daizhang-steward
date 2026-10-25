@@ -88,9 +88,10 @@ test("A11：发布文档齐全（good-first-issues / demo-script / v0.5.0 releas
   assert.ok(notes.includes("0.5.0") && /CC BY-NC-SA 4\.0/.test(notes), "发布说明应含版本与许可证");
 });
 
-test("版本一致性：package.json 与 CLI VERSION 均为 0.5.0", () => {
+test("版本一致性：package.json 与 CLI VERSION 保持一致", () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
-  assert.equal(pkg.version, "0.5.0");
   const cli = readFileSync(join(ROOT, "apps", "cli", "src", "index.ts"), "utf8");
-  assert.match(cli, /const VERSION = "0\.5\.0"/);
+  const escaped = pkg.version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(cli, new RegExp(`const VERSION = "${escaped}"`));
+  assert.ok(/^\d+\.\d+\.\d+$/.test(pkg.version), "版本号应为语义化 x.y.z");
 });

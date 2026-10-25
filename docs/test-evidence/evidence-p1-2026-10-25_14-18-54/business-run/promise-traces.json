@@ -1,0 +1,20 @@
+{
+  "authorized": {
+    "authorized": true,
+    "promise_id": "prm-4c9a150334",
+    "project_id": "prj-f04961409e",
+    "text": "30 天内交付报表导出功能，报价 16000 元，验收后收款",
+    "source_message_id": "msg-demo-customer-inquiry",
+    "mandate_clause": "承接无需经营资质的软件/自动化小额订单，单笔不超过单笔额度",
+    "mandate_id": "mand-9df9bc338a",
+    "chain": [
+      "对话原文：msg-demo-customer-inquiry",
+      "委托条款：承接无需经营资质的软件/自动化小额订单，单笔不超过单笔额度（委托 mand-9df9bc338a，授权人 个人经营者（本人））",
+      "项目：prj-f04961409e"
+    ]
+  },
+  "unauthorized": {
+    "authorized": false,
+    "reason": "未授权"
+  }
+}

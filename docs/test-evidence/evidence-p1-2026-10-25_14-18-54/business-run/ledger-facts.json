@@ -1,0 +1,20 @@
+[
+  {
+    "entry_id": "led-c4d35945d4",
+    "amount_cny": 20000,
+    "payee_or_payer": "有财务对账需求的小微企业",
+    "basis": "验收单 runs/sim/prj-f04961409e/acceptance.eml + 报价审批 apr-434f811d88",
+    "approved_by": "sim-owner（仿真审批人，非真人）",
+    "receipt_ref": "receipt-prj-f04961409e",
+    "project_id": "prj-f04961409e"
+  },
+  {
+    "entry_id": "led-499f559b86",
+    "amount_cny": 20000,
+    "payee_or_payer": "有财务对账需求的小微企业",
+    "basis": "验收单 runs/sim/prj-f04961409e/acceptance.eml + 委托条款",
+    "approved_by": "sim-owner（仿真审批人，非真人）",
+    "receipt_ref": "invoice-prj-f04961409e",
+    "project_id": "prj-f04961409e"
+  }
+]

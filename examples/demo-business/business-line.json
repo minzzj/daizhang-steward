@@ -1,0 +1,709 @@
+{
+  "schema_version": "demo-business/1",
+  "fixture_id": "fixture-demo-business-personal-v1",
+  "mode": "personal",
+  "currency": "CNY",
+  "generated_at": "2026-10-24T20:00:00+08:00",
+  "notice": "本文件为纯虚构演示数据（示例工作室 / 示例客户 / 虚构供应商），仅用于本地仿真与验收；不含任何真实公司、真实个人、真实联系方式、真实账号或真实税号。所有来源 URL 均为保留域名 example.com 下的虚构路径。",
+  "mandate": {
+    "mandate_id": "mandate-demo-001",
+    "granted_by": "示例工作室（虚构，个人经营者）",
+    "grantee": "代掌 Steward（仿真个人版）",
+    "scope": "线上数字化交付：数据处理脚本、自动化报表、轻量 Web 工具及配套文档；不含线下现场施工或上门服务，不含需要行政许可或行业资质的业务。",
+    "valid_from": "2026-10-01T00:00:00+08:00",
+    "valid_to": "2026-12-31T23:59:59+08:00",
+    "budget_limits": {
+      "month_cny": 50000,
+      "project_cny": 20000,
+      "per_txn_cny": 5000
+    },
+    "prohibited": [
+      "线下施工与上门服务",
+      "需要行政许可或行业资质的业务",
+      "代客户签字、代签合同或代盖公章",
+      "自动付款、自动转账或自动变更收款账户",
+      "绕过验证码/风控、抓取登录后页面、购买名单",
+      "未经人工审批的对外承诺、收款与开票"
+    ],
+    "approval_required": [
+      "报价与合同承诺",
+      "收款确认",
+      "开票",
+      "单笔 ≥ 3000 元支出",
+      "对外发送客户消息"
+    ],
+    "clauses": [
+      {
+        "clause_id": "clause-scope-online",
+        "text": "仅承接线上数字化交付；线下与资质类业务一律拒绝并留痕。"
+      },
+      {
+        "clause_id": "clause-budget-3layer",
+        "text": "三层预算上限：月 50000 元 / 单项目 20000 元 / 单笔支出 5000 元；超限暂停并交人。"
+      },
+      {
+        "clause_id": "clause-human-approval",
+        "text": "对外承诺、收款、开票、批量外联必须人工批准；审批超时挂起，不自动放行。"
+      }
+    ],
+    "confidence": "certain"
+  },
+  "business_lines": [
+    {
+      "business_line_id": "bl-online-report",
+      "name": "月度经营报表自动化（线上交付）",
+      "who_pays": "示例客户（虚构，运营负责人）",
+      "quote_cny": 16000,
+      "cost_cny": 4200,
+      "gross_margin": 0.7375,
+      "worst_case_cny": 3800,
+      "sources": [
+        {
+          "source_id": "src-bl-report-1",
+          "title": "示例行业论坛：报表自动化求助帖（虚构）",
+          "url": "https://example.com/forum/post/2001",
+          "accessed_at": "2026-10-05T09:20:00+08:00",
+          "confidence": "certain"
+        },
+        {
+          "source_id": "src-bl-report-2",
+          "title": "示例客户官网公开询价页（虚构）",
+          "url": "https://example.com/tenders/2002",
+          "accessed_at": "2026-10-05T09:35:00+08:00",
+          "confidence": "certain"
+        }
+      ],
+      "risks": [
+        "客户数据口径未完全对齐，需书面确认字段定义",
+        "验收标准需双方书面确认，避免范围蔓延",
+        "云服务与外包成本可能小幅上涨"
+      ],
+      "requires_license": false,
+      "requires_offline": false,
+      "decision": "selected",
+      "decision_reason": "线上可交付、报价在单项目预算内、无资质要求、最坏情况仍为正收益，符合委托 scope。",
+      "confidence": "certain"
+    },
+    {
+      "business_line_id": "bl-license-consulting",
+      "name": "企业资质合规咨询（需许可证）",
+      "who_pays": "示例企业（虚构，人事负责人）",
+      "quote_cny": 30000,
+      "cost_cny": 9000,
+      "gross_margin": 0.7,
+      "worst_case_cny": 6000,
+      "sources": [
+        {
+          "source_id": "src-bl-license-1",
+          "title": "示例企业官网公开采购公告（虚构）",
+          "url": "https://example.com/procurement/2010",
+          "accessed_at": "2026-10-05T10:10:00+08:00",
+          "confidence": "certain"
+        }
+      ],
+      "risks": [
+        "需人力资源服务/咨询类前置行政许可",
+        "报价 30000 元超过单项目预算 20000 元",
+        "个人经营主体无法承接需要资质的业务"
+      ],
+      "requires_license": true,
+      "requires_offline": false,
+      "decision": "rejected",
+      "decision_reason": "因「需许可证」被拒：需要行政许可或行业资质的业务在 mandate.prohibited 中明确禁止，个人版不得承接。",
+      "confidence": "certain"
+    },
+    {
+      "business_line_id": "bl-offline-inspection",
+      "name": "门店设备巡检与现场施工（线下）",
+      "who_pays": "示例连锁门店（虚构，行政经理）",
+      "quote_cny": 26000,
+      "cost_cny": 15000,
+      "gross_margin": 0.4231,
+      "worst_case_cny": -2000,
+      "sources": [
+        {
+          "source_id": "src-bl-offline-1",
+          "title": "示例连锁门店公开采购公告（虚构）",
+          "url": "https://example.com/procurement/3001",
+          "accessed_at": "2026-10-04T09:50:00+08:00",
+          "confidence": "certain"
+        },
+        {
+          "source_id": "src-bl-offline-2",
+          "title": "示例门店巡检需求帖（虚构，页面已失效）",
+          "url": "https://example.com/expired/3002",
+          "accessed_at": "2026-10-04T10:00:00+08:00",
+          "confidence": "tombstone"
+        }
+      ],
+      "risks": [
+        "需上门施工与差旅，超出线上数字化 scope",
+        "人身安全与保险责任不在个人版委托范围",
+        "单笔外包成本 15000 元超过单笔支出上限 5000 元"
+      ],
+      "requires_license": false,
+      "requires_offline": true,
+      "decision": "rejected",
+      "decision_reason": "因「线下」被拒：需上门施工与现场作业，不在 mandate.scope 的线上数字化交付范围内。",
+      "confidence": "certain"
+    }
+  ],
+  "client_inquiry": {
+    "inquiry_id": "inq-demo-001",
+    "received_at": "2026-10-08T10:12:00+08:00",
+    "channel": "email",
+    "from": "示例客户（虚构，运营负责人）",
+    "from_email": "buyer@example.com",
+    "raw_text": "你好，我们是示例客户（虚构）。现在每周要花半天手工汇总多个平台的经营数据，容易出错。想请你们做一个自动化报表工具，预算大概 15000–20000 元，两周内能交付吗？",
+    "need_summary": "把多平台经营数据自动汇总为周报/月报，减少人工整理与出错",
+    "budget_hint_cny": 20000,
+    "message_ref": "msg-001",
+    "confidence": "certain"
+  },
+  "quote": {
+    "quote_id": "quote-demo-001",
+    "business_line_id": "bl-online-report",
+    "issued_at": "2026-10-09T16:40:00+08:00",
+    "valid_until": "2026-10-16T23:59:59+08:00",
+    "amount_cny": 16000,
+    "duration_days": 14,
+    "currency": "CNY",
+    "scope": [
+      "读取 3 个示例数据源（CSV/JSON 文件，虚构）并生成统一经营报表",
+      "支持一键生成周报与月报（Markdown + CSV 输出）",
+      "交付部署与使用说明文档",
+      "验收后 7 天内免费修复缺陷（最多 2 轮）"
+    ],
+    "out_of_scope": [
+      "对接需要登录的真实第三方平台",
+      "线下上门部署与现场培训",
+      "代客户对外发布报表或发送客户数据"
+    ],
+    "payment_terms": "验收通过后 7 日内一次性支付 16000 元；对公转账（仿真，无真实账号）",
+    "status": "accepted",
+    "client_confirmed_message_ref": "msg-003",
+    "approved_by": "示例工作室授权人（虚构）",
+    "approved_at": "2026-10-10T09:10:00+08:00",
+    "commitment_trace": {
+      "message_ref": "msg-003",
+      "mandate_clause_ref": "clause-scope-online",
+      "quote_ref": "quote-demo-001"
+    },
+    "confidence": "certain"
+  },
+  "project": {
+    "project_id": "proj-demo-001",
+    "business_line_id": "bl-online-report",
+    "quote_id": "quote-demo-001",
+    "client": "示例客户（虚构）",
+    "name": "月度经营报表自动化（仿真项目）",
+    "status": "accepted",
+    "started_at": "2026-10-10T09:30:00+08:00",
+    "due_at": "2026-10-24T23:59:59+08:00",
+    "delivered_at": "2026-10-21T18:00:00+08:00",
+    "accepted_at": "2026-10-22T15:20:00+08:00",
+    "budget": {
+      "project_limit_cny": 20000,
+      "spent_cny": 4200,
+      "remaining_cny": 15800
+    },
+    "confidence": "certain"
+  },
+  "agents": [
+    {
+      "agent_id": "agent-conductor",
+      "role": "conductor",
+      "display_name": "总调度代理（仿真）",
+      "responsibilities": ["拆解任务与依赖", "分配三层预算", "验收、返工与升级"],
+      "tools_allowlist": ["branch", "report", "stop"],
+      "confidence": "certain"
+    },
+    {
+      "agent_id": "agent-developer",
+      "role": "developer",
+      "display_name": "开发代理（仿真）",
+      "responsibilities": ["实现报表生成脚本", "自测与交付说明"],
+      "tools_allowlist": ["code-loop", "file.write", "report"],
+      "confidence": "certain"
+    },
+    {
+      "agent_id": "agent-customer",
+      "role": "customer",
+      "display_name": "客户代理（仿真）",
+      "responsibilities": ["整理客户需求", "确认报价与验收", "同步客户沟通"],
+      "tools_allowlist": ["report"],
+      "confidence": "certain"
+    },
+    {
+      "agent_id": "agent-finance",
+      "role": "finance",
+      "display_name": "财务代理（仿真）",
+      "responsibilities": ["登记收支账本", "确认收款", "跟踪开票状态"],
+      "tools_allowlist": ["report", "approve"],
+      "confidence": "certain"
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "task-001",
+      "project_id": "proj-demo-001",
+      "title": "确认客户需求与预算范围",
+      "assignee_role": "customer",
+      "assignee_agent_id": "agent-customer",
+      "depends_on": [],
+      "status": "done",
+      "acceptance_criteria": ["需求原文与预算区间有记录", "客户确认需求（msg-001 / msg-002）"],
+      "evidence_ref": "runs/demo-business/tasks/task-001-requirement.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-002",
+      "project_id": "proj-demo-001",
+      "title": "拆解任务、分配预算与验收标准",
+      "assignee_role": "conductor",
+      "assignee_agent_id": "agent-conductor",
+      "depends_on": ["task-001"],
+      "status": "done",
+      "acceptance_criteria": ["每个子任务有负责人与验收标准", "预算不超三层上限（50000/20000/5000）"],
+      "evidence_ref": "runs/demo-business/tasks/task-002-plan.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-003",
+      "project_id": "proj-demo-001",
+      "title": "实现报表生成脚本",
+      "assignee_role": "developer",
+      "assignee_agent_id": "agent-developer",
+      "depends_on": ["task-002"],
+      "status": "done",
+      "acceptance_criteria": ["3 个示例数据源可生成统一报表", "周报/月报可一键生成"],
+      "evidence_ref": "runs/demo-business/tasks/task-003-implementation.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-004",
+      "project_id": "proj-demo-001",
+      "title": "脚本自测与使用文档",
+      "assignee_role": "developer",
+      "assignee_agent_id": "agent-developer",
+      "depends_on": ["task-003"],
+      "status": "done",
+      "acceptance_criteria": ["示例数据自测通过", "文档含部署与使用步骤"],
+      "evidence_ref": "runs/demo-business/tasks/task-004-selftest-doc.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-005",
+      "project_id": "proj-demo-001",
+      "title": "中期进度确认与需求变更记录",
+      "assignee_role": "customer",
+      "assignee_agent_id": "agent-customer",
+      "depends_on": ["task-003"],
+      "status": "done",
+      "acceptance_criteria": ["进度同步消息有记录（msg-004）", "需求变更（如有）写入需求记录"],
+      "evidence_ref": "runs/demo-business/tasks/task-005-progress.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-006",
+      "project_id": "proj-demo-001",
+      "title": "报价确认与收款登记",
+      "assignee_role": "finance",
+      "assignee_agent_id": "agent-finance",
+      "depends_on": ["task-005"],
+      "status": "done",
+      "acceptance_criteria": ["收款金额与报价单一致（16000）", "账本记录含审批人与回执引用"],
+      "evidence_ref": "runs/demo-business/tasks/task-006-payment.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-007",
+      "project_id": "proj-demo-001",
+      "title": "交付确认与验收结案",
+      "assignee_role": "conductor",
+      "assignee_agent_id": "agent-conductor",
+      "depends_on": ["task-004", "task-005"],
+      "status": "done",
+      "acceptance_criteria": ["2 个交付物齐备且有 evidence_ref", "客户验收通过消息有记录（msg-006）"],
+      "evidence_ref": "runs/demo-business/tasks/task-007-acceptance.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-008",
+      "project_id": "proj-demo-001",
+      "title": "开票与月报账本核对",
+      "assignee_role": "finance",
+      "assignee_agent_id": "agent-finance",
+      "depends_on": ["task-006", "task-007"],
+      "status": "done",
+      "acceptance_criteria": ["发票金额 = 收款金额（16000）", "月报收支/毛利与账本一致"],
+      "evidence_ref": "runs/demo-business/tasks/task-008-invoice-report.md",
+      "evidence_status": "fixture_placeholder",
+      "confidence": "certain"
+    },
+    {
+      "task_id": "task-009",
+      "project_id": "proj-demo-001",
+      "title": "线下上门部署（已拒绝并取消）",
+      "assignee_role": "conductor",
+      "assignee_agent_id": "agent-conductor",
+      "depends_on": ["task-002"],
+      "status": "cancelled",
+      "acceptance_criteria": ["拒绝理由可读并留痕", "不产生线下动作与费用"],
+      "evidence_ref": "runs/demo-business/tasks/task-009-rejected-offline.md",
+      "evidence_status": "fixture_placeholder",
+      "cancel_reason": "客户临时要求线下上门部署；超出 mandate.scope（仅线上交付），按边界规则拒绝并取消。",
+      "confidence": "tombstone"
+    }
+  ],
+  "messages": [
+    {
+      "message_id": "msg-001",
+      "ts": "2026-10-08T10:12:00+08:00",
+      "direction": "client_to_steward",
+      "channel": "email",
+      "from": "示例客户（虚构）",
+      "to": "示例工作室（虚构）",
+      "kind": "inquiry",
+      "text": "每周手工汇总多平台经营数据要半天，想做自动化报表工具，预算约 15000–20000 元，两周内可交付吗？",
+      "related_ref": "inq-demo-001",
+      "confidence": "certain"
+    },
+    {
+      "message_id": "msg-002",
+      "ts": "2026-10-09T11:05:00+08:00",
+      "direction": "steward_to_client",
+      "channel": "email",
+      "from": "示例工作室（虚构）",
+      "to": "示例客户（虚构）",
+      "kind": "requirement_confirm",
+      "text": "已了解需求：3 个示例数据源、周报/月报输出。我们按 16000 元、14 天工期报价，验收标准为报表字段与示例数据一致；请确认。",
+      "related_ref": "quote-demo-001",
+      "confidence": "certain"
+    },
+    {
+      "message_id": "msg-003",
+      "ts": "2026-10-10T09:10:00+08:00",
+      "direction": "client_to_steward",
+      "channel": "email",
+      "from": "示例客户（虚构）",
+      "to": "示例工作室（虚构）",
+      "kind": "quote_confirm",
+      "text": "报价 16000 元与 14 天工期可以接受，验收后 7 日内付款，可以开始。",
+      "related_ref": "quote-demo-001",
+      "confidence": "certain"
+    },
+    {
+      "message_id": "msg-004",
+      "ts": "2026-10-15T17:30:00+08:00",
+      "direction": "steward_to_client",
+      "channel": "email",
+      "from": "示例工作室（虚构）",
+      "to": "示例客户（虚构）",
+      "kind": "progress_update",
+      "text": "第 5 天进度：3 个示例数据源已跑通，周报生成完成，月报与文档本周内完成；暂无需求变更。",
+      "related_ref": "task-005",
+      "confidence": "certain"
+    },
+    {
+      "message_id": "msg-005",
+      "ts": "2026-10-21T18:00:00+08:00",
+      "direction": "steward_to_client",
+      "channel": "email",
+      "from": "示例工作室（虚构）",
+      "to": "示例客户（虚构）",
+      "kind": "delivery_confirm",
+      "text": "交付完成：脚本与提交说明 1 份、部署与使用文档 1 份，均附证据引用；请按报价单验收标准验收。",
+      "related_ref": "proj-demo-001",
+      "confidence": "certain"
+    },
+    {
+      "message_id": "msg-006",
+      "ts": "2026-10-22T15:20:00+08:00",
+      "direction": "client_to_steward",
+      "channel": "email",
+      "from": "示例客户（虚构）",
+      "to": "示例工作室（虚构）",
+      "kind": "acceptance_passed",
+      "text": "已按验收标准核对，报表字段与示例数据一致，验收通过。",
+      "related_ref": "proj-demo-001",
+      "confidence": "certain"
+    },
+    {
+      "message_id": "msg-007",
+      "ts": "2026-10-23T18:10:00+08:00",
+      "direction": "steward_to_client",
+      "channel": "email",
+      "from": "示例工作室（虚构）",
+      "to": "示例客户（虚构）",
+      "kind": "invoice_notice",
+      "text": "已收到 16000 元款项并登记账本；增值税普通发票已开具（虚构仿真），回执与发票引用已写入账本。",
+      "related_ref": "inv-demo-001",
+      "confidence": "certain"
+    }
+  ],
+  "deliverables": [
+    {
+      "deliverable_id": "deliv-001",
+      "project_id": "proj-demo-001",
+      "type": "code_repository_commit",
+      "name": "报表生成脚本与提交说明",
+      "description": "实现 3 个示例数据源读取、周报/月报生成与自测脚本；提交说明包含运行方式与已验证场景。",
+      "repository": "https://example.com/repos/demo-report（虚构示例仓库）",
+      "commit_ref": "demo-commit-a1b2c3（虚构）",
+      "evidence_ref": "runs/demo-business/deliverables/deliv-001-code-commit.md",
+      "evidence_status": "fixture_placeholder",
+      "verified_by": "agent-developer",
+      "verified_at": "2026-10-21T17:40:00+08:00",
+      "confidence": "certain"
+    },
+    {
+      "deliverable_id": "deliv-002",
+      "project_id": "proj-demo-001",
+      "type": "documentation",
+      "name": "部署与使用说明文档",
+      "description": "含环境准备、示例数据替换方式、周报/月报命令与常见问题。",
+      "doc_ref": "https://example.com/docs/demo-report-usage（虚构文档页）",
+      "evidence_ref": "runs/demo-business/deliverables/deliv-002-usage-doc.md",
+      "evidence_status": "fixture_placeholder",
+      "verified_by": "agent-developer",
+      "verified_at": "2026-10-21T17:50:00+08:00",
+      "confidence": "certain"
+    }
+  ],
+  "ledger": {
+    "currency": "CNY",
+    "entries": [
+      {
+        "entry_id": "ledger-001",
+        "kind": "income",
+        "amount_cny": 16000,
+        "ts": "2026-10-23T10:05:00+08:00",
+        "ref": "pay-demo-001",
+        "project_id": "proj-demo-001",
+        "basis": "报价单 quote-demo-001 + 验收通过 msg-006",
+        "confidence": "certain"
+      },
+      {
+        "entry_id": "ledger-002",
+        "kind": "expense",
+        "amount_cny": 800,
+        "ts": "2026-10-11T14:20:00+08:00",
+        "ref": "exp-001",
+        "project_id": "proj-demo-001",
+        "basis": "云服务月费（虚构报价）",
+        "confidence": "certain"
+      },
+      {
+        "entry_id": "ledger-003",
+        "kind": "expense",
+        "amount_cny": 3400,
+        "ts": "2026-10-18T16:40:00+08:00",
+        "ref": "exp-002",
+        "project_id": "proj-demo-001",
+        "basis": "外包开发结算（虚构）",
+        "confidence": "certain"
+      }
+    ],
+    "totals": {
+      "income_cny": 16000,
+      "expense_cny": 4200,
+      "net_cny": 11800
+    },
+    "budget_snapshot": {
+      "month_limit_cny": 50000,
+      "month_used_cny": 4200,
+      "month_remaining_cny": 45800,
+      "project_limit_cny": 20000,
+      "project_used_cny": 4200,
+      "project_remaining_cny": 15800,
+      "per_txn_limit_cny": 5000,
+      "largest_txn_cny": 3400
+    }
+  },
+  "payment": {
+    "payment_id": "pay-demo-001",
+    "project_id": "proj-demo-001",
+    "income": true,
+    "amount_cny": 16000,
+    "currency": "CNY",
+    "payer": "示例客户（虚构）",
+    "basis": "报价单 + 验收通过记录",
+    "basis_ref": "quote-demo-001",
+    "approved_by": "示例工作室授权人（虚构）",
+    "approved_at": "2026-10-23T09:40:00+08:00",
+    "receipt_ref": "runs/demo-business/ledger/receipts/pay-demo-001.md",
+    "received_at": "2026-10-23T10:05:00+08:00",
+    "method": "对公转账（仿真，无真实账号）",
+    "ledger_entry_ref": "ledger-001",
+    "confidence": "certain"
+  },
+  "invoice": {
+    "invoice_id": "inv-demo-001",
+    "project_id": "proj-demo-001",
+    "payment_id": "pay-demo-001",
+    "type": "增值税普通发票",
+    "title": "示例客户（虚构）",
+    "tax_id": "DEMO-TAX-000000（虚构占位，非真实税号）",
+    "amount_cny": 16000,
+    "currency": "CNY",
+    "status": "issued",
+    "status_label": "已开",
+    "issuer_subject": "个人（示例工作室，虚构）",
+    "issued_at": "2026-10-23T17:20:00+08:00",
+    "invoice_ref": "runs/demo-business/ledger/invoices/inv-demo-001.json",
+    "confidence": "certain"
+  },
+  "expenses": [
+    {
+      "expense_id": "exp-001",
+      "project_id": "proj-demo-001",
+      "category": "cloud_service",
+      "vendor": "示例云服务（虚构）",
+      "amount_cny": 800,
+      "payer": "示例工作室（虚构）",
+      "basis": "1 台云主机 + 对象存储 1 个月（虚构报价）",
+      "basis_ref": "https://example.com/pricing/demo-cloud（虚构）",
+      "approved_by": "示例工作室授权人（虚构）",
+      "approved_at": "2026-10-11T10:00:00+08:00",
+      "per_txn_limit_ok": true,
+      "receipt_ref": "runs/demo-business/ledger/receipts/exp-001.md",
+      "paid_at": "2026-10-11T14:20:00+08:00",
+      "ledger_entry_ref": "ledger-002",
+      "confidence": "certain"
+    },
+    {
+      "expense_id": "exp-002",
+      "project_id": "proj-demo-001",
+      "category": "outsourcing",
+      "vendor": "示例外包开发者（虚构）",
+      "amount_cny": 3400,
+      "payer": "示例工作室（虚构）",
+      "basis": "报表导出的轻量前端页面外包（虚构结算）",
+      "basis_ref": "https://example.com/contracts/demo-outsourcing（虚构）",
+      "approved_by": "示例工作室授权人（虚构）",
+      "approved_at": "2026-10-18T09:00:00+08:00",
+      "per_txn_limit_ok": true,
+      "receipt_ref": "runs/demo-business/ledger/receipts/exp-002.md",
+      "paid_at": "2026-10-18T16:40:00+08:00",
+      "ledger_entry_ref": "ledger-003",
+      "confidence": "certain"
+    }
+  ],
+  "tombstones": [
+    {
+      "tombstone_id": "tomb-001",
+      "entity_type": "task",
+      "entity_id": "task-009",
+      "reason": "客户临时要求线下上门部署：超出委托 scope（仅线上交付），已拒绝、留痕并将任务标记为墓碑。",
+      "marked_at": "2026-10-12T11:00:00+08:00",
+      "decided_by": "示例工作室授权人（虚构）",
+      "confidence": "tombstone"
+    },
+    {
+      "tombstone_id": "tomb-002",
+      "entity_type": "source",
+      "entity_id": "src-bl-offline-2",
+      "reason": "候选业务线的第二来源页面已失效（虚构），无法打开核对，按墓碑标记且不作为证据。",
+      "marked_at": "2026-10-06T15:30:00+08:00",
+      "decided_by": "示例工作室授权人（虚构）",
+      "confidence": "tombstone"
+    }
+  ],
+  "monthly_summary": {
+    "period": "2026-10",
+    "income_cny": 16000,
+    "expense_cny": 4200,
+    "net_cny": 11800,
+    "gross_margin": 0.7375,
+    "budget_remaining": {
+      "month_cny": 45800,
+      "project_cny": 15800
+    },
+    "compliance_events": [
+      "拒绝需许可证业务 1 次（bl-license-consulting）",
+      "拒绝线下施工需求 1 次（task-009 已取消并标记墓碑）",
+      "未发生未经人工审批的对外承诺、收款或开票"
+    ],
+    "pending_items": [
+      "3 条下月提案待授权人审批"
+    ],
+    "next_proposals_refs": ["prop-001", "prop-002", "prop-003"],
+    "confidence": "certain"
+  },
+  "next_proposals": [
+    {
+      "proposal_id": "prop-001",
+      "title": "报表自动化二期：异常预警与周报推送",
+      "business_line_id": "bl-online-report",
+      "who_pays": "示例客户（虚构）",
+      "quote_cny": 12000,
+      "cost_cny": 3000,
+      "gross_margin": 0.75,
+      "worst_case_cny": 3000,
+      "basis": "上期验收通过（msg-006）与客户沟通记录（msg-007）",
+      "sources": [
+        {
+          "source_id": "src-prop-001",
+          "title": "示例客户官网新增需求页（虚构）",
+          "url": "https://example.com/tenders/4001",
+          "confidence": "certain"
+        }
+      ],
+      "requires_license": false,
+      "requires_offline": false,
+      "confidence": "probable"
+    },
+    {
+      "proposal_id": "prop-002",
+      "title": "客服问答草稿自动化（线上交付）",
+      "business_line_id": "bl-online-report",
+      "who_pays": "示例客户（虚构）",
+      "quote_cny": 9000,
+      "cost_cny": 2000,
+      "gross_margin": 0.7778,
+      "worst_case_cny": 2500,
+      "basis": "示例行业论坛公开求助帖（虚构）",
+      "sources": [
+        {
+          "source_id": "src-prop-002",
+          "title": "示例行业论坛：客服自动化求助帖（虚构）",
+          "url": "https://example.com/forum/post/4002",
+          "confidence": "probable"
+        }
+      ],
+      "requires_license": false,
+      "requires_offline": false,
+      "confidence": "probable"
+    },
+    {
+      "proposal_id": "prop-003",
+      "title": "历史数据清洗脚本",
+      "business_line_id": "bl-online-report",
+      "who_pays": "示例客户（虚构）",
+      "quote_cny": 6000,
+      "cost_cny": 1200,
+      "gross_margin": 0.8,
+      "worst_case_cny": 1800,
+      "basis": "客户内部口头需求备忘（虚构，待确认）",
+      "sources": [
+        {
+          "source_id": "src-prop-003",
+          "title": "需求备忘（虚构，待确认）",
+          "url": "https://example.com/notes/4003",
+          "confidence": "unknown"
+        }
+      ],
+      "requires_license": false,
+      "requires_offline": false,
+      "confidence": "unknown"
+    }
+  ]
+}

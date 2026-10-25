@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-10-25T14:19:04.195Z",
+  "open_orders": [
+    "prj-f04961409e | 企业表格清洗与对账机器人（含交付文档） | 客户 有财务对账需求的小微企业 | 状态 delivered | 置信度 certain"
+  ],
+  "pending_threads": [
+    "prm-4c9a150334 | 承诺：30 天内交付报表导出功能，报价 16000 元，验收后收款 | 原文 msg-demo-customer-inquiry"
+  ],
+  "payables": [],
+  "credentials": [
+    "env:DEEPSEEK_API_KEY",
+    "env:DEMO_BROWSER_PROFILE",
+    "keychain:demo-login"
+  ],
+  "risks": [
+    "接管态：所有新动作已停止（原因：验收演示：接管键）"
+  ],
+  "coverage": "complete",
+  "reason": "验收演示：接管键",
+  "by": "cli-acceptance"
+}

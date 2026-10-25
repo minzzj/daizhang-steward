@@ -45,11 +45,20 @@ jobs:
       - name: Scout demo (fixture-driven; drafts only, never auto-sent — A7)
         run: node dist/apps/cli/src/index.js scout --json
 
+      - name: Phase-2 business domain demo (fixture-driven; B1/B2/B5/B6/B7 — no network)
+        run: node dist/apps/cli/src/index.js business --json
+
+      - name: Phase-2 boundary rules check (4 out-of-scope classes must be denied — B7)
+        run: node dist/apps/cli/src/index.js boundary-check --json
+
       - name: Dummy read-only branch demo (config + existing prompt, no core change — A10)
         run: node dist/apps/cli/src/index.js dummy-branch --json
 
       - name: Safety check (stop key ≤5s / checkpoint / branch isolation — A8/A9)
         run: node dist/apps/cli/src/index.js safety-check
+
+      - name: Console E2E (headless real browser; local 127.0.0.1 console)
+        run: node tests/e2e-console/run.mjs --headless 1 --evidence-dir runs/ci-console-e2e
 
       - name: Real-browser E2E (headless Chrome/Edge, demo-web normal flow)
         run: node tests/e2e-browser/login-flow.mjs --case normal --headless 1 --evidence-dir runs/ci-e2e

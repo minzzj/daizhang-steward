@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "runId": "run-20261025-221904-b56b1a",
+  "branchId": "br-conductor-20261025221904-d2b1",
+  "stepIndex": 2,
+  "doneSteps": [
+    "step-0",
+    "step-1",
+    "step-2"
+  ],
+  "completed": true,
+  "updatedAt": "2026-10-25T14:19:04.213Z",
+  "state": {
+    "lastTool": "echo"
+  }
+}

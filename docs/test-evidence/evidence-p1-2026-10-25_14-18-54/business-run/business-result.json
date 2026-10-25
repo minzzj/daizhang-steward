@@ -1,0 +1,302 @@
+{
+  "project": {
+    "id": "prj-f04961409e",
+    "name": "企业表格清洗与对账机器人（含交付文档）",
+    "business_line_id": "bl-sheet-reconcile-bot",
+    "client": "有财务对账需求的小微企业",
+    "status": "delivered",
+    "timeline": [
+      {
+        "at": "2026-10-25T14:19:04.193Z",
+        "kind": "created",
+        "summary": "项目创建：企业表格清洗与对账机器人（含交付文档）（业务线 bl-sheet-reconcile-bot）",
+        "evidence_ids": [],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.193Z",
+        "kind": "note",
+        "summary": "客户询价：你好，我们两个平台店铺每天要手动整理销售日报，太耗时间了。想问下做一个自动导出+清洗+日报的工具有多贵？大概多久能交付？",
+        "evidence_ids": [],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.193Z",
+        "kind": "approval",
+        "summary": "待审批[quote]：对外报价 ¥20000：企业表格清洗与对账机器人（含交付文档）（超时不自动放行）",
+        "evidence_ids": [],
+        "confidence": "probable"
+      },
+      {
+        "at": "2026-10-25T14:19:04.193Z",
+        "kind": "approval",
+        "summary": "审批通过 [quote]：对外报价 ¥20000：企业表格清洗与对账机器人（含交付文档）（by sim-owner（仿真审批人，非真人））",
+        "evidence_ids": [],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "quoted",
+        "summary": "报价确认 ¥20000（审批 apr-434f811d88，by sim-owner（仿真审批人，非真人））",
+        "evidence_ids": [],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "task",
+        "summary": "新增任务 [developer]：交付「企业表格清洗与对账机器人（含交付文档）」的可运行 demo 与使用说明",
+        "evidence_ids": [],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "task",
+        "summary": "新增任务 [customer]：客户确认需求并出具验收单",
+        "evidence_ids": [],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "task",
+        "summary": "任务完成 [developer]：交付「企业表格清洗与对账机器人（含交付文档）」的可运行 demo 与使用说明",
+        "evidence_ids": [
+          "ev-78debe7dca",
+          "ev-1e68de289d"
+        ],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "delivery",
+        "summary": "交付完成：交付「企业表格清洗与对账机器人（含交付文档）」的可运行 demo 与使用说明",
+        "evidence_ids": [
+          "ev-78debe7dca",
+          "ev-1e68de289d"
+        ],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "task",
+        "summary": "任务完成 [customer]：客户确认需求并出具验收单",
+        "evidence_ids": [
+          "ev-b47ddd77ef"
+        ],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "acceptance",
+        "summary": "客户验收通过（证据 runs/sim/prj-f04961409e/acceptance.eml）",
+        "evidence_ids": [
+          "ev-b47ddd77ef"
+        ],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "income",
+        "summary": "账本记录（income）：¥20000 来自 有财务对账需求的小微企业（回执 receipt-prj-f04961409e）",
+        "evidence_ids": [],
+        "confidence": "certain"
+      },
+      {
+        "at": "2026-10-25T14:19:04.194Z",
+        "kind": "invoice",
+        "summary": "账本记录（invoice）：¥20000 付给 有财务对账需求的小微企业（回执 invoice-prj-f04961409e）",
+        "evidence_ids": [],
+        "confidence": "certain"
+      }
+    ],
+    "created_at": "2026-10-25T14:19:04.193Z",
+    "updated_at": "2026-10-25T14:19:04.194Z",
+    "confidence": "certain"
+  },
+  "tasks": [
+    {
+      "id": "task-d57125a5ea",
+      "project_id": "prj-f04961409e",
+      "agent_role": "developer",
+      "goal": "交付「企业表格清洗与对账机器人（含交付文档）」的可运行 demo 与使用说明",
+      "status": "done",
+      "evidence": [
+        "ev-78debe7dca",
+        "ev-1e68de289d"
+      ],
+      "created_at": "2026-10-25T14:19:04.194Z",
+      "completed_at": "2026-10-25T14:19:04.194Z"
+    },
+    {
+      "id": "task-ab980ee0fd",
+      "project_id": "prj-f04961409e",
+      "agent_role": "customer",
+      "goal": "客户确认需求并出具验收单",
+      "status": "done",
+      "evidence": [
+        "ev-b47ddd77ef"
+      ],
+      "created_at": "2026-10-25T14:19:04.194Z",
+      "completed_at": "2026-10-25T14:19:04.194Z"
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-10-25T14:19:04.193Z",
+      "kind": "created",
+      "summary": "项目创建：企业表格清洗与对账机器人（含交付文档）（业务线 bl-sheet-reconcile-bot）",
+      "evidence_ids": [],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.193Z",
+      "kind": "note",
+      "summary": "客户询价：你好，我们两个平台店铺每天要手动整理销售日报，太耗时间了。想问下做一个自动导出+清洗+日报的工具有多贵？大概多久能交付？",
+      "evidence_ids": [],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.193Z",
+      "kind": "approval",
+      "summary": "待审批[quote]：对外报价 ¥20000：企业表格清洗与对账机器人（含交付文档）（超时不自动放行）",
+      "evidence_ids": [],
+      "confidence": "probable"
+    },
+    {
+      "at": "2026-10-25T14:19:04.193Z",
+      "kind": "approval",
+      "summary": "审批通过 [quote]：对外报价 ¥20000：企业表格清洗与对账机器人（含交付文档）（by sim-owner（仿真审批人，非真人））",
+      "evidence_ids": [],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "quoted",
+      "summary": "报价确认 ¥20000（审批 apr-434f811d88，by sim-owner（仿真审批人，非真人））",
+      "evidence_ids": [],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "task",
+      "summary": "新增任务 [developer]：交付「企业表格清洗与对账机器人（含交付文档）」的可运行 demo 与使用说明",
+      "evidence_ids": [],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "task",
+      "summary": "新增任务 [customer]：客户确认需求并出具验收单",
+      "evidence_ids": [],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "task",
+      "summary": "任务完成 [developer]：交付「企业表格清洗与对账机器人（含交付文档）」的可运行 demo 与使用说明",
+      "evidence_ids": [
+        "ev-78debe7dca",
+        "ev-1e68de289d"
+      ],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "delivery",
+      "summary": "交付完成：交付「企业表格清洗与对账机器人（含交付文档）」的可运行 demo 与使用说明",
+      "evidence_ids": [
+        "ev-78debe7dca",
+        "ev-1e68de289d"
+      ],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "task",
+      "summary": "任务完成 [customer]：客户确认需求并出具验收单",
+      "evidence_ids": [
+        "ev-b47ddd77ef"
+      ],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "acceptance",
+      "summary": "客户验收通过（证据 runs/sim/prj-f04961409e/acceptance.eml）",
+      "evidence_ids": [
+        "ev-b47ddd77ef"
+      ],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "income",
+      "summary": "账本记录（income）：¥20000 来自 有财务对账需求的小微企业（回执 receipt-prj-f04961409e）",
+      "evidence_ids": [],
+      "confidence": "certain"
+    },
+    {
+      "at": "2026-10-25T14:19:04.194Z",
+      "kind": "invoice",
+      "summary": "账本记录（invoice）：¥20000 付给 有财务对账需求的小微企业（回执 invoice-prj-f04961409e）",
+      "evidence_ids": [],
+      "confidence": "certain"
+    }
+  ],
+  "ledger": [
+    {
+      "id": "led-c4d35945d4",
+      "project_id": "prj-f04961409e",
+      "type": "income",
+      "amount_cny": 20000,
+      "payee_or_payer": "有财务对账需求的小微企业",
+      "basis": "验收单 runs/sim/prj-f04961409e/acceptance.eml + 报价审批 apr-434f811d88",
+      "approved_by": "sim-owner（仿真审批人，非真人）",
+      "receipt_ref": "receipt-prj-f04961409e",
+      "occurred_at": "2026-10-25T14:19:04.194Z",
+      "confidence": "certain",
+      "created_at": "2026-10-25T14:19:04.194Z"
+    },
+    {
+      "id": "led-499f559b86",
+      "project_id": "prj-f04961409e",
+      "type": "invoice",
+      "amount_cny": 20000,
+      "payee_or_payer": "有财务对账需求的小微企业",
+      "basis": "验收单 runs/sim/prj-f04961409e/acceptance.eml + 委托条款",
+      "approved_by": "sim-owner（仿真审批人，非真人）",
+      "receipt_ref": "invoice-prj-f04961409e",
+      "occurred_at": "2026-10-25T14:19:04.194Z",
+      "confidence": "certain",
+      "created_at": "2026-10-25T14:19:04.194Z"
+    }
+  ],
+  "invoice_status": "issued",
+  "invoice_no": "invoice-prj-f04961409e",
+  "report": {
+    "month": "2026-10",
+    "income_cny": 20000,
+    "cost_cny": 0,
+    "gross_margin_cny": 20000,
+    "gross_margin_rate": 1,
+    "budget_left_cny": 50000,
+    "compliance_events": [],
+    "next_proposals": [
+      "企业表格清洗与对账机器人（含交付文档）",
+      "电商店铺日报自动化（多平台导出→清洗→日报）",
+      "本地商家短视频脚本 + 粗剪流水线"
+    ],
+    "as_of": "2026-10-25T14:19:04.194Z",
+    "coverage": "complete"
+  },
+  "quote_cny": 20000,
+  "customer_message": "你好，我们两个平台店铺每天要手动整理销售日报，太耗时间了。想问下做一个自动导出+清洗+日报的工具有多贵？大概多久能交付？",
+  "acceptance": {
+    "id": "ev-b47ddd77ef",
+    "project_id": "prj-f04961409e",
+    "kind": "email",
+    "path": "runs/sim/prj-f04961409e/acceptance.eml",
+    "note": "客户验收通过邮件",
+    "confidence": "certain",
+    "created_at": "2026-10-25T14:19:04.194Z"
+  }
+}

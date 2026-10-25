@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "halted": true,
+  "stop_ms": 3,
+  "pack": {
+    "generated_at": "2026-10-25T14:19:11.656Z",
+    "open_orders": [
+      "prj-a0d00c6c91 | 企业表格清洗与对账机器人（含交付文档） | 客户 有财务对账需求的小微企业 | 状态 delivered | 置信度 certain"
+    ],
+    "pending_threads": [],
+    "payables": [
+      "apr-52c7007078 | 待审批[payment] 支付示例云服务费用（仿真，待人工批准） | ¥1200"
+    ],
+    "credentials": [
+      "env:DEEPSEEK_API_KEY",
+      "keychain:demo-login"
+    ],
+    "risks": [
+      "接管态：所有新动作已停止（原因：CLI 接管键）",
+      "存在 1 张待审批卡（超时挂起，不自动放行）"
+    ],
+    "coverage": "complete",
+    "reason": "CLI 接管键",
+    "by": "cli-user"
+  },
+  "pack_path": ".\\.steward\\domain\\artifacts\\takeover-pack.json"
+}
