@@ -1,4 +1,6 @@
-* text=auto
+# Normalize everything to LF in the repository and in checkouts (Windows CI stability:
+# CRLF-converted patches/logs break `git apply` and byte-level evidence comparisons).
+* text=auto eol=lf
 *.md text eol=lf
 *.json text eol=lf
 *.yml text eol=lf
@@ -7,6 +9,8 @@
 *.js text eol=lf
 *.ts text eol=lf
 *.sh text eol=lf
+*.patch text eol=lf
+*.diff text eol=lf
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
 *.png binary

@@ -106,3 +106,22 @@ test("MockHarness 首轮失败注入：第一轮无补丁，第二轮真实补�
   assert.equal(result.rounds[0].patchAvailable, false);
   assert.equal(result.rounds[1].acceptanceExit, 0);
 });
+
+test("CRLF 补丁会被归一化后应用（Windows CI 防护）", async () => {
+  const dir = await evidenceDir();
+  const testLogPath = join(dir, "test.log");
+  const crlfPatch = FIX_PATCH.replaceAll("\n", "\r\n");
+  const result = await runCodeLoop({
+    task: demoCodeTask("x"),
+    harness: new MockHarness({ patch: crlfPatch }),
+    repoRoot: ROOT,
+    acceptanceCommand: `node "${OK_FIXTURE}"`,
+    evidenceDir: dir,
+    testLogPath,
+    maxRounds: 2,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.rounds.length, 1);
+  assert.equal(result.rounds[0].patchApplied, true);
+});
+

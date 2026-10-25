@@ -50,7 +50,9 @@ export function applyPatchInWorktree(options: {
 
   const patchFile = join(worktree, ".steward-patch.diff");
   try {
-    writeFileSync(patchFile, options.patch, "utf8");
+    // Normalize line endings: a CRLF-converted working tree must never break `git apply`.
+    const normalizedPatch = options.patch.replaceAll("\r\n", "\n");
+    writeFileSync(patchFile, normalizedPatch, "utf8");
   } catch (error) {
     return fail("", `写入补丁失败：${error instanceof Error ? error.message : String(error)}`);
   }
