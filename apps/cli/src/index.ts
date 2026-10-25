@@ -32,8 +32,13 @@ import {
   type ToolResult,
 } from "../../../packages/steward-core/src/index.js";
 import { MockHarness, demoCodeTask, runCodeLoop } from "../../../packages/steward-harness/src/index.js";
+import {
+  ScoutEngine,
+  type ScoutFixtureLead,
+  type ScoutReport,
+} from "../../../packages/steward-scout/src/index.js";
 
-const VERSION = "0.3.0";
+const VERSION = "0.4.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -76,6 +81,7 @@ function printHelp(): void {
   steward browser-flow [--case normal|login-timeout] [--headless] [--json]
                                               真实浏览器（本机 Chrome/Edge）执行 demo-web 流程并截图留证（A2）
   steward desktop-flow [--json]              真实 Windows 桌面键鼠执行 demo-desktop 流程并截图留证（A3）
+  steward scout [--fixture <path>] [--json]  Scout 客户分支：fixture → ICP/评分/3 条草稿/审批队列（不发送，A7）
   steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
   steward run --goal "<目标>" [--role operator] [--resume <runId>] [--json]
                                               在 Mock 计划下执行一个分支；--resume 从检查点跳过已完成步骤
@@ -259,6 +265,105 @@ function createTools(root: string): ToolRegistry {
         ok: result.ok,
         summary: result.summary,
         evidence: [patchPath, testLogPath, resultPath],
+      };
+    },
+  );
+
+  registry.register(
+    {
+      name: "scout.report",
+      description: "Scout 客户分支：读取本地合规 fixtures → ICP/三场景/四因子评分/去重/3 条外联草稿/审批队列（只起草，不发送）",
+      risk: "medium",
+      requiresApproval: false,
+      evidence: true,
+    },
+    async (args, ctx): Promise<ToolResult> => {
+      const fixturePath = String(args.fixture ?? join(root, "examples", "scout-fixtures", "leads.json"));
+      if (!existsSync(fixturePath)) return { ok: false, summary: `Scout fixtures 缺失：${fixturePath}` };
+      let leads: ScoutFixtureLead[];
+      try {
+        leads = JSON.parse(readFileSync(fixturePath, "utf8")) as ScoutFixtureLead[];
+      } catch (error) {
+        return { ok: false, summary: `Scout fixtures 不是合法 JSON：${error instanceof Error ? error.message : String(error)}` };
+      }
+      if (!Array.isArray(leads) || leads.length === 0) return { ok: false, summary: "Scout fixtures 必须是非空数组" };
+
+      const engine = new ScoutEngine({ leads }); // 全量传入（不要按 status 预过滤）
+      const report: ScoutReport = engine.buildReport(); // 内部会物化草稿
+      const scored = engine.scoredLeads();
+      const drafts = engine.drafts();
+      const queue = engine.approvalQueue();
+
+      const reportMdPath = join(ctx.evidenceDir, "scout-report.md");
+      const reportJsonPath = join(ctx.evidenceDir, "scout-report.json");
+      const scoredPath = join(ctx.evidenceDir, "leads-scored.json");
+      const draftsPath = join(ctx.evidenceDir, "drafts.json");
+      const queuePath = join(ctx.evidenceDir, "approval-queue.json");
+      await writeFile(reportJsonPath, JSON.stringify(report, null, 2) + "\n", "utf8");
+      await writeFile(scoredPath, JSON.stringify(scored, null, 2) + "\n", "utf8");
+      await writeFile(draftsPath, JSON.stringify(drafts, null, 2) + "\n", "utf8");
+      await writeFile(queuePath, JSON.stringify(queue, null, 2) + "\n", "utf8");
+
+      const markdown = [
+        "# ScoutReport — 客户分支（fixture 驱动；只起草，未发送）",
+        "",
+        `- 生成时间：${report.generated_at}`,
+        `- 线索总数：${report.leads_total}（丢弃 ${report.leads_discarded}）`,
+        `- 合格线索：${report.qualified_count}`,
+        `- 外联草稿：${report.drafts_count}（全部待人工审批）`,
+        `- 已发送：${report.sent_count}（自动发送被禁止）`,
+        `- 每日每渠道上限：${report.daily_limit_per_channel}`,
+        "",
+        "## ICP",
+        "",
+        `- 细分：${report.icp.segment}`,
+        `- 痛点：${report.icp.pain_points.join("；")}`,
+        `- 预算：${report.icp.budget}`,
+        `- 渠道：${report.icp.channels.join(", ")}`,
+        `- 不合格线：${report.icp.disqualifiers.join("；")}`,
+        "",
+        "## 三个高价值场景",
+        "",
+        ...report.scenarios.map(
+          (scenario) => `- **${scenario.name}**：${scenario.who_hurts}；痛点：${scenario.pain}；现状：${scenario.current_workaround}`,
+        ),
+        "",
+        "## 渠道统计",
+        "",
+        ...Object.entries(report.channels).map(([channel, stats]) => `- ${channel}: drafts=${stats.drafts}, sent=${stats.sent}`),
+        "",
+        "## 丢弃记录",
+        "",
+        ...(report.rejected_reasons.length > 0
+          ? report.rejected_reasons.map((item) => `- ${item.lead_id ?? "(无 id)"}：${item.reason}`)
+          : ["- 无"]),
+        "",
+        "## 审批队列（全部 pending；人工批准后才会发送）",
+        "",
+        "| lead_id | 渠道 | 字数 | 引用信号 | 状态 |",
+        "|---|---|---|---|---|",
+        ...queue.map((item) => `| ${item.lead_id} | ${item.draft.channel} | ${item.draft.chars} | ${item.draft.cites_signal} | ${item.status} |`),
+        "",
+        "> 合规：未批准不发送；每日每渠道 ≤10；支持退订；不冒充人类；不采集无合法依据的个人信息。",
+        "",
+      ].join("\n");
+      await writeFile(reportMdPath, markdown, "utf8");
+
+      const draftsDir = join(ctx.evidenceDir, "outreach-drafts");
+      await mkdir(draftsDir, { recursive: true });
+      for (const draft of drafts) {
+        await writeFile(
+          join(draftsDir, `${draft.lead_id}.md`),
+          `# ${draft.subject}\n\n${draft.body}\n\n- chars: ${draft.chars}\n- cites_signal: ${draft.cites_signal}\n- status: ${draft.status}\n`,
+          "utf8",
+        );
+      }
+
+      const ok = report.sent_count === 0 && queue.every((item) => item.status === "pending");
+      return {
+        ok,
+        summary: `Scout：${report.leads_total} 条线索 → 丢弃 ${report.leads_discarded} → 合格 ${report.qualified_count} → ${report.drafts_count} 条草稿（全部待审批，0 发送）`,
+        evidence: [reportMdPath, reportJsonPath, scoredPath, draftsPath, queuePath, draftsDir],
       };
     },
   );
@@ -557,6 +662,35 @@ async function cmdSafetyCheck(parsed: ParsedArgs): Promise<number> {
   return ok ? 0 : 1;
 }
 
+async function cmdScout(parsed: ParsedArgs): Promise<number> {
+  const root = findRepoRoot();
+  const prompts = await loadPrompts();
+  const runtime = new AgentRuntime({ root, tools: createTools(root), ...(prompts ? { prompts } : {}) });
+  const manager = new BranchManager();
+  const fixture = flagString(parsed.flags, "fixture");
+  const branch = manager.create({
+    role: "scout",
+    goal: "Scout：从本地合规 fixtures 产出 ICP/三场景/四因子评分/3 条外联草稿/审批队列（只起草，不发送）",
+    tools: ["echo", "scout.report"],
+  });
+  const plan: PlannedStep[] = [
+    {
+      tool: "echo",
+      description: "写验收检查",
+      args: { message: "验收：≥10 条线索（含来源+评分）、3 条草稿 ≤150 字且引用具体信号、全部待审批、0 发送、丢弃有记录" },
+    },
+    { tool: "scout.report", description: "运行 Scout 客户分支", args: fixture ? { fixture } : {} },
+    {
+      tool: "echo",
+      description: "汇总",
+      args: { message: "Scout 证据已写入本次 run 目录（scout-report.md/json、drafts.json、approval-queue.json、outreach-drafts/）" },
+    },
+  ];
+  const result = await runtime.run({ branch, plan });
+  printRunResult(result, root, parsed.flags.json === true);
+  return result.ok ? 0 : 1;
+}
+
 async function cmdBranch(parsed: ParsedArgs): Promise<number> {
   const goal = flagString(parsed.flags, "goal") ?? "示例目标";
   const role = (flagString(parsed.flags, "role") ?? "operator") as "operator" | "dummy" | "conductor" | "scout" | "reviewer";
@@ -627,6 +761,8 @@ async function main(): Promise<number> {
     case "desktop-flow":
     case "demo-desktop":
       return cmdDesktopFlow(parsed);
+    case "scout":
+      return cmdScout(parsed);
     case "code-loop":
     case "demo-code-loop":
       return cmdCodeLoop(parsed);

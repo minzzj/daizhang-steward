@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "runId": "run-20261025-200457-17b4e7",
+  "branchId": "br-scout-20261025200457-0fe9",
+  "stepIndex": 2,
+  "doneSteps": [
+    "step-0",
+    "step-1",
+    "step-2"
+  ],
+  "completed": true,
+  "updatedAt": "2026-10-25T12:04:57.306Z",
+  "state": {
+    "lastTool": "echo"
+  }
+}

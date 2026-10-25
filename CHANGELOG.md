@@ -5,8 +5,7 @@
 
 ## [Unreleased]
 
-### Planned — Phase 1 (M3–M4)
-- M3 客户分支：Scout、来源清单、评分、外联草稿、审批队列、ScoutReport
+### Planned — Phase 1 (M4)
 - M4 开源发布：双语文档、LICENSE/COMMERCIAL/NOTICE、CI 绿、Release、5 个 good-first-issue
 
 ### Planned — Phase 2 (personal → enterprise)
@@ -16,6 +15,36 @@
 - 30 条法律与合规边界规则 + 个人/企业两种模式
 - IoT 适配器契约（stub）+ MCP server
 - v1.0.0 发布 + 宣传片（BGM/静音双版本）
+
+## [0.4.0] — 2026-10-25
+
+### Added — M3 客户分支 Scout（验收 A7 通过）
+
+- **Scout 核心模块 `packages/steward-scout`**：`ScoutEngine` 实现 ICP 画像与恰好 3 个高价值场景、
+  四因子评分（需求 40% / 预算 20% / 可触达性 20% / 合规 20%）、来源硬校验（缺 `source_url` /
+  非 http(s) / 空 `signal` / 空 `consent_basis` 一律丢弃并留证）、`org+signal` 归一化去重、
+  ≤150 字外联草稿（引用具体信号、不冒充人类、不群发）、人工审批队列（默认全部 `pending`）、
+  每日每渠道 ≤10 频控、退订拦截、回复/会议统计与 `ScoutReport`。模块**纯逻辑、零第三方依赖、
+  零网络 IO**：所有"发送"类方法只记录状态，不真正外发。
+- **合规线索 fixtures `examples/scout-fixtures/`**：14 条**纯虚构**线索（`leads.json` + 中文 README），
+  域名一律保留域名 `example.com`/`example.org`，无真实个人信息；覆盖合格、缺来源、非法 URL、
+  空合规依据、重复五类质量池。
+- **CLI 新增命令 `scout`**（`--fixture <path>` / `--json`）：fixture 驱动跑 Scout 分支并写证据
+  （`scout-report.md/.json`、`leads-scored.json`、`drafts.json`、`approval-queue.json`、
+  `outreach-drafts/`）→ 命令数 11 → **12 个已实现 + 2 个占位**（`takeover`、`approve` 仍为占位）。
+- **`npm run acceptance:m3`**：一键验收（build + 74 测试 + Scout 运行 + A7 的 12 项检查），生成
+  `docs/test-evidence/m3-acceptance-<stamp>.{md,json}` 并把 scout-run 证据 + `unit-tests.log`
+  复制到 `docs/test-evidence/evidence-m3-<stamp>/`（本次 15 文件，已脱敏）。
+- **测试**：53 → **74/74** 通过（新增 `tests/unit/scout.test.mjs` 21 条；共 11 个测试文件）。
+- **CI**：新增 Scout demo 步骤（fixture 驱动、无网络、只起草不发送）。
+
+### Changed
+- `package.json` 版本 0.3.0 → **0.4.0**；CLI `VERSION` 同步 `0.4.0`。
+- 验收：A7 通过；累计 A1/A2/A3/A4/A5/A6/A7/A8/A9/A12 通过。证据
+  `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` +
+  `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`（15 文件）；Scout run
+  `run-20261025-200457-17b4e7`：14 条线索 → 丢弃 4 → 合格 8 → 3 条草稿（110–113 字）→
+  审批队列全 `pending`、`sent_count=0`。
 
 ## [0.3.0] — 2026-10-25
 
@@ -137,7 +166,8 @@
 - 双语文档骨架：architecture / contracts / threat-model / adapters / runtime-prompts / delivery-checklist
 - 脚手架自检 `pnpm check`、密钥扫描 `pnpm check:secrets`、交付同步脚本 `scripts/sync-delivery.ps1`
 
-[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.4.0
 [0.3.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.3.0
 [0.2.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.2.0
 [0.1.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.1.0

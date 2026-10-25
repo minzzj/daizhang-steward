@@ -1,6 +1,6 @@
 {
   "name": "daizhang-steward",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "代掌 Steward — composable operating-AI core: real browser/desktop operator, DeepSeek-Harness code loop, customer branch. Source-available, non-commercial (CC BY-NC-SA 4.0).",
   "license": "CC-BY-NC-SA-4.0",
@@ -27,6 +27,7 @@
     "evidence": "node scripts/run-evidence.mjs",
     "acceptance": "node scripts/run-acceptance.mjs",
     "acceptance:m2": "node scripts/run-acceptance-m2.mjs",
+    "acceptance:m3": "node scripts/run-acceptance-m3.mjs",
     "sync:delivery": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-delivery.ps1"
   },
   "devDependencies": {

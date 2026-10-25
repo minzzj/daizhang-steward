@@ -39,7 +39,16 @@
 - 平台：本阶段真实桌面验收只在 Windows 执行；Linux/macOS 路径见包 README 第 10 节
   （X11/macOS Accessibility），契约语义不变、按平台替换实现层。
 
-## 3. 模型 / Harness 适配器
+## 3. 线索来源（Scout / 客户分支）
+
+- 当前实现为**本地 fixture 驱动**：线索来自 `examples/scout-fixtures/leads.json`（14 条纯虚构合规
+  线索，域名均为保留域名、无真实个人信息）；`packages/steward-scout` 的 `ScoutEngine` 为纯逻辑、
+  **零网络 IO**，不抓页面、不调模型、不发请求，`markSent` 只记录状态。
+- 真实运行时的来源接入必须是有合法依据的公开来源并遵守 robots/ToS：不抓登录后页面、不购买名单、
+  不采集无合法依据的个人信息；采集到的线索只进入「来源硬校验 → 评分 → 起草 → 人工审批队列」，
+  **绝不自动外发**（未获人工批准不可发送、每日每渠道 ≤10、退订即停）。
+
+## 4. 模型 / Harness 适配器
 
 | 实现 | 用途 | 依赖 | 状态 |
 |---|---|---|---|
@@ -50,27 +59,27 @@
 
 Harness 只接收 CodeTask 文本，返回 CodeResult；不接触生产凭据、不执行部署。
 
-M2 未引入新的 Harness 实现：`DshHeadlessHarness` / `DeepSeekApiHarness` 仍为规划（建议 M3+ 接入）；
-真实浏览器与真实桌面验收均不依赖付费 API。核心已具备三个安全模块（`stop-controller` /
-`checkpoint` / `isolation`）供任何适配器/分支复用。
+M2/M3 均未引入新的 Harness 实现：`DshHeadlessHarness` / `DeepSeekApiHarness` 仍为规划（建议 M4+
+接入）；真实浏览器、真实桌面与 Scout 验收均不依赖付费 API。核心已具备三个安全模块
+（`stop-controller` / `checkpoint` / `isolation`）供任何适配器/分支复用。
 
 M1 编码回路：`packages/steward-harness/src/patch.ts` 在**隔离 git worktree** 应用 `unified_diff`
 （不碰主工作区）；`loop.ts` 的 `runCodeLoop` 每轮跑真实浏览器验收，最多两轮，超限写
 `escalated=true` 并以退出码 1 结束（不无限重试）；CLI `code-loop` 暴露该回路，`--fail` 使用坏补丁
 验证升级路径。
 
-## 4. 通知适配器
+## 5. 通知适配器
 
 Windows Toast / 邮件 SMTP / Webhook（企业微信、飞书、Slack）/ CLI 审批队列；短信与电话
 阶段二评估后接入。所有通知只发摘要与链接，不发凭据与个人信息原文；发送失败要重试并留证。
 
-## 5. IoT 适配器（阶段二 stub）
+## 6. IoT 适配器（阶段二 stub）
 
 - 传输：MQTT 与 HTTP JSON-RPC 编解码两种；设备清单、指令、回执、事件回传四个对象。
 - 指令必须带：动作、参数、审批要求、超时；回执必须带：结果、证据、时间。
 - 阶段一只提供接口与模拟设备 fixture，**不接真实设备**。
 
-## 6. 失败与未知结果
+## 7. 失败与未知结果
 
 统一原则：**未知 ≠ 成功**。任何适配器返回 `unknown` 时，内核暂停该分支、写事件、生成核对卡，
 由人或下一次运行补证；不得自动重试超过 2 次，不得记成已成功。

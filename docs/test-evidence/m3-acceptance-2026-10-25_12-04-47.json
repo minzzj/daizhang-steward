@@ -1,0 +1,77 @@
+{
+  "stamp": "2026-10-25_12-04-47",
+  "ok": true,
+  "checks": {
+    "build": true,
+    "unitTests": true,
+    "scoutRun": true,
+    "leadsAtLeast10": true,
+    "qualifiedAtLeast8": true,
+    "scenarios3": true,
+    "drafts3": true,
+    "draftsCompliant": true,
+    "approvalPendingOnly": true,
+    "nothingSent": true,
+    "rejectedRecorded": true,
+    "noAutoSendApi": true
+  },
+  "testSummary": {
+    "tests": 74,
+    "pass": 74,
+    "fail": 0
+  },
+  "runs": {
+    "scout": "run-20261025-200457-17b4e7"
+  },
+  "scout": {
+    "leads_total": 14,
+    "qualified_count": 8,
+    "drafts_count": 3,
+    "pending_approval": 3,
+    "sent_count": 0,
+    "rejected_reasons": 4,
+    "channels": {
+      "email": {
+        "drafts": 2,
+        "sent": 0
+      },
+      "form": {
+        "drafts": 1,
+        "sent": 0
+      }
+    }
+  },
+  "evidence": {
+    "scoutRun": [
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/prompt.md",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/meta.json",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/console.log",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/events.jsonl",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/scout-report.json",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/leads-scored.json",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/drafts.json",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/approval-queue.json",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/scout-report.md",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/outreach-drafts/lead-001.md",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/outreach-drafts/lead-004.md",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/outreach-drafts/lead-006.md",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/checkpoint.json",
+      "docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/report.md"
+    ],
+    "unitTestsLog": "unit-tests.log"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 1217
+    },
+    "unitTests": {
+      "exitCode": 0,
+      "durationMs": 8207
+    },
+    "scout": {
+      "exitCode": 0,
+      "durationMs": 157
+    }
+  }
+}

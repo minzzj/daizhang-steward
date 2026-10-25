@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-10-25T12:04:57.268Z",
+  "icp": {
+    "segment": "10–200 人的中小企业（电商、SaaS、本地服务优先）里负责运营/客服/行政的「一人多岗」负责人",
+    "pain_points": [
+      "每周/每天手工整理多渠道报表，耗时且易错",
+      "客服与后台重复录入、复制粘贴，挤占思考时间",
+      "跨系统对账靠人工核对，月底集中加班",
+      "想上自动化但缺技术人手、缺可复核的交付方式"
+    ],
+    "budget": "月付 3,000–20,000 元人民币（按流程数量与托管时长计价）",
+    "channels": [
+      "email",
+      "platform_dm",
+      "form"
+    ],
+    "disqualifiers": [
+      "要求绕过验证码/风控、抓取登录后页面或购买名单",
+      "要求自动群发/无视退订、要求 AI 冒充真人",
+      "采集无合法依据的个人信息",
+      "无 source_url 或 consent_basis 的线索（一律不入库）",
+      "预算与交付范围完全无法对齐且无明确流程"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "scenario-weekly-report",
+      "name": "每周经营报表自动整理",
+      "who_hurts": "电商/连锁门店运营负责人",
+      "pain": "每周从多个后台导出销售、库存、客服数据，再手工合并成一张报表",
+      "current_workaround": "人工导出 Excel 后复制粘贴，2–5 小时/周，口径靠记忆",
+      "why_us": "用浏览器/桌面操作替代重复导出与合并，先生成草稿报表由人复核，全程留证据"
+    },
+    {
+      "id": "scenario-cs-reply",
+      "name": "客服与后台重复录入",
+      "who_hurts": "客服主管、行政/运营兼岗人员",
+      "pain": "同一信息在聊天工具、工单系统、表格之间重复录入与回复",
+      "current_workaround": "复制粘贴 + 固定话术；漏记、错记常见，新人上手慢",
+      "why_us": "按固定流程把重复录入与首轮回复做成待审草稿，人只做确认与例外"
+    },
+    {
+      "id": "scenario-reconcile",
+      "name": "对账与发票核对",
+      "who_hurts": "财务/行政兼岗的中小企业",
+      "pain": "订单、支付、发票三套数据靠肉眼核对，月底集中加班",
+      "current_workaround": "人工比对表格，差异逐条查，结果难以复核",
+      "why_us": "自动比对并输出差异清单，每步留证据、可回放，人只处理差异"
+    }
+  ],
+  "leads_total": 14,
+  "leads_discarded": 4,
+  "qualified_count": 8,
+  "drafts_count": 3,
+  "pending_approval": 3,
+  "sent_count": 0,
+  "replies": 0,
+  "meetings": 0,
+  "rejected_reasons": [
+    {
+      "lead_id": "lead-011",
+      "reason": "缺少 source_url（无来源即丢弃，不补造）"
+    },
+    {
+      "lead_id": "lead-012",
+      "reason": "source_url 不是 http(s) 链接：内部名单（无来源）"
+    },
+    {
+      "lead_id": "lead-013",
+      "reason": "缺少 consent_basis（无合规依据）"
+    },
+    {
+      "lead_id": "lead-014",
+      "reason": "重复线索（org+signal 归一化后相同）：保留更高分的 lead-001（fit 0.838），丢弃 lead-014（fit 0.838）"
+    }
+  ],
+  "channels": {
+    "email": {
+      "drafts": 2,
+      "sent": 0
+    },
+    "form": {
+      "drafts": 1,
+      "sent": 0
+    }
+  },
+  "daily_limit_per_channel": 10
+}

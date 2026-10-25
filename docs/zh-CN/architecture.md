@@ -1,7 +1,7 @@
 # 架构 / Architecture（中文）
 
-> 状态：设计定稿；**M0 内核 + M1 真实浏览器回路 + M2 真实 Windows 桌面与安全模块已实现并验证
-> （2026-10-25）**，其余随 M3–M4 落地，细节改动以 PR 为准。
+> 状态：设计定稿；**M0 内核 + M1 真实浏览器回路 + M2 真实 Windows 桌面与安全模块 + M3 Scout 客户分支
+> 已实现并验证（2026-10-25）**，其余随 M4 落地，细节改动以 PR 为准。
 > 配套：`docs/zh-CN/contracts.md`、`docs/zh-CN/threat-model.md`、`docs/zh-CN/adapters.md`。
 
 ## 1. 设计原则
@@ -29,14 +29,15 @@
 
 | 形态 | 命令 | 用途 |
 |---|---|---|
-| 内核 CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/code-loop/run/branch/report/stop/safety-check/version/help` | 24h 运行、演示、验收 |
+| 内核 CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/code-loop/run/branch/report/stop/safety-check/version/help` | 24h 运行、演示、验收 |
 | DSH 驾驶舱（可选） | `dsh --profile daizhang web` | 人用 DSH GUI 观察/审批/接管；挂 `steward-mcp` 与 `dsh-browser`/`dsh-computer-use` |
 
 内核是独立 Node/TS 进程；驾驶舱只是可选的“人机接口”，不参与核心决策。
 
 工程为**单包布局**（无 pnpm workspace）：`packages/*/src` + `apps/cli/src` 由
 `tsc -p tsconfig.json` 编译到 `dist/`，命令一律用 npm（`npm run build` / `npm test` / `npm run demo` /
-`npm run acceptance` / `npm run acceptance:m2`）。`takeover` 与 `approve` 仍为占位命令（后续里程碑）。
+`npm run acceptance` / `npm run acceptance:m2` / `npm run acceptance:m3`）。`takeover` 与 `approve`
+仍为占位命令（后续里程碑）。
 
 **M1 实现现状**：`packages/steward-browser` 提供 Playwright 真实浏览器适配器（有头默认、
 `chrome→msedge` 回退、每 run 独立 `userDataDir`、每步截图/DOM/console、5 类失败分类、
@@ -53,7 +54,17 @@ Unicode 真实键盘；白名单默认拒绝、Per-Monitor V2 DPI 感知、5 类
 跳过已完成步骤）、`isolation.ts`（`CredentialVault` 跨分支凭据隔离 + 脱敏、`ProfileLock` profile
 独占、`assertBranchToolsAllowed` 工具白名单断言）；runtime 集成这些模块并在 `ToolContext` 中提供
 `signal` / `locks` / `vault`。CLI 新增 `desktop-flow`、`safety-check`、`run --resume <runId>`
-（共 11 个已实现命令 + 2 个占位）。Conductor / Reviewer / Scout 分支仍为规划（M3+）。
+（M2 后 11 个已实现命令 + 2 个占位）。
+
+**M3 实现现状**：`packages/steward-scout` 提供 Scout 客户分支引擎（`ScoutEngine`）：ICP 与恰好
+3 个高价值场景、四因子评分（需求 40% / 预算 20% / 可触达性 20% / 合规 20%）、来源硬校验
+（缺 `source_url` / 非 http(s) / 空 `signal` / 空 `consent_basis` 即丢弃并留证）、`org+signal`
+归一化去重、≤150 字外联草稿（引用具体信号、不冒充人类、不群发）、人工审批队列（默认全部
+`pending`）、每日每渠道 ≤10 频控、退订与回复/会议统计、`ScoutReport`。模块**纯逻辑、零依赖、
+零网络 IO**：`markSent` 只记录状态，绝不外发；fixture 在 `examples/scout-fixtures/`（14 条虚构
+合规线索）。CLI 新增 `scout`（fixture 驱动，写 `scout-report.md/.json`、`leads-scored.json`、
+`drafts.json`、`approval-queue.json`、`outreach-drafts/`），命令数 11 → **12 个已实现 + 2 个占位**。
+Conductor / Reviewer 仍为规划（M4+）。
 
 ## 4. 分支生命周期
 
@@ -65,9 +76,10 @@ Unicode 真实键盘；白名单默认拒绝、Per-Monitor V2 DPI 感知、5 类
 
 分支不得自行再开分支；需要扩展时提交 `BranchRequest` 由 Conductor 决定。过期自动停止。
 
-M2 现状：CLI 直接装配 operator 分支（BranchSpec + 工具白名单）跑 `browser-flow` / `desktop-flow` /
-`code-loop`；runtime 已接入停止控制器、检查点（支持 `run --resume`）、profile 锁与按分支隔离的凭据
-引用。Conductor 的分支派生、Reviewer 证据复核与 Conductor 验收接口仍是规划（M3+）。
+M3 现状：CLI 直接装配 operator 分支（BranchSpec + 工具白名单）跑 `browser-flow` / `desktop-flow` /
+`code-loop`，以及 scout 分支跑 `scout`（只起草、进审批队列、不发送）；runtime 已接入停止控制器、
+检查点（支持 `run --resume`）、profile 锁与按分支隔离的凭据引用。Conductor 的分支派生、Reviewer
+证据复核与 Conductor 验收接口仍是规划（M4+）。
 
 ## 5. 证据与账本
 
@@ -76,9 +88,10 @@ M2 现状：CLI 直接装配 operator 分支（BranchSpec + 工具白名单）�
   以及 MockHarness 回路的 `code-task.json`、`code-result.json`、`patch.diff`、`test.log`；M1 起
   真实浏览器运行另含 `e2e/<case>/screenshots/`、`e2e/<case>/result.json`、`e2e/server.log`；M2 起
   真实桌面运行另含 `e2e-desktop/screenshots/`、`e2e-desktop/result.json`、`steps.json`、
-  `sidecar.log`，并每步原子写 `checkpoint.json`；验收时复制到
-  `docs/test-evidence/evidence-m1-<stamp>/` 与 `docs/test-evidence/evidence-m2-<stamp>/`。
-  `approval.json` 随审批队列（后续里程碑）落地。
+  `sidecar.log`，并每步原子写 `checkpoint.json`；M3 起 Scout 运行另含 `scout-report.md/.json`、
+  `leads-scored.json`、`drafts.json`、`approval-queue.json`、`outreach-drafts/`。验收时复制到
+  `docs/test-evidence/evidence-m1-<stamp>/`、`evidence-m2-<stamp>/` 与 `evidence-m3-<stamp>/`。
+  `approval.json` 随正式审批队列（后续里程碑）落地。
 - SQLite 索引可从事件重放重建；崩溃后用检查点恢复，不重复发送/扣款。
 
 ## 6. 摘要层级

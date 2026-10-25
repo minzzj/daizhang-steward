@@ -3,19 +3,19 @@
 **可托管的 AI 经营代理 / A composable operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations · evidence-first.
 
-> 状态：**M2 已完成** — 真实 Windows 桌面 + 安全模块已验证（2026-10-25）：真实 Windows 窗口 +
-> 真实键鼠（SendInput）完成 demo-desktop 打开→填表→保存→校验→截图（A3）；停止键 ≤5s 生效
-> （实测约 305ms），检查点让 `run --resume` 跳过已完成步骤（A8）；分支凭据 / profile 锁 / 工具白名单
-> 相互隔离（A9）；M1 的真实浏览器编码回路（A2/A4/A5）回归通过。**53/53** 单元+集成测试通过，
-> CLI 现为 **11 个命令 + 2 个占位**；验收 **A1/A2/A3/A4/A5/A6/A8/A9/A12 通过**
+> 状态：**M3 已完成** — Scout 客户分支已验证（2026-10-25）：fixture 驱动的 Scout 引擎产出
+> ICP + 3 个高价值场景，四因子评分线索、来源硬校验、去重，起草 **3 条外联草稿（≤150 字，均引用具体
+> 信号）**，全部进入人工审批队列（pending）——**0 发送**。加上 M1 真实浏览器回路（A2/A4/A5）与 M2
+> 真实 Windows 桌面 + 安全模块（A3/A8/A9）。**74/74** 单元+集成测试通过，CLI 现为
+> **12 个命令 + 2 个占位**；验收 **A1/A2/A3/A4/A5/A6/A7/A8/A9/A12 通过**
 > （见 [ROADMAP.md](ROADMAP.md) 与 [`docs/zh-CN/delivery-checklist.md`](docs/zh-CN/delivery-checklist.md) 中的证据）。
-> M2 证据：[`docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.md`](docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.md)。
-> Status: **M2 complete** — real Windows desktop + safety modules verified (2026-10-25): a real Windows
-> window driven by real mouse/keyboard (SendInput) through open → fill → save → validate → screenshots
-> (A3); stop key ≤5s (≈305 ms measured) and checkpoint-based `run --resume` (A8); isolated branch
-> credentials / profile locks / tool allowlists (A9); the M1 real-browser loop still passes. 53/53
-> unit + integration tests pass; the CLI ships 11 commands + 2 placeholders; acceptance
-> A1/A2/A3/A4/A5/A6/A8/A9/A12 pass.
+> M3 证据：[`docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md`](docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md)。
+> Status: **M3 complete** — Scout customer branch verified (2026-10-25): a fixture-driven Scout engine
+> builds the ICP + 3 high-value scenarios, four-factor scores leads, hard-checks sources, dedupes,
+> drafts 3 outreach drafts (≤150 chars, each citing a concrete signal) and queues them all for human
+> approval (pending, 0 sent); plus the M1 real-browser loop and M2 real Windows desktop + safety
+> modules. 74/74 unit + integration tests pass; the CLI ships 12 commands + 2 placeholders; acceptance
+> A1/A2/A3/A4/A5/A6/A7/A8/A9/A12 pass.
 
 ---
 
@@ -78,22 +78,24 @@ are denied by default and CAPTCHAs/2FA/human-verification always hand off to a h
 packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts + M2 的
             stop-controller/checkpoint/isolation；steward-harness: MockHarness + 隔离 worktree 补丁 +
             两轮编码回路；steward-browser: Playwright 真实浏览器适配器；steward-desktop: 真实 Windows
-            桌面适配器——ctypes 侧车 + SendInput)
-apps/       CLI entry (steward: demo/browser-flow/desktop-flow/code-loop/run/branch/report/stop/
-            safety-check/version/help)
+            桌面适配器——ctypes 侧车 + SendInput；steward-scout: 客户分支引擎——ICP/评分/草稿/审批队列，
+            纯逻辑零网络)
+apps/       CLI entry (steward: demo/browser-flow/desktop-flow/scout/code-loop/run/branch/report/
+            stop/safety-check/version/help)
 prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
-examples/   demo-web, demo-desktop, mock-harness（脚本化补丁）, scout-fixtures, demo-business
-tests/      unit tests（M2 共 10 文件 / 53 条）+ e2e-browser + e2e-desktop；contract / fault 后续里程碑
+examples/   demo-web, demo-desktop, mock-harness（脚本化补丁）, scout-fixtures（14 条虚构合规线索）,
+            demo-business
+tests/      unit tests（M3 共 11 文件 / 74 条）+ e2e-browser + e2e-desktop；contract / fault 后续里程碑
 docs/       双语文档（en/ 与 zh-CN/）+ 测试证据
 scripts/    校验/构建辅助、密钥扫描、证据包 / 验收脚本、交付同步
 runs/       每次运行的产物（gitignored；证据在此）
 dist/       构建输出（gitignored；单包构建）
 ```
 
-## 快速开始 / Quickstart（M0 → M2）
+## 快速开始 / Quickstart（M0 → M3）
 
 > M0 克隆后即可离线运行（MockHarness，无需付费 API）；M1 增加真实浏览器回路；M2 增加真实 Windows
-> 桌面回路与安全模块：
+> 桌面回路与安全模块；M3 增加 fixture 驱动的 Scout 客户分支（离线、只起草不发送）：
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
@@ -104,28 +106,41 @@ npm install
 npm run check          # 校验仓库配置 / repo-config check
 npm run check:secrets  # 密钥扫描 / secret scan
 npm run build          # tsc -p tsconfig.json → dist/
-npm test               # 53/53 单元+集成测试 / unit + integration tests
+npm test               # 74/74 单元+集成测试 / unit + integration tests
 npm run demo           # M0 空回路 → runs/<run-id>/ + report.md（MockHarness）
 npm run test:prompts   # 提示词版本/安全测试（验收 A12）
 npm run evidence       # 离线证据包 → docs/test-evidence/test-result-<stamp>.{md,json}
 npm run acceptance     # M1 本机有头真实浏览器验收（A2/A4/A5）→ docs/test-evidence/m1-acceptance-<stamp>.*
 npm run acceptance:m2  # M2 真实桌面 + 停止键/检查点/隔离验收（A3/A8/A9），仅本机
+npm run acceptance:m3  # M3 Scout 验收（A7：14 线索 → 丢弃 4 → 合格 8 → 3 草稿，0 发送）
 ```
 
 CI 跑无头真实浏览器 normal 流程（`node tests/e2e-browser/login-flow.mjs --case normal --headless 1`）
-加 `safety-check` 自检；有头 `npm run acceptance` 与真实桌面 `npm run acceptance:m2` 仅本机运行
-（托管 CI 无交互桌面）。
++ fixture 驱动 `scout` 演示（只起草、绝不自动发送）+ `safety-check` 自检；有头 `npm run acceptance`
+与真实桌面 `npm run acceptance:m2` 仅本机运行（托管 CI 无交互桌面）。
 
-M2 能跑什么：CLI 已实现 `demo`、`browser-flow`、`desktop-flow`、`code-loop`、`run`、`branch`、
-`report`、`stop`、`safety-check`、`version`、`help`（**11 个命令**；`takeover`、`approve` 为占位）。
-`browser-flow` 在有头 Chrome 里跑真实 demo-web 登录/项目流程并逐步截图；`desktop-flow` 用真实键鼠
-（SendInput，中文 Unicode 真实键盘输入）操作真实 `demo-desktop` 窗口并逐步截图；`code-loop`
+M3 能跑什么：CLI 已实现 `demo`、`browser-flow`、`desktop-flow`、`scout`、`code-loop`、`run`、
+`branch`、`report`、`stop`、`safety-check`、`version`、`help`（**12 个命令**；`takeover`、`approve`
+为占位）。`browser-flow` 在有头 Chrome 里跑真实 demo-web 登录/项目流程并逐步截图；`desktop-flow`
+用真实键鼠（SendInput，中文 Unicode 真实键盘输入）操作真实 `demo-desktop` 窗口并逐步截图；`scout`
+读取虚构合规 fixtures，构建 ICP + 3 个高价值场景，按四因子评分（需求 40% / 预算 20% / 可触达 20% /
+合规 20%）评分、来源硬校验与去重，最多起草 3 条外联草稿（≤150 字、均引用具体信号），全部进入
+**人工审批队列**（全部 `pending`、`sent=0`；每日每渠道 ≤10；支持退订；无任何网络 IO）；`code-loop`
 跑 CodeTask → 补丁 → 隔离 git worktree → 真实浏览器验收，`code-loop --fail` 注入坏补丁并在两轮
 失败后升级；`safety-check` 自检停止键（≤5s）、检查点 save/load/resume 与分支隔离；`run --resume <runId>`
 从最近检查点恢复并跳过已完成步骤。每次运行把证据写入 `runs/<run-id>/`：`prompt.md`、`report.md`、
 `console.log`、`meta.json`、`events.jsonl`（哈希链账本）、`checkpoint.json`（M2），以及
-`patch.diff`、`test.log`、`code-task.json`、`code-result.json`、`e2e/<case>/screenshots/` 与
-`e2e-desktop/screenshots/`。也可直接调用构建产物：`node dist/apps/cli/src/index.js help`。
+`patch.diff`、`test.log`、`code-task.json`、`code-result.json`、`e2e/<case>/screenshots/`、
+`e2e-desktop/screenshots/`；Scout 运行另含 `scout-report.md/.json`、`leads-scored.json`、
+`drafts.json`、`approval-queue.json`、`outreach-drafts/`。也可直接调用构建产物：
+`node dist/apps/cli/src/index.js help`。
+
+最新 M3 验收（2026-10-25，本机 fixture 驱动 Scout 运行，无网络，`npm run acceptance:m3` OK，
+12/12 检查）：[`docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md`](docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md)
+（· [`.json`](docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.json)）；证据包
+[`docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`](docs/test-evidence/evidence-m3-2026-10-25_12-04-47/)
+（15 个文件，已脱敏：Scout run `run-20261025-200457-17b4e7` —— 14 条线索 → 丢弃 4 → 合格 8 →
+3 条草稿（110–113 字），全部待审批、0 发送；另含 74/74 的 `unit-tests.log`）。
 
 最新 M2 验收（2026-10-25，本机真实 Windows 桌面会话，`npm run acceptance:m2` OK）：
 [`docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.md`](docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.md)
@@ -150,8 +165,11 @@ A9 凭据/profile/工具白名单隔离 —— 全部 ✅。
 
 - UI 验收使用**真实 Chromium/Edge（有头）**与**真实 Windows 窗口真实键鼠（SendInput）**，不用 API 或假 DOM 代替；
 - 每个对外动作自动截图，失败保留现场；重试最多两轮，超限升级人类；
-- CI 使用 MockHarness（无需付费密钥），跑无头真实浏览器 normal 流程 + `safety-check` 自检；有头
-  `npm run acceptance` 与真实桌面 `npm run acceptance:m2` 仅本地；发布前在干净路径重跑全量。
+- **Scout 绝不自行发送**：只起草（≤150 字、引用具体信号），每条外联都进入人工审批队列（`pending`），
+  每日每渠道 ≤10 条，退订后永久停止触达；模块**零网络 IO**，`markSent` 只记录状态；
+- CI 使用 MockHarness（无需付费密钥），跑无头真实浏览器 normal 流程 + fixture 驱动 `scout` 演示
+  （只起草、绝不自动发送）+ `safety-check` 自检；有头 `npm run acceptance` 与真实桌面
+  `npm run acceptance:m2` 仅本地；发布前在干净路径重跑全量。
 
 ## 许可证 / License
 
@@ -172,10 +190,12 @@ share-alike on distribution. Third-party components keep their MIT/Apache-2.0 li
 
 - [ROADMAP.md](ROADMAP.md) — 里程碑与批准门
 - [docs/zh-CN/delivery-checklist.md](docs/zh-CN/delivery-checklist.md) / [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — 验收条目与证据
-- [docs/test-evidence/](docs/test-evidence/) — 测试证据归档（`test-result-*`、`m1-acceptance-*`、`evidence-m1-*`、`m2-acceptance-*`、`evidence-m2-*`）
+- [docs/test-evidence/](docs/test-evidence/) — 测试证据归档（`test-result-*`、`m1-acceptance-*`、`evidence-m1-*`、`m2-acceptance-*`、`evidence-m2-*`、`m3-acceptance-*`、`evidence-m3-*`）
 - [docs/zh-CN/architecture.md](docs/zh-CN/architecture.md) / [docs/en/architecture.md](docs/en/architecture.md)
 - [docs/zh-CN/adapters.md](docs/zh-CN/adapters.md) / [docs/en/adapters.md](docs/en/adapters.md)
 - [packages/steward-desktop/README.md](packages/steward-desktop/README.md) — 真实 Windows 桌面适配器
+- [packages/steward-scout/README.md](packages/steward-scout/README.md) — Scout 客户分支引擎
+- [examples/scout-fixtures/README.zh-CN.md](examples/scout-fixtures/README.zh-CN.md) — 14 条虚构合规线索
 - [docs/zh-CN/contracts.md](docs/zh-CN/contracts.md) / [docs/en/contracts.md](docs/en/contracts.md)
 - [docs/zh-CN/threat-model.md](docs/zh-CN/threat-model.md) / [docs/en/threat-model.md](docs/en/threat-model.md)
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — 假设与未覆盖清单

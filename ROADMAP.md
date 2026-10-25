@@ -11,8 +11,8 @@
 | 1 | M0 骨架 | 内核最小闭环：AgentRuntime/BranchSpec/PolicyEngine/ArtifactBus/PromptManager/EventLog/BudgetGuard/StopSignal；CLI（7 命令 + 2 占位）；MockHarness；demo-web/demo-desktop；prompts v1；单包构建；CI | A1、A6、A12 | ✅ 完成（2026-10-25；A1/A6/A12 通过，证据 `runs/run-20261025-172017-eb9116/` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md`） |
 | 1 | M1 浏览器回路 | 真实浏览器回路：`steward-browser`（Playwright 有头/回退）、CodeTask→补丁→隔离 worktree→真实浏览器验收、失败两轮升级、`tests/e2e-browser`、CLI `browser-flow`/`code-loop`、Windows CI CRLF 修复（`b4ed316`） | A2、A4、A5、A6 | ✅ 完成（2026-10-25；A2/A4/A5/A6 通过，`npm run acceptance` OK；证据 `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`） |
 | 1 | M2 桌面与安全 | Windows 桌面适配器；PolicyEngine；停止键；审计；检查点恢复；分支隔离 | A3、A8、A9 | ✅ 完成（2026-10-25；A3/A8/A9 通过，`npm run acceptance:m2` OK；证据 `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`） |
-| 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ⏳ 下一步 |
-| 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ⏳ |
+| 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ✅ 完成（2026-10-25；A7 通过，`npm run acceptance:m3` OK；证据 `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` + `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`） |
+| 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ⏳ 下一步 |
 | — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ⏳ |
 | 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ⏳ |
 | 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ⏳ |
@@ -50,6 +50,17 @@
 > `run --resume`）。证据：`docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` +
 > `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`（34 文件：A3 截图与结果、A8/A9 自检结果、
 > 测试日志，已脱敏）。
+>
+> **M3 验收结论（2026-10-25）**：A7 通过（本机 fixture 驱动 Scout 运行，无网络外联，
+> `npm run acceptance:m3` OK，**12/12 检查全 ✅**）。Scout run `run-20261025-200457-17b4e7`：
+> fixtures **14 条**线索 → 丢弃 **4**（缺 `source_url` / 非法 URL / 空 `consent_basis` / 重复各 1）
+> → 通过来源硬校验 10 条、其中 **8** 条达到默认 0.5 合格阈值 → **3 条外联草稿**（110–113 字，均
+> ≤150 字且引用具体信号）→ 审批队列 **3 条全部 `pending`**、**0 发送**；ICP + **3 个高价值场景**；
+> 丢弃原因全部留证。测试 **74/74**（M2 的 53 条 + `tests/unit/scout.test.mjs` 21 条）；CLI 现为
+> **12 个已实现命令 + 2 个占位**（新增 `scout`）。证据：
+> `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` +
+> `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`（15 文件：scout-run 证据 + `unit-tests.log`，
+> 已脱敏）。
 
 ## 每个里程碑的 Definition of Done
 
@@ -72,4 +83,4 @@
 - 阶段一完成 → 输出 HANDOFF → **结束会话**；阶段二在新会话从 HANDOFF 继续。
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
-_Last updated: 2026-10-25 (M2 complete; next milestone M3 customer branch)._
+_Last updated: 2026-10-25 (M3 complete; next milestone M4 open-source release)._

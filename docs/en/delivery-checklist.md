@@ -1,8 +1,8 @@
 # Delivery & Acceptance Checklist
 
 > Each acceptance item = id + command/operation + evidence path + latest result (evidence must be openable).
-> After M2, A1 / A2 / A3 / A4 / A5 / A6 / A8 / A9 / A12 are marked `pass`; the other items are updated as milestones complete (`pass / fail / partial`).
-> Last updated: 2026-10-25 (M2 complete)
+> After M3, A1 / A2 / A3 / A4 / A5 / A6 / A7 / A8 / A9 / A12 are marked `pass`; the other items are updated as milestones complete (`pass / fail / partial`).
+> Last updated: 2026-10-25 (M3 complete)
 
 ## A. Phase 1 (doc 1 — 12 items)
 
@@ -13,12 +13,12 @@
 | A3 | demo-desktop open/fill/save/verify/screenshot | `node tests/e2e-desktop/run.mjs` (or `npm run acceptance:m2`) | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A3-desktop-flow/`: `e2e-desktop/screenshots/001…020-*.png` (20 real step screenshots), `e2e-desktop/result.json` (36/36 checks), `e2e-desktop/project.json` (real saved JSON, content verified), `steps.json`, `sidecar.log`, `report.md`, `checkpoint.json`; run `run-20261025-185100-6a4d70` | ✅ pass (2026-10-25; real window + real SendInput mouse/keyboard) |
 | A4 | Seeded defect → CodeTask → patch → apply → tests pass | `node dist/apps/cli/src/index.js code-loop` (or `npm run acceptance`) | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A4-code-loop/`: `patch.diff`, `code-loop-result.json`, `e2e/login-timeout/` (4 screenshots + `result.json`), `report.md`; run `run-20261025-175216-fe8759` | ✅ pass (2026-10-25; red→green on round 1) |
 | A5 | Two consecutive failures → escalate, no infinite loop | `node dist/apps/cli/src/index.js code-loop --fail` (or `npm run acceptance`) | `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/A5-escalation/`: `test.log` (two failed rounds), `code-loop-result.json` (`escalated=true`, `rounds=2`), `e2e/login-timeout/screenshots/004-assert-timeout-recovery-fail.png`; run `run-20261025-175223-de0b95`; `codeLoopFail` exit 1 is expected | ✅ pass (2026-10-25) |
-| A6 | Every run has prompt/patch/test.log/screenshots/report, no secrets | `npm run demo` + `npm run evidence` + `npm run acceptance` + `npm run acceptance:m2` | M0: `runs/run-20261025-172017-eb9116/` (`prompt.md` / `patch.diff` / `test.log` / `report.md` / `events.jsonl` / `console.log` / `meta.json` / `code-task.json` / `code-result.json` / `goal.md`) + `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`; M1: `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/` (45 files incl. real e2e screenshots); M2: `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/` (34 files incl. real desktop screenshots + `checkpoint.json` + 53/53 test logs) | ✅ pass (2026-10-25; M2 includes real desktop screenshots and checkpoints) |
-| A7 | Scout ≥10 leads (source+score), 3 drafts unsent | `npm run demo:scout` (M3) | `scout-report.md` + approval queue | todo (M3) |
+| A6 | Every run has prompt/patch/test.log/screenshots/report, no secrets | `npm run demo` + `npm run evidence` + `npm run acceptance` + `npm run acceptance:m2` + `npm run acceptance:m3` | M0: `runs/run-20261025-172017-eb9116/` (`prompt.md` / `patch.diff` / `test.log` / `report.md` / `events.jsonl` / `console.log` / `meta.json` / `code-task.json` / `code-result.json` / `goal.md`) + `docs/test-evidence/test-result-2026-10-25_09-52-08.{md,json}`; M1: `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/` (45 files incl. real e2e screenshots); M2: `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` + `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/` (34 files incl. real desktop screenshots + `checkpoint.json` + 53/53 test logs); M3: `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` + `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/` (15 files: scout-run report/drafts/approval-queue/events + 74/74 `unit-tests.log`; repo-level `npm run check:secrets` re-checked) | ✅ pass (2026-10-25; M3 includes Scout run evidence and the approval queue) |
+| A7 | Scout ≥10 leads (source+score), 3 drafts unsent | `node dist/apps/cli/src/index.js scout --json` (or `npm run acceptance:m3`) | `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/scout-run/`: `scout-report.json` (`leads_total=14`, `leads_discarded=4`, `qualified_count=8`, `drafts_count=3`, `pending_approval=3`, `sent_count=0`, 4 `rejected_reasons`, 3 `scenarios`), `leads-scored.json`, `drafts.json` (110–113 chars ≤150, `cites_signal=true`), `approval-queue.json` (all 3 `pending`), `outreach-drafts/lead-001.md`/`lead-004.md`/`lead-006.md`, `scout-report.md`, `report.md`; run `run-20261025-200457-17b4e7` | ✅ pass (2026-10-25; fixture-driven, no network, 0 sent) |
 | A8 | Stop key within 5s; restart resumes without duplicates | `node dist/apps/cli/src/index.js safety-check`; in-flight preemption and resume are covered by `tests/unit/m2-runtime.test.mjs` (part of `npm test`) | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json` (`stop.ok=true`, measured **305ms** <5000ms; `checkpoint` save/load/completed); `m2-runtime-tests.log` (stop preempts within 5s, resume skips completed steps without re-running them) | ✅ pass (2026-10-25) |
 | A9 | Branch isolation (credentials / browser profiles) | `node dist/apps/cli/src/index.js safety-check`; `tests/unit/m2-safety.test.mjs` (part of `npm test`) | `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/A8-A9-safety-check/safety-check-result.json`: cross-branch credential reads denied (`CrossBranchAccessError`), redacted output contains no reference plaintext, same-profile concurrent use denied (`ProfileBusyError`), tools outside the allowlist denied; isolation cases in `tests/unit/m2-safety.test.mjs` | ✅ pass (2026-10-25) |
 | A10 | New read-only dummy branch by config only | `npm run demo:dummy-branch` (M4) | config + report | todo (M4) |
-| A11 | Tests/lint/docs/license complete, no telemetry | `npm run lint && npm test` | CI log | todo (M4 full acceptance; currently green on lint/build/53 tests + CI headless E2E + safety-check) |
+| A11 | Tests/lint/docs/license complete, no telemetry | `npm run lint && npm test` | CI log | todo (M4 full acceptance; currently green on lint/build/74 tests + CI headless E2E + Scout demo + safety-check) |
 | A12 | Runtime prompts versioned, tested, replaceable | `npm run test:prompts` | `prompts/manifest.json` (4 roles + sha256) + `tests/unit/prompts.test.mjs` (5 assertions) | ✅ pass (2026-10-25) |
 
 > **M0 verdict (2026-10-25)**: A1 / A6 / A12 pass. `npm run check`, `npm run check:secrets`,
@@ -43,6 +43,18 @@
 > **53/53** (M1's 35 + `m2-safety` 14 + `m2-runtime` 4); the CLI now ships **11 implemented commands +
 > 2 placeholders**. Evidence: `docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` +
 > `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/` (34 files, sanitized).
+>
+> **M3 verdict (2026-10-25)**: A7 passes (local fixture-driven Scout run, no network egress,
+> `npm run acceptance:m3` OK, **12/12 checks true**). Scout run `run-20261025-200457-17b4e7`:
+> **14** fixture leads → **4** discarded (missing `source_url` / invalid URL / empty `consent_basis` /
+> duplicate — one each) → 10 pass the source hard-checks, of which **8** reach the default 0.5 qualified
+> threshold → **3 outreach drafts** (110–113 chars, all ≤150 and citing a concrete signal) →
+> approval queue **all 3 `pending`**, **0 sent**; ICP + **3 high-value scenarios**; every discard reason
+> recorded. Tests **74/74** (M2's 53 + `scout.test.mjs` 21, 11 test files); the CLI now ships
+> **12 implemented commands + 2 placeholders** (new `scout`). Evidence:
+> `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` +
+> `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/` (15 files: scout-run evidence + `unit-tests.log`,
+> sanitized).
 
 ## B. Phase 2 (doc 2 — 8 items)
 

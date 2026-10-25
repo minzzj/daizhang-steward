@@ -52,7 +52,18 @@
   documented in the package README (section 10, X11/macOS Accessibility) — same contract, different
   implementation layer.
 
-## 3. Model / Harness adapters
+## 3. Lead sources (Scout / customer branch)
+
+- The current implementation is **local-fixture driven**: leads come from
+  `examples/scout-fixtures/leads.json` (14 purely fictional compliant leads; reserved domains only,
+  no real personal data). `ScoutEngine` in `packages/steward-scout` is pure logic with **zero network
+  I/O** — it does not fetch pages, call models or send requests; `markSent` only records state.
+- Real-world source onboarding must use public, lawfully-grounded sources and honour robots/ToS: never
+  scrape behind logins, buy lists or collect personal data without a lawful basis. Collected leads only
+  enter "source hard-check → scoring → drafting → human approval queue" and are **never sent
+  automatically** (no send without human approval, ≤10 per channel per day, unsubscribe stops contact).
+
+## 4. Model / Harness adapters
 
 | Implementation | Purpose | Dependency | Status |
 |---|---|---|---|
@@ -64,29 +75,29 @@
 The Harness receives CodeTask text only and returns CodeResult; it never touches production
 credentials or performs deployments.
 
-M2 adds no new Harness implementation: `DshHeadlessHarness` / `DeepSeekApiHarness` remain planned
-(recommended from M3+); real-browser and real-desktop acceptance do not depend on a paid API. The
-core now ships three safety modules (`stop-controller` / `checkpoint` / `isolation`) reusable by any
-adapter or branch.
+M2/M3 add no new Harness implementation: `DshHeadlessHarness` / `DeepSeekApiHarness` remain planned
+(recommended from M4+); real-browser, real-desktop and Scout acceptance do not depend on a paid API.
+The core now ships three safety modules (`stop-controller` / `checkpoint` / `isolation`) reusable by
+any adapter or branch.
 
 M1 code loop: `packages/steward-harness/src/patch.ts` applies a `unified_diff` in an **isolated git
 worktree** (never touching the main workspace); `loop.ts` (`runCodeLoop`) runs the real-browser
 acceptance per round, at most two rounds, then writes `escalated=true` and exits 1 (no infinite
 retry); the CLI `code-loop` command exposes it, and `--fail` uses a broken patch to verify escalation.
 
-## 4. Notification adapters
+## 5. Notification adapters
 
 Windows Toast / SMTP email / Webhook (WeCom, Feishu, Slack) / CLI approval queue; SMS and voice are
 evaluated in phase 2. Notifications carry summaries and links only — never credentials or raw
 personal data. Failed sends are retried and recorded.
 
-## 5. IoT adapter (phase 2 stub)
+## 6. IoT adapter (phase 2 stub)
 
 - Transport: MQTT and HTTP JSON-RPC codecs; four objects: devices, commands, receipts, events.
 - Commands carry action, args, approval requirement, timeout. Receipts carry result, evidence, time.
 - Phase 1 ships only interfaces and a simulated-device fixture; **no real devices**.
 
-## 6. Failures and unknown results
+## 7. Failures and unknown results
 
 One rule: **unknown ≠ success**. When an adapter returns `unknown`, the core suspends the branch,
 writes an event and produces a reconciliation card. No more than two retries; never recorded as done.

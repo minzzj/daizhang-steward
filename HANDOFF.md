@@ -1,15 +1,15 @@
 # HANDOFF / 交接状态
 
 > 给下一次会话（或下一位执行者）的现状交接。每次里程碑结束更新。
-> 最后更新：2026-10-25（M2 完成并验收；真实 Windows 桌面 + 停止键/检查点/分支隔离；下一步 M3）
+> 最后更新：2026-10-25（M3 完成并验收；Scout 客户分支 ICP/评分/草稿/审批队列，只起草不发送；下一步 M4）
 
 ## 当前状态（一句话）
 
-M2 真实 Windows 桌面 + 安全模块已完成并验收：真实窗口 + 真实键鼠（SendInput）跑通 A3 桌面流程
-（打开→填表→保存→校验→截图，36/36 检查、20 张截图）、停止键 ≤5s（实测 305ms）+ 检查点
-save/load/resume（A8）、分支凭据/profile 锁/工具白名单隔离（A9）；**53/53** 测试通过，
-CLI **11 命令 + 2 占位**。累计 A1/A2/A3/A4/A5/A6/A8/A9/A12 验收通过。代码在 GitHub `main`
-分支（M2 已推送 `6603b04`；M1 最后 `25ef167`）。
+M3 Scout 客户分支已完成并验收：fixture 驱动 **14 条线索 → 丢弃 4 → 合格 8 → 3 条外联草稿
+（110–113 字、均引用信号）→ 审批队列 3 条全 pending、0 发送**（A7 通过）；加上 M1 真实浏览器
+（A2/A4/A5）与 M2 真实桌面 + 安全模块（A3/A8/A9）。**74/74** 测试通过，CLI **12 命令 + 2 占位**。
+累计 A1/A2/A3/A4/A5/A6/A7/A8/A9/A12 验收通过。代码在 GitHub `main` 分支（M2 已推送 `6603b04`；
+M3 随本次里程碑提交）。
 
 ## M0 已完成清单（2026-10-25）
 
@@ -74,6 +74,26 @@ CLI **11 命令 + 2 占位**。累计 A1/A2/A3/A4/A5/A6/A8/A9/A12 验收通过�
 - [x] 验收 **A3 / A8 / A9 通过**（A3 run `run-20261025-185100-6a4d70`；A8/A9 自检
   `evidence-m2-…/A8-A9-safety-check/safety-check-result.json`）
 
+## M3 已完成清单（2026-10-25）
+
+- [x] `packages/steward-scout`：**Scout 客户分支引擎**（`ScoutEngine`，纯逻辑零依赖零网络）——
+  ICP + 恰好 3 个高价值场景、四因子评分（需求 40% / 预算 20% / 可触达 20% / 合规 20%）、
+  来源硬校验（缺 `source_url`/非 http(s)/空 `signal`/空 `consent_basis` 即丢弃并留证）、
+  `org+signal` 归一化去重、≤150 字草稿（引用具体信号、不冒充人类、不群发）、人工审批队列
+  （默认全部 `pending`）、每日每渠道 ≤10、退订拦截、回复/会议统计、`ScoutReport`
+- [x] `examples/scout-fixtures/`：**14 条纯虚构合规线索**（`leads.json` + 中文 README；保留域名、
+  无真实个人信息；覆盖合格/缺来源/非法 URL/空依据/重复五类质量池）
+- [x] CLI 新增 `scout`（`--fixture <path>` / `--json`）：fixture → 评分 → 3 条草稿 → 审批队列，
+  写 `scout-report.md/.json`、`leads-scored.json`、`drafts.json`、`approval-queue.json`、
+  `outreach-drafts/` → **12 个已实现命令 + 2 个占位**（`takeover`/`approve` 仍为占位）
+- [x] 测试 53 → **74/74**（新增 `tests/unit/scout.test.mjs` 21 条；共 11 个测试文件）
+- [x] `npm run acceptance:m3` 一键验收（build + 74 测试 + Scout 运行 + A7 的 12 项检查）；
+  证据 `docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` +
+  `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`（15 文件，已脱敏）
+- [x] CI 增加 Scout demo 步骤（fixture 驱动、无网络、只起草不发送）
+- [x] 验收 **A7 通过**（run `run-20261025-200457-17b4e7`：14 线索 → 丢弃 4 → 合格 8 →
+  3 草稿 110–113 字 → 审批全 pending、0 发送；丢弃原因全部留证）
+
 ## 现在能做什么
 
 | 操作 | 命令 | 说明 |
@@ -81,19 +101,21 @@ CLI **11 命令 + 2 占位**。累计 A1/A2/A3/A4/A5/A6/A8/A9/A12 验收通过�
 | 安装依赖 | `npm install` | Node.js ≥ 22.18；用 npm（不是 pnpm） |
 | 构建 | `npm run build` | `tsc -p tsconfig.json` → `dist/`（单包布局） |
 | 类型检查 / lint | `npm run lint` | `tsc --noEmit` |
-| 单元+集成测试 | `npm test` | 先 build 再 `node --test "tests/unit/*.test.mjs"`；M2 共 **53/53** 通过 |
+| 单元+集成测试 | `npm test` | 先 build 再 `node --test "tests/unit/*.test.mjs"`；M3 共 **74/74** 通过 |
 | 只跑测试（不 build） | `npm run test:unit` | `node --test "tests/unit/*.test.mjs"` |
 | 提示词测试（A12） | `npm run test:prompts` | 4 角色安全条款、禁止项、无密钥/本机路径、sha256 校验 |
 | M0 空回路演示 | `npm run demo` | MockHarness，无付费 API；产物写入 `runs/<run-id>/` |
 | 证据包 | `npm run evidence` | 自动 build + tests + demo，输出 `docs/test-evidence/test-result-<stamp>.{md,json}` |
 | 真实浏览器流程（A2） | `node dist/apps/cli/src/index.js browser-flow [--case normal\|login-timeout] [--headless]` | 本机有头默认；产物 `runs/<run-id>/e2e/...` + 每步截图 |
 | 真实桌面流程（A3） | `node dist/apps/cli/src/index.js desktop-flow [--json]` | 本机真实 Windows 桌面；真实键鼠（SendInput）+ 每步截图，产物 `runs/<run-id>/e2e-desktop/` |
+| Scout 客户分支（A7） | `node dist/apps/cli/src/index.js scout [--fixture <path>] [--json]` | fixture 驱动：ICP/三场景/四因子评分/3 条草稿/审批队列（只起草、0 发送），产物 `runs/<run-id>/scout-report.*`、`drafts.json`、`approval-queue.json`、`outreach-drafts/` |
 | 编码回路（A4） | `node dist/apps/cli/src/index.js code-loop [--json]` | CodeTask→补丁→隔离 worktree→真实浏览器红转绿 |
 | 编码回路失败注入（A5） | `node dist/apps/cli/src/index.js code-loop --fail [--json]` | 坏补丁两轮失败后停止升级（exit 1，不无限重试） |
 | 停止键 / 检查点 / 隔离自检（A8/A9） | `node dist/apps/cli/src/index.js safety-check [--json]` | 停止键 ≤5s（实测 305ms）、检查点 save/load/resume、凭据/ProfileLock/工具白名单隔离自检 |
 | 检查点恢复运行（A8） | `node dist/apps/cli/src/index.js run --goal "<目标>" --resume <runId>` | 从最近检查点跳过已完成步骤、不重复执行 |
 | M1 一键验收 | `npm run acceptance` | 本机有头真实浏览器；生成 `docs/test-evidence/m1-acceptance-<stamp>.*` + `evidence-m1-<stamp>/` |
 | M2 一键验收 | `npm run acceptance:m2` | 本机真实 Windows 桌面；生成 `docs/test-evidence/m2-acceptance-<stamp>.*` + `evidence-m2-<stamp>/` |
+| M3 一键验收 | `npm run acceptance:m3` | fixture 驱动 Scout（无网络、只起草）；生成 `docs/test-evidence/m3-acceptance-<stamp>.*` + `evidence-m3-<stamp>/` |
 | 真实浏览器 E2E | `node tests/e2e-browser/login-flow.mjs --case normal\|login-timeout\|all [--expect-red login-timeout] [--headless 1]` | normal 应绿；login-timeout 修复前应红；`adapter-smoke.mjs` 28/28 |
 | 真实桌面 E2E（A3） | `node tests/e2e-desktop/run.mjs [--evidence-dir <目录>]` | 真实 Windows 窗口 + 真实键鼠 + 20 张截图 + JSON 内容断言；需先 `npm run build` |
 | 重新生成提示词 manifest | `npm run prompts:manifest` | 修改 `prompts/*.md` 后必须执行（sha256 会变） |
@@ -102,26 +124,28 @@ CLI **11 命令 + 2 占位**。累计 A1/A2/A3/A4/A5/A6/A8/A9/A12 验收通过�
 | 同步交付快照（旧流程） | `npm run sync:delivery` | 原用于 C: → H: 交付目录复制；现在权威仓库就在 H:，一般不需要 |
 | 查看路线图 | [ROADMAP.md](ROADMAP.md) | 里程碑与批准门 |
 
-CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` / `branch` / `report` /
-`stop` / `safety-check` / `version` / `help` 已实现（共 11 个）；别名 `demo-browser` /
+CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `code-loop` / `run` / `branch` /
+`report` / `stop` / `safety-check` / `version` / `help` 已实现（共 12 个）；别名 `demo-browser` /
 `demo-code-loop` / `demo-desktop` 保留；`takeover`、`approve` 为占位（阶段二 / 后续里程碑）。
-`run` 支持 `--resume <runId>` 从检查点恢复。
+`run` 支持 `--resume <runId>` 从检查点恢复；`scout` 支持 `--fixture <path>`（只起草，不发送）。
 
 ## 还不能做什么
 
 - 桌面适配器暂无 **UIA 可访问性树**、拖拽、滚轮/触控板手势、右键菜单语义、剪贴板、多窗口批处理
   会话编排——M2 已实现真实键鼠 + 截图 + 白名单的核心能力，其余按契约留待后续迭代。
+- Scout **没有真实来源抓取与真实发送通道**（按产品边界：M3 只做 fixture 驱动、只起草不发送；
+  真实发送必须由审批后的人工流程完成，留给后续里程碑/阶段二）。
 - 真实桌面 E2E 只能在未锁屏的真实交互 Windows 会话跑；托管 CI/无桌面环境不能跑（CI 只跑
-  `safety-check` 与 build）。
-- 不能调用真实 DSH / DeepSeek Harness——目前用 MockHarness + 脚本化补丁（真实浏览器/桌面验收已跑通）。
-- 没有 `approve` 审批队列与 `takeover` 接管包——当前 CLI 为占位命令（M3/M4 或阶段二）。
-- 不能发布 GitHub Release——M4；代码已推送 `main`（M2 `6603b04`，M1 `25ef167`）。
+  Scout demo、`safety-check` 与 build）。
+- 不能调用真实 DSH / DeepSeek Harness——目前用 MockHarness + 脚本化补丁（真实浏览器/桌面/Scout 验收已跑通）。
+- 没有 `approve` 审批队列与 `takeover` 接管包——当前 CLI 为占位命令（M4 或阶段二）。
+- 不能发布 GitHub Release——M4；代码已推送 `main`（M2 `6603b04`，M3 随本次里程碑提交）。
 - 不能生成宣传片——Phase 2 后（阶段一可选 3 分钟演示）。
 
 ## 代码在哪
 
 - **权威仓库（唯一开发位置）**：`H:\minzzj文件\技术部\项目\官方\代掌\daizhang-steward`
-  （GitHub `main` 分支；M2 已推送 `6603b04`；不要 git commit，除非用户明确要求）
+  （GitHub `main` 分支；M2 已推送 `6603b04`，M3 随本次里程碑提交；不要 git commit，除非用户明确要求）
 - **C: 旧副本为归档**：`C:\daizhang-build\daizhang-steward` 只读参考，**不要再在这里改文件**。
 - **方案文档**：`H:\minzzj文件\技术部\项目\官方\代掌\代掌-实施总方案-v0.1.md`
 - 工程已从 pnpm workspace 改为**单包布局**（H: 为 exFAT，不支持符号链接，pnpm workspace 装不起来）：
@@ -133,12 +157,12 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` /
 - **GitHub 公开仓库**：https://github.com/minzzj/daizhang-steward（2026-10-25 发布验证，见
   [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)；
   当时 CI #1/#2 均 success，许可证识别 `Other/NOASSERTION` 属预期）
-- **代码位置**：GitHub `main` 分支（M2 已推送 `6603b04`；M4 统一发版；
-  当前 `package.json` 版本 `0.3.0`）。
+- **代码位置**：GitHub `main` 分支（M2 已推送 `6603b04`；M3 随本次里程碑提交；M4 统一发版；
+  当前 `package.json` 版本 `0.4.0`）。
 - **M0 验证证据**：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md /
   events.jsonl / code-task.json / code-result.json 等）与
   [`docs/test-evidence/test-result-2026-10-25_09-52-08.md`](docs/test-evidence/test-result-2026-10-25_09-52-08.md)
-  （该文件为 Windows CI 修复前快照，tests 34；**当前测试数为 53**，以 `npm test` 为准）；
+  （该文件为 Windows CI 修复前快照，tests 34；**当前测试数为 74**，以 `npm test` 为准）；
   `npm run check` / `npm run check:secrets` / `npm run demo` / `npm run evidence` 均通过。
 - **M1 验证证据**：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
   `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组截图与日志；
@@ -147,7 +171,12 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` /
   `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`（34 文件：A3 真实桌面 20 张截图 +
   `result.json`/`steps.json`/`project.json`/`checkpoint.json`，A8/A9 `safety-check-result.json`，
   `unit-tests.log`、`m2-runtime-tests.log`；已脱敏）；`npm run acceptance:m2` OK（本机真实 Windows
-  桌面）；A3/A8/A9 通过；`npm test` **53/53**。
+  桌面）；A3/A8/A9 通过。
+- **M3 验证证据**：`docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` +
+  `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`（15 文件：`scout-run/` 的
+  `scout-report.md/.json`、`leads-scored.json`、`drafts.json`、`approval-queue.json`、
+  `outreach-drafts/`、`events.jsonl`、`report.md`、`checkpoint.json` + 74/74 `unit-tests.log`；
+  已脱敏）；`npm run acceptance:m3` OK（fixture 驱动、无网络外联）；A7 通过；`npm test` **74/74**。
 
 ## 本机踩坑（2026-10-25 实测）
 
@@ -169,7 +198,7 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` /
    （提交 `b4ed316` 修复：`.gitattributes` 全仓 `eol=lf` + `patch.ts` 归一化 CRLF + CRLF 回归测试）。
    修改 patch/diff 时注意行尾；`.ps1` 保持 CRLF。
 9. **证据脱敏**：验收证据复制进仓库前用 `scripts/sanitize.mjs` 替换本机路径与临时 worktree 路径
-   （M1/M2 acceptance bundle 已脱敏）；自动生成的证据文件不要手改。
+   （M1/M2/M3 acceptance bundle 已脱敏）；自动生成的证据文件不要手改。
 10. **M2 真实桌面验收**：必须在本机**真实交互桌面会话**（未锁屏）运行，`SendInput`/`BitBlt` 依赖前台
     会话；Session 0 / 托管 CI / RDP 断开 / UAC 安全桌面会失败。需要 **Python ≥ 3.8** 在 `PATH`
     （可用 `STEWARD_PYTHON` 或 `pythonCommand` 指定）。桌面 E2E 会先等真人输入空闲 ≥800ms 再操作，
@@ -177,25 +206,29 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `code-loop` / `run` /
 11. **桌面坐标与 DPI**：侧车是 Per-Monitor V2 DPI 感知进程，`click(x,y)` 用**屏幕物理像素**；
     操作 tkinter 等 DPI 未感知程序需按 `clientRect.width / 逻辑宽度` 换算（`tests/e2e-desktop/run.mjs`
     已内置换算）。真实桌面共享资源，不要与真人操作并行跑。
+12. **M3 Scout 验收**：`npm run acceptance:m3` 全程 **fixture 驱动、无网络外联**，只起草不发送；
+    会重建 `docs/test-evidence/m3-acceptance-*` + `evidence-m3-*`（只保留最新一份）。Scout 的
+    `markSent` 只记录状态，真实发送不在阶段一范围内；fixture 用保留域名 `example.com`/`example.org`，
+    不要替换成真实个人信息。
 
 ## 下一步（按序执行）
 
-0. **推送状态**：M0/M1/M2 已推送 GitHub `main`（最新 `6603b04`）；GitHub Release 留给 M4。
-1. **M3 客户分支（下一步）**：Scout——ICP、来源清单、评分、外联草稿、审批队列、ScoutReport（A7）；
-   保留真实浏览器/真实桌面 E2E 回归。
-2. **M4**：双语文档刷新 + GitHub Release + CI（A10/A11/A12）；`main` 继续按里程碑推送。
-3. 阶段一完成：更新本文件 → 按用户要求继续阶段二（或视额度停会话）。
+0. **推送状态**：M0/M1/M2 已推送 GitHub `main`（最新 `6603b04`）；M3 随本次里程碑提交；GitHub Release 留给 M4。
+1. **M4 开源发布（下一步）**：双语文档刷新 + LICENSE 校验 + GitHub Release + CI（A10/A11/A12）+
+   5 个 good-first-issue + 3 分钟演示；`main` 继续按里程碑推送。
+2. 阶段一完成：更新本文件 → 按用户要求继续阶段二（或视额度停会话）。
 
 ## 等待用户确认的事项
 
-- [ ] 是否继续 M3（客户分支 Scout）——默认按 ROADMAP 继续
+- [ ] 是否继续 M4（开源发布）——默认按 ROADMAP 继续
 - [ ] 测试 key 仅用于联调（默认是；建议联调后轮换）
 - [x] GitHub 认证（已通过本机凭据完成建仓与推送；令牌未落盘）
 - [x] 仓库名（`minzzj/daizhang-steward` 已创建）
 - [x] 第一阶段发布平台（GitHub public 仓库已发布）
 - [x] M0 验收（2026-10-25：A1/A6/A12 通过）
 - [x] M1 验收（2026-10-25：A2/A4/A5/A6 通过；`npm run acceptance` OK）
-- [x] M2 验收（2026-10-25：A3/A8/A9 通过；`npm run acceptance:m2` OK，53/53 测试）
+- [x] M2 验收（2026-10-25：A3/A8/A9 通过；`npm run acceptance:m2` OK）
+- [x] M3 验收（2026-10-25：A7 通过；`npm run acceptance:m3` OK，74/74 测试）
 
 ## 已知风险
 
@@ -209,6 +242,8 @@ GitHub 认证、非商用许可预期、法律边界需人工复核、额度控�
   `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（A2/A4/A5 三组 45 文件）
 - [x] M2 验收证据索引：`docs/test-evidence/m2-acceptance-2026-10-25_10-50-51.{md,json}` +
   `docs/test-evidence/evidence-m2-2026-10-25_10-50-51/`（A3 桌面 20 张截图 + A8/A9 自检 + 测试日志，34 文件）
-- [ ] 阶段一 12 条验收证据索引（M3–M4 完成后补齐）
+- [x] M3 验收证据索引：`docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.{md,json}` +
+  `docs/test-evidence/evidence-m3-2026-10-25_12-04-47/`（scout-run 证据 + 74/74 测试日志，15 文件）
+- [ ] 阶段一 12 条验收证据索引（M4 完成后补齐）
 - [ ] 经营域数据模型与阶段二实施计划（基于方案 §5）
 - [ ] 企业版边界清单人工复核记录

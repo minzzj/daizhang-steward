@@ -42,6 +42,9 @@ jobs:
       - name: Acceptance evidence (`steward demo`, MockHarness — no paid API)
         run: npm run evidence
 
+      - name: Scout demo (fixture-driven; drafts only, never auto-sent — A7)
+        run: node dist/apps/cli/src/index.js scout --json
+
       - name: Safety check (stop key ≤5s / checkpoint / branch isolation — A8/A9)
         run: node dist/apps/cli/src/index.js safety-check
 

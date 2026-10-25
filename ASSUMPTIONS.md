@@ -1,7 +1,7 @@
 # Assumptions & Known Gaps / 假设与未覆盖清单
 
 > 本文件是**诚实边界**清单：实现前先写下“不知道就不猜”的部分。随里程碑更新。
-> 最后更新：2026-10-25（M2 完成）
+> 最后更新：2026-10-25（M3 完成）
 
 ## 一、环境假设
 
@@ -29,7 +29,7 @@
 5. 30 条法律边界中，“已实现”指程序行为可拦截；“人工/不适用”按文档要求逐条标注。
 6. 通知通道阶段一用桌面通知 + 邮件 + 审批队列；短信/电话待合规评估后再接。
 
-## 三、已知未覆盖（截至 M2）
+## 三、已知未覆盖（截至 M3）
 
 - [x] M0 内核最小闭环：AgentRuntime / BranchSpec / PolicyEngine / ArtifactBus / PromptManager /
   EventLog / BudgetGuard / StopSignal、CLI 7 命令（+2 占位）、MockHarness、prompts v1、
@@ -45,12 +45,18 @@
 - [x] 停止键 ≤5s、检查点恢复、分支隔离已实现（M2 完成：`stop-controller` / `checkpoint` /
   `isolation` + runtime 集成；A8/A9 通过；`run --resume` 跳过已完成步骤不重复执行）。
 - [x] HarnessAdapter：MockHarness ✅ M0；脚本化真实补丁 + 隔离 worktree + 两轮升级 ✅ M1；
-  DSH headless / DeepSeek API 两种真实实现仍规划（M3+）。
+  DSH headless / DeepSeek API 两种真实实现仍规划（M4+）。
+- [x] M3 Scout 客户分支：`packages/steward-scout` 的 `ScoutEngine`（ICP + 3 个高价值场景、四因子评分
+  40/20/20/20、来源硬校验与去重、≤150 字草稿且引用信号、审批队列默认 pending、每日每渠道 ≤10、
+  退订/回复/会议统计、ScoutReport；纯逻辑零网络）、`examples/scout-fixtures/`（14 条纯虚构线索）、
+  CLI `scout`、`npm run acceptance:m3`；A7 通过（14 → 丢弃 4 → 合格 8 → 3 条草稿待审、0 发送，
+  2026-10-25）。
 - [ ] 桌面适配器的次要能力尚未实现：UIA 可访问性树、右键菜单语义、拖拽、滚轮/触控板手势、
   剪贴板、多窗口批处理会话编排（M2 契约内后续迭代项）。
 - [ ] 故障演练尚未实现：断网、强杀恢复、账本损坏、封号、72h 失联、循环超限（`tests/fault/`，
   后续里程碑/阶段二）。
-- [ ] Scout 线索来源清单与评分尚未实现（M3）。
+- [ ] Scout 的真实来源抓取与真实发送通道尚未实现（按产品边界：M3 只做 fixture 驱动、只起草不发送；
+  真实发送必须由审批后的人工流程完成，留给后续里程碑/阶段二）。
 - [ ] 经营域数据模型、30 条边界规则、控制台尚未实现（Phase 2）。
 - [ ] IoT 适配器只有契约计划，无实现（Phase 2 stub）。
 - [ ] 宣传片、GitHub Release、正式 LICENSE 发布验证尚未执行（M4/Phase 2）。

@@ -1,0 +1,12 @@
+{
+  "runId": "run-20261025-200457-17b4e7",
+  "goal": "Scout：从本地合规 fixtures 产出 ICP/三场景/四因子评分/3 条外联草稿/审批队列（只起草，不发送）",
+  "branchId": "br-scout-20261025200457-0fe9",
+  "branchRole": "scout",
+  "promptRef": "scout@1.0.0",
+  "startedAt": "2026-10-25T12:04:57.258Z",
+  "evidenceRoot": "runs/run-20261025-200457-17b4e7",
+  "finishedAt": "2026-10-25T12:04:57.305Z",
+  "ok": true,
+  "steps": 3
+}
