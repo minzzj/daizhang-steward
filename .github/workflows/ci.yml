@@ -57,6 +57,12 @@ jobs:
       - name: Safety check (stop key ≤5s / checkpoint / branch isolation — A8/A9)
         run: node dist/apps/cli/src/index.js safety-check
 
+      - name: Fault drill — real localhost network outage (B3, 0.2 min short run)
+        run: node dist/apps/cli/src/index.js fault-drill --case net-outage --outage-minutes 0.2 --json
+
+      - name: Fault drill — real localhost platform ban (B4, 0.2 min short run)
+        run: node dist/apps/cli/src/index.js fault-drill --case platform-ban --ban-minutes 0.2 --json
+
       - name: Console E2E (headless real browser; local 127.0.0.1 console)
         run: node tests/e2e-console/run.mjs --headless 1 --evidence-dir runs/ci-console-e2e
 

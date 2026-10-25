@@ -1,0 +1,75 @@
+{
+  "stamp": "2026-10-25_15-02-52",
+  "ok": true,
+  "checks": {
+    "build": true,
+    "unitTests": true,
+    "b3NoNewPromise": true,
+    "b3QueuedActions": true,
+    "b3RecoveredWithin10Min": true,
+    "b3LedgerNoDuplicates": true,
+    "b3DrillOk": true,
+    "b4BanDetected": true,
+    "b4AlternativePlan": true,
+    "b4Notification": true,
+    "b4DrillOk": true
+  },
+  "phase": "P2 fault drills",
+  "testSummary": {
+    "tests": 133,
+    "pass": 133,
+    "fail": 0
+  },
+  "b3": {
+    "outage_minutes": 2,
+    "blocked_promises": 25,
+    "queued_actions": 25,
+    "replayed": 25,
+    "duplicates_found": 0,
+    "recovered_within_10min": true,
+    "outage_ms": 120007
+  },
+  "b4": {
+    "ban_minutes": 2,
+    "ban_detected_within_ms": 11,
+    "stopped": true,
+    "actions_attempted_during_ban": 24,
+    "alternative_items": 5,
+    "notification_path": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\runs\\drill-platform-ban-2026-10-25_15-05-02\\notifications\\2026-10-25T15-05-03-038Z-ban.md",
+    "recovered": true
+  },
+  "evidence": {
+    "netOutage": [
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B3-net-outage/notifications/2026-10-25T15-03-02-579Z-outage.md",
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B3-net-outage/notifications/2026-10-25T15-05-02-687Z-recovery.md",
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B3-net-outage/outbox.json",
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B3-net-outage/ledger.json",
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B3-net-outage/drill-net-outage.json"
+    ],
+    "platformBan": [
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B4-platform-ban/alternative-plan.json",
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B4-platform-ban/notifications/2026-10-25T15-05-03-038Z-ban.md",
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B4-platform-ban/notifications/2026-10-25T15-07-03-019Z-recovery.md",
+      "docs/test-evidence/evidence-p2-2026-10-25_15-02-52/B4-platform-ban/drill-platform-ban.json"
+    ],
+    "unitTestsLog": "unit-tests.log"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 1879
+    },
+    "unitTests": {
+      "exitCode": 0,
+      "durationMs": 8284
+    },
+    "netOutage": {
+      "exitCode": 0,
+      "durationMs": 120364
+    },
+    "platformBan": {
+      "exitCode": 0,
+      "durationMs": 120260
+    }
+  }
+}

@@ -1,0 +1,1243 @@
+{
+  "case": "net_outage",
+  "started_at": "2026-10-25T15:03:02.542Z",
+  "finished_at": "2026-10-25T15:05:02.690Z",
+  "outage_ms": 120007,
+  "nominal_outage_ms": 120000,
+  "time_scale": 1,
+  "accelerated": false,
+  "probes": [
+    {
+      "at": "2026-10-25T15:03:02.545Z",
+      "online": true,
+      "latency_ms": 3
+    },
+    {
+      "at": "2026-10-25T15:03:02.554Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:07.599Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:12.604Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:17.617Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:22.629Z",
+      "online": false,
+      "latency_ms": 3,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:27.643Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:32.661Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:37.675Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:42.682Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:47.699Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:52.708Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:03:57.726Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:02.739Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:07.752Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:12.769Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:17.782Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:22.793Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:27.814Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:32.832Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:37.851Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:42.867Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:47.887Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:52.895Z",
+      "online": false,
+      "latency_ms": 3,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:04:57.915Z",
+      "online": false,
+      "latency_ms": 1,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:05:02.548Z",
+      "online": false,
+      "latency_ms": 2,
+      "error": "ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:05:02.561Z",
+      "online": true,
+      "latency_ms": 3
+    }
+  ],
+  "blocked_promises": 25,
+  "queued_actions": 25,
+  "replayed": 25,
+  "duplicates_found": 0,
+  "recovered_within_10min": true,
+  "ok": true,
+  "recovered": true,
+  "promises_created_during_outage": 0,
+  "recovery_ms": 3,
+  "ticks": [
+    {
+      "tick": 0,
+      "at": "2026-10-25T15:03:02.584Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 1,
+      "queued_actions": 1
+    },
+    {
+      "tick": 1,
+      "at": "2026-10-25T15:03:07.601Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 2,
+      "queued_actions": 2
+    },
+    {
+      "tick": 2,
+      "at": "2026-10-25T15:03:12.608Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 3,
+      "queued_actions": 3
+    },
+    {
+      "tick": 3,
+      "at": "2026-10-25T15:03:17.620Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 4,
+      "queued_actions": 4
+    },
+    {
+      "tick": 4,
+      "at": "2026-10-25T15:03:22.632Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 5,
+      "queued_actions": 5
+    },
+    {
+      "tick": 5,
+      "at": "2026-10-25T15:03:27.646Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 6,
+      "queued_actions": 6
+    },
+    {
+      "tick": 6,
+      "at": "2026-10-25T15:03:32.665Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 7,
+      "queued_actions": 7
+    },
+    {
+      "tick": 7,
+      "at": "2026-10-25T15:03:37.678Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 8,
+      "queued_actions": 8
+    },
+    {
+      "tick": 8,
+      "at": "2026-10-25T15:03:42.686Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 9,
+      "queued_actions": 9
+    },
+    {
+      "tick": 9,
+      "at": "2026-10-25T15:03:47.702Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 10,
+      "queued_actions": 10
+    },
+    {
+      "tick": 10,
+      "at": "2026-10-25T15:03:52.712Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 11,
+      "queued_actions": 11
+    },
+    {
+      "tick": 11,
+      "at": "2026-10-25T15:03:57.729Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 12,
+      "queued_actions": 12
+    },
+    {
+      "tick": 12,
+      "at": "2026-10-25T15:04:02.743Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 13,
+      "queued_actions": 13
+    },
+    {
+      "tick": 13,
+      "at": "2026-10-25T15:04:07.755Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 14,
+      "queued_actions": 14
+    },
+    {
+      "tick": 14,
+      "at": "2026-10-25T15:04:12.772Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 15,
+      "queued_actions": 15
+    },
+    {
+      "tick": 15,
+      "at": "2026-10-25T15:04:17.786Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 16,
+      "queued_actions": 16
+    },
+    {
+      "tick": 16,
+      "at": "2026-10-25T15:04:22.796Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 17,
+      "queued_actions": 17
+    },
+    {
+      "tick": 17,
+      "at": "2026-10-25T15:04:27.817Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 18,
+      "queued_actions": 18
+    },
+    {
+      "tick": 18,
+      "at": "2026-10-25T15:04:32.835Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 19,
+      "queued_actions": 19
+    },
+    {
+      "tick": 19,
+      "at": "2026-10-25T15:04:37.854Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 20,
+      "queued_actions": 20
+    },
+    {
+      "tick": 20,
+      "at": "2026-10-25T15:04:42.871Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 21,
+      "queued_actions": 21
+    },
+    {
+      "tick": 21,
+      "at": "2026-10-25T15:04:47.890Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 22,
+      "queued_actions": 22
+    },
+    {
+      "tick": 22,
+      "at": "2026-10-25T15:04:52.898Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 23,
+      "queued_actions": 23
+    },
+    {
+      "tick": 23,
+      "at": "2026-10-25T15:04:57.918Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 24,
+      "queued_actions": 24
+    },
+    {
+      "tick": 24,
+      "at": "2026-10-25T15:05:02.553Z",
+      "online": false,
+      "phase": "outage",
+      "blocked_promises": 25,
+      "queued_actions": 25
+    }
+  ],
+  "notifications": [
+    ".\\runs\\drill-net-outage-2026-10-25_15-03-02\\notifications\\2026-10-25T15-03-02-579Z-outage.md",
+    ".\\runs\\drill-net-outage-2026-10-25_15-03-02\\notifications\\2026-10-25T15-05-02-687Z-recovery.md"
+  ],
+  "evidence_paths": [
+    ".\\runs\\drill-net-outage-2026-10-25_15-03-02\\drill-net-outage.json",
+    ".\\runs\\drill-net-outage-2026-10-25_15-03-02\\outbox.json",
+    ".\\runs\\drill-net-outage-2026-10-25_15-03-02\\ledger.json",
+    ".\\runs\\drill-net-outage-2026-10-25_15-03-02\\notifications\\2026-10-25T15-03-02-579Z-outage.md",
+    ".\\runs\\drill-net-outage-2026-10-25_15-03-02\\notifications\\2026-10-25T15-05-02-687Z-recovery.md"
+  ],
+  "reconcile": {
+    "replayed": 25,
+    "skipped_duplicates": 0,
+    "duplicates_found": 0,
+    "entries_added": 25,
+    "ledger_entries_total": 25
+  },
+  "reconcile_repeat": {
+    "replayed": 25,
+    "skipped_duplicates": 25,
+    "duplicates_found": 0,
+    "entries_added": 0,
+    "ledger_entries_total": 25
+  },
+  "generated_at": "2026-10-25T15:05:02.690Z",
+  "environment": {
+    "node": "v24.15.0",
+    "platform_url": "http://127.0.0.1:49729",
+    "time_scale": 1,
+    "accelerated": false,
+    "time_scale_note": "time_scale=1：真实分钟口径，未加速"
+  },
+  "outbox_items": [
+    {
+      "id": "ob-783a69cc899b",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-0"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-0",
+      "created_at": "2026-10-25T15:03:02.582Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.566Z",
+      "ref": "quote-0001"
+    },
+    {
+      "id": "ob-db54fac24a11",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-1"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-1",
+      "created_at": "2026-10-25T15:03:07.599Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.568Z",
+      "ref": "msg-0001"
+    },
+    {
+      "id": "ob-a042f37e1824",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-2"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-2",
+      "created_at": "2026-10-25T15:03:12.604Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.570Z",
+      "ref": "quote-0002"
+    },
+    {
+      "id": "ob-bb1b4524b47b",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-3"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-3",
+      "created_at": "2026-10-25T15:03:17.617Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.572Z",
+      "ref": "msg-0002"
+    },
+    {
+      "id": "ob-a231916275ca",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-4"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-4",
+      "created_at": "2026-10-25T15:03:22.629Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.574Z",
+      "ref": "quote-0003"
+    },
+    {
+      "id": "ob-6a456b40b3c3",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-5"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-5",
+      "created_at": "2026-10-25T15:03:27.643Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.576Z",
+      "ref": "msg-0003"
+    },
+    {
+      "id": "ob-eab3abdc19e3",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-6"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-6",
+      "created_at": "2026-10-25T15:03:32.661Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.577Z",
+      "ref": "quote-0004"
+    },
+    {
+      "id": "ob-9ceda4a3d1d6",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-7"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-7",
+      "created_at": "2026-10-25T15:03:37.675Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.579Z",
+      "ref": "msg-0004"
+    },
+    {
+      "id": "ob-8d2397007113",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-8"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-8",
+      "created_at": "2026-10-25T15:03:42.682Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.580Z",
+      "ref": "quote-0005"
+    },
+    {
+      "id": "ob-7dbe52964647",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-9"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-9",
+      "created_at": "2026-10-25T15:03:47.699Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.581Z",
+      "ref": "msg-0005"
+    },
+    {
+      "id": "ob-a27b29308aea",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-10"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-10",
+      "created_at": "2026-10-25T15:03:52.709Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.583Z",
+      "ref": "quote-0006"
+    },
+    {
+      "id": "ob-d2d93538e2db",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-11"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-11",
+      "created_at": "2026-10-25T15:03:57.726Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.584Z",
+      "ref": "msg-0006"
+    },
+    {
+      "id": "ob-a8d268971ee7",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-12"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-12",
+      "created_at": "2026-10-25T15:04:02.739Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.586Z",
+      "ref": "quote-0007"
+    },
+    {
+      "id": "ob-df95c374918b",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-13"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-13",
+      "created_at": "2026-10-25T15:04:07.752Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.587Z",
+      "ref": "msg-0007"
+    },
+    {
+      "id": "ob-9ffd1377a401",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-14"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-14",
+      "created_at": "2026-10-25T15:04:12.769Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.588Z",
+      "ref": "quote-0008"
+    },
+    {
+      "id": "ob-24147e275816",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-15"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-15",
+      "created_at": "2026-10-25T15:04:17.782Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.589Z",
+      "ref": "msg-0008"
+    },
+    {
+      "id": "ob-0ef1e1abce32",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-16"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-16",
+      "created_at": "2026-10-25T15:04:22.793Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.591Z",
+      "ref": "quote-0009"
+    },
+    {
+      "id": "ob-bb19d21ed638",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-17"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-17",
+      "created_at": "2026-10-25T15:04:27.814Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.592Z",
+      "ref": "msg-0009"
+    },
+    {
+      "id": "ob-819ce20e05f3",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-18"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-18",
+      "created_at": "2026-10-25T15:04:32.832Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.593Z",
+      "ref": "quote-0010"
+    },
+    {
+      "id": "ob-f5433be6563e",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-19"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-19",
+      "created_at": "2026-10-25T15:04:37.851Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.594Z",
+      "ref": "msg-0010"
+    },
+    {
+      "id": "ob-d423b102700b",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-20"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-20",
+      "created_at": "2026-10-25T15:04:42.867Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.596Z",
+      "ref": "quote-0011"
+    },
+    {
+      "id": "ob-f2a8bdbe1dac",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-21"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-21",
+      "created_at": "2026-10-25T15:04:47.887Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.597Z",
+      "ref": "msg-0011"
+    },
+    {
+      "id": "ob-d75543d46971",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-22"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-22",
+      "created_at": "2026-10-25T15:04:52.895Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.598Z",
+      "ref": "quote-0012"
+    },
+    {
+      "id": "ob-f59f28ce2ba1",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-23"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-23",
+      "created_at": "2026-10-25T15:04:57.915Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.599Z",
+      "ref": "msg-0012"
+    },
+    {
+      "id": "ob-f65822494910",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-24"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-24",
+      "created_at": "2026-10-25T15:05:02.548Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.601Z",
+      "ref": "quote-0013"
+    }
+  ],
+  "replay_report": {
+    "replayed": 25,
+    "skipped_duplicates": 0,
+    "failed": 0,
+    "duplicates_found": 0,
+    "items": [
+      {
+        "id": "ob-783a69cc899b",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-0"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-0",
+        "created_at": "2026-10-25T15:03:02.582Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.566Z",
+        "ref": "quote-0001"
+      },
+      {
+        "id": "ob-db54fac24a11",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-1"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-1",
+        "created_at": "2026-10-25T15:03:07.599Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.568Z",
+        "ref": "msg-0001"
+      },
+      {
+        "id": "ob-a042f37e1824",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-2"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-2",
+        "created_at": "2026-10-25T15:03:12.604Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.570Z",
+        "ref": "quote-0002"
+      },
+      {
+        "id": "ob-bb1b4524b47b",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-3"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-3",
+        "created_at": "2026-10-25T15:03:17.617Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.572Z",
+        "ref": "msg-0002"
+      },
+      {
+        "id": "ob-a231916275ca",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-4"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-4",
+        "created_at": "2026-10-25T15:03:22.629Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.574Z",
+        "ref": "quote-0003"
+      },
+      {
+        "id": "ob-6a456b40b3c3",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-5"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-5",
+        "created_at": "2026-10-25T15:03:27.643Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.576Z",
+        "ref": "msg-0003"
+      },
+      {
+        "id": "ob-eab3abdc19e3",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-6"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-6",
+        "created_at": "2026-10-25T15:03:32.661Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.577Z",
+        "ref": "quote-0004"
+      },
+      {
+        "id": "ob-9ceda4a3d1d6",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-7"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-7",
+        "created_at": "2026-10-25T15:03:37.675Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.579Z",
+        "ref": "msg-0004"
+      },
+      {
+        "id": "ob-8d2397007113",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-8"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-8",
+        "created_at": "2026-10-25T15:03:42.682Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.580Z",
+        "ref": "quote-0005"
+      },
+      {
+        "id": "ob-7dbe52964647",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-9"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-9",
+        "created_at": "2026-10-25T15:03:47.699Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.581Z",
+        "ref": "msg-0005"
+      },
+      {
+        "id": "ob-a27b29308aea",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-10"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-10",
+        "created_at": "2026-10-25T15:03:52.709Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.583Z",
+        "ref": "quote-0006"
+      },
+      {
+        "id": "ob-d2d93538e2db",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-11"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-11",
+        "created_at": "2026-10-25T15:03:57.726Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.584Z",
+        "ref": "msg-0006"
+      },
+      {
+        "id": "ob-a8d268971ee7",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-12"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-12",
+        "created_at": "2026-10-25T15:04:02.739Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.586Z",
+        "ref": "quote-0007"
+      },
+      {
+        "id": "ob-df95c374918b",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-13"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-13",
+        "created_at": "2026-10-25T15:04:07.752Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.587Z",
+        "ref": "msg-0007"
+      },
+      {
+        "id": "ob-9ffd1377a401",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-14"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-14",
+        "created_at": "2026-10-25T15:04:12.769Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.588Z",
+        "ref": "quote-0008"
+      },
+      {
+        "id": "ob-24147e275816",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-15"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-15",
+        "created_at": "2026-10-25T15:04:17.782Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.589Z",
+        "ref": "msg-0008"
+      },
+      {
+        "id": "ob-0ef1e1abce32",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-16"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-16",
+        "created_at": "2026-10-25T15:04:22.793Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.591Z",
+        "ref": "quote-0009"
+      },
+      {
+        "id": "ob-bb19d21ed638",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-17"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-17",
+        "created_at": "2026-10-25T15:04:27.814Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.592Z",
+        "ref": "msg-0009"
+      },
+      {
+        "id": "ob-819ce20e05f3",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-18"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-18",
+        "created_at": "2026-10-25T15:04:32.832Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.593Z",
+        "ref": "quote-0010"
+      },
+      {
+        "id": "ob-f5433be6563e",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-19"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-19",
+        "created_at": "2026-10-25T15:04:37.851Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.594Z",
+        "ref": "msg-0010"
+      },
+      {
+        "id": "ob-d423b102700b",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-20"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-20",
+        "created_at": "2026-10-25T15:04:42.867Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.596Z",
+        "ref": "quote-0011"
+      },
+      {
+        "id": "ob-f2a8bdbe1dac",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-21"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-21",
+        "created_at": "2026-10-25T15:04:47.887Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.597Z",
+        "ref": "msg-0011"
+      },
+      {
+        "id": "ob-d75543d46971",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-22"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-22",
+        "created_at": "2026-10-25T15:04:52.895Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.598Z",
+        "ref": "quote-0012"
+      },
+      {
+        "id": "ob-f59f28ce2ba1",
+        "action_kind": "message",
+        "payload": {
+          "thread_id": "thread-sim-1",
+          "text": "断网期间待补记消息",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-23"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-23",
+        "created_at": "2026-10-25T15:04:57.915Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.599Z",
+        "ref": "msg-0012"
+      },
+      {
+        "id": "ob-f65822494910",
+        "action_kind": "quote",
+        "payload": {
+          "customer": "仿真客户 A",
+          "amount_cny": 1200,
+          "note": "断网期间待补记报价",
+          "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-24"
+        },
+        "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-24",
+        "created_at": "2026-10-25T15:05:02.548Z",
+        "attempts": 1,
+        "status": "replayed",
+        "replayed_at": "2026-10-25T15:05:02.601Z",
+        "ref": "quote-0013"
+      }
+    ]
+  },
+  "events": [
+    {
+      "at": "2026-10-25T15:03:02.545Z",
+      "kind": "baseline.online",
+      "detail": "latency=3ms"
+    },
+    {
+      "at": "2026-10-25T15:03:02.552Z",
+      "kind": "outage.inject",
+      "detail": "POST http://127.0.0.1:49730/admin/outage {mode:\"down\"} → HTTP 200"
+    },
+    {
+      "at": "2026-10-25T15:03:02.554Z",
+      "kind": "outage.detected",
+      "detail": "首次离线探测：ECONNREFUSED: ECONNREFUSED: fetch failed"
+    },
+    {
+      "at": "2026-10-25T15:05:02.558Z",
+      "kind": "outage.restore",
+      "detail": "POST http://127.0.0.1:49730/admin/outage {mode:\"up\"} → HTTP 200"
+    },
+    {
+      "at": "2026-10-25T15:05:02.561Z",
+      "kind": "recovery.online",
+      "detail": "恢复探测在线，耗时 3ms"
+    },
+    {
+      "at": "2026-10-25T15:05:02.605Z",
+      "kind": "outbox.replayed",
+      "detail": "replayed=25; failed=0; duplicates=0"
+    },
+    {
+      "at": "2026-10-25T15:05:02.686Z",
+      "kind": "ledger.reconcile",
+      "detail": "entries_added=25; duplicates_found=0"
+    },
+    {
+      "at": "2026-10-25T15:05:02.687Z",
+      "kind": "ledger.reconcile.repeat",
+      "detail": "entries_added=0; skipped=25"
+    }
+  ]
+}

@@ -45,6 +45,7 @@ import {
   cmdTakeover,
   registerPhase2Tools,
 } from "./phase2.js";
+import { cmdFaultDrill } from "./fault-cli.js";
 
 const VERSION = "0.6.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
@@ -93,6 +94,8 @@ function printHelp(): void {
   steward dummy-branch [--json]              只读 dummy 分支：仅配置+已有 reviewer 提示词，不改核心（A10）
   steward business [--json]                  阶段二：选题/仿真业务线/账本6要素/承诺追溯/接管包/月报/边界（B1/B2/B5/B6/B7）
   steward boundary-check [--json]            阶段二：边界规则自检（四类越界 100% 拒绝，B7）
+  steward fault-drill --case net-outage|platform-ban [--outage-minutes 120] [--ban-minutes 15] [--json]
+                                              阶段二：真实故障演练（断网 B3 / 平台封禁 B4，真实 localhost HTTP）
   steward console [--port 4180]              阶段二：本地 Web 控制台（只监听 127.0.0.1）
   steward approve [--id <cardId> --decision approve|reject] [--json]  审批队列（超时挂起，不自动放行）
   steward takeover [--resume] [--json]       接管键：停止新动作并生成 6 类接管包
@@ -844,6 +847,8 @@ async function main(): Promise<number> {
       return cmdPhase2BoundaryCheck(parsed);
     case "console":
       return cmdConsole(parsed);
+    case "fault-drill":
+      return cmdFaultDrill(parsed);
     case "version":
       console.log(`steward ${VERSION} (node ${process.version})`);
       return 0;

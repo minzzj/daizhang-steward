@@ -30,6 +30,8 @@
     "acceptance:m3": "node scripts/run-acceptance-m3.mjs",
     "acceptance:m4": "node scripts/run-acceptance-m4.mjs",
     "acceptance:p1": "node scripts/run-acceptance-p1.mjs",
+    "acceptance:p2": "node scripts/run-acceptance-p2.mjs",
+    "drill:long": "node scripts/run-long-drill.mjs",
     "sync:delivery": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-delivery.ps1"
   },
   "devDependencies": {

@@ -1,0 +1,394 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-25T15:05:02.601Z",
+  "items": [
+    {
+      "id": "ob-783a69cc899b",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-0"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-0",
+      "created_at": "2026-10-25T15:03:02.582Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.566Z",
+      "ref": "quote-0001"
+    },
+    {
+      "id": "ob-db54fac24a11",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-1"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-1",
+      "created_at": "2026-10-25T15:03:07.599Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.568Z",
+      "ref": "msg-0001"
+    },
+    {
+      "id": "ob-a042f37e1824",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-2"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-2",
+      "created_at": "2026-10-25T15:03:12.604Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.570Z",
+      "ref": "quote-0002"
+    },
+    {
+      "id": "ob-bb1b4524b47b",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-3"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-3",
+      "created_at": "2026-10-25T15:03:17.617Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.572Z",
+      "ref": "msg-0002"
+    },
+    {
+      "id": "ob-a231916275ca",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-4"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-4",
+      "created_at": "2026-10-25T15:03:22.629Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.574Z",
+      "ref": "quote-0003"
+    },
+    {
+      "id": "ob-6a456b40b3c3",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-5"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-5",
+      "created_at": "2026-10-25T15:03:27.643Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.576Z",
+      "ref": "msg-0003"
+    },
+    {
+      "id": "ob-eab3abdc19e3",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-6"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-6",
+      "created_at": "2026-10-25T15:03:32.661Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.577Z",
+      "ref": "quote-0004"
+    },
+    {
+      "id": "ob-9ceda4a3d1d6",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-7"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-7",
+      "created_at": "2026-10-25T15:03:37.675Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.579Z",
+      "ref": "msg-0004"
+    },
+    {
+      "id": "ob-8d2397007113",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-8"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-8",
+      "created_at": "2026-10-25T15:03:42.682Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.580Z",
+      "ref": "quote-0005"
+    },
+    {
+      "id": "ob-7dbe52964647",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-9"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-9",
+      "created_at": "2026-10-25T15:03:47.699Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.581Z",
+      "ref": "msg-0005"
+    },
+    {
+      "id": "ob-a27b29308aea",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-10"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-10",
+      "created_at": "2026-10-25T15:03:52.709Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.583Z",
+      "ref": "quote-0006"
+    },
+    {
+      "id": "ob-d2d93538e2db",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-11"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-11",
+      "created_at": "2026-10-25T15:03:57.726Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.584Z",
+      "ref": "msg-0006"
+    },
+    {
+      "id": "ob-a8d268971ee7",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-12"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-12",
+      "created_at": "2026-10-25T15:04:02.739Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.586Z",
+      "ref": "quote-0007"
+    },
+    {
+      "id": "ob-df95c374918b",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-13"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-13",
+      "created_at": "2026-10-25T15:04:07.752Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.587Z",
+      "ref": "msg-0007"
+    },
+    {
+      "id": "ob-9ffd1377a401",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-14"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-14",
+      "created_at": "2026-10-25T15:04:12.769Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.588Z",
+      "ref": "quote-0008"
+    },
+    {
+      "id": "ob-24147e275816",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-15"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-15",
+      "created_at": "2026-10-25T15:04:17.782Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.589Z",
+      "ref": "msg-0008"
+    },
+    {
+      "id": "ob-0ef1e1abce32",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-16"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-16",
+      "created_at": "2026-10-25T15:04:22.793Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.591Z",
+      "ref": "quote-0009"
+    },
+    {
+      "id": "ob-bb19d21ed638",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-17"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-17",
+      "created_at": "2026-10-25T15:04:27.814Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.592Z",
+      "ref": "msg-0009"
+    },
+    {
+      "id": "ob-819ce20e05f3",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-18"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-18",
+      "created_at": "2026-10-25T15:04:32.832Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.593Z",
+      "ref": "quote-0010"
+    },
+    {
+      "id": "ob-f5433be6563e",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-19"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-19",
+      "created_at": "2026-10-25T15:04:37.851Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.594Z",
+      "ref": "msg-0010"
+    },
+    {
+      "id": "ob-d423b102700b",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-20"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-20",
+      "created_at": "2026-10-25T15:04:42.867Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.596Z",
+      "ref": "quote-0011"
+    },
+    {
+      "id": "ob-f2a8bdbe1dac",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-21"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-21",
+      "created_at": "2026-10-25T15:04:47.887Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.597Z",
+      "ref": "msg-0011"
+    },
+    {
+      "id": "ob-d75543d46971",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-22"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-22",
+      "created_at": "2026-10-25T15:04:52.895Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.598Z",
+      "ref": "quote-0012"
+    },
+    {
+      "id": "ob-f59f28ce2ba1",
+      "action_kind": "message",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-23"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-23",
+      "created_at": "2026-10-25T15:04:57.915Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.599Z",
+      "ref": "msg-0012"
+    },
+    {
+      "id": "ob-f65822494910",
+      "action_kind": "quote",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-24"
+      },
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-24",
+      "created_at": "2026-10-25T15:05:02.548Z",
+      "attempts": 1,
+      "status": "replayed",
+      "replayed_at": "2026-10-25T15:05:02.601Z",
+      "ref": "quote-0013"
+    }
+  ]
+}

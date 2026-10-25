@@ -1,0 +1,369 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-25T15:05:02.683Z",
+  "entries": [
+    {
+      "id": "led-209a80bd15f3",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-0",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-0",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:03:02.582Z",
+      "created_at": "2026-10-25T15:05:02.606Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-0"
+      }
+    },
+    {
+      "id": "led-a9dc7088c6a1",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-1",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-1",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:03:07.599Z",
+      "created_at": "2026-10-25T15:05:02.609Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-1"
+      }
+    },
+    {
+      "id": "led-d29034cdc067",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-2",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-2",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:03:12.604Z",
+      "created_at": "2026-10-25T15:05:02.612Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-2"
+      }
+    },
+    {
+      "id": "led-faffa58d4c58",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-3",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-3",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:03:17.617Z",
+      "created_at": "2026-10-25T15:05:02.615Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-3"
+      }
+    },
+    {
+      "id": "led-0941c6748cb6",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-4",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-4",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:03:22.629Z",
+      "created_at": "2026-10-25T15:05:02.620Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-4"
+      }
+    },
+    {
+      "id": "led-276124d73d5e",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-5",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-5",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:03:27.643Z",
+      "created_at": "2026-10-25T15:05:02.623Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-5"
+      }
+    },
+    {
+      "id": "led-970e45a096b3",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-6",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-6",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:03:32.661Z",
+      "created_at": "2026-10-25T15:05:02.626Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-6"
+      }
+    },
+    {
+      "id": "led-deeb37540bc5",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-7",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-7",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:03:37.675Z",
+      "created_at": "2026-10-25T15:05:02.629Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-7"
+      }
+    },
+    {
+      "id": "led-66cd017fdcd7",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-8",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-8",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:03:42.682Z",
+      "created_at": "2026-10-25T15:05:02.632Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-8"
+      }
+    },
+    {
+      "id": "led-26dc4408ffe3",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-9",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-9",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:03:47.699Z",
+      "created_at": "2026-10-25T15:05:02.635Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-9"
+      }
+    },
+    {
+      "id": "led-2e7ba47e231b",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-10",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-10",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:03:52.709Z",
+      "created_at": "2026-10-25T15:05:02.639Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-10"
+      }
+    },
+    {
+      "id": "led-63948b99ef53",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-11",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-11",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:03:57.726Z",
+      "created_at": "2026-10-25T15:05:02.642Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-11"
+      }
+    },
+    {
+      "id": "led-80bac6ba4015",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-12",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-12",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:04:02.739Z",
+      "created_at": "2026-10-25T15:05:02.645Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-12"
+      }
+    },
+    {
+      "id": "led-9a16787b81fb",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-13",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-13",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:04:07.752Z",
+      "created_at": "2026-10-25T15:05:02.648Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-13"
+      }
+    },
+    {
+      "id": "led-6e2edc813032",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-14",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-14",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:04:12.769Z",
+      "created_at": "2026-10-25T15:05:02.651Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-14"
+      }
+    },
+    {
+      "id": "led-8294fcef9f9a",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-15",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-15",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:04:17.782Z",
+      "created_at": "2026-10-25T15:05:02.655Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-15"
+      }
+    },
+    {
+      "id": "led-29035833ee05",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-16",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-16",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:04:22.793Z",
+      "created_at": "2026-10-25T15:05:02.658Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-16"
+      }
+    },
+    {
+      "id": "led-59c0cf498f87",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-17",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-17",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:04:27.814Z",
+      "created_at": "2026-10-25T15:05:02.661Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-17"
+      }
+    },
+    {
+      "id": "led-c9da8b3a94de",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-18",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-18",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:04:32.832Z",
+      "created_at": "2026-10-25T15:05:02.664Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-18"
+      }
+    },
+    {
+      "id": "led-ff11c9d44649",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-19",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-19",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:04:37.851Z",
+      "created_at": "2026-10-25T15:05:02.667Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-19"
+      }
+    },
+    {
+      "id": "led-38820231c1d6",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-20",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-20",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:04:42.867Z",
+      "created_at": "2026-10-25T15:05:02.671Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-20"
+      }
+    },
+    {
+      "id": "led-c37ccbf808b4",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-21",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-21",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:04:47.887Z",
+      "created_at": "2026-10-25T15:05:02.674Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-21"
+      }
+    },
+    {
+      "id": "led-c119e93cdf0a",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-22",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-22",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:04:52.895Z",
+      "created_at": "2026-10-25T15:05:02.677Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-22"
+      }
+    },
+    {
+      "id": "led-0ce2f911f4f2",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-23",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-23",
+      "action_kind": "message",
+      "amount_cny": null,
+      "occurred_at": "2026-10-25T15:04:57.915Z",
+      "created_at": "2026-10-25T15:05:02.680Z",
+      "payload": {
+        "thread_id": "thread-sim-1",
+        "text": "断网期间待补记消息",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-23"
+      }
+    },
+    {
+      "id": "led-7d473b9697e0",
+      "idempotency_key": "net-outage-2026-10-25T15-03-02-542Z-24",
+      "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-24",
+      "action_kind": "quote",
+      "amount_cny": 1200,
+      "occurred_at": "2026-10-25T15:05:02.548Z",
+      "created_at": "2026-10-25T15:05:02.683Z",
+      "payload": {
+        "customer": "仿真客户 A",
+        "amount_cny": 1200,
+        "note": "断网期间待补记报价",
+        "receipt_ref": "receipt-net-outage-2026-10-25T15-03-02-542Z-24"
+      }
+    }
+  ]
+}
