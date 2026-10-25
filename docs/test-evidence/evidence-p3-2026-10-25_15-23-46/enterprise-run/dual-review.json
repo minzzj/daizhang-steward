@@ -1,0 +1,50 @@
+{
+  "request": {
+    "id": "acr-001",
+    "from_account": "示例银行 **** 8888（虚构）",
+    "to_account": "示例银行 **** 9999（虚构）",
+    "requested_by": "示例财务（虚构）",
+    "status": "pending_dual_review",
+    "reviews": [],
+    "applied": false,
+    "created_at": "2026-10-25T15:23:57.148Z"
+  },
+  "after_first_review": {
+    "id": "acr-001",
+    "from_account": "示例银行 **** 8888（虚构）",
+    "to_account": "示例银行 **** 9999（虚构）",
+    "requested_by": "示例财务（虚构）",
+    "status": "pending_dual_review",
+    "reviews": [
+      {
+        "reviewer": "示例财务负责人（虚构，finance）",
+        "decision": "approve",
+        "at": "2026-10-25T15:23:57.149Z"
+      }
+    ],
+    "applied": false,
+    "created_at": "2026-10-25T15:23:57.148Z"
+  },
+  "after_second_review": {
+    "id": "acr-001",
+    "from_account": "示例银行 **** 8888（虚构）",
+    "to_account": "示例银行 **** 9999（虚构）",
+    "requested_by": "示例财务（虚构）",
+    "status": "approved",
+    "reviews": [
+      {
+        "reviewer": "示例财务负责人（虚构，finance）",
+        "decision": "approve",
+        "at": "2026-10-25T15:23:57.149Z"
+      },
+      {
+        "reviewer": "示例法务（虚构，legal）",
+        "decision": "approve",
+        "at": "2026-10-25T15:23:57.149Z"
+      }
+    ],
+    "applied": true,
+    "created_at": "2026-10-25T15:23:57.148Z"
+  },
+  "applied_only_after_two": true
+}

@@ -1,0 +1,18 @@
+{
+  "initial": {
+    "doc_id": "doc-demo-contract-001",
+    "status": "pending_human",
+    "ai_may_sign": false,
+    "signing_page_hint": "「示例企业服务合同（虚构）」签署页/盖章页（需人工定位）",
+    "next_action": "请人工在签署页完成签名/用印并回传证据；AI 只生成待签草案并定位签署页，不代签。"
+  },
+  "signed": {
+    "doc_id": "doc-demo-contract-001",
+    "status": "signed",
+    "ai_may_sign": false,
+    "signing_page_hint": "「示例企业服务合同（虚构）」签署页/盖章页（需人工定位）",
+    "next_action": "人工签署/用印已完成并留痕，可进入归档与交付。",
+    "signed_by": "示例法人（虚构，人签）",
+    "signed_at": "2026-10-25T15:23:57.148Z"
+  }
+}

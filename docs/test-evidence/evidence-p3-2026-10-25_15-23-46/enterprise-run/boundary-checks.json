@@ -1,0 +1,6 @@
+{
+  "decision": "deny",
+  "rule_id": "EB-01",
+  "user_message": "该业务需要经营资质，个人/企业模式下均不承接无证业务。已拒绝；请先取得对应资质，或改做无需资质的业务线。",
+  "mode": "enterprise"
+}

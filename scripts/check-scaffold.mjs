@@ -113,6 +113,8 @@ const REQUIRED_DIRS = [
   "tests/e2e-console",
   "packages/steward-fault/src",
   "examples/demo-platform",
+  "examples/demo-enterprise",
+  "packages/steward-enterprise/src",
   "packages/steward-desktop",
   "tests/fixtures",
   "scripts",

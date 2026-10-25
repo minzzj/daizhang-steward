@@ -1,0 +1,301 @@
+{
+  "personal": {
+    "order": {
+      "blocked": false,
+      "conflicts": [],
+      "payment": {
+        "ok": true,
+        "account_type": "personal",
+        "message": "个人账户收款路径校验通过（仅记录校验结果，未发生真实收款）。"
+      },
+      "signature": {
+        "required": false,
+        "signatory_ok": true,
+        "ai_may_sign": false,
+        "message": "本单无需用印；个人模式由客户本人签署，AI 不代签。"
+      },
+      "audit": [
+        {
+          "seq": 7,
+          "at": "2026-10-25T15:23:57.149Z",
+          "action": "order.run",
+          "object": "order:personal/individual",
+          "result": "ok",
+          "reason": "mode=personal; quote=3000; invoice=vat_general; payment=personal_account"
+        },
+        {
+          "seq": 8,
+          "at": "2026-10-25T15:23:57.149Z",
+          "action": "invoice.draft",
+          "object": "invoice:vat_general",
+          "result": "pending",
+          "reason": "发票抬头/税号/合同一致：已生成开票草稿，等待人工确认提交（不自动提交、不自动开票）。"
+        }
+      ],
+      "invoice": {
+        "ok": true,
+        "invoice_type": "vat_general",
+        "title": "个人经营者（虚构）",
+        "tax_no": "",
+        "checks": {
+          "title_matches": true,
+          "tax_no_matches": true,
+          "contract_matches": true
+        },
+        "draft_status": "draft_pending_human",
+        "message": "发票抬头/税号/合同一致：已生成开票草稿，等待人工确认提交（不自动提交、不自动开票）。"
+      }
+    },
+    "block": false,
+    "conflicts": [],
+    "invoice": {
+      "ok": true,
+      "invoice_type": "vat_general",
+      "title": "个人经营者（虚构）",
+      "tax_no": "",
+      "checks": {
+        "title_matches": true,
+        "tax_no_matches": true,
+        "contract_matches": true
+      },
+      "draft_status": "draft_pending_human",
+      "message": "发票抬头/税号/合同一致：已生成开票草稿，等待人工确认提交（不自动提交、不自动开票）。"
+    }
+  },
+  "enterprise": {
+    "order": {
+      "blocked": false,
+      "conflicts": [],
+      "payment": {
+        "ok": true,
+        "account_type": "corporate",
+        "message": "对公账户收款路径校验通过（仅记录校验结果，未发生真实收款）。"
+      },
+      "signature": {
+        "required": true,
+        "signatory_ok": true,
+        "ai_may_sign": false,
+        "message": "用印已由自然人完成；本单签署人合法（AI 不代签），可进入人工确认环节。"
+      },
+      "audit": [
+        {
+          "seq": 9,
+          "at": "2026-10-25T15:23:57.149Z",
+          "action": "order.run",
+          "object": "order:enterprise/company",
+          "result": "ok",
+          "reason": "mode=enterprise; quote=20000; invoice=vat_special; payment=corporate_account"
+        },
+        {
+          "seq": 10,
+          "at": "2026-10-25T15:23:57.149Z",
+          "action": "invoice.draft",
+          "object": "invoice:vat_special",
+          "result": "pending",
+          "reason": "发票抬头/税号/合同一致：已生成开票草稿，等待人工确认提交（不自动提交、不自动开票）。"
+        }
+      ],
+      "invoice": {
+        "ok": true,
+        "invoice_type": "vat_special",
+        "title": "示例科技企业（虚构）",
+        "tax_no": "91330100MA2DEMO01X（虚构税号）",
+        "checks": {
+          "title_matches": true,
+          "tax_no_matches": true,
+          "contract_matches": true
+        },
+        "draft_status": "draft_pending_human",
+        "message": "发票抬头/税号/合同一致：已生成开票草稿，等待人工确认提交（不自动提交、不自动开票）。"
+      }
+    },
+    "block": false,
+    "conflicts": [],
+    "invoice": {
+      "ok": true,
+      "invoice_type": "vat_special",
+      "title": "示例科技企业（虚构）",
+      "tax_no": "91330100MA2DEMO01X（虚构税号）",
+      "checks": {
+        "title_matches": true,
+        "tax_no_matches": true,
+        "contract_matches": true
+      },
+      "draft_status": "draft_pending_human",
+      "message": "发票抬头/税号/合同一致：已生成开票草稿，等待人工确认提交（不自动提交、不自动开票）。"
+    }
+  },
+  "mismatches_blocked": [
+    [
+      {
+        "code": "MODE_CLIENT_TYPE_MISMATCH",
+        "field": "client_type",
+        "message": "personal 模式只允许 individual 客户：当前为 company，主体/客户类型不一致（B8），已阻断。",
+        "severity": "block"
+      },
+      {
+        "code": "MODE_INVOICE_TYPE_MISMATCH",
+        "field": "invoice_type_requested",
+        "message": "personal 模式不允许开具 vat_special：发票类型与模式不一致（B8），已阻断。请切换模式或改用允许的发票类型。",
+        "severity": "block"
+      }
+    ],
+    [
+      {
+        "code": "MODE_PAYMENT_METHOD_MISMATCH",
+        "field": "payment_method",
+        "message": "enterprise 模式必须使用 corporate_account 收款：当前为 personal_account，主体/收款不一致（B8），已阻断。",
+        "severity": "block"
+      }
+    ],
+    [
+      {
+        "code": "AUTHORIZATION_LETTER_NOT_SIGNED",
+        "field": "authorization_letter",
+        "message": "企业模式必须先完成公司授权书人签（当前 none）：AI 不代签，已阻断并转人工签署后再执行。",
+        "severity": "block"
+      }
+    ],
+    [
+      {
+        "code": "INVOICE_TITLE_MISMATCH",
+        "field": "client_invoice_title",
+        "message": "开票抬头不一致（订单「另一家公司（虚构）」≠ 认证主体「示例科技企业（虚构）」）：已阻断（不产生发票），请核对合同/抬头。",
+        "severity": "block"
+      },
+      {
+        "code": "TAX_NO_MISMATCH",
+        "field": "client_tax_no",
+        "message": "开票税号不一致（订单「TAX-WRONG-0000」≠ 认证主体「91330100MA2DEMO01X（虚构税号）」）：已阻断并转人工核对，AI 不猜测/补全税号。",
+        "severity": "block"
+      }
+    ],
+    [
+      {
+        "code": "SIGNATORY_NOT_AUTHORIZED",
+        "field": "signatory",
+        "message": "签署人「路人甲（未授权）」不是授权经办人/法定代表人（允许：示例经办人（虚构）、示例法人（虚构）），已阻断并转人工。",
+        "severity": "block"
+      }
+    ],
+    [
+      {
+        "code": "SEAL_NOT_SIGNED",
+        "field": "seal",
+        "message": "本单需要签署/用印，但用印尚未由自然人完成：AI 不代签，已阻断并转人工签署后再执行。",
+        "severity": "block"
+      }
+    ]
+  ],
+  "checks": {
+    "subject_consistent": true,
+    "invoice_consistent": true,
+    "payment_consistent": true,
+    "all_mismatches_blocked": true
+  },
+  "ok": true,
+  "mismatch_scenarios": [
+    {
+      "id": "mismatch-1-personal-company-special-invoice",
+      "label": "个人模式 + 企业客户 + 专票（① 模式/发票类型不一致）",
+      "blocked": true,
+      "conflicts": [
+        {
+          "code": "MODE_CLIENT_TYPE_MISMATCH",
+          "field": "client_type",
+          "message": "personal 模式只允许 individual 客户：当前为 company，主体/客户类型不一致（B8），已阻断。",
+          "severity": "block"
+        },
+        {
+          "code": "MODE_INVOICE_TYPE_MISMATCH",
+          "field": "invoice_type_requested",
+          "message": "personal 模式不允许开具 vat_special：发票类型与模式不一致（B8），已阻断。请切换模式或改用允许的发票类型。",
+          "severity": "block"
+        }
+      ],
+      "invoice_produced": false,
+      "payment_captured": false
+    },
+    {
+      "id": "mismatch-2-enterprise-personal-account",
+      "label": "企业模式 + 个人账户收款（② 主体/收款不一致）",
+      "blocked": true,
+      "conflicts": [
+        {
+          "code": "MODE_PAYMENT_METHOD_MISMATCH",
+          "field": "payment_method",
+          "message": "enterprise 模式必须使用 corporate_account 收款：当前为 personal_account，主体/收款不一致（B8），已阻断。",
+          "severity": "block"
+        }
+      ],
+      "invoice_produced": false,
+      "payment_captured": false
+    },
+    {
+      "id": "mismatch-3-authorization-unsigned",
+      "label": "企业模式 + 公司授权书未人签（③ 认证不一致，AI 不代签）",
+      "blocked": true,
+      "conflicts": [
+        {
+          "code": "AUTHORIZATION_LETTER_NOT_SIGNED",
+          "field": "authorization_letter",
+          "message": "企业模式必须先完成公司授权书人签（当前 none）：AI 不代签，已阻断并转人工签署后再执行。",
+          "severity": "block"
+        }
+      ],
+      "invoice_produced": false,
+      "payment_captured": false
+    },
+    {
+      "id": "mismatch-4-invoice-identity",
+      "label": "企业模式 + 抬头/税号与主体不一致（④ 开票校验不一致）",
+      "blocked": true,
+      "conflicts": [
+        {
+          "code": "INVOICE_TITLE_MISMATCH",
+          "field": "client_invoice_title",
+          "message": "开票抬头不一致（订单「另一家公司（虚构）」≠ 认证主体「示例科技企业（虚构）」）：已阻断（不产生发票），请核对合同/抬头。",
+          "severity": "block"
+        },
+        {
+          "code": "TAX_NO_MISMATCH",
+          "field": "client_tax_no",
+          "message": "开票税号不一致（订单「TAX-WRONG-0000」≠ 认证主体「91330100MA2DEMO01X（虚构税号）」）：已阻断并转人工核对，AI 不猜测/补全税号。",
+          "severity": "block"
+        }
+      ],
+      "invoice_produced": false,
+      "payment_captured": false
+    },
+    {
+      "id": "mismatch-5-signatory",
+      "label": "企业模式 + 签署人非授权经办人（⑤ 签署主体不一致）",
+      "blocked": true,
+      "conflicts": [
+        {
+          "code": "SIGNATORY_NOT_AUTHORIZED",
+          "field": "signatory",
+          "message": "签署人「路人甲（未授权）」不是授权经办人/法定代表人（允许：示例经办人（虚构）、示例法人（虚构）），已阻断并转人工。",
+          "severity": "block"
+        }
+      ],
+      "invoice_produced": false,
+      "payment_captured": false
+    },
+    {
+      "id": "mismatch-6-seal-unsigned",
+      "label": "企业模式 + 需用印但未人签（⑥ 用印不一致，AI 不代签）",
+      "blocked": true,
+      "conflicts": [
+        {
+          "code": "SEAL_NOT_SIGNED",
+          "field": "seal",
+          "message": "本单需要签署/用印，但用印尚未由自然人完成：AI 不代签，已阻断并转人工签署后再执行。",
+          "severity": "block"
+        }
+      ],
+      "invoice_produced": false,
+      "payment_captured": false
+    }
+  ]
+}

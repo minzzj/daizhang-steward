@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "invoice_type": "vat_special",
+  "title": "示例科技企业（虚构）",
+  "tax_no": "91330100MA2DEMO01X（虚构税号）",
+  "checks": {
+    "title_matches": true,
+    "tax_no_matches": true,
+    "contract_matches": true
+  },
+  "draft_status": "draft_pending_human",
+  "message": "发票抬头/税号/合同一致：已生成开票草稿，等待人工确认提交（不自动提交、不自动开票）。"
+}

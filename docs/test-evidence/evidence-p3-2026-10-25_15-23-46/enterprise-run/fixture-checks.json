@@ -1,0 +1,103 @@
+{
+  "total": 8,
+  "all_ok": true,
+  "rows": [
+    {
+      "case_id": "order-normal-personal",
+      "expected_blocked": false,
+      "blocked": false,
+      "ok": true,
+      "conflicts": []
+    },
+    {
+      "case_id": "order-normal-enterprise",
+      "expected_blocked": false,
+      "blocked": false,
+      "ok": true,
+      "conflicts": []
+    },
+    {
+      "case_id": "order-mismatch-01-personal-company-vat",
+      "expected_blocked": true,
+      "blocked": true,
+      "ok": true,
+      "conflicts": [
+        {
+          "code": "MODE_CLIENT_TYPE_MISMATCH",
+          "field": "client_type",
+          "message": "personal 模式只允许 individual 客户：当前为 company，主体/客户类型不一致（B8），已阻断。"
+        },
+        {
+          "code": "MODE_INVOICE_TYPE_MISMATCH",
+          "field": "invoice_type_requested",
+          "message": "personal 模式不允许开具 vat_special：发票类型与模式不一致（B8），已阻断。请切换模式或改用允许的发票类型。"
+        }
+      ]
+    },
+    {
+      "case_id": "order-mismatch-02-enterprise-personal-payment",
+      "expected_blocked": true,
+      "blocked": true,
+      "ok": true,
+      "conflicts": [
+        {
+          "code": "MODE_PAYMENT_METHOD_MISMATCH",
+          "field": "payment_method",
+          "message": "enterprise 模式必须使用 corporate_account 收款：当前为 personal_account，主体/收款不一致（B8），已阻断。"
+        }
+      ]
+    },
+    {
+      "case_id": "order-mismatch-03-auth-pending",
+      "expected_blocked": true,
+      "blocked": true,
+      "ok": true,
+      "conflicts": [
+        {
+          "code": "AUTHORIZATION_LETTER_NOT_SIGNED",
+          "field": "authorization_letter",
+          "message": "企业模式必须先完成公司授权书人签（当前 pending_human）：AI 不代签，已阻断并转人工签署后再执行。"
+        }
+      ]
+    },
+    {
+      "case_id": "order-mismatch-04-title",
+      "expected_blocked": true,
+      "blocked": true,
+      "ok": true,
+      "conflicts": [
+        {
+          "code": "INVOICE_TITLE_MISMATCH",
+          "field": "client_invoice_title",
+          "message": "开票抬头不一致（订单「示例客户企业（虚构）」≠ 认证主体「示例科技企业（虚构）」）：已阻断（不产生发票），请核对合同/抬头。"
+        }
+      ]
+    },
+    {
+      "case_id": "order-mismatch-05-tax",
+      "expected_blocked": true,
+      "blocked": true,
+      "ok": true,
+      "conflicts": [
+        {
+          "code": "TAX_NO_MISMATCH",
+          "field": "client_tax_no",
+          "message": "开票税号不一致（订单「91330100MA2DEMO999（虚构，错误税号）」≠ 认证主体「91330100MA2DEMO01X（虚构税号）」）：已阻断并转人工核对，AI 不猜测/补全税号。"
+        }
+      ]
+    },
+    {
+      "case_id": "order-mismatch-06-signatory",
+      "expected_blocked": true,
+      "blocked": true,
+      "ok": true,
+      "conflicts": [
+        {
+          "code": "SIGNATORY_NOT_AUTHORIZED",
+          "field": "signatory",
+          "message": "签署人「示例实习生（虚构，未授权）」不是授权经办人/法定代表人（允许：示例经办人（虚构）、示例法人（虚构）），已阻断并转人工。"
+        }
+      ]
+    }
+  ]
+}

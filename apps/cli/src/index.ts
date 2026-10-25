@@ -45,6 +45,7 @@ import {
   cmdTakeover,
   registerPhase2Tools,
 } from "./phase2.js";
+import { cmdEnterpriseDemo } from "./enterprise-cli.js";
 import { cmdFaultDrill } from "./fault-cli.js";
 
 const VERSION = "0.6.0";
@@ -97,6 +98,7 @@ function printHelp(): void {
   steward fault-drill --case net-outage|platform-ban [--outage-minutes 120] [--ban-minutes 15] [--json]
                                               阶段二：真实故障演练（断网 B3 / 平台封禁 B4，真实 localhost HTTP）
   steward console [--port 4180]              阶段二：本地 Web 控制台（只监听 127.0.0.1）
+  steward enterprise-demo [--json]           阶段三：企业版（主体/授权/用印/对公/专票/双人复核/30 条边界/B8 双模式）
   steward approve [--id <cardId> --decision approve|reject] [--json]  审批队列（超时挂起，不自动放行）
   steward takeover [--resume] [--json]       接管键：停止新动作并生成 6 类接管包
   steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
@@ -849,6 +851,9 @@ async function main(): Promise<number> {
       return cmdConsole(parsed);
     case "fault-drill":
       return cmdFaultDrill(parsed);
+    case "enterprise-demo":
+    case "demo-enterprise":
+      return cmdEnterpriseDemo(parsed);
     case "version":
       console.log(`steward ${VERSION} (node ${process.version})`);
       return 0;

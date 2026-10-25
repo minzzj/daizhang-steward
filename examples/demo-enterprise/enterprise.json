@@ -1,0 +1,209 @@
+{
+  "schema_version": "demo-enterprise/1",
+  "fixture_id": "fixture-demo-enterprise-v1",
+  "mode": "enterprise",
+  "currency": "CNY",
+  "generated_at": "2026-10-25T23:00:00+08:00",
+  "notice": "本文件为纯虚构演示数据（示例科技企业 / 示例法人 / 示例经办人 / 示例银行），仅用于本地仿真与 P3 企业版验收；不含任何真实企业、真实执照、真实税号、真实银行账号或真实个人信息。所有编号均带「虚构」标注，联系方式仅使用保留域名 example.com。",
+  "entity": {
+    "entity_id": "ent-demo-001",
+    "kind": "company",
+    "name": "示例科技企业（虚构）",
+    "license_no": "91330100MA2DEMO01X（虚构统一社会信用代码）",
+    "legal_representative": "示例法人（虚构）",
+    "agent_name": "示例经办人（虚构）",
+    "authorization_letter": {
+      "letter_id": "auth-letter-demo-001",
+      "status": "signed",
+      "signed_by": "示例法人（虚构，人签）",
+      "signed_at": "2026-10-20T10:00:00+08:00",
+      "path": "evidence/authorization-letter.md",
+      "evidence_status": "fixture_placeholder",
+      "scope": ["报价与合同草拟", "收款确认", "开票申请草稿", "客户沟通"],
+      "note": "授权书由法人本人签署；AI 只生成待签文件并定位签署页，不代签",
+      "confidence": "certain"
+    },
+    "seal": {
+      "seal_id": "seal-demo-001",
+      "status": "signed",
+      "signed_by": "示例法人（虚构，人签）",
+      "sealed_at": "2026-10-20T10:10:00+08:00",
+      "path": "evidence/seal-record.md",
+      "evidence_status": "fixture_placeholder",
+      "note": "AI 只生成待用印文件并定位盖章页，不代盖",
+      "confidence": "certain"
+    },
+    "bank_account": {
+      "account_name": "示例科技企业（虚构）",
+      "account_no_masked": "**** **** **** 8888",
+      "bank_name": "示例银行（虚构）",
+      "type": "corporate",
+      "currency": "CNY",
+      "note": "对公账户；真实账号不落盘，仅以掩码展示（虚构）",
+      "confidence": "certain"
+    },
+    "tax_no": "91330100MA2DEMO01X（虚构税号）",
+    "scope": {
+      "business_scope": ["软件开发", "数据处理", "技术服务"],
+      "excluded": ["需行政许可或行业资质的业务", "用工/派遣类业务", "线下施工与上门作业"],
+      "note": "经营范围以营业执照登记为准（本 fixture 为虚构）；超出经营范围或需资质业务一律转人工/拒绝"
+    },
+    "registered_address": "示例省示例市示例路 100 号（虚构）",
+    "established_at": "2020-01-01（虚构注册日期）",
+    "contact_email": "finance@example.com",
+    "confidence": "certain"
+  },
+  "invoice_defaults": {
+    "type": "vat_special",
+    "type_label": "增值税专用发票",
+    "title": "示例科技企业（虚构）",
+    "tax_no": "91330100MA2DEMO01X（虚构税号）",
+    "issuer_subject": "示例科技企业（虚构）",
+    "default_status": "draft_only",
+    "note": "企业版默认专票；AI 只生成开票草稿，申报与提交必须由授权人确认（AI 不代申报）",
+    "confidence": "certain"
+  },
+  "review_policy": {
+    "dual_review_threshold_cny": 5000,
+    "dual_review_roles": ["finance", "legal"],
+    "dual_review_scope": [
+      "单笔金额 ≥ 5000 元",
+      "收款账户变更",
+      "发票抬头或税号变更",
+      "对外合同与承诺"
+    ],
+    "approval_chain": [
+      {
+        "tier_id": "tier-1-small",
+        "label": "小额（≤ 4999 元）",
+        "min_cny": 0,
+        "max_cny": 4999,
+        "approvers": ["示例经办人（虚构）"],
+        "requires_dual_review": false,
+        "sla_hours": 4
+      },
+      {
+        "tier_id": "tier-2-medium",
+        "label": "中额（5000–50000 元）",
+        "min_cny": 5000,
+        "max_cny": 50000,
+        "approvers": ["示例财务负责人（虚构）", "示例法务负责人（虚构）"],
+        "requires_dual_review": true,
+        "sla_hours": 8
+      },
+      {
+        "tier_id": "tier-3-large",
+        "label": "大额（> 50000 元）",
+        "min_cny": 50001,
+        "max_cny": null,
+        "approvers": ["示例法人（虚构）", "示例财务负责人（虚构）", "示例法务负责人（虚构）"],
+        "requires_dual_review": true,
+        "sla_hours": 24
+      }
+    ],
+    "note": "AI 只发起审批，不代批；审批超时挂起，不自动放行；双人复核 = finance + legal 两位人工确认",
+    "confidence": "certain"
+  },
+  "seats": [
+    {
+      "seat_id": "seat-org-admin",
+      "name": "组织管理员",
+      "holder": "示例管理员（虚构）",
+      "permissions": ["成员管理", "审批链配置", "席位分配"],
+      "mfa_required": true,
+      "can_sign": false
+    },
+    {
+      "seat_id": "seat-finance",
+      "name": "财务复核",
+      "holder": "示例财务负责人（虚构）",
+      "permissions": ["账本", "收款确认", "开票草稿", "发票核对"],
+      "mfa_required": true,
+      "can_sign": false
+    },
+    {
+      "seat_id": "seat-legal",
+      "name": "法务复核",
+      "holder": "示例法务负责人（虚构）",
+      "permissions": ["授权书审核", "用印审核", "合同审阅"],
+      "mfa_required": true,
+      "can_sign": false
+    },
+    {
+      "seat_id": "seat-ai-agent",
+      "name": "AI 代理席位",
+      "holder": "代掌 Steward（仿真企业版）",
+      "permissions": ["草稿生成", "只读查询", "待办提醒"],
+      "mfa_required": false,
+      "can_sign": false,
+      "note": "AI 无签署、付款、申报、变更账户权限"
+    }
+  ],
+  "multi_agent_serial": {
+    "enabled": true,
+    "max_concurrent_agents": 1,
+    "serial_queue": true,
+    "credential_isolation": "每个代理独立凭据引用，禁止跨代理读取明文；凭据只从环境变量/密钥存储读取",
+    "action_log": "多账号/多代理操作按顺序写 events.jsonl，不并发执行",
+    "note": "企业版多代理、多账号串行执行；同一时间只允许一个代理操作企业账号",
+    "confidence": "certain"
+  },
+  "mode_rules": {
+    "modes": ["personal", "enterprise"],
+    "personal": {
+      "allowed_client_types": ["individual"],
+      "allowed_payment_methods": ["personal_account"],
+      "allowed_invoice_types": ["none", "vat_general"]
+    },
+    "enterprise": {
+      "allowed_client_types": ["company"],
+      "allowed_payment_methods": ["corporate_account"],
+      "allowed_invoice_types": ["vat_special", "vat_general"]
+    },
+    "enterprise_requirements": [
+      "authorization_letter.status == signed（法人本人签署）",
+      "seal.status == signed（用印人签）",
+      "发票抬头与税号必须与认证主体 entity 一致",
+      "签署人必须是 entity.agent_name（经办人）或 legal_representative（法人）"
+    ],
+    "blocking": "任一不一致：expected_blocked=true，并返回 conflict_codes 中的 expected_conflict_code；AI 只解释与留痕，不绕过",
+    "confidence": "certain"
+  },
+  "conflict_codes": {
+    "MODE_CLIENT_TYPE_MISMATCH": {
+      "label": "模式与客户主体类型不一致",
+      "trigger": "personal 模式接 company 客户（或 enterprise 模式接 individual 客户）",
+      "severity": "critical"
+    },
+    "MODE_PAYMENT_METHOD_MISMATCH": {
+      "label": "模式与收款方式不一致",
+      "trigger": "enterprise 模式必须使用 corporate_account；personal 模式必须使用 personal_account",
+      "severity": "critical"
+    },
+    "MODE_INVOICE_TYPE_MISMATCH": {
+      "label": "模式与发票类型不一致",
+      "trigger": "personal 模式不能开增值税专用发票（仅 none / vat_general）",
+      "severity": "critical"
+    },
+    "AUTHORIZATION_LETTER_NOT_SIGNED": {
+      "label": "企业授权书未完成人签",
+      "trigger": "enterprise 模式的 authorization_letter.status 不是 signed（如 pending_human）",
+      "severity": "critical"
+    },
+    "INVOICE_TITLE_MISMATCH": {
+      "label": "发票抬头与认证主体不一致",
+      "trigger": "client_invoice_title 与 entity.name（或 invoice_defaults.title）不一致",
+      "severity": "critical"
+    },
+    "TAX_NO_MISMATCH": {
+      "label": "税号与认证主体不一致",
+      "trigger": "client_tax_no 与 entity.tax_no（或 invoice_defaults.tax_no）不一致",
+      "severity": "critical"
+    },
+    "SIGNATORY_NOT_AUTHORIZED": {
+      "label": "签署人非授权经办人",
+      "trigger": "signatory 既不是 entity.agent_name 也不是 entity.legal_representative",
+      "severity": "critical"
+    }
+  }
+}

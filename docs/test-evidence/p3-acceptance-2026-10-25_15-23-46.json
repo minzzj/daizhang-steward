@@ -1,0 +1,90 @@
+{
+  "stamp": "2026-10-25_15-23-46",
+  "ok": true,
+  "checks": {
+    "build": true,
+    "unitTests": true,
+    "b8DualMode": true,
+    "b8MismatchesBlocked": true,
+    "boundaryTable30": true,
+    "fourKeyRulesDenied": true,
+    "dualReviewTwoPeople": true,
+    "sealNoAiSign": true,
+    "invoiceDraftPendingHuman": true,
+    "orgApprovalChain": true,
+    "boundaryDenyOrHuman": true,
+    "fixturesCrossCheck": true
+  },
+  "phase": "P3 enterprise edition",
+  "testSummary": {
+    "tests": 151,
+    "pass": 151,
+    "fail": 0
+  },
+  "b8": {
+    "personal_ok": true,
+    "enterprise_ok": true,
+    "mismatches_blocked": 6,
+    "checks": {
+      "subject_consistent": true,
+      "invoice_consistent": true,
+      "payment_consistent": true,
+      "all_mismatches_blocked": true
+    }
+  },
+  "boundaries": {
+    "rows": 30,
+    "four_key": 4
+  },
+  "dual_review": true,
+  "seal": "signed",
+  "invoice": "draft_pending_human",
+  "org_approval_chains": [
+    1,
+    2,
+    3
+  ],
+  "fixtures": {
+    "total": 8,
+    "all_ok": true
+  },
+  "runs": {
+    "enterprise": "run-20261025-232357-2ce6f6"
+  },
+  "evidence": {
+    "enterpriseRun": [
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/prompt.md",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/meta.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/console.log",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/events.jsonl",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/profile.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/entity-validation.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/seal-flow.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/org-approval.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/dual-review.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/invoice-validation.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/dual-mode-orders.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/boundary-table.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/boundary-table.md",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/boundary-checks.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/fixture-checks.json",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/report.md",
+      "docs/test-evidence/evidence-p3-2026-10-25_15-23-46/enterprise-run/checkpoint.json"
+    ],
+    "unitTestsLog": "unit-tests.log"
+  },
+  "steps": {
+    "build": {
+      "exitCode": 0,
+      "durationMs": 1905
+    },
+    "unitTests": {
+      "exitCode": 0,
+      "durationMs": 8267
+    },
+    "enterprise": {
+      "exitCode": 0,
+      "durationMs": 171
+    }
+  }
+}

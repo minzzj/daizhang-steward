@@ -63,6 +63,9 @@ jobs:
       - name: Fault drill — real localhost platform ban (B4, 0.2 min short run)
         run: node dist/apps/cli/src/index.js fault-drill --case platform-ban --ban-minutes 0.2 --json
 
+      - name: Phase-3 enterprise demo (B8 dual-mode consistency, 30 boundaries — no network)
+        run: node dist/apps/cli/src/index.js enterprise-demo --json
+
       - name: Console E2E (headless real browser; local 127.0.0.1 console)
         run: node tests/e2e-console/run.mjs --headless 1 --evidence-dir runs/ci-console-e2e
 
