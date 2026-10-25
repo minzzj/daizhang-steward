@@ -30,6 +30,18 @@
 - 为什么不在 H: 开发：H: 为 exFAT，不支持符号链接（pnpm workspace/AI 原子写会失败），
   且 HyperFrames 在 H: 渲染报 EISDIR（既有项目踩坑记录）。
 
+## 本机踩坑（2026-10-25 实测）
+
+1. **无 `pwsh`**：只有 Windows PowerShell 5.1。脚本一律用
+   `powershell -NoProfile -ExecutionPolicy Bypass -File <script>` 调用。
+2. **PS 5.1 读无 BOM 的 UTF-8 会按 ANSI 解码**：含中文路径的 `.ps1` 必须存为
+   **UTF-8 with BOM**（`scripts/sync-delivery.ps1` 已加 BOM，并在文件头注明）。
+3. **H: 为 exFAT**：不支持符号链接、硬链接（AI 文件工具的原子写会失败）；
+   给 H: 写文件用 PowerShell `[System.IO.File]::WriteAllText` 或先写 C: 再复制。
+4. `pnpm check` 在 PowerShell 中会把脚本横幅写到 stderr（`2>&1` 时显示成报错），
+   直接看退出码或用 `node scripts/check-scaffold.mjs` 更清晰。
+5. Playwright 直接用本机 Chrome/Edge 频道即可，无需下载 Chromium；桌面测试目标窗口用专用标题避免焦点误判。
+
 ## 下一步（用户批准后按序执行）
 
 1. **M0**：`steward-core` 最小内核 + CLI + MockHarness + demo fixtures + prompts v1 + 证据目录。

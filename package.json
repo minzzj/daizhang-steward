@@ -16,6 +16,6 @@
     "demo": "node scripts/task.mjs demo",
     "test": "node scripts/task.mjs test",
     "lint": "node scripts/task.mjs lint",
-    "sync:delivery": "pwsh -NoProfile -File scripts/sync-delivery.ps1"
+    "sync:delivery": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-delivery.ps1"
   }
 }

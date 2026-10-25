@@ -23,4 +23,4 @@ lint:
 	pnpm lint
 
 sync:
-	pwsh -NoProfile -File scripts/sync-delivery.ps1
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-delivery.ps1

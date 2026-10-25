@@ -1,5 +1,7 @@
-# 交付快照同步 / Delivery snapshot sync
-# Usage: pwsh -NoProfile -File scripts/sync-delivery.ps1 [-WhatIf]
+﻿# 交付快照同步 / Delivery snapshot sync
+# Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-delivery.ps1 [-WhatIf]
+# NOTE: This file MUST be saved as UTF-8 **with BOM** — Windows PowerShell 5.1 reads
+#       BOM-less files as ANSI and would corrupt the Chinese target path.
 # Copies SOURCE files (no .git / node_modules / runtime artifacts) from the
 # authoritative NTFS build directory to the H: delivery folder.
 # H: is exFAT: don't develop there (no symlinks, atomic-write issues), only keep copies.
