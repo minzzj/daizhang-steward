@@ -59,7 +59,9 @@ async function readJsonBody(req) {
   }
   if (chunks.length === 0) return { ok: true, value: {} };
   try {
-    const value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    // 容错：去掉个别命令行工具写入的 UTF-8 BOM（浏览器正常请求不含 BOM）
+    const text = Buffer.concat(chunks).toString("utf8").replace(/^\uFEFF/, "");
+    const value = JSON.parse(text);
     if (value === null || typeof value !== "object" || Array.isArray(value)) {
       return { ok: false, error: "请求体必须是 JSON 对象" };
     }

@@ -1,5 +1,5 @@
 /**
- * Core contracts (see docs/*/contracts.md).
+ * Core contracts (see docs/en/contracts.md and docs/zh-CN/contracts.md).
  * Fields may only be added, never removed.
  */
 

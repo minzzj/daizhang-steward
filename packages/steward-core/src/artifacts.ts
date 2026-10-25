@@ -1,4 +1,5 @@
 import { appendFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { newRunId } from "./ids.js";
 import type { RunArtifacts, RunMeta } from "./types.js";
@@ -61,7 +62,7 @@ export class ArtifactBus {
 
   async listRuns(): Promise<Array<{ runId: string; dir: string; meta?: RunMeta }>> {
     const out: Array<{ runId: string; dir: string; meta?: RunMeta }> = [];
-    let entries: Awaited<ReturnType<typeof readdir>>;
+    let entries: Dirent[];
     try {
       entries = await readdir(this.runsRoot, { withFileTypes: true });
     } catch {

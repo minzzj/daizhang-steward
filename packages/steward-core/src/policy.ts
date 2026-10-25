@@ -1,6 +1,6 @@
 import type { PolicyDecision, RiskLevel } from "./types.js";
 
-/** High-risk actions denied by default (see docs/*/threat-model.md). */
+/** High-risk actions denied by default (see docs/en/threat-model.md). */
 export const DEFAULT_DENY_ACTIONS = [
   "payment",
   "refund",

@@ -132,7 +132,7 @@ class StewardDemoApp:
         self.clear_button = tk.Button(buttons, text="清空", width=10, font=button_font, command=self.on_clear, takefocus=True)
         self.clear_button.pack(side="left")
 
-        status = tk.Frame(root, padx=16, pady=(4, 14))
+        status = tk.Frame(root, padx=16, pady=12)
         status.grid(row=3, column=0, sticky="ew")
         self.status_label = tk.Label(
             status,

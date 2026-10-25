@@ -25,7 +25,7 @@ export interface LoadedPrompt {
 
 /**
  * Loads versioned runtime prompts from prompts/ and validates their integrity.
- * Long prompts are never hard-coded in business code (see docs/*/runtime-prompts.md).
+ * Long prompts are never hard-coded in business code (see docs/en/runtime-prompts.md).
  */
 export class PromptManager {
   private readonly cache = new Map<string, LoadedPrompt>();

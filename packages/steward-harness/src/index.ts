@@ -1,6 +1,6 @@
 import { digest, type CodeResult, type CodeTask } from "@daizhang/steward-core";
 
-/** Isolates "where code comes from" (see docs/*/adapters.md). */
+/** Isolates "where code comes from" (see docs/en/adapters.md). */
 export interface HarnessAdapter {
   readonly name: string;
   runTask(task: CodeTask, options?: { workdir?: string; simulateFailure?: boolean }): Promise<CodeResult>;
