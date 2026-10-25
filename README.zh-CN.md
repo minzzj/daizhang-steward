@@ -5,11 +5,11 @@ Source-available · non-commercial · real browser & real desktop operations · 
 
 > 状态：**M1 已完成** — 真实浏览器编码回路已验证（2026-10-25）：本机有头 Chrome 跑通 demo-web 流程（A2）；
 > CodeTask → 补丁 → 隔离 worktree → 真实浏览器把 login-timeout 由红转绿（A4）；坏补丁两轮失败后升级人类（A5）。
-> **34/34** 单元+集成测试通过，CLI 现为 **9 个命令 + 2 个占位**；验收 **A1/A2/A4/A5/A6 与 A12 通过**
+> **35/35** 单元+集成测试通过，CLI 现为 **9 个命令 + 2 个占位**；验收 **A1/A2/A4/A5/A6 与 A12 通过**
 > （见 [ROADMAP.md](ROADMAP.md) 与 [`docs/zh-CN/delivery-checklist.md`](docs/zh-CN/delivery-checklist.md) 中的证据）。
 > Status: **M1 complete** — real-browser code loop verified (2026-10-25): headed Chrome runs the demo-web
 > flow (A2), repairs the seeded login-timeout defect via CodeTask → patch → isolated worktree → real
-> browser red→green (A4), and escalates after two failed rounds (A5); 34/34 unit + integration tests
+> browser red→green (A4), and escalates after two failed rounds (A5); 35/35 unit + integration tests
 > pass; the CLI ships 9 commands + 2 placeholders; acceptance A1/A2/A4/A5/A6 and A12 pass.
 
 ---
@@ -75,7 +75,7 @@ packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts
 apps/       CLI entry (steward: demo/browser-flow/code-loop/run/branch/report/stop/version/help)
 prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
 examples/   demo-web, demo-desktop, mock-harness（脚本化补丁）, scout-fixtures, demo-business
-tests/      unit tests（M1 共 34 条）+ e2e-browser 真实浏览器 E2E；contract / desktop / fault 后续里程碑
+tests/      unit tests（M1 共 35 条）+ e2e-browser 真实浏览器 E2E；contract / desktop / fault 后续里程碑
 docs/       双语文档（en/ 与 zh-CN/）+ 测试证据
 scripts/    校验/构建辅助、密钥扫描、证据包 / 验收脚本、交付同步
 runs/       每次运行的产物（gitignored；证据在此）
@@ -94,7 +94,7 @@ npm install
 npm run check          # 校验仓库配置 / repo-config check
 npm run check:secrets  # 密钥扫描 / secret scan
 npm run build          # tsc -p tsconfig.json → dist/
-npm test               # 34/34 单元+集成测试 / unit + integration tests
+npm test               # 35/35 单元+集成测试 / unit + integration tests
 npm run demo           # M0 空回路 → runs/<run-id>/ + report.md（MockHarness）
 npm run test:prompts   # 提示词版本/安全测试（验收 A12）
 npm run evidence       # 离线证据包 → docs/test-evidence/test-result-<stamp>.{md,json}

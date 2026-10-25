@@ -18,7 +18,7 @@
 | A8 | 停止键 5 秒；重启恢复不重复 | `npm run test:stop`（M2 实现） | 停止事件 + 恢复日志 | 未实现（M2；M0 有 StopSignal 最小实现） |
 | A9 | 分支隔离（凭据/浏览器配置） | `npm run test:isolation`（M2 实现） | 隔离用例 + events | 未实现（M2） |
 | A10 | 新增只读 dummy 分支只靠配置 | `npm run demo:dummy-branch`（M4 实现） | 配置 + 报告 | 未实现（M4） |
-| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` | CI 日志 | 未实现（M4 全量验收；M1 已满足 lint / build / 34 测试 + CI headless E2E） |
+| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` | CI 日志 | 未实现（M4 全量验收；M1 已满足 lint / build / 35 测试 + CI headless E2E） |
 | A12 | 提示词版本化、有测试、可替换 | `npm run test:prompts` | `prompts/manifest.json`（4 角色 + sha256）+ `tests/unit/prompts.test.mjs`（5 项断言） | ✅ 通过（2026-10-25） |
 
 > **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过。`npm run check`、`npm run check:secrets`、
@@ -27,7 +27,7 @@
 >
 > **M1 验收结论（2026-10-25）**：A2 / A4 / A5 / A6 通过（本机有头真实 Chrome，`npm run acceptance` OK）。
 > A2：7 步 / 7 张真实截图；A4：第 1 轮由红转绿；A5：两轮失败后停止升级（exit 1，不无限重试）。
-> 测试 **34/34**；`npm run lint`、`npm run check`、`npm run check:secrets` 通过。证据：
+> 测试 **35/35**；`npm run lint`、`npm run check`、`npm run check:secrets` 通过。证据：
 > `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
 > `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组）。
 

@@ -37,7 +37,7 @@
 - **`npm run acceptance`**：一键本机有头验收（build + A2 + A4 + A5），生成
   `docs/test-evidence/m1-acceptance-<stamp>.{md,json}` 并把截图/日志/结果复制到
   `docs/test-evidence/evidence-m1-<stamp>/`（本次 45 文件：A2/A4/A5 三组）。
-- **测试**：30 → **34/34** 通过（新增 `tests/unit/code-loop.test.mjs` 4 条）。
+- **测试**：30 → **35/35** 通过（新增 `tests/unit/code-loop.test.mjs` 5 条，含 Windows CRLF 补丁归一化回归）。
 - **CI**：新增无头真实浏览器 E2E（`login-flow.mjs --case normal --headless 1`）；有头验收仅本机。
 
 ### Changed
@@ -46,6 +46,14 @@
 - 验收：A2 / A4 / A5 / A6 通过；证据 `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}`
   + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`；runs `run-20261025-175213-9ea8ab`（A2）、
   `run-20261025-175216-fe8759`（A4）、`run-20261025-175223-de0b95`（A5）。
+
+### Fixed
+- **Windows CI**（提交 `b4ed316`）：Windows runner 曾把 `*.patch` 转成 CRLF 导致 `git apply` 失败；
+  `.gitattributes` 改为全仓 `eol=lf`（`*.patch` / `*.diff` 显式 `eol=lf`），`patch.ts` 归一化 CRLF，
+  并新增 CRLF 回归测试（测试数 34 → 35）。
+- **证据脱敏**：新增 `scripts/sanitize.mjs` / `scripts/sanitize-evidence.mjs`，M1 acceptance bundle
+  已脱敏（无本机绝对路径）；当前证据 `m1-acceptance-2026-10-25_09-52-12.{md,json}` +
+  `evidence-m1-2026-10-25_09-52-12/`（45 文件）。
 
 ## [0.1.0] — 2026-10-25
 

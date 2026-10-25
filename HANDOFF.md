@@ -6,8 +6,8 @@
 ## 当前状态（一句话）
 
 M1 真实浏览器回路已完成并验收：本机有头真实 Chrome 跑通 A2 浏览器流程、A4 CodeTask→补丁→隔离
-worktree→真实浏览器红转绿、A5 两轮失败升级；34/34 测试通过，CLI 9 命令 + 2 占位。
-A1/A2/A4/A5/A6/A12 验收通过。代码在本地分支 `wip/m0-core`，**尚未推送**（避免公开半成品）。
+worktree→真实浏览器红转绿、A5 两轮失败升级；35/35 测试通过，CLI 9 命令 + 2 占位。
+A1/A2/A4/A5/A6/A12 验收通过。代码已在 GitHub `main` 分支（最新提交 `b4ed316`）。
 
 ## M0 已完成清单（2026-10-25）
 
@@ -19,7 +19,7 @@ A1/A2/A4/A5/A6/A12 验收通过。代码在本地分支 `wip/m0-core`，**尚未
       `npm run demo`、`npm run evidence` 全部通过
 - [x] 单包构建（`tsc -p tsconfig.json` → `dist/`）+ 全部命令改用 npm；C: 旧副本转为归档
 - [x] 验收 A1 / A6 / A12 通过（见 [ROADMAP.md](ROADMAP.md) 与 `docs/*/delivery-checklist.md`）
-- 代码状态：本地分支 `wip/m0-core`（**未推送**，M4 统一发布）
+- 代码状态：已在 GitHub `main` 分支（后续提交见仓库历史；M4 统一发版）
 
 ## M1 已完成清单（2026-10-25）
 
@@ -35,7 +35,10 @@ A1/A2/A4/A5/A6/A12 验收通过。代码在本地分支 `wip/m0-core`，**尚未
 - [x] `npm run acceptance` 一键本机有头验收；证据
       `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
       `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2/A4/A5 三组）
-- [x] 测试 30 → **34/34**（新增 `tests/unit/code-loop.test.mjs` 4 条）
+- [x] 测试 30 → **35/35**（新增 `tests/unit/code-loop.test.mjs` 5 条，含 Windows CRLF 补丁归一化回归）
+- [x] **Windows CI 修复**（提交 `b4ed316`）：`.gitattributes` 全仓 `eol=lf`（`*.patch` / `*.diff` 也强制 LF）
+      + `patch.ts` 归一化 CRLF，修复 Windows runner 把补丁转 CRLF 导致 `git apply` 失败；新增 CRLF 回归测试
+- [x] **GitHub Actions CI #5（提交 `b4ed316`）Windows + Ubuntu 全绿**（build / 35 测试 / demo 证据 / 无头真实浏览器 E2E）
 - [x] CI 增加无头真实浏览器 E2E（`login-flow.mjs --case normal --headless 1`）
 - [x] 验收 **A2 / A4 / A5 / A6 通过**（runs `run-20261025-175213-9ea8ab` /
       `run-20261025-175216-fe8759` / `run-20261025-175223-de0b95`）
@@ -47,7 +50,7 @@ A1/A2/A4/A5/A6/A12 验收通过。代码在本地分支 `wip/m0-core`，**尚未
 | 安装依赖 | `npm install` | Node.js ≥ 22.18；用 npm（不是 pnpm） |
 | 构建 | `npm run build` | `tsc -p tsconfig.json` → `dist/`（单包布局） |
 | 类型检查 / lint | `npm run lint` | `tsc --noEmit` |
-| 单元+集成测试 | `npm test` | 先 build 再 `node --test "tests/unit/*.test.mjs"`；M1 共 **34/34** 通过 |
+| 单元+集成测试 | `npm test` | 先 build 再 `node --test "tests/unit/*.test.mjs"`；M1 共 **35/35** 通过 |
 | 只跑测试（不 build） | `npm run test:unit` | `node --test "tests/unit/*.test.mjs"` |
 | 提示词测试（A12） | `npm run test:prompts` | 4 角色安全条款、禁止项、无密钥/本机路径、sha256 校验 |
 | M0 空回路演示 | `npm run demo` | MockHarness，无付费 API；产物写入 `runs/<run-id>/` |
@@ -72,13 +75,13 @@ CLI 子命令：`demo` / `browser-flow` / `code-loop` / `run` / `branch` / `repo
 - 不能操作真实桌面（Windows UIA/SendInput）——M2 实现；M1 只有真实浏览器。
 - 不能调用真实 DSH / DeepSeek Harness——M1 用的是 MockHarness + 脚本化补丁（真实浏览器验收已跑通）。
 - 没有 `approve` 审批队列与 `takeover` 接管包——当前 CLI 为占位命令。
-- 不能发布 GitHub Release——M4；代码分支尚未推送。
+- 不能发布 GitHub Release——M4；代码已推送 `main`（最新 `b4ed316`）。
 - 不能生成宣传片——Phase 2 后（阶段一可选 3 分钟演示）。
 
 ## 代码在哪
 
 - **权威仓库（唯一开发位置）**：`H:\minzzj文件\技术部\项目\官方\代掌\daizhang-steward`
-  （当前分支 `wip/m0-core`；不要切换分支、不要 git commit，除非用户明确要求）
+  （GitHub `main` 分支，最新提交 `b4ed316`；不要 git commit，除非用户明确要求）
 - **C: 旧副本为归档**：`C:\daizhang-build\daizhang-steward` 只读参考，**不要再在这里改文件**。
 - **方案文档**：`H:\minzzj文件\技术部\项目\官方\代掌\代掌-实施总方案-v0.1.md`
 - 工程已从 pnpm workspace 改为**单包布局**（H: 为 exFAT，不支持符号链接，pnpm workspace 装不起来）：
@@ -90,15 +93,17 @@ CLI 子命令：`demo` / `browser-flow` / `code-loop` / `run` / `branch` / `repo
 - **GitHub 公开仓库**：https://github.com/minzzj/daizhang-steward（2026-10-25 发布验证，见
   [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)；
   当时 CI #1/#2 均 success，许可证识别 `Other/NOASSERTION` 属预期）
-- **代码位置**：本地分支 `wip/m0-core`（**尚未推送**，避免公开半成品；M4 统一发布，当前
+- **代码位置**：GitHub `main` 分支（最新提交 `b4ed316`，已推送；M4 统一发版；当前
   `package.json` 版本 `0.2.0`）。
 - **M0 验证证据**：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md /
   events.jsonl / code-task.json / code-result.json 等）与
-  [`docs/test-evidence/test-result-2026-10-25_09-52-08.md`](docs/test-evidence/test-result-2026-10-25_09-52-08.md)；
-  `npm run check` / `npm run check:secrets` / `npm test` / `npm run demo` / `npm run evidence` 均通过。
+  [`docs/test-evidence/test-result-2026-10-25_09-52-08.md`](docs/test-evidence/test-result-2026-10-25_09-52-08.md)
+  （该文件为 Windows CI 修复前快照，tests 34；**当前测试数为 35**，以 `npm test` 为准）；
+  `npm run check` / `npm run check:secrets` / `npm run demo` / `npm run evidence` 均通过。
 - **M1 验证证据**：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
-  `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组截图与日志）；
-  `npm run acceptance` OK（本机有头真实 Chrome）；`npm test` **34/34**；A2/A4/A5/A6 通过。
+  `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组截图与日志；
+  已用 `scripts/sanitize.mjs` 脱敏，无本机绝对路径）；`npm run acceptance` OK（本机有头真实 Chrome）；
+  `npm test` **35/35**；A2/A4/A5/A6 通过。
 
 ## 本机踩坑（2026-10-25 实测）
 
@@ -116,14 +121,19 @@ CLI 子命令：`demo` / `browser-flow` / `code-loop` / `run` / `branch` / `repo
 7. **M1 真实浏览器验收**：本机有头 Chrome 实测通过；适配器默认有头、`chrome → msedge` 回退；
    托管 CI 无交互桌面，只能跑 `login-flow.mjs --case normal --headless 1`（开发自测），
    产品验收用本机 `npm run acceptance`。
+8. **Windows CI 的 CRLF 风险**：Windows runner 曾把 `*.patch` 转成 CRLF 导致 `git apply` 失败
+   （提交 `b4ed316` 修复：`.gitattributes` 全仓 `eol=lf` + `patch.ts` 归一化 CRLF + CRLF 回归测试）。
+   修改 patch/diff 时注意行尾；`.ps1` 保持 CRLF。
+9. **证据脱敏**：验收证据复制进仓库前用 `scripts/sanitize.mjs` 替换本机路径与临时 worktree 路径
+   （M1 acceptance bundle 已脱敏）；自动生成的证据文件不要手改。
 
 ## 下一步（按序执行）
 
-0. **推送前检查**：M0/M1 已完成并验收；推送/发版留给 M4（当前分支 `wip/m0-core` 不推送）。
+0. **推送状态**：M0/M1 已推送 GitHub `main`（最新提交 `b4ed316`）；GitHub Release 留给 M4。
 1. **M2 桌面与安全（下一步）**：Windows 桌面适配器（demo-desktop，A3）+ PolicyEngine 风险矩阵 +
    停止键 5 秒 + 检查点恢复 + 分支隔离（A8/A9）；保留真实浏览器 E2E 回归。
 2. **M3**：Scout 线索来源/评分/审批队列（A7）。
-3. **M4**：双语文档刷新 + 推送 `wip/m0-core` → main + GitHub Release + CI（A10/A11/A12）。
+3. **M4**：双语文档刷新 + GitHub Release + CI（A10/A11/A12）；`main` 继续按里程碑推送。
 4. 阶段一完成：更新本文件 → 按用户要求继续阶段二（或视额度停会话）。
 
 ## 等待用户确认的事项
@@ -133,8 +143,8 @@ CLI 子命令：`demo` / `browser-flow` / `code-loop` / `run` / `branch` / `repo
 - [x] GitHub 认证（已通过本机凭据完成建仓与推送；令牌未落盘）
 - [x] 仓库名（`minzzj/daizhang-steward` 已创建）
 - [x] 第一阶段发布平台（GitHub public 仓库已发布）
-- [x] M0 验收（2026-10-25：A1/A6/A12 通过；`wip/m0-core` 未推送）
-- [x] M1 验收（2026-10-25：A2/A4/A5/A6 通过；`npm run acceptance` OK，34/34 测试）
+- [x] M0 验收（2026-10-25：A1/A6/A12 通过）
+- [x] M1 验收（2026-10-25：A2/A4/A5/A6 通过；`npm run acceptance` OK，35/35 测试）
 
 ## 已知风险
 

@@ -1,7 +1,7 @@
 # Assumptions & Known Gaps / 假设与未覆盖清单
 
 > 本文件是**诚实边界**清单：实现前先写下“不知道就不猜”的部分。随里程碑更新。
-> 最后更新：2026-10-25（M0 完成）
+> 最后更新：2026-10-25（M1 完成）
 
 ## 一、环境假设
 
@@ -12,6 +12,9 @@
 4. 无 `gh` CLI；GitHub 发布走「真实浏览器 + REST API」，令牌只从环境变量读取。
 5. 视频渲染需要完整 FFmpeg（image2pipe + libx264 + AAC）与 HyperFrames；建议在 NTFS 盘运行
    （H: 为 exFAT，写大文件/原子写受限）。
+6. **CI 行尾**：Windows runner 曾把 `*.patch` 转成 CRLF 导致 `git apply` 失败；已用
+   `.gitattributes` 全仓 `eol=lf`（`*.patch`/`*.diff` 也强制 LF）+ `patch.ts` 归一化 CRLF 修复
+   （提交 `b4ed316`），并加 CRLF 回归测试。
 
 ## 二、产品假设
 
@@ -22,13 +25,19 @@
 5. 30 条法律边界中，“已实现”指程序行为可拦截；“人工/不适用”按文档要求逐条标注。
 6. 通知通道阶段一用桌面通知 + 邮件 + 审批队列；短信/电话待合规评估后再接。
 
-## 三、已知未覆盖（截至 M0）
+## 三、已知未覆盖（截至 M1）
 
 - [x] M0 内核最小闭环：AgentRuntime / BranchSpec / PolicyEngine / ArtifactBus / PromptManager /
   EventLog / BudgetGuard / StopSignal、CLI 7 命令（+2 占位）、MockHarness、prompts v1、
   30 条单元+集成测试、证据脚本（2026-10-25 完成并验证）。
-- [ ] 真实浏览器 E2E、桌面 E2E、故障演练尚未实现（M1–M2）。
-- [x] HarnessAdapter：M0 已实现 MockHarness；DSH headless / DeepSeek API 两种实现待 M1。
+- [x] M1 真实浏览器回路：`steward-browser`（Playwright 有头默认 / `chrome→msedge` 回退 / 每 run 独立
+  userDataDir / 逐步截图、DOM、console / 5 类失败分类 / 风控停交人）、`patch.ts` + `loop.ts`
+  （隔离 git worktree、两轮升级）、`tests/e2e-browser`、CLI `browser-flow`/`code-loop`、
+  **35/35** 测试、A2/A4/A5/A6 通过（2026-10-25）。
+- [x] 真实浏览器 E2E 已实现（M1 完成，A2/A4/A5 通过；`tests/e2e-browser/`）。
+- [ ] 桌面 E2E、故障演练尚未实现（M2）。
+- [x] HarnessAdapter：MockHarness ✅ M0；脚本化真实补丁 + 隔离 worktree + 两轮升级 ✅ M1；
+  DSH headless / DeepSeek API 两种真实实现仍规划（M2+）。
 - [x] 停止键最小实现（StopSignal，每个动作前检查）已在 M0 落地。
 - [ ] 分支隔离、检查点恢复尚未实现（M2）。
 - [ ] Scout 线索来源清单与评分尚未实现（M3）。

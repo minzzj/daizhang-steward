@@ -1,7 +1,8 @@
 # 核心契约 / Contracts（中文）
 
 > 原则：**字段只增不减**。所有时间用 ISO 8601（UTC 偏移），所有路径用仓库相对路径。
-> 机器可读的 JSON Schema 将在 M0 落到 `packages/steward-core/schemas/`，本文件为权威说明。
+> 机器可读的 JSON Schema 计划在后续里程碑落到 `packages/steward-core/schemas/`；M1 以
+> `packages/steward-core/src/types.ts` + 单元测试为准，本文件为权威说明。
 
 ## 1. BranchSpec（分支）
 
@@ -26,12 +27,12 @@
   "task_id": "ct-20261025-001",
   "repo": "github.com/minzzj/daizhang-steward",
   "branch": "fix/login-timeout",
-  "goal": "修复 demo-web 登录页在 3 秒超时后不显示错误提示",
-  "reproduction": ["启动 demo-web", "打开 /login", "输入任意账号", "等待 4 秒"],
-  "expected": "显示“请求超时，请重试”",
+  "goal": "修复 demo-web 登录页在慢网路径下超时后不显示错误提示",
+  "reproduction": ["启动 demo-web（127.0.0.1:4173）", "打开慢网路径 /login?timeout=1", "输入任意账号并点击登录", "等待 4 秒（该路径服务端 4 秒后返回）"],
+  "expected": "显示“请求超时，请重试”，按钮恢复可点击",
   "actual": "按钮一直转圈，无提示",
-  "files": ["examples/demo-web/src/login.ts"],
-  "acceptance": ["npm run test:e2e -- --grep login-timeout"],
+  "files": ["examples/demo-web/app.js"],
+  "acceptance": ["node tests/e2e-browser/login-flow.mjs --case login-timeout"],
   "constraints": ["不改公共 API", "不新增付费依赖"],
   "forbidden": ["packages/steward-core/auth/**"],
   "output": "unified_diff"
@@ -46,14 +47,15 @@
 {
   "task_id": "ct-20261025-001",
   "patch": "diff --git a/... b/...",
-  "summary": "在 api.ts 增加超时分支，在 login.ts 渲染错误提示",
-  "tests_run": ["npm run test:e2e -- --grep login-timeout"],
+  "summary": "在 examples/demo-web/app.js 增加超时恢复分支并渲染错误提示",
+  "tests_run": ["node tests/e2e-browser/login-flow.mjs --case login-timeout"],
   "risks": ["未覆盖移动端布局"],
   "uncovered": ["真实网络抖动"]
 }
 ```
 
-补丁在隔离 worktree 应用并测试；通过出 TestReport + PR 草稿，失败最多两轮后升级人类；不自动合并主分支。
+补丁在隔离 git worktree 应用并测试（M1 已实现：`patch.ts` + `runCodeLoop`）；通过出 TestReport +
+PR 草稿，失败最多两轮后升级人类（`escalated=true` / exit 1）；不自动合并主分支。
 
 ## 4. Lead（客户线索）
 

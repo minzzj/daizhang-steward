@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | 0 | S0 脚手架 | 仓库、许可证、治理文件、双语文档骨架、CI 自检、目标与路线图 | `npm run check` 绿、CI 绿 | ✅ 完成（2026-10-25，GitHub 仓库已发布） |
 | 1 | M0 骨架 | 内核最小闭环：AgentRuntime/BranchSpec/PolicyEngine/ArtifactBus/PromptManager/EventLog/BudgetGuard/StopSignal；CLI（7 命令 + 2 占位）；MockHarness；demo-web/demo-desktop；prompts v1；单包构建；CI | A1、A6、A12 | ✅ 完成（2026-10-25；A1/A6/A12 通过，证据 `runs/run-20261025-172017-eb9116/` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md`） |
-| 1 | M1 浏览器回路 | 真实浏览器回路：`steward-browser`（Playwright 有头/回退）、CodeTask→补丁→隔离 worktree→真实浏览器验收、失败两轮升级、`tests/e2e-browser`、CLI `browser-flow`/`code-loop` | A2、A4、A5、A6 | ✅ 完成（2026-10-25；A2/A4/A5/A6 通过，`npm run acceptance` OK；证据 `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`） |
+| 1 | M1 浏览器回路 | 真实浏览器回路：`steward-browser`（Playwright 有头/回退）、CodeTask→补丁→隔离 worktree→真实浏览器验收、失败两轮升级、`tests/e2e-browser`、CLI `browser-flow`/`code-loop`、Windows CI CRLF 修复（`b4ed316`） | A2、A4、A5、A6 | ✅ 完成（2026-10-25；A2/A4/A5/A6 通过，`npm run acceptance` OK；证据 `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` + `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`） |
 | 1 | M2 桌面与安全 | Windows 桌面适配器；PolicyEngine；停止键；审计；检查点恢复；分支隔离 | A3、A8、A9 | ⏳ 下一步 |
 | 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ⏳ |
 | 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ⏳ |
@@ -33,10 +33,11 @@
 > A2 浏览器流程 `run-20261025-175213-9ea8ab`（7 步 / 7 张真实截图）；A4 编码回路
 > `run-20261025-175216-fe8759`（CodeTask→补丁→隔离 worktree→login-timeout 由红转绿，第 1 轮通过）；
 > A5 两轮升级 `run-20261025-175223-de0b95`（坏补丁连续两轮失败后停止升级，exit 1，不无限重试）。
-> 测试 **34/34**（M0 的 30 条 + 新增 `tests/unit/code-loop.test.mjs` 4 条）；`npm run lint` /
-> `npm run check` / `npm run check:secrets` 通过。证据：
+> 测试 **35/35**（M0 的 30 条 + `tests/unit/code-loop.test.mjs` 5 条，含 Windows CRLF 补丁归一化回归）；`npm run lint` /
+> `npm run check` / `npm run check:secrets` 通过。Windows CI 的 `*.patch` CRLF 问题已修复
+> （提交 `b4ed316`：`.gitattributes` 全仓 `eol=lf` + `patch.ts` 归一化 CRLF + CRLF 回归测试）。证据：
 > `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
-> `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组截图与日志）。
+> `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组截图与日志，已脱敏）。
 
 ## 每个里程碑的 Definition of Done
 

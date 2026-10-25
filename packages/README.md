@@ -1,14 +1,14 @@
 # Packages
 
 > 状态：**M1 已完成**，工程为**单包布局**。当前实际源码包：`steward-core`（内核）、
-> `steward-harness`（MockHarness + 隔离 worktree 补丁 + 两轮编码回路）、`steward-browser`
+> `steward-harness`（MockHarness + 隔离 worktree 补丁（含 CRLF 归一化）+ 两轮编码回路）、`steward-browser`
 > （Playwright 真实浏览器适配器）；下表其余包为规划项，随 M2–M4 / 阶段二落地。
 > 包职责见 [`docs/zh-CN/architecture.md`](../docs/zh-CN/architecture.md)。
 
 | 包 | 职责 | 状态 |
 |---|---|---|
 | `steward-core` | AgentRuntime、BranchSpec、ToolRegistry、PolicyEngine、ArtifactBus、PromptManager、EventLog、BudgetGuard、StopSignal | ✅ M0 已实现 |
-| `steward-harness` | HarnessAdapter：MockHarness + `patch.ts`（隔离 git worktree 应用补丁）+ `loop.ts`（`runCodeLoop` 两轮升级） | ✅ M0/M1 已实现（mock + 脚本化补丁） |
+| `steward-harness` | HarnessAdapter：MockHarness + `patch.ts`（隔离 git worktree 应用补丁，CRLF 归一化）+ `loop.ts`（`runCodeLoop` 两轮升级） | ✅ M0/M1 已实现（mock + 脚本化补丁） |
 | `steward-browser` | Playwright 真实浏览器适配器（有头默认、`chrome→msedge` 回退、独立 `userDataDir`、逐步截图/DOM/console、5 类失败分类、风控停交人） | ✅ M1 已实现 |
 | `steward-conductor` | 总调度：目标拆解、派生分支、验收、汇总、预算 | 规划（M2+；M0/M1 由 CLI/BranchManager 承担最小能力） |
 | `steward-operator` | 操作型分支：浏览器/桌面/文件/HTTP、CodeTask 编写与验收执行 | 规划（M2+；M1 由 CLI `browser-flow`/`code-loop` + `steward-browser` 覆盖最小回路） |

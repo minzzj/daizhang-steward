@@ -1,8 +1,9 @@
 # Core Contracts
 
 > Rule: **fields may only be added, never removed.** All timestamps are ISO 8601 (with UTC offset),
-> all paths are repository-relative. Machine-readable JSON Schemas will land in
-> `packages/steward-core/schemas/` at M0; this document is the normative description.
+> all paths are repository-relative. Machine-readable JSON Schemas are planned for a later milestone
+> under `packages/steward-core/schemas/`; at M1 the TS types in `packages/steward-core/src/types.ts`
+> plus unit tests are the machine-checked source, and this document stays normative.
 
 ## 1. BranchSpec
 
@@ -27,12 +28,12 @@ Branches cannot spawn branches; they submit a `BranchRequest` to the Conductor.
   "task_id": "ct-20261025-001",
   "repo": "github.com/minzzj/daizhang-steward",
   "branch": "fix/login-timeout",
-  "goal": "Fix missing timeout error on demo-web login page",
-  "reproduction": ["start demo-web", "open /login", "type any account", "wait 4s"],
-  "expected": "show 'Request timed out, please retry'",
+  "goal": "Fix the missing timeout error on the demo-web login page under the slow-network path",
+  "reproduction": ["start demo-web (127.0.0.1:4173)", "open the slow path /login?timeout=1", "type any account and click login", "wait 4s (that server path responds after 4s)"],
+  "expected": "show 'Request timed out, please retry' and re-enable the button",
   "actual": "spinner spins forever, no message",
-  "files": ["examples/demo-web/src/login.ts"],
-  "acceptance": ["npm run test:e2e -- --grep login-timeout"],
+  "files": ["examples/demo-web/app.js"],
+  "acceptance": ["node tests/e2e-browser/login-flow.mjs --case login-timeout"],
   "constraints": ["no public API changes", "no paid dependencies"],
   "forbidden": ["packages/steward-core/auth/**"],
   "output": "unified_diff"
@@ -47,15 +48,16 @@ A task without an executable acceptance check never enters the code loop.
 {
   "task_id": "ct-20261025-001",
   "patch": "diff --git a/... b/...",
-  "summary": "add timeout branch in api.ts, render error in login.ts",
-  "tests_run": ["npm run test:e2e -- --grep login-timeout"],
+  "summary": "add timeout recovery in examples/demo-web/app.js and render the error message",
+  "tests_run": ["node tests/e2e-browser/login-flow.mjs --case login-timeout"],
   "risks": ["mobile layout not covered"],
   "uncovered": ["real network jitter"]
 }
 ```
 
-Patches are applied in an isolated worktree and tested. On success: TestReport + PR draft. On
-failure: at most two rounds, then escalate to a human. Never auto-merge to main.
+Patches are applied in an isolated git worktree and tested (implemented in M1: `patch.ts` +
+`runCodeLoop`). On success: TestReport + PR draft. On failure: at most two rounds, then escalate to a
+human (`escalated=true` / exit 1). Never auto-merge to main.
 
 ## 4. Lead
 

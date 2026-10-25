@@ -5,7 +5,7 @@ Source-available · non-commercial · real browser & real desktop operations.
 
 > Status: **M1 complete** — real-browser code loop verified (2026-10-25): headed Chrome runs the
 > demo-web flow (A2), repairs the seeded login-timeout defect through CodeTask → patch → isolated
-> worktree → real browser red→green (A4), and escalates after two failed rounds (A5). **34/34** unit +
+> worktree → real browser red→green (A4), and escalates after two failed rounds (A5). **35/35** unit +
 > integration tests pass; the CLI ships **9 commands + 2 placeholders**. Acceptance A1/A2/A4/A5/A6 and
 > A12 pass — see [ROADMAP.md](ROADMAP.md) and
 > [`docs/en/delivery-checklist.md`](docs/en/delivery-checklist.md).
@@ -75,7 +75,7 @@ packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts
 apps/       CLI entry (steward: demo/browser-flow/code-loop/run/branch/report/stop/version/help)
 prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
 examples/   demo-web, demo-desktop, mock-harness (scripted patches), scout-fixtures, demo-business
-tests/      unit tests (34 at M1) + e2e-browser real-browser E2E; contract / desktop / fault drills later
+tests/      unit tests (35 at M1) + e2e-browser real-browser E2E; contract / desktop / fault drills later
 docs/       bilingual docs (en/ and zh-CN/) + test evidence
 scripts/    check/build helpers, secret scan, evidence + acceptance runners, delivery sync
 runs/       per-run artifacts (gitignored; evidence lives here)
@@ -94,7 +94,7 @@ npm install
 npm run check          # repo/config check
 npm run check:secrets  # secret scan
 npm run build          # tsc -p tsconfig.json → dist/
-npm test               # 34/34 unit + integration tests
+npm test               # 35/35 unit + integration tests
 npm run demo           # M0 empty loop → runs/<run-id>/ + report.md (MockHarness)
 npm run test:prompts   # prompt versioning/safety tests (acceptance A12)
 npm run evidence       # offline evidence bundle → docs/test-evidence/test-result-<stamp>.{md,json}

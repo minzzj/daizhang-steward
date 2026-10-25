@@ -1,12 +1,12 @@
 # Tests
 
-> 状态：**M1 已落地 `unit/`（8 个文件 / 34 条测试全部通过）与 `e2e-browser/`（真实浏览器 E2E）**；
+> 状态：**M1 已落地 `unit/`（8 个文件 / 35 条测试全部通过）与 `e2e-browser/`（真实浏览器 E2E）**；
 > `contract/`、`e2e-desktop/`、`fault/` 随 M2+ 实现。UI 验收必须真实操作。
 
 ## 运行 / Running
 
 ```bash
-npm test                    # build + 全部单元+集成测试（M1 共 34 条）
+npm test                    # build + 全部单元+集成测试（M1 共 35 条）
 npm run test:unit           # 只跑单元测试：node --test "tests/unit/*.test.mjs"
 npm run test:prompts        # 提示词版本与安全条款测试（验收 A12）
 
@@ -22,14 +22,14 @@ npm run acceptance          # 本机有头一键验收（A2/A4/A5）→ docs/tes
 
 M1 实现范围：
 
-- `tests/unit/`（8 文件 / 34 条）：`branch` / `cli-demo` / `events` / `harness` / `policy` / `prompts` /
-  `runtime` / `code-loop`
+- `tests/unit/`（8 文件 / 35 条）：`branch` / `cli-demo` / `events` / `harness` / `policy` / `prompts` /
+  `runtime` / `code-loop`（含 Windows CI 的 CRLF 补丁归一化回归）
 - `tests/e2e-browser/`：`login-flow.mjs`（`normal` / `login-timeout` / `--expect-red`）、
   `adapter-smoke.mjs`、`lib/demo-server.mjs`（自管 demo-web 服务）
 
 ```text
 tests/
-├── unit/           # 纯逻辑：引擎、账本、策略、编码回路、提示词校验（M1: 8 文件 / 34 条）
+├── unit/           # 纯逻辑：引擎、账本、策略、编码回路、提示词校验（M1: 8 文件 / 35 条）
 ├── e2e-browser/    # 真实 Chromium/Edge（headed）真点击/输入/截图；禁止 mock 路由（M1 已实现）
 ├── fixtures/       # 测试夹具：always-ok / always-fail 脚本
 ├── contract/       # 规划（M2+）：JSON Schema 校验

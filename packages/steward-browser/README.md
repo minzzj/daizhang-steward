@@ -134,6 +134,6 @@ node tests/e2e-browser/adapter-smoke.mjs --evidence-dir runs/adapter-smoke
   窗口物理像素与 CSS 像素不同，截图不受影响，但按物理坐标调试需按 CSS 像素换算。
 - 每步自动截图+DOM 会产生较多文件（每步 2 个），长流程 run 的证据目录会较大。
 - 多标签：新标签页自动成为当前操作页，暂未提供显式标签切换 API。
-- 下载/上传/滚屏/选择等能力按 `docs/zh-CN/adapters.md` 在 M1 后续迭代补齐。
+- 下载/上传/滚屏/选择等能力按 `docs/zh-CN/adapters.md` 在后续迭代补齐。
 - 风控关键词为启发式：**漏判**靠页面文本与错误分类兜底、**误判**方向是安全（停止交人）。
 - 仅 Windows 实测（Chrome 155 / Edge 已安装）；Linux/macOS 未验证。

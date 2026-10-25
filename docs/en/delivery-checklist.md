@@ -18,7 +18,7 @@
 | A8 | Stop key within 5s; restart resumes without duplicates | `npm run test:stop` (M2) | stop event + resume log | todo (M2; minimal StopSignal in M0) |
 | A9 | Branch isolation (credentials / browser profiles) | `npm run test:isolation` (M2) | isolation test + events | todo (M2) |
 | A10 | New read-only dummy branch by config only | `npm run demo:dummy-branch` (M4) | config + report | todo (M4) |
-| A11 | Tests/lint/docs/license complete, no telemetry | `npm run lint && npm test` | CI log | todo (M4 full acceptance; M1 already green on lint/build/34 tests + CI headless E2E) |
+| A11 | Tests/lint/docs/license complete, no telemetry | `npm run lint && npm test` | CI log | todo (M4 full acceptance; M1 already green on lint/build/35 tests + CI headless E2E) |
 | A12 | Runtime prompts versioned, tested, replaceable | `npm run test:prompts` | `prompts/manifest.json` (4 roles + sha256) + `tests/unit/prompts.test.mjs` (5 assertions) | ✅ pass (2026-10-25) |
 
 > **M0 verdict (2026-10-25)**: A1 / A6 / A12 pass. `npm run check`, `npm run check:secrets`,
@@ -27,7 +27,7 @@
 >
 > **M1 verdict (2026-10-25)**: A2 / A4 / A5 / A6 pass (local headed real Chrome, `npm run acceptance`
 > OK). A2: 7 steps / 7 real screenshots; A4: red→green on round 1; A5: escalation after two failed
-> rounds (exit 1, no infinite retry). **34/34** tests; `npm run lint`, `npm run check` and
+> rounds (exit 1, no infinite retry). **35/35** tests; `npm run lint`, `npm run check` and
 > `npm run check:secrets` pass. Evidence:
 > `docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
 > `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/` (45 files: A2 / A4 / A5 groups).
