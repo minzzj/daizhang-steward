@@ -60,17 +60,19 @@ test("事件账本可被篡改检测", async () => {
 test("事件 target 字段中的密钥会被脱敏", async () => {
   const dir = await tmpDir();
   const log = await EventLog.open(join(dir, "events.jsonl"));
+  // 拼出假的 key 形态，避免仓库密钥扫描把测试夹具误报为真实密钥
+  const fakeKey = "sk-" + "abcdefghijklmnopqrstuvwx";
   const ev = await log.append({
     branch_id: "br-test",
     tool: "http.post",
-    target: "https://example.com/?key=sk-abcdefghijklmnopqrstuvwx",
+    target: `https://example.com/?key=${fakeKey}`,
     input_digest: digest("y"),
     policy_decision: "allow",
     result: "success",
     evidence_path: "",
     confidence: "certain",
   });
-  assert.ok(!ev.target.includes("sk-abcdefghijklmnopqrstuvwx"));
+  assert.ok(!ev.target.includes(fakeKey));
   assert.ok(ev.target.includes("REDACTED"));
 });
 
