@@ -5,13 +5,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const targets = [
-  "packages/steward-core/dist",
-  "packages/steward-harness/dist",
-  "apps/cli/dist",
-  "coverage",
-  "test-results",
-];
+const targets = ["dist", "coverage", "test-results", ".steward"];
 let removed = 0;
 for (const t of targets) {
   const p = join(ROOT, t);

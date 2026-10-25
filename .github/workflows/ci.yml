@@ -2,15 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, wip/m0-core]
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  scaffold:
-    name: scaffold (${{ matrix.os }})
+  check:
+    name: check (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -19,24 +19,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 12.14.0
-
       - uses: actions/setup-node@v4
         with:
           node-version: "22.18.0"
+          cache: npm
 
-      - name: Install (scaffold has no dependencies yet)
-        run: pnpm install --no-frozen-lockfile
+      - name: Install
+        run: npm ci
 
-      - name: Scaffold self-check
-        run: pnpm check
+      - name: Repository self-check（structure + license + prompts + path hygiene）
+        run: npm run check
 
       - name: Secret scan
-        run: pnpm check:secrets
+        run: npm run check:secrets
 
-# Milestone jobs land with M0:
-#   lint / unit / contract
+      - name: Build / typecheck
+        run: npm run build
+
+      - name: Unit + integration tests
+        run: npm run test:unit
+
+      - name: Acceptance evidence (`steward demo`, MockHarness — no paid API)
+        run: npm run evidence
+
+# M1+ jobs:
 #   e2e-browser: real headless Chromium against examples/demo-web
-#   desktop E2E: local/self-hosted only (no GUI runner on hosted CI)
+#   desktop E2E: local/self-hosted only (hosted CI has no interactive desktop)

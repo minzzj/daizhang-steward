@@ -13,6 +13,7 @@ coverage/
 # Runtime artifacts & evidence (kept out of git; see runs/README)
 runs/*
 !runs/.gitkeep
+.steward/
 *.log
 logs/
 test-results/

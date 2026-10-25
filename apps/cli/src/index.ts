@@ -19,8 +19,8 @@ import {
   type PlannedStep,
   type RunResult,
   type ToolResult,
-} from "@daizhang/steward-core";
-import { MockHarness, demoCodeTask } from "@daizhang/steward-harness";
+} from "../../../packages/steward-core/src/index.js";
+import { MockHarness, demoCodeTask } from "../../../packages/steward-harness/src/index.js";
 
 const VERSION = "0.1.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";

@@ -1,4 +1,4 @@
-import { digest, type CodeResult, type CodeTask } from "@daizhang/steward-core";
+import { digest, type CodeResult, type CodeTask } from "../../steward-core/src/index.js";
 
 /** Isolates "where code comes from" (see docs/en/adapters.md). */
 export interface HarnessAdapter {

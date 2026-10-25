@@ -1,22 +1,26 @@
 {
   "name": "daizhang-steward",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "private": true,
   "description": "代掌 Steward — composable operating-AI core: real browser/desktop operator, DeepSeek-Harness code loop, customer branch. Source-available, non-commercial (CC BY-NC-SA 4.0).",
   "license": "CC-BY-NC-SA-4.0",
   "type": "module",
-  "packageManager": "pnpm@12.14.0",
   "engines": {
     "node": ">=22.18.0"
   },
+  "main": "dist/apps/cli/src/index.js",
+  "bin": {
+    "steward": "dist/apps/cli/src/index.js"
+  },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -p tsconfig.json",
     "clean": "node scripts/clean.mjs",
-    "lint": "tsc -b",
-    "test": "pnpm build && node --test tests/unit",
-    "test:unit": "node --test tests/unit",
-    "demo": "pnpm build && node apps/cli/dist/index.js demo",
-    "dev": "pnpm build && node apps/cli/dist/index.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test \"tests/unit/*.test.mjs\"",
+    "test:unit": "node --test \"tests/unit/*.test.mjs\"",
+    "test:prompts": "node --test tests/unit/prompts.test.mjs",
+    "demo": "npm run build && node dist/apps/cli/src/index.js demo",
+    "dev": "npm run build && node dist/apps/cli/src/index.js",
     "check": "node scripts/check-scaffold.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "prompts:manifest": "node scripts/update-prompt-manifest.mjs",

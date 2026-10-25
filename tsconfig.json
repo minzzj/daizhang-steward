@@ -1,8 +1,9 @@
 {
-  "files": [],
-  "references": [
-    { "path": "packages/steward-core" },
-    { "path": "packages/steward-harness" },
-    { "path": "apps/cli" }
-  ]
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": ["packages/*/src/**/*.ts", "apps/cli/src/**/*.ts"]
 }

@@ -125,6 +125,23 @@ export class AgentRuntime {
         break;
       }
 
+      // Branch tool allowlist: a step may only use tools listed in its BranchSpec.
+      if (!branch.tools.includes(step.tool)) {
+        ok = false;
+        steps.push({ tool: step.tool, decision: "deny", ok: false, summary: `工具不在分支白名单：${step.tool}`, evidence: [] });
+        await events.append({
+          branch_id: branch.id,
+          tool: step.tool,
+          target: step.description ?? step.tool,
+          input_digest: digest(step.args ?? {}),
+          policy_decision: "deny",
+          result: "failure",
+          evidence_path: "",
+          confidence: "certain",
+        });
+        break;
+      }
+
       const verdict = policy.evaluate({ tool: step.tool, risk: spec.risk });
       if (verdict.decision !== "allow") {
         ok = false;
