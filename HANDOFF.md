@@ -8,8 +8,8 @@
 M3 Scout 客户分支已完成并验收：fixture 驱动 **14 条线索 → 丢弃 4 → 合格 8 → 3 条外联草稿
 （110–113 字、均引用信号）→ 审批队列 3 条全 pending、0 发送**（A7 通过）；加上 M1 真实浏览器
 （A2/A4/A5）与 M2 真实桌面 + 安全模块（A3/A8/A9）。**74/74** 测试通过，CLI **12 命令 + 2 占位**。
-累计 A1/A2/A3/A4/A5/A6/A7/A8/A9/A12 验收通过。代码在 GitHub `main` 分支（M2 已推送 `6603b04`；
-M3 随本次里程碑提交）。
+累计 A1/A2/A3/A4/A5/A6/A7/A8/A9/A12 验收通过。代码在 GitHub `main` 分支（M3 已推送 `dd487a2`；
+M2 最后 `6603b04`）。
 
 ## M0 已完成清单（2026-10-25）
 
@@ -139,13 +139,13 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `code-loop`
   Scout demo、`safety-check` 与 build）。
 - 不能调用真实 DSH / DeepSeek Harness——目前用 MockHarness + 脚本化补丁（真实浏览器/桌面/Scout 验收已跑通）。
 - 没有 `approve` 审批队列与 `takeover` 接管包——当前 CLI 为占位命令（M4 或阶段二）。
-- 不能发布 GitHub Release——M4；代码已推送 `main`（M2 `6603b04`，M3 随本次里程碑提交）。
+- 不能发布 GitHub Release——M4；代码已推送 `main`（M2 `6603b04`，M2 最后 `6603b04`）。
 - 不能生成宣传片——Phase 2 后（阶段一可选 3 分钟演示）。
 
 ## 代码在哪
 
 - **权威仓库（唯一开发位置）**：`H:\minzzj文件\技术部\项目\官方\代掌\daizhang-steward`
-  （GitHub `main` 分支；M2 已推送 `6603b04`，M3 随本次里程碑提交；不要 git commit，除非用户明确要求）
+  （GitHub `main` 分支；M3 已推送 `dd487a2`；不要 git commit，除非用户明确要求）
 - **C: 旧副本为归档**：`C:\daizhang-build\daizhang-steward` 只读参考，**不要再在这里改文件**。
 - **方案文档**：`H:\minzzj文件\技术部\项目\官方\代掌\代掌-实施总方案-v0.1.md`
 - 工程已从 pnpm workspace 改为**单包布局**（H: 为 exFAT，不支持符号链接，pnpm workspace 装不起来）：
@@ -157,7 +157,7 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `code-loop`
 - **GitHub 公开仓库**：https://github.com/minzzj/daizhang-steward（2026-10-25 发布验证，见
   [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)；
   当时 CI #1/#2 均 success，许可证识别 `Other/NOASSERTION` 属预期）
-- **代码位置**：GitHub `main` 分支（M2 已推送 `6603b04`；M3 随本次里程碑提交；M4 统一发版；
+- **代码位置**：GitHub `main` 分支（M3 已推送 `dd487a2`；M4 统一发版；
   当前 `package.json` 版本 `0.4.0`）。
 - **M0 验证证据**：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md /
   events.jsonl / code-task.json / code-result.json 等）与
@@ -213,7 +213,7 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `code-loop`
 
 ## 下一步（按序执行）
 
-0. **推送状态**：M0/M1/M2 已推送 GitHub `main`（最新 `6603b04`）；M3 随本次里程碑提交；GitHub Release 留给 M4。
+0. **推送状态**：M0/M1/M2/M3 已推送 GitHub `main`（最新 `dd487a2`）；GitHub Release 留给 M4。
 1. **M4 开源发布（下一步）**：双语文档刷新 + LICENSE 校验 + GitHub Release + CI（A10/A11/A12）+
    5 个 good-first-issue + 3 分钟演示；`main` 继续按里程碑推送。
 2. 阶段一完成：更新本文件 → 按用户要求继续阶段二（或视额度停会话）。
