@@ -73,7 +73,7 @@ export class PromptManager {
     const actual = sha256(text);
     if (actual !== entry.sha256) {
       throw new Error(
-        `提示词校验失败：${entry.file} sha256=${actual}，清单记录=${entry.sha256}。运行 pnpm prompts:manifest 更新清单。`,
+        `提示词校验失败：${entry.file} sha256=${actual}，清单记录=${entry.sha256}。运行 npm run prompts:manifest 更新清单。`,
       );
     }
     const loaded: LoadedPrompt = {

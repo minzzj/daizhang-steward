@@ -1,6 +1,18 @@
 # Tests
 
-> 状态：**待 M0 起逐步实现**。四层结构，UI 验收必须真实操作。
+> 状态：**M0 已落地 `unit/`（7 个文件 / 30 条测试全部通过）**；`contract/`、`e2e-browser/`、
+> `e2e-desktop/`、`fault/` 随 M1–M2 实现。UI 验收必须真实操作。
+
+## 运行 / Running
+
+```bash
+npm test               # build + 全部单元测试（M0 共 30 条）
+npm run test:unit      # 只跑单元测试：node --test "tests/unit/*.test.mjs"
+npm run test:prompts   # 提示词版本与安全条款测试（验收 A12）
+npm run evidence       # build + tests + demo，写 docs/test-evidence/test-result-<stamp>.{md,json}
+```
+
+M0 实现范围（`tests/unit/`）：`branch` / `cli-demo` / `events` / `harness` / `policy` / `prompts` / `runtime`。
 
 ```text
 tests/

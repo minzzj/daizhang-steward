@@ -1,9 +1,11 @@
 # 运行时提示词 / Runtime Prompts
 
-> 状态：**待 M0 实现**。目录结构与规则见 [`docs/zh-CN/runtime-prompts.md`](../docs/zh-CN/runtime-prompts.md) /
+> 状态：**v1 已实现（M0，2026-10-25）**：4 份运行时提示词 + `manifest.json`（版本 / 日期 / sha256 / 适用角色）
+> + 提示词测试（`npm run test:prompts`）。目录结构与规则见
+> [`docs/zh-CN/runtime-prompts.md`](../docs/zh-CN/runtime-prompts.md) /
 > [`docs/en/runtime-prompts.md`](../docs/en/runtime-prompts.md)。
 
-M0 交付内容：
+已交付内容（v1，2026-10-25）：
 
 ```text
 prompts/
@@ -21,3 +23,9 @@ prompts/
 2. 业务代码里**禁止**出现长提示词。
 3. 每个提示词有测试：安全条款、禁止项、输出格式、无密钥/本机路径。
 4. 修改提示词必须更新版本与 manifest sha256，并跑通该角色契约测试与一条端到端用例。
+
+常用命令（npm）：
+
+- 生成/更新 manifest（改过 `prompts/*.md` 后必须执行）：`npm run prompts:manifest`
+- 提示词测试（安全条款 / 禁止项 / 无密钥与本机路径 / sha256）：`npm run test:prompts`
+- 版本记录见 [`CHANGELOG.md`](CHANGELOG.md)。

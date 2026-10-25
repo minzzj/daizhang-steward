@@ -1,14 +1,21 @@
 # Examples
 
-> 状态：**待 M0–M2 实现**。全部为本地可跑的演示素材，不依赖真实客户与真实资金。
+> 状态：**M0 已完成 demo-web / demo-desktop / mock-harness**（各自 README 含运行方式与自检命令）；
+> `scout-fixtures`（M3）与 `demo-business`（阶段二）仍待实现。全部为本地可跑演示素材，不依赖真实客户与真实资金。
 
-| 目录 | 内容 | 用于 |
-|---|---|---|
-| `demo-web/` | 本地演示站点（带预置缺陷：登录超时无提示、表单校验错位、验证码页） | A2 / A4 / A5 真实浏览器验收 |
-| `demo-desktop/` | 本地 GUI 演示程序（Python tkinter 真窗口：表单/保存/校验） | A3 真实桌面验收 |
-| `mock-harness/` | 脚本化补丁与失败注入 | A1 / A4 / A5 免付费演示与 CI |
-| `scout-fixtures/` | 虚构线索 fixture（≥10 条，含来源 URL/信号/评分/合规依据） | A7 |
-| `demo-business/` | 阶段二仿真业务线（客户对话、交付物、收款与发票状态） | B1–B8 |
+| 目录 | 内容 | 用于 | 状态 |
+|---|---|---|---|
+| `demo-web/` | 本地演示站点（Node 内置 http，`127.0.0.1:4173`；带预置缺陷：登录超时无提示、表单校验错位等）+ README.zh-CN | A2 / A4 / A5 真实浏览器验收 | ✅ M0 已实现 |
+| `demo-desktop/` | Python 标准库 tkinter 真窗口 GUI（表单/保存/校验，`--out` JSON，`--self-test` 无窗口自检）+ README.zh-CN | A3 真实桌面验收 | ✅ M0 已实现 |
+| `mock-harness/` | MockHarness fixture（`fixture.txt`）；MockHarness 本体在 `packages/steward-harness` | A1 免付费演示与 CI | ✅ M0 已实现 |
+| `scout-fixtures/` | 虚构线索 fixture（≥10 条，含来源 URL/信号/评分/合规依据） | A7 | 待实现（M3） |
+| `demo-business/` | 阶段二仿真业务线（客户对话、交付物、收款与发票状态） | B1–B8 | 待实现（阶段二） |
+
+自检方式（**不能替代**真实 UI 验收）：
+
+- `examples/demo-web`：启动后 `GET /health`、`GET /api/projects` 校验服务端行为（见其 README §8）。
+- `examples/demo-desktop`：`python -m py_compile main.py` + `python main.py --self-test`（无窗口，退出码 0 为通过）。
+- 真实浏览器/桌面 UI 验收分别在 M1/M2 由 `tests/e2e-browser` / `tests/e2e-desktop` 执行（A2/A3）。
 
 规则：
 

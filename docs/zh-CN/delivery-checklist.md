@@ -1,25 +1,29 @@
 # 交付物与验收清单 / Delivery Checklist（中文）
 
 > 每条验收 = 编号 + 命令/操作 + 证据路径 + 最近结果（证据必须能打开）。
-> 状态在脚手架阶段全部为 `未实现`；里程碑完成后更新为 `通过 / 未通过 / 部分`。
-> 最近一次更新：2026-10-25（scaffold）
+> M0 完成后 A1 / A6 / A12 标记为 `通过`；其余条目随里程碑完成更新为 `通过 / 未通过 / 部分`。
+> 最近一次更新：2026-10-25（M0 完成）
 
 ## A. 阶段一（文档 1，12 条）
 
-| # | 验收 | 命令/操作 | 证据（计划路径） | 状态 |
+| # | 验收 | 命令/操作 | 证据 | 状态 |
 |---|---|---|---|---|
-| A1 | 干净克隆可跑，无需付费 API | `pnpm install && pnpm demo` | `docs/test-evidence/A1-*` | 未实现 |
-| A2 | demo-web 登录/填表/提交/校验/截图 | `pnpm test:e2e` | `runs/<id>/screenshots/` | 未实现 |
-| A3 | demo-desktop 打开/填表/保存/校验/截图 | `pnpm test:desktop` | `runs/<id>/screenshots/` | 未实现 |
-| A4 | 预置缺陷 → CodeTask → 补丁 → 应用 → 测试通过 | `pnpm demo:code-loop` | `runs/<id>/code-task.json` 等 | 未实现 |
-| A5 | 连续失败两次 → 升级，无无限循环 | 同上（注入失败） | 两轮日志 + 升级事件 | 未实现 |
-| A6 | 每次运行有 prompt/patch/test.log/截图/report 且无密钥 | `pnpm verify:evidence` | `runs/<id>/` 全目录 | 未实现 |
-| A7 | Scout ≥10 线索（来源+评分），3 条草稿未发送 | `pnpm demo:scout` | `scout-report.md` + 审批队列 | 未实现 |
-| A8 | 停止键 5 秒；重启恢复不重复 | `pnpm test:stop` | 停止事件 + 恢复日志 | 未实现 |
-| A9 | 分支隔离（凭据/浏览器配置） | `pnpm test:isolation` | 隔离用例 + events | 未实现 |
-| A10 | 新增只读 dummy 分支只靠配置 | `pnpm demo:dummy-branch` | 配置 + 报告 | 未实现 |
-| A11 | 测试/lint/文档/许可证齐全、无遥测 | `pnpm lint && pnpm test` | CI 日志 | 未实现 |
-| A12 | 提示词版本化、有测试、可替换 | `pnpm test:prompts` | prompt 单测输出 | 未实现 |
+| A1 | 干净克隆可跑，无需付费 API | `npm install && npm run demo` | `runs/run-20261025-172017-eb9116/report.md` + `docs/test-evidence/test-result-2026-10-25_09-20-15.md`（MockHarness，无付费 API） | ✅ 通过（2026-10-25） |
+| A2 | demo-web 登录/填表/提交/校验/截图 | `npm run test:e2e`（M1 实现） | `runs/<id>/screenshots/` | 未实现（M1） |
+| A3 | demo-desktop 打开/填表/保存/校验/截图 | `npm run test:desktop`（M2 实现） | `runs/<id>/screenshots/` | 未实现（M2） |
+| A4 | 预置缺陷 → CodeTask → 补丁 → 应用 → 测试通过 | `npm run demo:code-loop`（M1 实现） | `runs/<id>/code-task.json` 等 | 未实现（M1；M0 已有 MockHarness 骨架） |
+| A5 | 连续失败两次 → 升级，无无限循环 | 同上（注入失败） | 两轮日志 + 升级事件 | 未实现（M1） |
+| A6 | 每次运行有 prompt/patch/test.log/截图/report 且无密钥 | `npm run demo` + `npm run evidence` | `runs/run-20261025-172017-eb9116/`：`prompt.md` / `patch.diff` / `test.log` / `report.md` / `events.jsonl` / `console.log` / `meta.json` / `code-task.json` / `code-result.json` / `goal.md`；索引 `docs/test-evidence/test-result-2026-10-25_09-20-15.{md,json}` | ✅ 通过（2026-10-25；真实 UI 截图随 M1 补齐） |
+| A7 | Scout ≥10 线索（来源+评分），3 条草稿未发送 | `npm run demo:scout`（M3 实现） | `scout-report.md` + 审批队列 | 未实现（M3） |
+| A8 | 停止键 5 秒；重启恢复不重复 | `npm run test:stop`（M2 实现） | 停止事件 + 恢复日志 | 未实现（M2；M0 有 StopSignal 最小实现） |
+| A9 | 分支隔离（凭据/浏览器配置） | `npm run test:isolation`（M2 实现） | 隔离用例 + events | 未实现（M2） |
+| A10 | 新增只读 dummy 分支只靠配置 | `npm run demo:dummy-branch`（M4 实现） | 配置 + 报告 | 未实现（M4） |
+| A11 | 测试/lint/文档/许可证齐全、无遥测 | `npm run lint && npm test` | CI 日志 | 未实现（M4 全量验收；M0 已满足 lint / build / 30 测试） |
+| A12 | 提示词版本化、有测试、可替换 | `npm run test:prompts` | `prompts/manifest.json`（4 角色 + sha256）+ `tests/unit/prompts.test.mjs`（5 项断言） | ✅ 通过（2026-10-25） |
+
+> **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过。`npm run check`、`npm run check:secrets`、
+> `npm test`（30/30）、`npm run demo`、`npm run evidence` 全部退出码 0；证据文件由
+> `npm run evidence` 自动生成，不手工编辑。
 
 ## B. 阶段二（文档 2，8 条）
 
@@ -51,4 +55,5 @@
 
 - 每条证据路径必须能从仓库内打开；截图由 E2E 自动生成（禁止手截）。
 - 发布前在干净中性路径重跑全量，更新本表“最近结果”列。
-- 文档数字必须与证据一致：`pnpm verify:docs`（M4 实现）校验。
+- 文档数字必须与证据一致；`docs/test-evidence/test-result-<stamp>.{md,json}` 由 `npm run evidence`
+  自动生成，不手工编辑；`npm run verify:docs`（M4 实现）用于跨文档校验。

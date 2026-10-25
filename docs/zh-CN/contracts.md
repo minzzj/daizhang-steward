@@ -31,7 +31,7 @@
   "expected": "显示“请求超时，请重试”",
   "actual": "按钮一直转圈，无提示",
   "files": ["examples/demo-web/src/login.ts"],
-  "acceptance": ["pnpm test:e2e -- --grep login-timeout"],
+  "acceptance": ["npm run test:e2e -- --grep login-timeout"],
   "constraints": ["不改公共 API", "不新增付费依赖"],
   "forbidden": ["packages/steward-core/auth/**"],
   "output": "unified_diff"
@@ -47,7 +47,7 @@
   "task_id": "ct-20261025-001",
   "patch": "diff --git a/... b/...",
   "summary": "在 api.ts 增加超时分支，在 login.ts 渲染错误提示",
-  "tests_run": ["pnpm test:e2e -- --grep login-timeout"],
+  "tests_run": ["npm run test:e2e -- --grep login-timeout"],
   "risks": ["未覆盖移动端布局"],
   "uncovered": ["真实网络抖动"]
 }

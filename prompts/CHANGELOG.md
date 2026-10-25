@@ -1,6 +1,6 @@
 # 提示词变更记录 / Prompt CHANGELOG
 
-> 规则：每次修改运行时提示词必须——升版本号、记录本文件、重新生成 `prompts/manifest.json`（`pnpm prompts:manifest`）、
+> 规则：每次修改运行时提示词必须——升版本号、记录本文件、重新生成 `prompts/manifest.json`（`npm run prompts:manifest`）、
 > 跑提示词测试（安全条款 / 禁止项 / 输出格式 / 无密钥与本机路径）。版本格式：`<role>@<semver>`。
 
 ## v1.0.0 — 2026-10-25
@@ -26,5 +26,5 @@
 **校验说明：**
 
 - 文件头统一为 `<!-- prompt: <id> | version: 1.0.0 | updated: 2026-10-25 -->`。
-- sha256 由 `pnpm prompts:manifest` 生成写入 `prompts/manifest.json`，以清单记录为准（本文件不记录摘要）。
+- sha256 由 `npm run prompts:manifest` 生成写入 `prompts/manifest.json`，以清单记录为准（本文件不记录摘要）。
 - 兼容性：首批版本，无旧版本替换；后续任何文字改动都必须升版本并在此追加记录。

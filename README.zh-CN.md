@@ -3,10 +3,13 @@
 **可托管的 AI 经营代理 / A composable operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations · evidence-first.
 
-> 状态：**脚手架（scaffold）** — 2026-10-25。本仓库目前只包含地基：许可证、治理文件、双语文档骨架、
-> 路线图与脚手架自检。**功能代码按里程碑 M0–M4 实现**（见 [ROADMAP.md](ROADMAP.md)）。
-> Status: **scaffold** — foundation only (license, governance, bilingual doc skeleton, roadmap,
-> scaffold checks). Feature code lands milestone by milestone (see [ROADMAP.md](ROADMAP.md)).
+> 状态：**M0 已完成** — 内核最小闭环已验证（2026-10-25）：`steward` CLI 用 MockHarness 跑通端到端空回路
+> （**无需付费 API**），**30/30** 单元+集成测试通过，**4** 份运行时提示词带 sha256 校验的 manifest；
+> 验收 **A1 / A6 / A12 通过**（见 [ROADMAP.md](ROADMAP.md) 与
+> [`docs/zh-CN/delivery-checklist.md`](docs/zh-CN/delivery-checklist.md) 中的证据）。
+> Status: **M0 complete** — minimal kernel loop verified (2026-10-25): the `steward` CLI runs an
+> end-to-end empty loop with MockHarness (no paid API), 30/30 unit + integration tests pass, and
+> 4 versioned runtime prompts ship with a sha256-checked manifest; acceptance A1/A6/A12 pass.
 
 ---
 
@@ -61,31 +64,50 @@ are denied by default and CAPTCHAs/2FA/human-verification always hand off to a h
 
 ## 仓库结构 / Repository layout
 
+本仓库为**单包布局**（无 pnpm workspace）：`tsconfig.json` 把 `packages/*/src` 与
+`apps/cli/src` 用 `tsc -p tsconfig.json` 编译到 `dist/`；命令一律用 npm。
+
 ```text
-packages/   core packages (steward-core, steward-conductor, steward-operator, ...)
-apps/       CLI and optional DSH profile ("cockpit")
-prompts/    versioned runtime prompts (loaded by PromptManager, tested)
+packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts;
+            steward-harness: MockHarness)
+apps/       CLI entry (steward: demo/run/branch/report/stop/version/help)
+prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
 examples/   demo-web, demo-desktop, mock-harness, scout-fixtures, demo-business
-tests/      unit / contract / e2e-browser / e2e-desktop / fault drills
-docs/       bilingual docs (en/ and zh-CN/)
-scripts/    dev/demo/test/lint, secret scan, delivery sync
-runs/       runtime artifacts (gitignored; evidence lives here)
+tests/      unit tests (M0 实现 30 条); contract / e2e / fault drills 后续里程碑
+docs/       双语文档（en/ 与 zh-CN/）+ 测试证据
+scripts/    校验/构建辅助、密钥扫描、证据包、交付同步
+runs/       每次运行的产物（gitignored；证据在此）
+dist/       构建输出（gitignored；单包构建）
 ```
 
-## 快速开始 / Quickstart
+## 快速开始 / Quickstart（M0）
 
-> 目前只有脚手架自检可运行（无需网络、无需付费 API）：
-> Only scaffold checks run today (no network, no paid API needed):
+> 克隆后即可离线运行，无需付费 API（MockHarness）：
+> M0 runs offline once cloned — no paid API (MockHarness):
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
 cd daizhang-steward
-# Node.js >= 22.18, pnpm >= 10
-pnpm check          # 校验仓库骨架 / verify scaffold
-pnpm check:secrets  # 密钥扫描 / secret scan
+# Node.js >= 22.18, npm
+npm install
+npm run check          # 校验仓库配置 / repo-config check
+npm run check:secrets  # 密钥扫描 / secret scan
+npm run build          # tsc -p tsconfig.json → dist/
+npm test               # 30/30 单元+集成测试 / unit + integration tests
+npm run demo           # 空回路 → runs/<run-id>/ + report.md（MockHarness）
+npm run test:prompts   # 提示词版本/安全测试（验收 A12）
+npm run evidence       # 证据包 → docs/test-evidence/test-result-<stamp>.{md,json}
 ```
 
-功能与演示将在 M0 完成后可用（`pnpm dev` / `pnpm demo` / `pnpm test`）。
+M0 能跑什么：CLI 已实现 `demo`、`run`、`branch`、`report`、`stop`、`version`、`help`
+（`takeover`、`approve` 为 M1/阶段二占位）。每次运行把证据写入 `runs/<run-id>/`：
+`prompt.md`、`report.md`、`console.log`、`meta.json`、`events.jsonl`（哈希链账本），以及
+MockHarness 回路产生的 `patch.diff`、`test.log`、`code-task.json`、`code-result.json`，
+另有 `screenshots/` 目录（M1 起由真实 E2E 填充）。也可直接调用构建产物：
+`node dist/apps/cli/src/index.js demo`。
+
+最新验证运行：`runs/run-20261025-172017-eb9116/` — 证据见
+[`docs/test-evidence/test-result-2026-10-25_09-20-15.md`](docs/test-evidence/test-result-2026-10-25_09-20-15.md)。
 
 ## 真实测试承诺 / Real-test pledge
 
@@ -111,6 +133,8 @@ share-alike on distribution. Third-party components keep their MIT/Apache-2.0 li
 ## 文档索引 / Docs index
 
 - [ROADMAP.md](ROADMAP.md) — 里程碑与批准门
+- [docs/zh-CN/delivery-checklist.md](docs/zh-CN/delivery-checklist.md) / [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — 验收条目与证据
+- [docs/test-evidence/](docs/test-evidence/) — 测试证据归档（`test-result-*.{md,json}`）
 - [docs/zh-CN/architecture.md](docs/zh-CN/architecture.md) / [docs/en/architecture.md](docs/en/architecture.md)
 - [docs/zh-CN/contracts.md](docs/zh-CN/contracts.md) / [docs/en/contracts.md](docs/en/contracts.md)
 - [docs/zh-CN/threat-model.md](docs/zh-CN/threat-model.md) / [docs/en/threat-model.md](docs/en/threat-model.md)

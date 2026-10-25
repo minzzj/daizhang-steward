@@ -31,4 +31,4 @@ allowed, but commercial use is prohibited, and distributed adaptations must use 
 For commercial licensing, please open an issue prefixed `[Commercial License]` on the GitHub
 repository. Scope, term and fees are negotiated separately; the signed agreement prevails.
 
-_Last updated: 2026-10-25 (scaffold)._
+_Last updated: 2026-10-25._

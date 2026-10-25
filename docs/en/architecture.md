@@ -1,6 +1,7 @@
 # Architecture
 
-> Status: design fixed at scaffold stage. Implementation lands through milestones M0–M4.
+> Status: design fixed; **M0 kernel loop implemented and verified (2026-10-25)**, the rest lands
+> through M1–M4.
 > Companions: `contracts.md`, `threat-model.md`, `adapters.md`.
 
 ## 1. Design principles
@@ -33,10 +34,14 @@
 
 | Mode | Command | Purpose |
 |---|---|---|
-| Core CLI | `pnpm steward run/branch/report/stop/takeover` | 24/7 operation, demos, acceptance |
+| Core CLI | `node dist/apps/cli/src/index.js demo/run/branch/report/stop/version/help` | 24/7 operation, demos, acceptance |
 | DSH cockpit (optional) | `dsh --profile daizhang web` | Human oversight GUI; mounts `steward-mcp` plus `dsh-browser`/`dsh-computer-use` |
 
 The core is a standalone Node/TS process; the cockpit is only an optional human interface.
+
+The repository is a **single package** (no pnpm workspace): `packages/*/src` + `apps/cli/src` are
+compiled by `tsc -p tsconfig.json` into `dist/`, and all commands use npm (`npm run build`, `npm test`,
+`npm run demo`). `takeover` and `approve` are placeholder commands at M0.
 
 ## 4. Branch lifecycle
 
@@ -52,8 +57,9 @@ branches stop automatically.
 ## 5. Evidence and ledger
 
 - `events.jsonl`: append-only with `seq` and a hash chain; fields in `contracts.md`; secrets redacted.
-- `runs/<run-id>/`: `prompt.md`, `patch.diff`, `test.log`, `screenshots/`, `console.log`,
-  `report.md`, `approval.json`.
+- `runs/<run-id>/`: at M0 each run writes `prompt.md`, `report.md`, `console.log`, `meta.json`,
+  `events.jsonl`, plus `code-task.json`, `code-result.json`, `patch.diff` and `test.log` from the
+  MockHarness loop; `screenshots/` (real E2E from M1) and `approval.json` (from M1) are filled later.
 - The SQLite index is rebuildable by replaying events; after a crash, resume from the checkpoint
   without resending messages or double-paying.
 

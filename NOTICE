@@ -24,7 +24,7 @@ this project's non-commercial license does not alter them.
    preserved. This `NOTICE` and the dependency manifests fulfill that obligation.
 2. 若未来把第三方代码直接收录进本仓库（vendoring），其文件头将保留原始版权与许可证声明。
    If third-party code is ever vendored into this repository, original headers will be preserved.
-3. 本仓库的 `pnpm-lock.yaml` 固定依赖版本；发布二进制/压缩包时会生成完整 `THIRD_PARTY_LICENSES.md`。
+3. 本仓库的 `package-lock.json` 固定依赖版本；发布二进制/压缩包时会生成完整 `THIRD_PARTY_LICENSES.md`。
    A full `THIRD_PARTY_LICENSES.md` will be generated for any release archive.
 
-_Last updated: 2026-10-25 (scaffold)._
+_Last updated: 2026-10-25 (M0)._

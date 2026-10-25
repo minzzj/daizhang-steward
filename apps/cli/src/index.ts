@@ -143,7 +143,7 @@ async function loadPrompts(): Promise<PromptManager | undefined> {
     return await PromptManager.load(paths.prompts);
   } catch (error) {
     console.error(`[warn] 提示词未加载：${(error as Error).message}`);
-    console.error("[warn] 先运行 `pnpm prompts:manifest` 生成/更新 prompts/manifest.json");
+    console.error("[warn] 先运行 `npm run prompts:manifest` 生成/更新 prompts/manifest.json");
     return undefined;
   }
 }

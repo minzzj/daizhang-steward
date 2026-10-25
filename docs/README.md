@@ -11,9 +11,13 @@
 | [zh-CN/threat-model.md](zh-CN/threat-model.md) · [en/threat-model.md](en/threat-model.md) | 威胁模型与默认拒绝清单 |
 | [zh-CN/adapters.md](zh-CN/adapters.md) · [en/adapters.md](en/adapters.md) | 浏览器/桌面/模型/通知/IoT 适配器契约 |
 | [zh-CN/runtime-prompts.md](zh-CN/runtime-prompts.md) · [en/runtime-prompts.md](en/runtime-prompts.md) | 运行时提示词的版本、测试与替换规则 |
-| [zh-CN/delivery-checklist.md](zh-CN/delivery-checklist.md) · [en/delivery-checklist.md](en/delivery-checklist.md) | 验收 × 证据映射（A1–A12 / B1–B8 / U1–U8） |
-| [test-evidence/README.md](test-evidence/README.md) | 测试证据归档规范 |
+| [zh-CN/delivery-checklist.md](zh-CN/delivery-checklist.md) · [en/delivery-checklist.md](en/delivery-checklist.md) | 验收 × 证据映射（A1–A12 / B1–B8 / U1–U8；M0 已完成 A1/A6/A12） |
+| [test-evidence/README.md](test-evidence/README.md) | 测试证据归档规范；自动生成的 `test-result-*.{md,json}` 与发布验证记录 |
+| [../runs/](../runs/) | 每次运行的产物本体（gitignored；证据在此，不在文档目录） |
 | [images/README.md](images/README.md) | 截图规范（E2E 自动生成、中性路径） |
+
+> 当前状态（2026-10-25）：**M0 完成** — A1 / A6 / A12 通过；证据见
+> [test-evidence/test-result-2026-10-25_09-20-15.md](test-evidence/test-result-2026-10-25_09-20-15.md)。
 
 ## 写作规则 / Writing rules
 
