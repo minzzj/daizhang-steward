@@ -5,15 +5,16 @@
 
 ## [Unreleased]
 
-### Planned — Phase 2 (remaining)
-- **P2 长跑收尾**：真实 2 小时断网 + 15 分钟封禁长跑证据（`long-drill-*`）入库；强杀恢复、72h 失联、
-  循环超限等扩展故障演练
-- **P4 发布**：v1.0.0 + GitHub Release + 验收包 + 真实截图宣传片（BGM/静音双版本）
+### Planned — Phase 2 (remaining → P4)
+- **P4 发布**：v1.0.0 + GitHub Release + 验收包 + 真实截图宣传片（BGM/静音双版本）+ 双语文档终审 +
+  30 条边界与 8 条验收完整对照
+- 强杀恢复、72h 失联、循环超限等扩展故障演练（`tests/fault/` 端到端）
 - 通知与协助：Windows Toast / 邮件 / Webhook / 交接流程
 - IoT 适配器契约（stub）+ MCP server
 - 企业专属 UI（企业看板/工作流页面）
+- 真实银行/税务/CA/电子签章系统对接（P4 后）
 
-## [0.8.0] — 2026-10-25
+## [0.8.0] — 2026-10-26
 
 ### Added — 阶段二 P3 企业版 MVP（B8 通过 + 30 条边界双模式表）
 
@@ -44,15 +45,22 @@
 - **CI**：新增 P3 企业版演示步骤（B8 + 30 条边界，无网络）。
 
 ### Changed
-- 验收：**B8 通过**；30 条边界双模式标注表完成；企业 run `run-20261025-232357-2ce6f6`；P3 交付
-  **v0.8.0**（GitHub Release/tag 待 Lead 按发布节奏处理；`package.json` 当前版本以仓库为准）。
+- 验收：**B8 通过**；30 条边界双模式标注表完成；企业 run `run-20261025-232357-2ce6f6`；**阶段二
+  P2+P3 合并发布 v0.8.0**（GitHub Release，Latest，tag `95b609a`；发布说明
+  `docs/RELEASE_NOTES_v0.8.0.md`；发布验证 `docs/test-evidence/release-v0.8.0-check.md` +
+  `docs/images/release-v0.8.0.png`）。
+- **P2 真实长跑已通过（2026-10-26）**：`npm run drill:long` 真实时长（断网 120 分钟 / 封禁 15 分钟）——
+  B3：1435 次承诺被拒/0 新增、1435 条动作全部补记、`duplicates_found=0`、二次对账 `entries_added=0`；
+  B4：9ms 检测、180 次尝试 0 成功、5 条替代方案 + 通知、解禁恢复；证据
+  `docs/test-evidence/long-drill-2026-10-25_15-02-52.{md,json}` +
+  `evidence-long-drill-2026-10-25_15-02-52/`（11 文件，已脱敏）。**B3/B4 通过 → 阶段二 B1–B8 全部通过。**
 - 文档同步：README 中英、ROADMAP、HANDOFF、ASSUMPTIONS、docs/README、delivery-checklist 中英、
-  architecture 中英、packages/apps/tests/examples README 更新到「阶段二 P3 完成 / v0.8.0 待发版」，
+  architecture 中英、packages/apps/tests/examples README 更新到「阶段二 P2+P3 完成 / v0.8.0 已发布」，
   并新增 `docs/zh-CN/enterprise.md` + `docs/en/enterprise.md`。
 
 ## [0.7.0] — 2026-10-25
 
-### Added — 阶段二 P2 故障演练（B3 / B4 短跑通过；长跑进行中）
+### Added — 阶段二 P2 故障演练（B3 / B4 短跑 + 真实长跑均通过）
 
 - **故障演练模块 `packages/steward-fault`**：**真实 localhost HTTP 故障注入**（不用 mock/stub）——
   B3 断网（真实 `ECONNREFUSED`）：断网期间**不产生新承诺**（`PromisesGate` 拒绝并计数）、动作进入
@@ -69,12 +77,18 @@
   （10 文件，已脱敏；断网 `outage=120007ms`、25 次承诺被拒、25 条排队/重放、账本重复 0；
   封禁 11ms 检测、替代方案 5 条、通知留痕）。
 - **CI**：新增真实 localhost 故障演练步骤（B3/B4 短跑，`--outage-minutes 0.2 --ban-minutes 0.2`）。
+- **`npm run drill:long`（真实长跑，2026-10-26 通过）**：真实时长不加速——**B3 断网 120 分钟
+  （7215 秒）** → **1435 次承诺被拒、0 新增**，1435 条动作入 Outbox 并**全部补记**、
+  **`duplicates_found=0`**、二次对账 `entries_added=0`、恢复在 10 分钟内；**B4 封禁 15 分钟（900 秒）**
+  → **9ms 检测**、**180 次尝试 0 成功**、停止动作 + **5 条替代方案** + 通知、解禁恢复；证据
+  `docs/test-evidence/long-drill-2026-10-25_15-02-52.{md,json}` +
+  `evidence-long-drill-2026-10-25_15-02-52/`（11 文件，已脱敏）。
 
 ### Changed
-- 验收：**B3/B4 短跑通过**（11/11 检查）；**真实 2 小时断网 + 15 分钟封禁长跑仍在后台运行**，
-  长跑证据（`long-drill-*`）待 Lead 入库后才算完整通过。P2 交付 **v0.7.0 待发版**。
+- 验收：**B3/B4 通过**（短跑 11/11 + 真实长跑）；阶段二 **B1–B8 全部通过**；P2 与 P3 合并发布
+  **v0.8.0**（GitHub Release，Latest，tag `95b609a`）。
 - 文档同步：README 中英、ROADMAP、HANDOFF、ASSUMPTIONS、docs/README、delivery-checklist 中英、
-  architecture 中英、packages/apps/tests/examples README 更新到「P2 短跑通过 / 长跑进行中」。
+  architecture 中英、packages/apps/tests/examples README 更新到「阶段二 P2+P3 完成 / v0.8.0 已发布」。
 
 ## [0.6.0] — 2026-10-25
 
@@ -293,8 +307,8 @@
 - 双语文档骨架：architecture / contracts / threat-model / adapters / runtime-prompts / delivery-checklist
 - 脚手架自检 `pnpm check`、密钥扫描 `pnpm check:secrets`、交付同步脚本 `scripts/sync-delivery.ps1`
 
-[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.6.0...HEAD
-[0.8.0]: https://github.com/minzzj/daizhang-steward/compare/v0.6.0...0185e50
+[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0
 [0.7.0]: https://github.com/minzzj/daizhang-steward/compare/v0.6.0...a41fe68
 [0.6.0]: https://github.com/minzzj/daizhang-steward/compare/v0.5.0...2db8da3
 [0.5.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0

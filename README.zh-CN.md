@@ -3,33 +3,35 @@
 **可托管的 AI 经营代理 / A composable operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations · evidence-first.
 
-> 状态：**阶段二 P3 完成 —— 企业版 MVP（v0.8.0，待发版）**（2026-10-25）。在阶段一操作型 AI 内核
+> 状态：**阶段二 P2 + P3 完成 —— v0.8.0 已发布**（2026-10-26）。在阶段一操作型 AI 内核
 > （真实浏览器 A2/A4/A5、真实 Windows 桌面 A3、安全模块 A8/A9、Scout A7、A10 dummy 分支、A11 发布就绪、
 > A12 提示词）与阶段二个人版 MVP（P1：经营域引擎、仿真业务线、本地 Web 控制台、审批/接管/月报、
-> 18 条个人模式边界）之上，阶段二新增：
-> **P2 故障演练**——真实 localhost HTTP 故障注入（真实 `ECONNREFUSED` 断网 + 真实 `403` 平台封禁）、
-> 断网承诺闸门（离线期间不产生新承诺）、幂等 Outbox/重放（账本不重复）+ 封禁时生成替代方案并本地通知
-> （B3/B4；**短跑验收已通过，真实 2 小时断网 + 15 分钟封禁长跑仍在进行中**，长跑证据由 Lead 后续入库）；
+> 18 条个人模式边界）之上，阶段二完成：
+> **P2 故障演练（完成：短跑 + 真实长跑）**——真实 localhost HTTP 故障注入（真实 `ECONNREFUSED` 断网 +
+> 真实 `403` 平台封禁）、断网承诺闸门、幂等 Outbox/重放（账本零重复）+ 封禁时替代方案与本地通知。
+> 真实长跑：断网 **120 分钟（7215 秒）** → **1435 次承诺被拒、0 新增**，1435 条动作入 Outbox 且恢复后
+> **全部补记**、**`duplicates_found=0`**、二次对账 `entries_added=0`；封禁 **15 分钟（900 秒）** →
+> **9ms 检测**、**180 次尝试 0 成功**、停止动作 + **5 条替代方案** + 通知、解禁恢复；
 > **P3 企业版**——企业主体与授权校验（执照/税号/授权书人签/用印人签）、对公账户、增值税专票
 > （抬头/税号/合同一致校验）、**发票仅草稿待人工确认**、税务申报草稿（AI 不代提交）、**双人复核**
 > （1 人不生效、2 位不同角色才生效）、组织审批链（按金额 1/2/3 级）、**AI 不代签**
 > （`ai_may_sign=false`）、用工/资质类转人工、多代理串行、**B8 双模式一致性且 6 类不一致全部阻断**、
 > **30 条边界双模式标注表**。
 > **151/151** 单元+集成测试通过（16 个测试文件）；CLI 现为 **19 个已实现命令 + 0 个占位**。验收
-> **A1–A12 通过**，阶段二 **B1/B2/B5/B6/B7/B8 通过**，P2 **短跑通过**（11/11 检查）、长跑进行中。详见
+> **A1–A12 通过**，阶段二 **B1–B8 全部通过**（B3/B4 含真实长跑）。**GitHub Release
+> [v0.8.0](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0)（Latest）已发布**；下一步 P4
+> （v1.0.0 + 宣传片）。详见
 > [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md) / [`docs/en/enterprise.md`](docs/en/enterprise.md)、
 > [ROADMAP.md](ROADMAP.md) 与 [`docs/zh-CN/delivery-checklist.md`](docs/zh-CN/delivery-checklist.md)。
-> Status: **Phase 2 P3 complete — enterprise MVP (v0.8.0, release pending)** (2026-10-25): on top of the
-> phase-1 core and the phase-2 personal-edition MVP (P1), phase 2 now adds **P2 fault drills** (real
-> localhost HTTP faults: real `ECONNREFUSED` outage + real `403` platform ban; offline promise gate,
-> idempotent outbox/replay with 0 duplicate ledger entries and alternative-plan notifications — short run
-> passed, the real 2-hour outage + 15-minute ban long run is still in progress) and the **P3 enterprise
-> edition** (entity/auth/seal with human signing only, corporate account, VAT special invoices with
-> title/tax/contract validation, invoice and tax-filing drafts the AI never submits, dual review with two
-> different roles, org approval chain 1/2/3 levels, employment/qualification hand-offs, multi-agent
-> serialization, B8 dual-mode consistency with all 6 mismatch classes blocked, and a 30-rule dual-mode
-> boundary table). 151/151 tests pass (16 files); the CLI ships 19 implemented commands + 0 placeholders;
-> acceptance A1–A12 + phase-2 B1/B2/B5/B6/B7/B8 pass, P2 short run passed.
+> Status: **Phase 2 P2 + P3 complete — v0.8.0 released** (2026-10-26): P2 fault drills (real localhost
+> HTTP faults; short run + real **120-min outage / 15-min ban** long run: 1435 promises blocked / 0 new,
+> 1435 queued and all replayed, 0 duplicate ledger entries; ban detected in 9 ms with 180 attempts and
+> 0 successes, 5 alternative items) and the **P3 enterprise edition** (entity/auth/seal with human signing
+> only, corporate invoices with validation, draft-only filing, dual review, org approval chain,
+> B8 dual-mode consistency with all 6 mismatch classes blocked, and a 30-rule dual-mode boundary table).
+> 151/151 tests pass (16 files); 19 implemented commands + `help`, 0 placeholders; acceptance
+> A1–A12 and phase-2 B1–B8 all pass. GitHub Release **v0.8.0** is live (Latest); P4 (v1.0.0 + promo
+> video) is next.
 
 ---
 
@@ -63,11 +65,12 @@ are denied by default and CAPTCHAs/2FA/human-verification always hand off to a h
 | 阶段 | 内容 | 状态 |
 |---|---|---|
 | Phase 1 | 开源「操作型 AI 内核」：Operator + Harness 编码回路 + Scout + Conductor；12 条可复现验收 | ✅ **已完成（v0.5.0，A1–A12 全部通过）** |
-| Phase 2 | 代掌经营代理：**个人版优先**（一条仿真业务线跑通），再企业版；8 条验收 + 30 条边界 | 🔄 **进行中 —— P1 个人版 MVP（v0.6.0）已完成；P2 故障演练（短跑通过、长跑进行中）；P3 企业版 MVP（v0.8.0）已完成且 B8 通过**；下一步 P4（v1.0.0 + 宣传片） |
+| Phase 2 | 代掌经营代理：**个人版优先**（一条仿真业务线跑通），再企业版；8 条验收 + 30 条边界 | ✅ **已完成（v0.8.0，B1–B8 全部通过）—— P1 个人版（v0.6.0）；P2 故障演练（含真实 120 分钟断网 + 15 分钟封禁长跑）；P3 企业版（B8 + 30 条边界）**；下一步 P4（v1.0.0 + 宣传片） |
 
-阶段一已完成并以 **v0.5.0** 发布；阶段二已交付 **P1 个人版 MVP（v0.6.0）** 与 **P3 企业版 MVP
-（v0.8.0，待发版）**；**P2 故障演练短跑已通过，真实 2 小时断网 + 15 分钟封禁长跑仍在运行**；
-下一步 P4（v1.0.0 + 宣传片），见 [ROADMAP.md](ROADMAP.md)。
+阶段一已完成并以 **v0.5.0** 发布；阶段二已交付 **P1 个人版 MVP（v0.6.0）**、**P2 故障演练**（短跑 +
+真实 120 分钟断网 / 15 分钟封禁长跑，均通过）与 **P3 企业版 MVP**，三者合并发布为 **v0.8.0**
+（[GitHub Release](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0)）；**B1–B8 全部通过**，
+**下一步 P4（v1.0.0 + 宣传片）**，见 [ROADMAP.md](ROADMAP.md)。
 
 ## 架构一览 / Architecture at a glance
 
@@ -133,11 +136,11 @@ dist/       构建输出（gitignored；单包构建）
 
 ## 快速开始 / Quickstart（M0 → v0.8.0）
 
-> 阶段一已完成、阶段二 P1/P3 已交付（P2 故障演练短跑通过、长跑进行中），全部里程碑都可在本机离线
-> 复现。M0 克隆后即可离线运行（MockHarness，无需付费 API）；M1 增加真实浏览器回路；M2 增加真实
-> Windows 桌面回路与安全模块；M3 增加 fixture 驱动的 Scout 客户分支；M4 增加 A10 只读 dummy 分支与
-> 发布就绪验收；**P1 增加经营域、本地 Web 控制台与仿真业务线（B1/B2/B5/B6/B7）**；**P2 增加真实
-> localhost 故障演练（B3/B4 短跑）**；**P3 增加企业版、B8 与 30 条边界双模式表**：
+> 阶段一已完成、阶段二 P1/P2/P3 已交付并发布 **v0.8.0**，全部里程碑都可在本机离线复现。M0 克隆后即可
+> 离线运行（MockHarness，无需付费 API）；M1 增加真实浏览器回路；M2 增加真实 Windows 桌面回路与安全
+> 模块；M3 增加 fixture 驱动的 Scout 客户分支；M4 增加 A10 只读 dummy 分支与发布就绪验收；**P1 增加
+> 经营域、本地 Web 控制台与仿真业务线（B1/B2/B5/B6/B7）**；**P2 增加真实 localhost 故障演练
+>（B3/B4 短跑 + 真实 120 分钟/15 分钟长跑）**；**P3 增加企业版、B8 与 30 条边界双模式表**：
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
@@ -158,6 +161,7 @@ npm run acceptance:m3  # M3 Scout 验收（A7：14 线索 → 丢弃 4 → 合�
 npm run acceptance:m4  # M4（阶段一）发布就绪验收（版本一致性为动态检查，可在后续版本重跑）
 npm run acceptance:p1  # P1 个人版 MVP 验收（B1/B2/B5/B6/B7 + 控制台 E2E + 113 测试），仅本机
 npm run acceptance:p2  # P2 故障演练**短跑**（B3/B4：约 2 分钟断网 + 2 分钟封禁，真实 localhost HTTP），仅本机
+npm run drill:long     # P2 **真实长跑**（B3：断网 120 分钟 / B4：封禁 15 分钟，真实时长），仅本机；生成 long-drill-* 证据
 npm run acceptance:p3  # P3 企业版验收（B8 + 30 条边界 + 双人复核/用印/发票/组织审批链），仅本机
 # 阶段二 P1 快速体验（全部离线、纯虚构数据）：
 node dist/apps/cli/src/index.js business          # 选题/仿真业务线/账本 6 要素/承诺追溯/接管包/月报/边界
@@ -226,14 +230,20 @@ deny）、双人复核（1 人 `applied=false`、2 位不同角色 `applied=true
 （3000/20000/80000）、用工/资质转人工、企业 fixtures 交叉验证 8/8；**151/151** 测试。详见
 [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md)（30 条边界表全文）。
 
-最新 P2 故障演练验收——**短跑通过、长跑进行中**（2026-10-25，`npm run acceptance:p2` OK，短跑
-**11/11 检查**；真实 2 小时断网 + 15 分钟封禁长跑仍在运行，长跑证据由 Lead 后续入库）：
+最新 P2 故障演练验收——**完成：短跑 + 真实长跑均通过**（2026-10-26，`npm run acceptance:p2` OK，短跑
+**11/11 检查**；真实长跑 `npm run drill:long`）：短跑证据
 [`docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md)
-（· [`.json`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.json)）；证据包
+（· [`.json`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.json)）+ 证据包
 [`docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`](docs/test-evidence/evidence-p2-2026-10-25_15-02-52/)
-（10 个文件，已脱敏）：B3 断网（真实 `ECONNREFUSED`；短跑 `outage=120007ms`、**25 次承诺被拒**、
-**25 条排队/重放动作**、**账本重复 0**、10 分钟内恢复）、B4 平台封禁（真实 `403+x-platform-ban`；
-**11ms 检测**、动作停止、**替代方案 5 条**、本地通知留痕）。短跑检查全部 ✅；**长跑尚未完成**。
+（10 文件，已脱敏：短跑断网 120007ms、25 次承诺被拒、25 条排队/重放、账本重复 0；封禁 11ms 检测、
+替代方案 5 条、通知留痕）。**真实长跑**（真实时长，不加速）：
+[`docs/test-evidence/long-drill-2026-10-25_15-02-52.md`](docs/test-evidence/long-drill-2026-10-25_15-02-52.md)
+（· [`.json`](docs/test-evidence/long-drill-2026-10-25_15-02-52.json)）+ 证据包
+[`docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/`](docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/)
+（11 文件，已脱敏）：**B3 真实断网 120 分钟（7215 秒）** → **1435 次承诺被拒、0 新增**，1435 条动作入
+Outbox 且恢复后**全部补记**、**`duplicates_found=0`**、二次对账 `entries_added=0`；**B4 真实封禁
+15 分钟（900 秒）** → **9ms 检测**、**180 次尝试 0 成功**、停止动作 + **5 条替代方案** + 通知、解禁恢复。
+**B1–B8 全部通过。**
 
 最新 P1 个人版 MVP 验收（2026-10-25，本机有头 Chrome，`npm run acceptance:p1` OK，12/12 检查）：
 [`docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.md`](docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.md)
@@ -251,7 +261,8 @@ A11 发布就绪（CC BY-NC-SA 4.0 许可证全文、第三方 NOTICE、商用�
 [`docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.md`](docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.md)
 （· [`.json`](docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.json)）+
 [`docs/test-evidence/evidence-m4-2026-10-25_13-43-07/`](docs/test-evidence/evidence-m4-2026-10-25_13-43-07/)。
-发布说明：[`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md)。
+发布说明：[`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md)（后续版本：
+[`v0.6.0`](docs/RELEASE_NOTES_v0.6.0.md) P1、[`v0.8.0`](docs/RELEASE_NOTES_v0.8.0.md) P2+P3）。
 
 最新 M3 验收（2026-10-25，本机 fixture 驱动 Scout 运行，无网络，`npm run acceptance:m3` OK，
 12/12 检查）：[`docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md`](docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md)
@@ -320,13 +331,13 @@ share-alike on distribution. Third-party components keep their MIT/Apache-2.0 li
 
 ## 文档索引 / Docs index
 
-- [ROADMAP.md](ROADMAP.md) — 里程碑与批准门（阶段一完成；阶段二 P1 + P3 完成，P2 长跑进行中，P4 下一步）
-- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) · [docs/RELEASE_NOTES_v0.6.0.md](docs/RELEASE_NOTES_v0.6.0.md) — 阶段一 / P1 发布说明（中英）
+- [ROADMAP.md](ROADMAP.md) — 里程碑与批准门（阶段一完成；阶段二 P1/P2/P3 完成并发布 v0.8.0，P4 下一步）
+- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) · [docs/RELEASE_NOTES_v0.6.0.md](docs/RELEASE_NOTES_v0.6.0.md) · [docs/RELEASE_NOTES_v0.8.0.md](docs/RELEASE_NOTES_v0.8.0.md) — 阶段一 / P1 / P2+P3 发布说明（中英；v0.8.0 已发布）
 - [docs/zh-CN/enterprise.md](docs/zh-CN/enterprise.md) / [docs/en/enterprise.md](docs/en/enterprise.md) — P3 企业版 + 30 条边界双模式标注表
 - [docs/demo-script.zh-CN.md](docs/demo-script.zh-CN.md) / [docs/demo-script.md](docs/demo-script.md) — 3 分钟演示脚本
 - [docs/good-first-issues.md](docs/good-first-issues.md) — 5 个 Good First Issues（中英）
-- [docs/zh-CN/delivery-checklist.md](docs/zh-CN/delivery-checklist.md) / [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — 验收条目与证据（A1–A12 通过；阶段二 B1/B2/B5/B6/B7/B8 通过；P2 短跑通过 / 长跑进行中）
-- [docs/test-evidence/](docs/test-evidence/) — 测试证据归档（`test-result-*`、`m1-acceptance-*`…`m4-acceptance-*`，`p1-acceptance-*` + `evidence-p1-*`、`p2-acceptance-*` + `evidence-p2-*`（短跑）、`p3-acceptance-*` + `evidence-p3-*`；长跑证据待入库）
+- [docs/zh-CN/delivery-checklist.md](docs/zh-CN/delivery-checklist.md) / [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — 验收条目与证据（A1–A12 通过；阶段二 B1–B8 全部通过，含 P2 真实长跑）
+- [docs/test-evidence/](docs/test-evidence/) — 测试证据归档（`test-result-*`、`m1-acceptance-*`…`m4-acceptance-*`，`p1-acceptance-*` + `evidence-p1-*`、`p2-acceptance-*` + `evidence-p2-*`（短跑）、`long-drill-2026-10-25_15-02-52.*` + `evidence-long-drill-2026-10-25_15-02-52/`（真实长跑）、`p3-acceptance-*` + `evidence-p3-*`，以及 `release-v0.5.0/v0.6.0/v0.8.0-check.md`）
 - [docs/zh-CN/architecture.md](docs/zh-CN/architecture.md) / [docs/en/architecture.md](docs/en/architecture.md)
 - [docs/zh-CN/adapters.md](docs/zh-CN/adapters.md) / [docs/en/adapters.md](docs/en/adapters.md)
 - [packages/steward-desktop/README.md](packages/steward-desktop/README.md) — 真实 Windows 桌面适配器

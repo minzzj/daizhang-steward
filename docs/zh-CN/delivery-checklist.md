@@ -1,10 +1,10 @@
 # 交付物与验收清单 / Delivery Checklist（中文）
 
 > 每条验收 = 编号 + 命令/操作 + 证据路径 + 最近结果（证据必须能打开）。
-> **阶段一（M0–M4）已完成并以 v0.5.0 发布：A1–A12 全部 `通过`。阶段二：P1 个人版 MVP（v0.6.0）——
-> B1/B2/B5/B6/B7 通过；P2 故障演练——短跑通过、长跑进行中；P3 企业版 MVP（v0.8.0 待发版）——
-> B8 通过 + 30 条边界双模式表。**
-> 最近一次更新：2026-10-25（阶段二 P3 完成，v0.8.0 待发版）
+> **阶段一（M0–M4）已完成并以 v0.5.0 发布：A1–A12 全部 `通过`。阶段二已完成并发布 v0.8.0：
+> P1 个人版 MVP（v0.6.0）B1/B2/B5/B6/B7 通过；P2 故障演练**短跑 + 真实长跑均通过**（B3/B4）；
+> P3 企业版 MVP（v0.8.0）B8 通过 + 30 条边界双模式表 —— 阶段二 B1–B8 全部通过。**
+> 最近一次更新：2026-10-26（阶段二 P2 长跑完成，v0.8.0 已发布）
 
 ## A. 阶段一（文档 1，12 条）
 
@@ -78,16 +78,20 @@
 > `docs/test-evidence/evidence-p1-2026-10-25_14-18-54/`（39 文件：business-run / boundary-run /
 > console-e2e / console-cli / takeover-result / unit-tests.log，已脱敏）。
 >
-> **P2 验收结论（2026-10-25，故障演练 —— 短跑通过 / 长跑进行中）**：`npm run acceptance:p2` **短跑
-> 11/11 检查全 ✅**（build + **133/133** 测试 + B3/B4 演练）。B3 断网（真实 `ECONNREFUSED`，短跑
-> `outage=120007ms`）：断网期间**不产生新承诺**（25 次被拒）、动作进入 **Outbox 排队**（25 条）、恢复后
-> **10 分钟内补记**（重放 25 条）、**账本重复 0**（幂等）；B4 平台封禁（真实 `403+x-platform-ban`）：
-> **11ms 内检测**并停止动作、生成**替代方案 5 条**、本地通知留痕、解禁恢复。证据：
+> **P2 验收结论（2026-10-26，故障演练 —— 完成：短跑 + 真实长跑均通过）**：`npm run acceptance:p2`
+> **短跑 11/11 检查全 ✅**（build + **133/133** 测试 + B3/B4 演练）；`npm run drill:long` **真实长跑通过**
+> （真实时长不加速，2026-10-26）。短跑：B3 断网 `outage=120007ms`、25 次承诺被拒、25 条排队/重放、
+> 账本重复 0；B4 封禁 11ms 检测、替代方案 5 条、通知留痕。**真实长跑**：**B3 断网 120 分钟（7215 秒）**
+> → **1435 次承诺被拒、0 新增**、1435 条动作入 Outbox、恢复后**全部补记**、**`duplicates_found=0`**、
+> 二次对账 `entries_added=0`；**B4 封禁 15 分钟（900 秒）** → **9ms 检测**、**180 次尝试 0 成功**、
+> 停止动作 + **5 条替代方案** + 通知、解禁恢复。证据：短跑
 > `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` +
-> `docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`（10 文件，已脱敏）。**真实 2 小时断网 +
-> 15 分钟封禁长跑仍在后台运行，`evidence-long-drill-*` 待 Lead 入库；长跑完成前 B3/B4 不算完整通过。**
+> `docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`（10 文件）；长跑
+> `docs/test-evidence/long-drill-2026-10-25_15-02-52.{md,json}` +
+> `docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/`（11 文件，已脱敏）。**B3/B4 通过 → B1–B8
+> 全部通过；已随 v0.8.0 发布。**
 >
-> **P3 验收结论（2026-10-25，企业版 MVP，v0.8.0 待发版）**：**B8 通过**，`npm run acceptance:p3` OK
+> **P3 验收结论（2026-10-25，企业版 MVP，v0.8.0 已发布）**：**B8 通过**，`npm run acceptance:p3` OK
 > （**12/12 检查全 ✅**；build + **151/151** 测试 + 企业版流程）。B8：个人/企业双模式各跑一单，
 > 主体/抬头/收款/发票类型一致（subject/invoice/payment consistent=true），**6 类不一致全部阻断**
 > （阻断时不产生发票/收款）；**30 条边界双模式标注表**（个人/企业 × 已实现/人工/不适用；四类重点
@@ -104,15 +108,15 @@
 
 ## B. 阶段二（文档 2，8 条）
 
-> P1（个人版 MVP）覆盖 **B1 / B2 / B5 / B6 / B7**（已通过）；**P2 故障演练覆盖 B3 / B4（短跑通过、
-> 长跑进行中）**；**P3 企业版覆盖 B8（已通过）**。
+> P1（个人版 MVP）覆盖 **B1 / B2 / B5 / B6 / B7**（已通过）；**P2 故障演练覆盖 B3 / B4（短跑 +
+> 真实长跑均通过）**；**P3 企业版覆盖 B8（已通过）**；**阶段二 B1–B8 全部通过，已随 v0.8.0 发布。**
 
 | # | 验收 | 场景 | 证据 | 状态 |
 |---|---|---|---|---|
 | B1 | 选题：5 万预算 30 天 ≥3 条业务线，30 秒打开来源 | 仿真业务线提案 | `evidence-p1-2026-10-25_14-18-54/business-run/proposal.json`（3 条合格、来源 URL 可查、proposal=true；business 命令 157ms）；run `run-20261025-221904-b56b1a` | ✅ 通过（2026-10-25，P1） |
 | B2 | 记账：一笔支出 30 秒看到 6 要素 | 账本详情 | `evidence-p1-2026-10-25_14-18-54/business-run/ledger-facts.json`（2 笔 × 6 要素全齐）；控制台 `/ledger` 详情抽屉 + `console-e2e/screenshots/004-ledger-facts.png` | ✅ 通过（2026-10-25，P1） |
-| B3 | 断网 2 小时不出新承诺，恢复 10 分钟补记 | 真实断网演练 | 短跑：`evidence-p2-2026-10-25_15-02-52/B3-net-outage/`（`drill-net-outage.json`：outage=120007ms、blocked_promises=25、queued_actions=25、replayed=25、`duplicates_found=0`、recovered_within_10min=true；outbox/ledger + 断网/恢复通知）；**长跑（120min）进行中，证据待入库** | 🟡 **短跑 ✅ 通过 / 长跑进行中**（2026-10-25，P2） |
-| B4 | 平台 B 封禁 15 分钟停止并出替代方案 | 封号故障注入 | 短跑：`evidence-p2-2026-10-25_15-02-52/B4-platform-ban/`（`drill-platform-ban.json`：ban_detected_within_ms=11、stopped=true、actions_attempted_during_ban=24；`alternative-plan.json` 5 条替代项；封禁/恢复通知留痕）；**长跑（15min）进行中，证据待入库** | 🟡 **短跑 ✅ 通过 / 长跑进行中**（2026-10-25，P2） |
+| B3 | 断网 2 小时不出新承诺，恢复 10 分钟补记 | 真实断网演练 | **真实长跑（2026-10-26）**：`evidence-long-drill-2026-10-25_15-02-52/B3-net-outage-120min/`（`drill-net-outage.json`：outage 120 分钟 = 7214994ms、`blocked_promises=1435`、**0 新增承诺**、`queued_actions=1435`、`replayed=1435`、`duplicates_found=0`、二次对账 `entries_added=0`、`recovered_within_10min=true`；outbox/ledger + 断网/恢复通知）；短跑：`evidence-p2-.../B3-net-outage/`（25/25/25、重复 0） | ✅ 通过（2026-10-26，P2 长跑） |
+| B4 | 平台 B 封禁 15 分钟停止并出替代方案 | 封号故障注入 | **真实长跑（2026-10-26）**：`evidence-long-drill-2026-10-25_15-02-52/B4-platform-ban-15min/`（`drill-platform-ban.json`：`ban_minutes=15`、`ban_detected_within_ms=9`、`stopped=true`、`actions_attempted_during_ban=180`、**`successful_actions_during_ban=0`**；`alternative-plan.json` 5 条替代项；封禁/恢复通知留痕）；短跑：`evidence-p2-.../B4-platform-ban/`（11ms 检测、24 次尝试、5 条替代） | ✅ 通过（2026-10-26，P2 长跑） |
 | B5 | 对外承诺可追溯到对话原文与授权条款 | 承诺追溯 | `evidence-p1-.../business-run/promise-traces.json`（授权链 3 段：对话原文→委托条款→项目；未记录返回“未授权”） | ✅ 通过（2026-10-25，P1） |
 | B6 | 接管键 10 秒停止 + 30 分钟接管包 | 接管演练 | `evidence-p1-.../takeover-result.json`（`stop_ms=3` ≤10000）+ `business-run/takeover-pack.json`（6 类：开放订单/待处理对话/应付款/凭据引用/风险/覆盖度）；控制台 E2E `006-takeover-stop.png` / `007-takeover-resume.png`（浏览器实测 88ms） | ✅ 通过（2026-10-25，P1） |
 | B7 | 四类越界 100% 拒绝、理由可读留痕 | 边界测试 | `evidence-p1-.../business-run/boundary-check.json` + `boundary-run/boundary-rules.json`（18 条个人模式规则；四类越界 4/4 deny、支付→human、报价→draft_only，均含可读 user_message） | ✅ 通过（2026-10-25，P1） |
@@ -125,9 +129,9 @@
 | U1 | 全部 UI 测试真实浏览器/真实桌面，不用 API 代替 | E2E 截图（M1 A2/A4/A5、M2 A3，P1 控制台 `tests/e2e-console` 9 步/73 检查）+ CI 无头真实浏览器 E2E | ✅ 已满足（阶段一 + P1；CI 规则检查可在 P2 加强） |
 | U2 | 通知与协助（审批卡/handoff/接管） | 通知日志 + 协助卡截图 | 部分满足（P1 已有审批卡/接管键 + 交接包；Toast/邮件/Webhook 待 P3/P4） |
 | U3 | IoT 预留（契约 + 模拟 fixture） | 契约文档 + fixture 测试 | 未实现（P3/P4 stub） |
-| U4 | GitHub minzzj 发布、NC-SA 许可、双语文档 | 仓库 https://github.com/minzzj/daizhang-steward + LICENSE（CC BY-NC-SA 4.0）+ 双语文档 + Release v0.5.0 | ✅ 已完成（2026-10-25，v0.5.0） |
+| U4 | GitHub minzzj 发布、NC-SA 许可、双语文档 | 仓库 https://github.com/minzzj/daizhang-steward + LICENSE（CC BY-NC-SA 4.0）+ 双语文档 + **v0.8.0 Release（Latest，2026-10-26）**；v0.5.0/v0.6.0 为历史版本 | ✅ 已完成（v0.8.0） |
 | U5 | 宣传片（真实截图、双版本） | 成片 + STORYBOARD/FACTS | 未实现（P4；当前以真实命令演示脚本替代） |
-| U6 | 阶段一完成输出 HANDOFF 并停会话 | [HANDOFF.md](../../HANDOFF.md) 已更新到「阶段二 P1 完成，v0.6.0」，阶段一已按约定交接 | ✅ 已完成（2026-10-25） |
+| U6 | 阶段一完成输出 HANDOFF 并停会话 | [HANDOFF.md](../../HANDOFF.md) 已更新到「阶段二 P2+P3 完成，v0.8.0 已发布」，阶段一/二均按约定交接 | ✅ 已完成 |
 | U7 | 测试 key 不入库、日志脱敏、可轮换 | `npm run check:secrets` 通过；证据包已脱敏 | ✅ 已满足 |
 | U8 | 按 DSH 插件体系实现并复用插件 | 复用清单 + 依赖锁 | 设计完成（P3/P4 落地 MCP/插件集成） |
 

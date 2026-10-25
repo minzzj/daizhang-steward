@@ -3,16 +3,18 @@
 **A composable, evidence-first operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations.
 
-> Status: **Phase 2 P3 complete — enterprise MVP (v0.8.0, release pending)** (2026-10-25). Building on the
-> phase-1 operating-AI core (real headed browser A2/A4/A5, real Windows desktop A3, safety modules A8/A9,
-> Scout A7, A10 dummy branch, A11 release readiness, A12 prompts) and the phase-2 personal-edition MVP
+> Status: **Phase 2 P2 + P3 complete — v0.8.0 released** (2026-10-26). Building on the phase-1
+> operating-AI core (real headed browser A2/A4/A5, real Windows desktop A3, safety modules A8/A9, Scout
+> A7, A10 dummy branch, A11 release readiness, A12 prompts) and the phase-2 personal-edition MVP
 > (P1: business-domain engine, simulated business line, local-only web console, approvals/takeover/monthly
 > report, 18 personal-mode boundary rules), phase 2 now adds:
-> **P2 fault drills** — real localhost HTTP fault injection (real `ECONNREFUSED` network outage and real
-> `403` platform ban), an offline promise gate (no new promises while offline), an idempotent outbox/replay
-> so the ledger never double-books, and alternative-plan notifications on a ban (B3/B4; **short run passed,
-> the real 2-hour outage + 15-minute ban long run is still in progress** — long-run evidence to be archived
-> by the Lead);
+> **P2 fault drills (complete — short run + real 2-hour/15-minute long run)** — real localhost HTTP fault
+> injection (real `ECONNREFUSED` network outage and real `403` platform ban), an offline promise gate, an
+> idempotent outbox/replay with zero double-booking, and alternative-plan notifications. Long run: outage
+> **120 minutes (7215 s)** → **1435 promises blocked, 0 new**, 1435 actions queued and **all replayed**,
+> **`duplicates_found=0`**, second reconciliation `entries_added=0`; ban **15 minutes (900 s)** → detected
+> in **9 ms**, **180 attempts with 0 successes**, actions stopped, **5 alternative items**, notifications,
+> recovery after unban;
 > **P3 enterprise edition** — company entity & authorization checks (license/tax number/human-signed
 > authorization letter/human seal), corporate account, VAT special invoices with title/tax/contract
 > validation, **invoice drafts pending a human**, tax-filing drafts the AI never submits, **dual review**
@@ -21,8 +23,10 @@ Source-available · non-commercial · real browser & real desktop operations.
 > serialization, **B8 dual-mode consistency with all 6 mismatch classes blocked**, and a **30-rule
 > dual-mode boundary table**.
 > **151/151** unit + integration tests pass (16 test files); the CLI ships **19 implemented commands +
-> 0 placeholders**. Acceptance **A1–A12 pass**, phase-2 **B1/B2/B5/B6/B7/B8 pass**, P2 **short run passed**
-> (11/11 checks) and the P2 long run is in progress. See
+> 0 placeholders**. Acceptance **A1–A12 pass** and phase-2 **B1–B8 all pass** (B3/B4 include the real
+> long-run drills). **GitHub Release
+> [v0.8.0](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0) (Latest)** — next: P4
+> (v1.0.0 + promo video). See
 > [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md) / [`docs/en/enterprise.md`](docs/en/enterprise.md),
 > [ROADMAP.md](ROADMAP.md) and [`docs/en/delivery-checklist.md`](docs/en/delivery-checklist.md).
 > 中文说明见 [README.zh-CN.md](README.zh-CN.md).
@@ -60,12 +64,13 @@ CAPTCHAs, 2FA and face verification always hand off to a human.
 | Phase | Scope | Status |
 |---|---|---|
 | Phase 1 | Open-source "operating-AI core": Operator + Harness code loop + Scout + Conductor; 12 reproducible acceptance checks | ✅ **Complete (v0.5.0, A1–A12 pass)** |
-| Phase 2 | Steward business agent: **personal edition first** (one simulated business line end-to-end), then enterprise edition; 8 acceptance checks + 30 legal/compliance boundaries | 🔄 **In progress — P1 personal-edition MVP (v0.6.0) complete; P2 fault drills (short run passed, long run in progress); P3 enterprise MVP (v0.8.0) complete with B8 pass**; P4 (v1.0.0 + promo video) next |
+| Phase 2 | Steward business agent: **personal edition first** (one simulated business line end-to-end), then enterprise edition; 8 acceptance checks + 30 legal/compliance boundaries | ✅ **Complete (v0.8.0, B1–B8 all pass) — P1 personal edition (v0.6.0); P2 fault drills incl. real 120-min outage + 15-min ban long run; P3 enterprise edition (B8 + 30 boundaries)**; P4 (v1.0.0 + promo video) next |
 
-Phase 1 is complete and released as **v0.5.0**; phase 2 has delivered the **P1 personal-edition MVP
-(v0.6.0)** and the **P3 enterprise MVP (v0.8.0, release pending)**, while **P2 fault drills are
-short-run complete and the real 2-hour outage + 15-minute ban long run is still running**; P4
-(v1.0.0 + promo video) is next — see [ROADMAP.md](ROADMAP.md).
+Phase 1 is complete and released as **v0.5.0**; phase 2 delivered the **P1 personal-edition MVP (v0.6.0)**,
+the **P2 fault drills** (short run + the real 120-minute outage / 15-minute ban long run, both passed) and
+the **P3 enterprise MVP**, all released together as **v0.8.0**
+([GitHub Release](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0)); **B1–B8 all pass** and
+**P4 (v1.0.0 + promo video) is next** — see [ROADMAP.md](ROADMAP.md).
 
 ## Architecture at a glance
 
@@ -140,13 +145,13 @@ dist/       build output (gitignored; single-package build)
 
 ## Quickstart (M0 → v0.8.0)
 
-Phase 1 is complete and phase 2 P1/P3 are delivered (P2 fault drills: short run passed, long run in
-progress); every milestone can be reproduced locally and offline. M0 runs with no paid API
-(MockHarness); M1 adds a real-browser loop; M2 adds the real Windows desktop loop and safety modules;
-M3 adds the fixture-driven Scout customer branch; M4 adds the A10 read-only dummy branch and
-release-readiness acceptance; **P1 adds the business domain, the local web console and the simulated
-business line (B1/B2/B5/B6/B7)**; **P2 adds real localhost fault drills (B3/B4 short run)**;
-**P3 adds the enterprise edition, B8 and the 30-rule dual-mode boundary table**:
+Phase 1 is complete and phase 2 P1/P2/P3 are delivered and released as **v0.8.0**; every milestone can be
+reproduced locally and offline. M0 runs with no paid API (MockHarness); M1 adds a real-browser loop;
+M2 adds the real Windows desktop loop and safety modules; M3 adds the fixture-driven Scout customer
+branch; M4 adds the A10 read-only dummy branch and release-readiness acceptance; **P1 adds the business
+domain, the local web console and the simulated business line (B1/B2/B5/B6/B7)**; **P2 adds real
+localhost fault drills (B3/B4 short run + real 120-min/15-min long run)**; **P3 adds the enterprise
+edition, B8 and the 30-rule dual-mode boundary table**:
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
@@ -167,6 +172,7 @@ npm run acceptance:m3  # M3 Scout acceptance (A7: 14 leads → 4 discarded → 8
 npm run acceptance:m4  # M4 (phase-1) release readiness (version check is dynamic; re-runnable on later commits)
 npm run acceptance:p1  # P1 personal-edition MVP acceptance (B1/B2/B5/B6/B7 + console E2E + 113 tests), local-only
 npm run acceptance:p2  # P2 fault drills SHORT run (B3/B4; ~2 min outage + ~2 min ban, real localhost HTTP), local-only
+npm run drill:long     # P2 REAL long run (B3: 120-min outage / B4: 15-min ban, true duration), local-only; writes long-drill-* evidence
 npm run acceptance:p3  # P3 enterprise acceptance (B8 + 30 boundaries + dual review/seal/invoice/org chain), local-only
 # phase-2 P1 tour (offline, fictional data):
 node dist/apps/cli/src/index.js business       # proposal + simulated business line + ledger 6 facts + promise trace + takeover pack + monthly report + boundaries
@@ -245,16 +251,21 @@ hand-off, enterprise fixture cross-check 8/8; **151/151** tests. Details:
 [`docs/en/enterprise.md`](docs/en/enterprise.md) / [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md).
 B8 passes; see also the 30-rule table.
 
-Latest P2 fault-drill acceptance — **short run passed, long run in progress** (2026-10-25,
-`npm run acceptance:p2` OK, **11/11 checks** on the short run; the real 2-hour outage + 15-minute ban
-long run is still running and its evidence will be archived by the Lead):
-[`docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md)
-(· [`.json`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.json)); evidence bundle
+Latest P2 fault-drill acceptance — **complete: short run + real long run both passed** (2026-10-26,
+`npm run acceptance:p2` OK, **11/11 checks** on the short run; real long run via `npm run drill:long`):
+short-run evidence [`docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md)
+(· [`.json`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.json)) +
 [`docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`](docs/test-evidence/evidence-p2-2026-10-25_15-02-52/)
-(10 files, sanitized): B3 net outage (real `ECONNREFUSED`; outage 120007 ms short run, **25 blocked
-promises**, **25 queued/replayed actions**, **0 duplicate ledger entries**, recovery within 10 min),
-B4 platform ban (real `403 + x-platform-ban`; detected in **11 ms**, stopped, **5 alternative items**,
-local notifications). Short-run checks are ✅; the **long run is not yet complete**.
+(10 files, sanitized: short run — 25 blocked promises / 25 queued-replayed actions / 0 duplicates;
+ban detected in 11 ms, 5 alternative items).
+**Real long run** (true duration, no acceleration):
+[`docs/test-evidence/long-drill-2026-10-25_15-02-52.md`](docs/test-evidence/long-drill-2026-10-25_15-02-52.md)
+(· [`.json`](docs/test-evidence/long-drill-2026-10-25_15-02-52.json)) +
+[`docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/`](docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/)
+(11 files, sanitized): **B3 real outage 120 min / 7215 s** → **1435 promises blocked, 0 new**, 1435 actions
+queued in the outbox and **all replayed** on recovery, **`duplicates_found=0`**, second reconciliation
+`entries_added=0`; **B4 real ban 15 min / 900 s** → detected in **9 ms**, **180 attempts, 0 successes**,
+actions stopped, **5 alternative items**, notifications, recovery after unban. **B1–B8 all pass.**
 
 Latest M4 phase-1 release acceptance (2026-10-25, `npm run acceptance:m4` OK, 10/10 checks): checks A10
 read-only `dummy-branch`, A11 release readiness (CC BY-NC-SA 4.0 license text, third-party NOTICE,
@@ -263,7 +274,8 @@ and the full **80/80** suite. Evidence:
 [`docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.md`](docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.md)
 (· [`.json`](docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.json)) +
 [`docs/test-evidence/evidence-m4-2026-10-25_13-43-07/`](docs/test-evidence/evidence-m4-2026-10-25_13-43-07/).
-Release notes: [`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md).
+Release notes: [`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md) (later releases:
+[`v0.6.0`](docs/RELEASE_NOTES_v0.6.0.md) P1, [`v0.8.0`](docs/RELEASE_NOTES_v0.8.0.md) P2+P3).
 
 Latest M3 acceptance (2026-10-25, local fixture-driven Scout run — no network, `npm run acceptance:m3`
 OK, 12/12 checks): [`docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md`](docs/test-evidence/m3-acceptance-2026-10-25_12-04-47.md)
@@ -340,16 +352,17 @@ runs before every commit/CI. See [`SECURITY.md`](SECURITY.md).
 
 ## Docs
 
-- [ROADMAP.md](ROADMAP.md) — milestones and approval gates (Phase 1 complete; Phase 2 P1 + P3 complete, P2 long run in progress, P4 next)
-- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) · [docs/RELEASE_NOTES_v0.6.0.md](docs/RELEASE_NOTES_v0.6.0.md) — phase-1 / P1 release notes (bilingual)
+- [ROADMAP.md](ROADMAP.md) — milestones and approval gates (Phase 1 complete; Phase 2 P1/P2/P3 complete and released as v0.8.0; P4 next)
+- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) · [docs/RELEASE_NOTES_v0.6.0.md](docs/RELEASE_NOTES_v0.6.0.md) · [docs/RELEASE_NOTES_v0.8.0.md](docs/RELEASE_NOTES_v0.8.0.md) — phase-1 / P1 / P2+P3 release notes (bilingual; v0.8.0 released)
 - [docs/zh-CN/enterprise.md](docs/zh-CN/enterprise.md) · [docs/en/enterprise.md](docs/en/enterprise.md) — P3 enterprise edition + the 30-rule dual-mode boundary table
 - [docs/demo-script.md](docs/demo-script.md) · [docs/demo-script.zh-CN.md](docs/demo-script.zh-CN.md) — 3-minute demo script
 - [docs/good-first-issues.md](docs/good-first-issues.md) — 5 good first issues (bilingual)
 - [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — acceptance items with evidence
-  (A1–A12 pass; phase 2 B1/B2/B5/B6/B7/B8 pass; P2 short run passed / long run in progress)
+  (A1–A12 pass; phase 2 B1–B8 all pass, including the real P2 long run)
 - [docs/test-evidence/](docs/test-evidence/) — evidence archive (`test-result-*`, `m1-acceptance-*` …
   `m4-acceptance-*`, `p1-acceptance-*` + `evidence-p1-*`, `p2-acceptance-*` + `evidence-p2-*` (short run),
-  `p3-acceptance-*` + `evidence-p3-*`; long-drill evidence to be archived)
+  `long-drill-2026-10-25_15-02-52.*` + `evidence-long-drill-2026-10-25_15-02-52/` (real long run),
+  `p3-acceptance-*` + `evidence-p3-*`, and `release-v0.5.0/v0.6.0/v0.8.0-check.md`)
 - [docs/en/architecture.md](docs/en/architecture.md) · [docs/en/adapters.md](docs/en/adapters.md)
   · [docs/en/contracts.md](docs/en/contracts.md) · [docs/en/threat-model.md](docs/en/threat-model.md)
 - [packages/steward-desktop/README.md](packages/steward-desktop/README.md) — real Windows desktop adapter

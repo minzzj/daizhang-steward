@@ -15,9 +15,9 @@
 | 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ✅ 完成（2026-10-25；阶段一收尾，**v0.5.0 已发布**；`npm run acceptance:m4` OK；证据 `docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.{md,json}` + `evidence-m4-2026-10-25_13-43-07/`；Release https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0） |
 | — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ✅ 完成（2026-10-25 v0.5.0 发布；阶段二已启动） |
 | 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ✅ 完成（2026-10-25；B1/B2/B5/B6/B7 通过，`npm run acceptance:p1` OK，**v0.6.0**；证据 `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` + `evidence-p1-2026-10-25_14-18-54/`） |
-| 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | 🟡 **短跑已通过，长跑进行中**（`npm run acceptance:p2` 短跑 11/11 OK，证据 `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` + `evidence-p2-2026-10-25_15-02-52/`；真实 2 小时断网 + 15 分钟封禁长跑仍在运行，长跑证据由 Lead 后续入库） |
-| 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ✅ 完成（2026-10-25；**B8 通过** + 30 条边界双模式表，`npm run acceptance:p3` OK，**v0.8.0 待发版**；证据 `docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` + `evidence-p3-2026-10-25_15-23-46/`；边界表全文见 `docs/zh-CN/enterprise.md`） |
-| 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ 下一步（P2 长跑收尾后） |
+| 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ✅ 完成（2026-10-26；**B3/B4 短跑 + 真实长跑均通过**：断网 120min → 1435 次承诺被拒/0 新增、1435 条动作全部补记、`duplicates_found=0`；封禁 15min → 9ms 检测、180 次尝试 0 成功、5 条替代方案；`npm run acceptance:p2` 短跑 11/11 OK、`npm run drill:long` 长跑通过；证据 `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` + `evidence-p2-2026-10-25_15-02-52/`（短跑）与 `long-drill-2026-10-25_15-02-52.{md,json}` + `evidence-long-drill-2026-10-25_15-02-52/`（长跑，11 文件）；已随 **v0.8.0** 发布） |
+| 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ✅ 完成（2026-10-25；**B8 通过** + 30 条边界双模式表，`npm run acceptance:p3` OK，**v0.8.0 已发布**；证据 `docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` + `evidence-p3-2026-10-25_15-23-46/`；边界表全文见 `docs/zh-CN/enterprise.md`） |
+| 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ 下一步（v0.8.0 已发布，P4 冲刺 v1.0.0） |
 
 > **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过；`npm run check`、`npm run check:secrets`、
 > `npm test`（30/30）、`npm run demo`、`npm run evidence` 全部退出码 0。证据：
@@ -96,17 +96,19 @@
 > `docs/test-evidence/evidence-p1-2026-10-25_14-18-54/`（39 文件：business-run / boundary-run /
 > console-e2e / console-cli / takeover-result / unit-tests.log，已脱敏）。
 >
-> **P2 验收结论（2026-10-25，故障演练，短跑通过 / 长跑进行中）**：`npm run acceptance:p2` 短跑
-> **11/11 检查 ✅**（build + **133/133** 测试 + B3/B4 演练）；**B3** 断网（真实 `ECONNREFUSED`，短跑
-> `outage=120007ms`）：断网期间**不产生新承诺**（25 次被拒）、动作进入 **Outbox 排队**（25 条）、
-> 恢复后 **10 分钟内补记**（重放 25 条）、**账本重复 0**（幂等）；**B4** 平台封禁（真实
-> `403+x-platform-ban`）：**11ms 内检测**并停止动作、生成**替代方案 5 条**、本地通知留痕、解禁恢复。
-> 证据：`docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` +
-> `docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`（10 文件，已脱敏）。
-> **真实 2 小时断网 + 15 分钟封禁长跑仍在后台运行，长跑证据（`long-drill-*`）由 Lead 后续入库；
-> 长跑完成前 P2 不算完整通过。**
+> **P2 验收结论（2026-10-26，故障演练，完成：短跑 + 真实长跑均通过）**：`npm run acceptance:p2` 短跑
+> **11/11 检查 ✅**（build + 133/133 测试 + B3/B4 演练）；短跑：B3 断网 `outage=120007ms`、25 次承诺被拒、
+> 25 条排队/重放、重复 0；B4 封禁 11ms 检测、替代方案 5 条、通知留痕。**真实长跑（`npm run drill:long`，
+> 真实时长不加速）**：**B3 断网 120 分钟（7215 秒）** → **1435 次承诺被拒、0 新增**、1435 条动作入
+> Outbox、恢复后**全部补记**、**`duplicates_found=0`**、二次对账 `entries_added=0`；**B4 封禁
+> 15 分钟（900 秒）** → **9ms 检测**、**180 次尝试 0 成功**、停止动作 + 5 条替代方案 + 通知、解禁恢复。
+> 证据：短跑 `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` +
+> `evidence-p2-2026-10-25_15-02-52/`（10 文件）；长跑
+> `docs/test-evidence/long-drill-2026-10-25_15-02-52.{md,json}` +
+> `docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/`（11 文件，已脱敏）。**B3/B4 通过 → B1–B8
+> 全部通过；P2/P3 已合并发布 v0.8.0。**
 >
-> **P3 验收结论（2026-10-25，企业版，v0.8.0 待发版）**：**B8 通过**，`npm run acceptance:p3` OK
+> **P3 验收结论（2026-10-25，企业版，v0.8.0 已发布）**：**B8 通过**，`npm run acceptance:p3` OK
 > （**12/12 检查全 ✅**；build + **151/151** 测试 + 企业版流程）。B8：个人/企业双模式各跑一单，
 > 主体/抬头/收款/发票类型一致（subject/invoice/payment consistent=true），**6 类不一致全部阻断**
 > （阻断时不产生发票/收款）；**30 条边界双模式标注表**（个人/企业 × 已实现/人工/不适用；四类重点
@@ -143,8 +145,7 @@
 
 - 每个里程碑完成即汇报，等用户确认（或用户明确“连续做完阶段二”）。
 - 阶段一完成 → 输出 HANDOFF → **结束会话**；阶段二在新会话从 HANDOFF 继续。
-- 当前：P1 已交付 v0.6.0、P3 已交付 v0.8.0（待发版）；P2 短跑已过、长跑进行中；**P2 长跑收尾 + P4
-  v1.0.0/宣传片**是剩余步骤。
+- 当前：阶段一 v0.5.0、P1 v0.6.0、P2+P3（v0.8.0）均已发布；**P4 v1.0.0/宣传片**是剩余步骤。
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
-_Last updated: 2026-10-25 (Phase 2 P3 enterprise MVP complete — v0.8.0 pending release; P2 short run passed / long run in progress; next: P2 long-run close-out + P4 v1.0.0)._
+_Last updated: 2026-10-26 (Phase 2 P2 + P3 complete — v0.8.0 released; B3/B4 real long run passed; next: P4 v1.0.0 + promo video)._

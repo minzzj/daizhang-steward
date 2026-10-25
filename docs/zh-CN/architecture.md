@@ -1,7 +1,8 @@
 # 架构 / Architecture（中文）
 
 > 状态：设计定稿；**阶段一（M0–M4）已实现并发布 v0.5.0；阶段二 P1 个人版 MVP 已交付 v0.6.0；
-> P2 故障演练短跑通过（长跑进行中）；P3 企业版 MVP 已实现并交付 v0.8.0（待发版）（2026-10-25）**；
+> P2 故障演练已完成（短跑 + 真实 120 分钟断网 / 15 分钟封禁长跑均通过）；P3 企业版 MVP 已实现并交付
+> v0.8.0，阶段二已合并发布 v0.8.0（2026-10-26）**；
 > P4（v1.0.0/宣传片）按 ROADMAP 推进，细节改动以 PR 为准。
 > 配套：`docs/zh-CN/contracts.md`、`docs/zh-CN/threat-model.md`、`docs/zh-CN/adapters.md`、
 > `docs/zh-CN/enterprise.md`（企业版 + 30 条边界双模式表）。
@@ -100,18 +101,20 @@ Good First Issues `docs/good-first-issues.md`）。
   → 命令数 **13 → 18 个已实现 + 0 个占位**；`npm run acceptance:p1` 一键验收（12 项检查，本机有头
   Chrome）。**B3/B4（故障演练）→ P2，B8（企业版）→ P3；Conductor / Reviewer 的完整编排仍为后续阶段。**
 
-**P2 实现现状（故障演练，v0.7.0 待发版；短跑通过 / 长跑进行中）**：
+**P2 实现现状（故障演练，随 v0.8.0 发布；短跑 + 真实长跑均通过）**：
 - `packages/steward-fault`：**真实 localhost HTTP 故障演练**——B3 断网（真实 `ECONNREFUSED`）：
   `PromisesGate` 断网期间拒绝新承诺并计数、动作写入**幂等 Outbox**、恢复后 `Outbox.replay()` +
   `LedgerReconciler` 对账（`duplicates_found=0`）；B4 平台封禁（真实 `403 + x-platform-ban: true`）：
   `BanDetector` 检测后停止动作、`buildAlternativePlan()` 生成替代方案（渠道/原因/下一步/负责人）、
   `notifyLocal()` 本地通知留痕、解禁恢复。
 - `examples/demo-platform/`：真实 localhost 故障注入平台（主端口 + `/admin/*` 控制端口）。
-- CLI 新增 `fault-drill --case net-outage|platform-ban`；`npm run acceptance:p2` **短跑 11/11 检查 ✅**
-  （真实 2h 断网 + 15min 封禁长跑仍在后台运行，`evidence-long-drill-*` 待 Lead 入库）。
+- CLI 新增 `fault-drill --case net-outage|platform-ban`；`npm run acceptance:p2` **短跑 11/11 检查 ✅**；
+  `npm run drill:long` **真实长跑通过（2026-10-26）**：B3 断网 120 分钟 → 1435 次承诺被拒/0 新增、
+  1435 条动作全部补记、`duplicates_found=0`；B4 封禁 15 分钟 → 9ms 检测、180 次尝试 0 成功、
+  5 条替代方案 + 通知、解禁恢复（证据 `long-drill-2026-10-25_15-02-52` + `evidence-long-drill-*` 11 文件）。
 - CI 新增真实 localhost 故障演练步骤（B3/B4 短跑）。
 
-**P3 实现现状（企业版 MVP，v0.8.0 待发版；B8 通过）**：
+**P3 实现现状（企业版 MVP，v0.8.0 已发布；B8 通过）**：
 - `packages/steward-enterprise`：企业版引擎——`validateEntity()` 主体认证（营业执照/统一社会信用代码 +
   公司授权书人签 + 对公账户 + 税号四项校验）；对公账户收款校验；增值税普通/专用发票；
   `createInvoiceDraft()` 开票校验（抬头/税号/合同一致）→ `draft_pending_human`；

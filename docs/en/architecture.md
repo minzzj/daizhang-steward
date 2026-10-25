@@ -1,8 +1,9 @@
 # Architecture
 
 > Status: design fixed; **Phase 1 (M0–M4) is fully implemented and released as v0.5.0; Phase 2 P1
-> personal-edition MVP was delivered as v0.6.0; P2 fault drills passed the short run (long run in
-> progress); P3 enterprise MVP is implemented and delivered as v0.8.0 (release pending) (2026-10-25)**;
+> personal-edition MVP was delivered as v0.6.0; P2 fault drills are complete (short run + the real
+> 120-minute outage / 15-minute ban long run both passed); P3 enterprise MVP is implemented and
+> Phase 2 was released together as v0.8.0 (2026-10-26)**;
 > P4 (v1.0.0 + promo video) proceeds per the ROADMAP.
 > Companions: `contracts.md`, `threat-model.md`, `adapters.md`, `docs/en/enterprise.md` (enterprise
 > edition + the 30-rule dual-mode boundary table).
@@ -122,7 +123,7 @@ CC BY-NC-SA 4.0 license text, NOTICE/COMMERCIAL, bilingual doc pairing, no telem
   a one-command acceptance (12 checks, local headed Chrome). **B3/B4 (fault drills) → P2, B8
   (enterprise) → P3; full Conductor/Reviewer orchestration remains later work.**
 
-**P2 implementation status (fault drills, v0.7.0 pending release; short run passed / long run in progress)**:
+**P2 implementation status (fault drills, released in v0.8.0; short + real long run both passed)**:
 - `packages/steward-fault`: **real localhost HTTP fault drills** — B3 network outage (real
   `ECONNREFUSED`): a `PromisesGate` rejects new promises while offline and counts them, actions go to an
   **idempotent Outbox**, and after recovery `Outbox.replay()` + `LedgerReconciler` reconcile with
@@ -131,12 +132,14 @@ CC BY-NC-SA 4.0 license text, NOTICE/COMMERCIAL, bilingual doc pairing, no telem
   `notifyLocal()` writes local notifications; recovery after the ban is lifted.
 - `examples/demo-platform/`: a real localhost fault-injection platform (main port + `/admin/*` control
   port) used by the drills.
-- The CLI adds `fault-drill --case net-outage|platform-ban`; `npm run acceptance:p2` **short run passes
-  11/11 checks ✅** (the real 2-hour outage + 15-minute ban long run is still running;
-  `evidence-long-drill-*` will be archived by the Lead).
+- The CLI adds `fault-drill --case net-outage|platform-ban`; `npm run acceptance:p2` **short run 11/11
+  checks ✅**; `npm run drill:long` **real long run passes (2026-10-26)**: B3 outage 120 min → 1435
+  promises blocked / 0 new, 1435 actions all replayed, `duplicates_found=0`; B4 ban 15 min → detected in
+  9 ms, 180 attempts / 0 successes, 5 alternative items + notifications, recovery after unban
+  (evidence `long-drill-2026-10-25_15-02-52` + `evidence-long-drill-*`, 11 files).
 - CI adds real localhost fault-drill steps (B3/B4 short run).
 
-**P3 implementation status (enterprise MVP, v0.8.0 pending release; B8 passes)**:
+**P3 implementation status (enterprise MVP, released in v0.8.0; B8 passes)**:
 - `packages/steward-enterprise`: enterprise engine — `validateEntity()` entity authorization (business
   license / unified social credit code + human-signed company authorization letter + corporate account +
   tax number, four hard checks); corporate-account payment validation; VAT general/special invoices;

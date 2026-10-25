@@ -1,7 +1,6 @@
 # 企业版 / Enterprise Edition（中文）
 
-> 状态：**阶段二 P3（企业版 MVP）已实现并通过验收（2026-10-25，B8 通过）**；交付版本 **v0.8.0**
-> （GitHub Release/tag 由 Lead 按发布节奏处理）。实现：`packages/steward-enterprise`；验收：
+> 状态：**阶段二 P2+P3（企业版 MVP）已完成并通过验收（B8 通过），v0.8.0 已发布（2026-10-26，GitHub Release Latest）**；交付版本 **v0.8.0**（[Release](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0)）。实现：`packages/steward-enterprise`；验收：
 > [`p3-acceptance-2026-10-25_15-23-46.{md,json}`](../test-evidence/p3-acceptance-2026-10-25_15-23-46.md)
 > + [`evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/)（18 文件，已脱敏）。
 > **纯本地、全部数据为虚构**：不连接真实银行/税务/CA/电子签章平台，不产生真实资金、发票与申报；
@@ -120,7 +119,7 @@ build、**151/151** 测试、B8 双模式、B8 六类阻断、30 条边界表、
   企业专属看板与工作流 UI 属于后续迭代。
 - 30 条边界为企业版目录的**程序可拦截范围**；企业特有流程（授权书生成、真实用印、属地税务规则差异）
   仍需人工复核，不替代法律/税务专业意见。
-- 版本：P3 交付 **v0.8.0**（P2 为 v0.7.0）；GitHub Release/tag 由 Lead 按发布节奏处理，
+- 版本：P3 交付 **v0.8.0**（P2 为 v0.7.0），P2+P3 已合并发布 **v0.8.0**（GitHub Release，Latest，2026-10-26），
   当前 `package.json` 版本以仓库实际为准。
 
 ## 7. 相关文档与证据
@@ -131,4 +130,4 @@ build、**151/151** 测试、B8 双模式、B8 六类阻断、30 条边界表、
 - 模块文档：[`packages/steward-enterprise/README.md`](../../packages/steward-enterprise/README.md)
 - 验收证据：[`docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/)
 
-_最后更新：2026-10-25（P3 企业版 MVP，v0.8.0 待发）。/ Last updated: 2026-10-25 (P3 enterprise MVP)._
+_最后更新：2026-10-26（P2+P3 完成，v0.8.0 已发布）。/ Last updated: 2026-10-26 (P2+P3 complete; v0.8.0 released)._

@@ -18,12 +18,15 @@ docs/test-evidence/
 ├── evidence-p1-<stamp>/                      # P1 验收证据副本：business-run / boundary-run / console-e2e / console-cli
 ├── p2-acceptance-<stamp>.md / .json          # 阶段二 P2 故障演练**短跑**验收（npm run acceptance:p2 生成）
 ├── evidence-p2-<stamp>/                      # P2 短跑证据副本：B3-net-outage / B4-platform-ban + unit-tests.log
-├── evidence-long-drill-<stamp>/              # P2 **长跑**（2h 断网 + 15min 封禁）证据目录（当前预留/为空，待 Lead 入库）
+├── long-drill-<stamp>.md / .json             # 阶段二 P2 故障演练**真实长跑**验收（npm run drill:long 生成）
+├── evidence-long-drill-<stamp>/              # P2 长跑证据副本：B3-net-outage-120min / B4-platform-ban-15min
+│                                             #   + 演练日志（本次 11 文件，2026-10-26 通过）
 ├── p3-acceptance-<stamp>.md / .json          # 阶段二 P3 企业版验收（npm run acceptance:p3 生成）
 ├── evidence-p3-<stamp>/                      # P3 验收证据副本：enterprise-run（profile/entity/seal/dual-review/
 │                                             #   invoice/org-approval/dual-mode-orders/boundary-table/fixture-checks）
 ├── release-v0.5.0-check.md                   # v0.5.0 Release 发布验证记录
 ├── release-v0.6.0-check.md                   # v0.6.0 Release 发布验证记录
+├── release-v0.8.0-check.md                   # v0.8.0 Release 发布验证记录（P2+P3，Latest）
 ├── 2026-10-25-repo-publish.md                # GitHub 仓库发布验证记录
 └── README.md
 ```
@@ -43,13 +46,15 @@ docs/test-evidence/
 | [evidence-m4-2026-10-25_13-43-07/](evidence-m4-2026-10-25_13-43-07/) | M4 验收证据副本（7 文件）：`A10-dummy-branch/`（prompt/meta/console/events/checkpoint/report）+ `unit-tests.log`（80/80） |
 | [p1-acceptance-2026-10-25_14-18-54.md](p1-acceptance-2026-10-25_14-18-54.md) · [.json](p1-acceptance-2026-10-25_14-18-54.json) | 阶段二 P1 个人版 MVP 验收（`npm run acceptance:p1`，本机有头真实 Chrome，12/12 检查）：build + **113 tests / 113 pass** + B1 选题 3 条业务线（来源可查）+ B2 账本 2 笔 6 要素 + B5 承诺授权链 3 段（未记录=未授权）+ B6 接管 stop_ms=3（≤10000）+ 6 类接管包 + B7 18 条个人模式边界规则（四类越界 4/4 拒绝、支付→human、报价→draft_only）+ 月报 + 控制台真实浏览器 E2E（9 步 / 73 检查 / 9 截图 / 实测接管停止 88ms）+ CLI 控制台真实浏览器 + 人工审批；runs `run-20261025-221904-b56b1a`（business）/ `run-20261025-221904-89b2f3`（boundary）；B3/B4/B8 延后 P2/P3 |
 | [evidence-p1-2026-10-25_14-18-54/](evidence-p1-2026-10-25_14-18-54/) | P1 验收证据副本（39 文件）：`business-run/`（proposal.json、business-result.json、ledger-facts.json 2 笔 × 6 要素、promise-traces.json、takeover-pack.json、boundary-check.json、monthly-report.{json,md}、summaries.json、report.md、checkpoint.json 等）、`boundary-run/`（boundary-rules.json 18 条 + boundary-check.json）、`console-e2e/`（9 步截图 + result.json / console-server.log / console.log）、`console-cli/`（`dashboard.png`、`ledger.png` 真实浏览器截图）、`takeover-result.json`、`unit-tests.log`（113/113） |
-| [p2-acceptance-2026-10-25_15-02-52.md](p2-acceptance-2026-10-25_15-02-52.md) · [.json](p2-acceptance-2026-10-25_15-02-52.json) | 阶段二 P2 故障演练**短跑**验收（`npm run acceptance:p2`，真实 localhost HTTP 故障注入）：build + **133 tests / 133 pass** + **11/11 检查 ✅**；B3 断网（`outage=120007ms`、blocked_promises=25、queued_actions=25、replayed=25、duplicates_found=0、recovered_within_10min=true）；B4 封禁（ban_detected_within_ms=11、stopped=true、actions_attempted_during_ban=24、alternative_items=5、通知留痕）；**长跑（2h 断网 + 15min 封禁）进行中，证据待入库** |
+| [p2-acceptance-2026-10-25_15-02-52.md](p2-acceptance-2026-10-25_15-02-52.md) · [.json](p2-acceptance-2026-10-25_15-02-52.json) | 阶段二 P2 故障演练**短跑**验收（`npm run acceptance:p2`，真实 localhost HTTP 故障注入）：build + **133 tests / 133 pass** + **11/11 检查 ✅**；B3 断网（`outage=120007ms`、blocked_promises=25、queued_actions=25、replayed=25、duplicates_found=0、recovered_within_10min=true）；B4 封禁（ban_detected_within_ms=11、stopped=true、actions_attempted_during_ban=24、alternative_items=5、通知留痕） |
 | [evidence-p2-2026-10-25_15-02-52/](evidence-p2-2026-10-25_15-02-52/) | P2 短跑证据副本（10 文件）：`B3-net-outage/`（`drill-net-outage.json`、`outbox.json`、`ledger.json`、断网/恢复通知）、`B4-platform-ban/`（`drill-platform-ban.json`、`alternative-plan.json`、封禁/恢复通知）、`unit-tests.log`（133/133） |
-| [evidence-long-drill-2026-10-25_15-02-52/](evidence-long-drill-2026-10-25_15-02-52/) | P2 **长跑**证据目录（**当前为空/预留**）：真实 2 小时断网 + 15 分钟封禁长跑仍在运行，完成后由 Lead 将 `long-drill-*` 证据复制入库 |
+| [long-drill-2026-10-25_15-02-52.md](long-drill-2026-10-25_15-02-52.md) · [.json](long-drill-2026-10-25_15-02-52.json) | 阶段二 P2 故障演练**真实长跑**验收（`npm run drill:long`，真实时长不加速，2026-10-26 通过）：**B3 断网 120 分钟（7215 秒）** → **1435 次承诺被拒、0 新增**、1435 条动作入 Outbox 并**全部补记**、**`duplicates_found=0`**、二次对账 `entries_added=0`、恢复在 10 分钟内；**B4 封禁 15 分钟（900 秒）** → **9ms 检测**、**180 次尝试 0 成功**、停止动作、**5 条替代方案**、通知留痕、解禁恢复 |
+| [evidence-long-drill-2026-10-25_15-02-52/](evidence-long-drill-2026-10-25_15-02-52/) | P2 长跑证据副本（11 文件，已脱敏）：`B3-net-outage-120min/`（`drill-net-outage.json`、`outbox.json`、`ledger.json`、断网/恢复通知）、`B4-platform-ban-15min/`（`drill-platform-ban.json`、`alternative-plan.json`、封禁/恢复通知）、`B3-net-outage-120min.log`、`B4-platform-ban-15min.log` |
 | [p3-acceptance-2026-10-25_15-23-46.md](p3-acceptance-2026-10-25_15-23-46.md) · [.json](p3-acceptance-2026-10-25_15-23-46.json) | 阶段二 P3 企业版验收（`npm run acceptance:p3`，纯本地、无真实银行/税务系统）：build + **151 tests / 151 pass** + **12/12 检查 ✅**；B8 双模式（subject/invoice/payment consistent=true、6 类不一致阻断、blocked 时无发票/收款）；30 条边界双模式表（4 类重点越界双模式 deny）；双人复核（1 人 applied=false、2 位不同角色 applied=true）；用印 ai_may_sign=false（人签）；专票校验 draft_pending_human；申报草稿 ai_may_submit=false；组织审批链 1/2/3 级（3000/20000/80000）；用工/资质转人工；企业 fixtures 8/8 交叉验证；企业 run `run-20261025-232357-2ce6f6` |
 | [evidence-p3-2026-10-25_15-23-46/](evidence-p3-2026-10-25_15-23-46/) | P3 验收证据副本（18 文件）：`enterprise-run/`（`profile.json`、`entity-validation.json`、`seal-flow.json`、`dual-review.json`、`invoice-validation.json`、`org-approval.json`、`dual-mode-orders.json`、`boundary-table.{md,json}`（30 条）、`boundary-checks.json`、`fixture-checks.json`、`report.md`、`checkpoint.json` 等）+ `unit-tests.log`（151/151） |
 | [release-v0.5.0-check.md](release-v0.5.0-check.md) | v0.5.0 GitHub Release 发布验证记录（API + 真实浏览器截图） |
 | [release-v0.6.0-check.md](release-v0.6.0-check.md) | v0.6.0 GitHub Release 发布验证记录（API + 真实浏览器截图） |
+| [release-v0.8.0-check.md](release-v0.8.0-check.md) | **v0.8.0 GitHub Release 发布验证记录**（P2+P3 合并发布，Latest，tag `95b609a`；API + 真实浏览器截图，截图见 [`../images/release-v0.8.0.png`](../images/release-v0.8.0.png)） |
 | [2026-10-25-repo-publish.md](2026-10-25-repo-publish.md) | GitHub 公开发布验证（REST API + 真实浏览器 + CI #1/#2） |
 
 - 截图与日志本体在 `runs/<run-id>/`（gitignored），测试结果文件引用其相对路径。
@@ -70,8 +75,17 @@ docs/test-evidence/
   business/boundary 为纯 fixture 离线运行）生成 `p1-acceptance-*` + `evidence-p1-*`
   （business-run / boundary-run / console-e2e / console-cli / takeover-result / unit-tests.log）；
   运行前会清理 `.steward/`，只保留最新一份。
+- P2 故障演练：短跑由 `npm run acceptance:p2`（`scripts/run-acceptance-p2.mjs`，真实 localhost HTTP，
+  约 2 分钟）生成 `p2-acceptance-*` + `evidence-p2-*`；**真实长跑**由 `npm run drill:long`
+  （`scripts/run-long-drill.mjs`，B3 断网 120 分钟 / B4 封禁 15 分钟，真实时长不加速，约 2.5 小时）
+  生成 `long-drill-*` + `evidence-long-drill-*`（本次 11 文件，已脱敏，2026-10-26 通过）。
+- P3 企业版验收由 `npm run acceptance:p3`（`scripts/run-acceptance-p3.mjs`，纯本地、无网络、无真实
+  银行/税务系统）生成 `p3-acceptance-*` + `evidence-p3-*`（enterprise-run 全量证据 + `unit-tests.log`）。
+- **v0.8.0 Release 验证**：[`release-v0.8.0-check.md`](release-v0.8.0-check.md) + 截图
+  [`../images/release-v0.8.0.png`](../images/release-v0.8.0.png)（Release 页面 Latest、tag、说明与
+  B1–B8 对照均由真实浏览器核对）。
 - M1–M4 / P1/P2/P3 acceptance bundle 复制进仓库前用 `scripts/sanitize.mjs` 脱敏（替换本机绝对路径与临时
   worktree 路径），因此 `evidence-m1-*`…`evidence-p3-*` 内不含本机路径；
   `scripts/sanitize-evidence.mjs` 仅用于对既有 bundle 做一次性脱敏。
 
-_最后更新：2026-10-25（阶段二 P3 企业版 MVP 完成，v0.8.0 待发版；P2 短跑通过 / 长跑进行中）。_
+_最后更新：2026-10-26（阶段二 P2 长跑完成 + P3 企业版，v0.8.0 已发布；B1–B8 全部通过）。_

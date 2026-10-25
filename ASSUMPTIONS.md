@@ -1,7 +1,7 @@
 # Assumptions & Known Gaps / 假设与未覆盖清单
 
 > 本文件是**诚实边界**清单：实现前先写下“不知道就不猜”的部分。随里程碑更新。
-> 最后更新：2026-10-25（阶段二 P3 企业版 MVP 完成，v0.8.0 待发版；P2 短跑通过 / 长跑进行中）
+> 最后更新：2026-10-26（阶段二 P2 + P3 完成，v0.8.0 已发布（Latest）；P2 真实长跑通过）
 
 ## 一、环境假设
 
@@ -39,10 +39,10 @@
 5. 30 条法律边界中，“已实现”指程序行为可拦截；“人工/不适用”按文档要求逐条标注。
 6. 通知通道阶段一用桌面通知 + 邮件 + 审批队列；短信/电话待合规评估后再接。
 
-## 三、已知未覆盖（截至 P3 / 阶段二企业版 MVP）
+## 三、已知未覆盖（截至 P3 / 阶段二完成，v0.8.0 已发布）
 
-> 阶段一（M0–M4，v0.5.0）、阶段二 P1（个人版 MVP，v0.6.0）与 P3（企业版 MVP，v0.8.0 待发版）已完成；
-> P2 故障演练短跑通过、真实长跑进行中。以下未覆盖项保留为 **P2 长跑收尾与 P4 输入**。
+> 阶段一（M0–M4，v0.5.0）与阶段二 P1（v0.6.0）/ P2（故障演练，短跑 + 真实长跑）/ P3（企业版，
+> v0.8.0 已发布）均已完成；以下未覆盖项保留为 **P4（v1.0.0）与后续输入**。
 
 - [x] M0 内核最小闭环：AgentRuntime / BranchSpec / PolicyEngine / ArtifactBus / PromptManager /
   EventLog / BudgetGuard / StopSignal、CLI 7 命令（+2 占位）、MockHarness、prompts v1、
@@ -76,19 +76,23 @@
   （9 步 / 73 检查 / 9 截图 / 浏览器接管停止 88ms）；`examples/demo-business` 仿真业务线；CLI 新增
   `business`/`boundary-check`/`console`/`approve`/`takeover` → **18 命令 + 0 占位**；测试 **113/113**
   （14 文件）；B1/B2/B5/B6/B7 通过（2026-10-25）。
-- [x] P2 故障演练实现与**短跑验收**（v0.7.0 待发版）：`packages/steward-fault`（真实 localhost HTTP
+- [x] P2 故障演练实现与**短跑验收**（v0.7.0（随 v0.8.0 发布））：`packages/steward-fault`（真实 localhost HTTP
   断网/封禁注入、`PromisesGate` 断网不产生新承诺、幂等 `Outbox` 排队与恢复重放、`LedgerReconciler`
   账本不重复、`BanDetector` 封禁检测停止、替代方案 + 本地通知）、`examples/demo-platform`、CLI
   `fault-drill`；短跑 11/11 检查通过（断网 outage=120007ms / 25 次承诺被拒 / 25 条排队重放 /
   重复 0；封禁 11ms 检测 / 替代方案 5 条 / 通知留痕）；测试 133/133（P2 时点，15 文件）。
-- [x] P3 企业版实现与验收（v0.8.0 待发版）：`packages/steward-enterprise`（主体/授权/用印四项校验、
+- [x] P3 企业版实现与验收（v0.8.0 已发布）：`packages/steward-enterprise`（主体/授权/用印四项校验、
   对公账户、增值税普通/专用发票、开票校验 draft_pending_human、申报草稿 ai_may_submit=false、
   双人复核、组织审批链 1/2/3 级、用印 ai_may_sign=false、用工/资质转人工、多代理串行、
   30 条边界双模式表、B8 双模式 6 类不一致阻断）；`examples/demo-enterprise`（8 条订单）；
   `docs/zh-CN/enterprise.md` + `docs/en/enterprise.md`；CLI `enterprise-demo`；测试 **151/151**
   （16 文件）；B8 通过（2026-10-25）。
-- [ ] **P2 长跑尚未完成**：真实 2 小时断网 + 15 分钟封禁长跑仍在后台运行；`evidence-long-drill-*`
-  目前为空/预留，长跑证据（`long-drill-*`）待 Lead 入库后才能判定 B3/B4 完整通过。
+- [x] **P2 真实长跑完成并通过（2026-10-26）**：`npm run drill:long`（真实时长不加速）——**B3 断网
+  120 分钟（7215 秒）** → **1435 次承诺被拒、0 新增**、1435 条动作入 Outbox 并**全部补记**、
+  **`duplicates_found=0`**、二次对账 `entries_added=0`、恢复在 10 分钟内；**B4 封禁 15 分钟（900 秒）**
+  → **9ms 检测**、**180 次尝试 0 成功**、停止动作 + **5 条替代方案** + 通知、解禁恢复。证据
+  `docs/test-evidence/long-drill-2026-10-25_15-02-52.{md,json}` +
+  `docs/test-evidence/evidence-long-drill-2026-10-25_15-02-52/`（11 文件，已脱敏）。
 - [ ] **P2 扩展故障演练尚未实现**：强杀恢复、账本损坏、72h 失联、循环超限（`tests/fault/` 端到端用例）。
 - [ ] **P4 尚未开始**：v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM/静音双版本）。
 - [ ] 桌面适配器的次要能力尚未实现：UIA 可访问性树、右键菜单语义、拖拽、滚轮/触控板手势、
@@ -99,8 +103,9 @@
   P2 已有本地通知文件留痕，但尚无真实推送通道。
 - [ ] 企业版未接真实银行/税务/CA/电子签章系统；无企业专属 UI；企业特有流程（授权书生成、真实用印、
   属地税务差异）仍需人工复核。
-- [ ] v0.7.0（P2）/ v0.8.0（P3）的版本升级、GitHub Release/tag 尚未创建（代码已推送 `main`；
-  由 Lead 按发布节奏决定）；v0.6.0 Release 已存在。
+- [x] **版本与发布已完成**：`package.json` 与 CLI 均为 **0.8.0**；P2+P3 已通过 GitHub Release
+  **v0.8.0** 发布（tag `95b609a`，Latest）；v0.5.0/v0.6.0 为历史版本；发布验证
+  `docs/test-evidence/release-v0.8.0-check.md` + `docs/images/release-v0.8.0.png`。
 
 ## 四、取证与合规边界
 
@@ -123,8 +128,9 @@
 ## 六、待用户拍板后更新的项
 
 - [x] 仓库名（`daizhang-steward`）、GitHub 认证方式（本机凭据，令牌未落盘）
-- [x] “第一阶段发布平台”（GitHub public 仓库已发布；v0.5.0 / v0.6.0 Release 已创建）
-- [ ] P2 长跑（120min 断网 + 15min 封禁）完成确认与 `long-drill-*` 证据入库
-- [ ] v0.7.0（P2）/ v0.8.0（P3）是否升级并创建 GitHub Release/tag（代码已推送 `main`，由 Lead 决定）
+- [x] “第一阶段发布平台”（GitHub public 仓库已发布；v0.5.0 / v0.6.0 / v0.8.0 Release 已创建）
+- [x] P2 长跑（120min 断网 + 15min 封禁）完成确认与 `long-drill-*` 证据入库（2026-10-26）
+- [x] v0.8.0（P2+P3）版本升级与 GitHub Release（已发布，Latest，tag `95b609a`）
+- [ ] P4 v1.0.0 发布与宣传片（双语文档终审、30 条边界与 8 条验收对照、真实截图宣传片）
 - [ ] 正式商用联系方式（`COMMERCIAL.md` 占位）
 - [ ] 是否在阶段一即产出预热短片（阶段一以真实命令演示脚本替代；正式宣传片计划 P4）

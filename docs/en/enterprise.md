@@ -1,7 +1,7 @@
 # Enterprise Edition（English）
 
 > Status: **Phase 2 P3 (enterprise MVP) is implemented and acceptance-verified (2026-10-25, B8 passes)**;
-> delivery version **v0.8.0** (GitHub Release/tag handled by the Lead on the release cadence).
+> delivery version **v0.8.0**, released together with P2 as [v0.8.0](https://github.com/minzzj/daizhang-steward/releases/tag/v0.8.0) (Latest, 2026-10-26).
 > Implementation: `packages/steward-enterprise`; acceptance:
 > [`p3-acceptance-2026-10-25_15-23-46.{md,json}`](../test-evidence/p3-acceptance-2026-10-25_15-23-46.md)
 > + [`evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/) (18 files, sanitized).
@@ -141,7 +141,7 @@ enterprise boundary hand-off (employment/qualification → human), enterprise fi
 - The 30 rules cover the programmatically enforceable scope of the enterprise catalog; enterprise-specific
   processes (authorization-letter drafting, real stamping, local tax-rule differences) still need human
   review and are not a substitute for legal/tax advice.
-- Version: P3 delivers **v0.8.0** (P2 was v0.7.0); GitHub Release/tag is handled by the Lead — the actual
+- Version: P3 delivers **v0.8.0** (P2 was v0.7.0); P2+P3 were released together as **v0.8.0**
   `package.json` version in the repository is authoritative.
 
 ## 7. Related docs and evidence
@@ -152,4 +152,4 @@ enterprise boundary hand-off (employment/qualification → human), enterprise fi
 - Module docs: [`packages/steward-enterprise/README.md`](../../packages/steward-enterprise/README.md)
 - Acceptance evidence: [`docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`](../test-evidence/evidence-p3-2026-10-25_15-23-46/)
 
-_Last updated: 2026-10-25 (P3 enterprise MVP; v0.8.0 pending release)._
+_Last updated: 2026-10-26 (P2+P3 complete; v0.8.0 released)._
