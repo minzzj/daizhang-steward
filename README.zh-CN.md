@@ -78,6 +78,8 @@ runs/       runtime artifacts (gitignored; evidence lives here)
 > Only scaffold checks run today (no network, no paid API needed):
 
 ```bash
+git clone https://github.com/minzzj/daizhang-steward.git
+cd daizhang-steward
 # Node.js >= 22.18, pnpm >= 10
 pnpm check          # 校验仓库骨架 / verify scaffold
 pnpm check:secrets  # 密钥扫描 / secret scan

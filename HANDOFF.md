@@ -1,7 +1,7 @@
 # HANDOFF / 交接状态
 
 > 给下一次会话（或下一位执行者）的现状交接。每次里程碑结束更新。
-> 最后更新：2026-10-25（S0 脚手架完成，等待低峰期批准）
+> 最后更新：2026-10-25（GitHub 仓库已发布并验证；功能开发暂停，等低峰期启动）
 
 ## 现在能做什么
 
@@ -30,6 +30,17 @@
 - 为什么不在 H: 开发：H: 为 exFAT，不支持符号链接（pnpm workspace/AI 原子写会失败），
   且 HyperFrames 在 H: 渲染报 EISDIR（既有项目踩坑记录）。
 
+## 发布状态（2026-10-25）
+
+- **GitHub 公开仓库**：https://github.com/minzzj/daizhang-steward
+- 默认分支 `main`，当前提交 `35c12e2`；Public；许可证识别为 `Other/NOASSERTION`（CC BY-NC-SA 4.0 属预期）。
+- 验证：GitHub REST API + **真实浏览器**（dsh-browser + 本机 Chrome）双路径，README/侧栏/目录/提交记录均正常；
+  证据见 [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)
+  与截图 [`docs/images/repo-home-2026-10-25.png`](docs/images/repo-home-2026-10-25.png)。
+- 待确认：GitHub Actions 首次运行结果 → **已完成：CI #1/#2 均 success（Windows + Ubuntu）**；Release 计划 M4/v0.1.0 创建。
+- **功能开发状态**：暂停（按用户要求等低峰期）。已完成的部分 M0 实现保存在**本地**分支
+  `wip/m0-core`（提交 `5d3f677`，**尚未推送**，避免公开半成品）。恢复开发第一步见「下一步」第 0 条。
+
 ## 本机踩坑（2026-10-25 实测）
 
 1. **无 `pwsh`**：只有 Windows PowerShell 5.1。脚本一律用
@@ -42,22 +53,24 @@
    直接看退出码或用 `node scripts/check-scaffold.mjs` 更清晰。
 5. Playwright 直接用本机 Chrome/Edge 频道即可，无需下载 Chromium；桌面测试目标窗口用专用标题避免焦点误判。
 
-## 下一步（用户批准后按序执行）
+## 下一步（低峰期继续，按序执行）
 
-1. **M0**：`steward-core` 最小内核 + CLI + MockHarness + demo fixtures + prompts v1 + 证据目录。
-2. 跑通文档 1 验收 **A1 / A6 / A12**，生成第一份证据包（截图 + 日志 + report）。
-3. **M1**：Playwright Operator 真实浏览器回路（A2/A4/A5/A6）。
-4. **M2**：Windows 桌面适配器 + PolicyEngine + 停止键 + 检查点（A3/A8/A9）。
-5. **M3**：Scout（A7）。**M4**：双语文档 + GitHub 发布（A10/A11/A12）。
-6. 阶段一完成：更新本文件 → **结束会话**（省额度）→ 阶段二新会话从这里继续。
+0. **恢复 M0 工作**：`git checkout wip/m0-core`（或把该分支 rebase 到 main），先跑
+   `pnpm install && pnpm build && pnpm test`，补 `prompts/manifest.json`（`pnpm prompts:manifest`），
+   再继续 M0 剩余项：CLI 的 `run/branch/report/stop` 命令、prompts v1 内容、单元测试、`pnpm demo` 空回路证据。
+1. **M0 验收**：A1 / A6 / A12，生成第一份证据包（截图+日志+report）并汇报。
+2. **M1**：Playwright Operator 真实浏览器回路（A2/A4/A5/A6）。
+3. **M2**：Windows 桌面适配器 + PolicyEngine + 停止键 + 检查点（A3/A8/A9）。
+4. **M3**：Scout（A7）。**M4**：双语文档 + GitHub 发布（A10/A11/A12）。
+5. 阶段一完成：更新本文件 → 按用户要求自动继续阶段二（或视额度停会话）。
 
 ## 等待用户确认的事项
 
-- [ ] 低峰期批准“开始阶段一 M0”
-- [ ] GitHub 认证方式（fine-grained PAT 放 `STEWARD_GH_TOKEN`，或 device flow）
-- [ ] 仓库名最终确认（默认 `daizhang-steward`）
-- [ ] “第一阶段发布平台”准确含义（默认 GitHub public + Release）
-- [ ] 测试 key 是否仅用于联调（默认是；建议联调后轮换）
+- [ ] 低峰期“开始/恢复目标”指令（用户已同意自动进下一阶段、自动更新仓库）
+- [ ] 测试 key 仅用于联调（默认是；建议联调后轮换）
+- [x] GitHub 认证（已通过本机凭据完成建仓与推送；令牌未落盘）
+- [x] 仓库名（`minzzj/daizhang-steward` 已创建）
+- [x] 第一阶段发布平台（GitHub public 仓库已发布）
 
 ## 已知风险
 

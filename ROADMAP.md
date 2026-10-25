@@ -7,8 +7,8 @@
 
 | 阶段 | 里程碑 | 内容 | 验收（见 docs/*/delivery-checklist.md） | 状态 |
 |---|---|---|---|---|
-| 0 | S0 脚手架 | 仓库、许可证、治理文件、双语文档骨架、CI 自检、目标与路线图 | `pnpm check` 绿、CI 绿 | ✅ 完成（2026-10-25） |
-| 1 | M0 骨架 | 内核最小闭环：AgentRuntime/BranchSpec/ArtifactBus/PromptManager/events；CLI；MockHarness；demo-web/demo-desktop；prompts v1；CI | A1、A6、A12 | ⏳ 待用户低峰期批准 |
+| 0 | S0 脚手架 | 仓库、许可证、治理文件、双语文档骨架、CI 自检、目标与路线图 | `pnpm check` 绿、CI 绿 | ✅ 完成（2026-10-25，GitHub 仓库已发布） |
+| 1 | M0 骨架 | 内核最小闭环：AgentRuntime/BranchSpec/ArtifactBus/PromptManager/events；CLI；MockHarness；demo-web/demo-desktop；prompts v1；CI | A1、A6、A12 | ⏸ 低峰期启动（部分实现保存在本地 `wip/m0-core`，未推送） |
 | 1 | M1 浏览器回路 | Playwright Operator；CodeTask→CodeResult→补丁→测试；失败两轮升级 | A2、A4、A5、A6 | ⏳ |
 | 1 | M2 桌面与安全 | Windows 桌面适配器；PolicyEngine；停止键；审计；检查点恢复；分支隔离 | A3、A8、A9 | ⏳ |
 | 1 | M3 客户分支 | Scout：ICP、来源清单、评分、外联草稿、审批队列、ScoutReport | A7 | ⏳ |
@@ -18,6 +18,10 @@
 | 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ⏳ |
 | 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ⏳ |
 | 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ |
+
+> 公开仓库：https://github.com/minzzj/daizhang-steward（2026-10-25 创建；发布验证见
+> `docs/test-evidence/2026-10-25-repo-publish.md`）。开发遵循“先契约后实现、每个里程碑一个 PR、
+> 真实浏览器/真实桌面取证”。
 
 ## 每个里程碑的 Definition of Done
 
