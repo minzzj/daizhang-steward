@@ -114,6 +114,7 @@ const REQUIRED_DIRS = [
   "packages/steward-fault/src",
   "examples/demo-platform",
   "examples/demo-enterprise",
+  "docs/media/promo",
   "packages/steward-enterprise/src",
   "packages/steward-desktop",
   "tests/fixtures",
