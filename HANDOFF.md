@@ -37,7 +37,7 @@
 - 验证：GitHub REST API + **真实浏览器**（dsh-browser + 本机 Chrome）双路径，README/侧栏/目录/提交记录均正常；
   证据见 [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)
   与截图 [`docs/images/repo-home-2026-10-25.png`](docs/images/repo-home-2026-10-25.png)。
-- 待确认：GitHub Actions 首次运行结果；Release 计划 M4/v0.1.0 创建。
+- 待确认：GitHub Actions 首次运行结果 → **已完成：CI #1/#2 均 success（Windows + Ubuntu）**；Release 计划 M4/v0.1.0 创建。
 - **功能开发状态**：暂停（按用户要求等低峰期）。已完成的部分 M0 实现保存在**本地**分支
   `wip/m0-core`（提交 `5d3f677`，**尚未推送**，避免公开半成品）。恢复开发第一步见「下一步」第 0 条。
 
