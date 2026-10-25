@@ -48,7 +48,7 @@ import {
 import { cmdEnterpriseDemo } from "./enterprise-cli.js";
 import { cmdFaultDrill } from "./fault-cli.js";
 
-const VERSION = "0.6.0";
+const VERSION = "0.8.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
