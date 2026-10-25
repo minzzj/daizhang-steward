@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# Build output
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Runtime artifacts & evidence (kept out of git; see runs/README)
+runs/*
+!runs/.gitkeep
+*.log
+logs/
+test-results/
+playwright-report/
+blob-report/
+browser-screenshots/
+
+# Local state / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*
+secrets*
+.dsh/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local delivery snapshots (never commit H: copies)
+交付/

@@ -1,0 +1,30 @@
+# NOTICE — Third-Party Components / 第三方组件声明
+
+代掌 Steward (daizhang-steward) 的**自有代码**按 **CC BY-NC-SA 4.0** 授权（见 `LICENSE`）。
+The project's **own code** is licensed under **CC BY-NC-SA 4.0** (see `LICENSE`).
+
+本项目设计为与下列第三方组件协同工作。第三方组件**保持其各自许可证**，不因本项目被改为非商业许可而改变。
+This project is designed to work with the third-party components below. They **keep their own licenses**;
+this project's non-commercial license does not alter them.
+
+## Runtime / tools
+
+| Component | Version (pinned at dev time) | License | Copyright |
+|---|---|---|---|
+| `@deepseek-ai/dsh` (DeepSeek Harness) and `@deepseek-ai/*` plugins | 0.2.0-rc.2 (pinned) | MIT | Copyright (c) DeepSeek |
+| `dsh-browser` | 0.1.0 | MIT | Copyright (c) ben7am1n |
+| `dsh-computer-use` | 0.3.1 | MIT | Copyright (c) 988hj7tczd-oss |
+| `playwright-core` (Playwright) | pinned via dsh-browser | Apache-2.0 | Copyright Microsoft Corporation |
+| Node.js | >= 22.18 | MIT | Copyright Node.js contributors |
+
+## Notes / 说明
+
+1. 分发时，MIT/Apache-2.0 组件的许可证与版权声明必须保留；本项目通过 `NOTICE` 与依赖清单履行该义务。
+   When distributing, the license texts and copyright notices of MIT/Apache-2.0 components must be
+   preserved. This `NOTICE` and the dependency manifests fulfill that obligation.
+2. 若未来把第三方代码直接收录进本仓库（vendoring），其文件头将保留原始版权与许可证声明。
+   If third-party code is ever vendored into this repository, original headers will be preserved.
+3. 本仓库的 `pnpm-lock.yaml` 固定依赖版本；发布二进制/压缩包时会生成完整 `THIRD_PARTY_LICENSES.md`。
+   A full `THIRD_PARTY_LICENSES.md` will be generated for any release archive.
+
+_Last updated: 2026-10-25 (scaffold)._

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  scaffold:
+    name: scaffold (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.14.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.18.0"
+
+      - name: Install (scaffold has no dependencies yet)
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Scaffold self-check
+        run: pnpm check
+
+      - name: Secret scan
+        run: pnpm check:secrets
+
+# Milestone jobs land with M0:
+#   lint / unit / contract
+#   e2e-browser: real headless Chromium against examples/demo-web
+#   desktop E2E: local/self-hosted only (no GUI runner on hosted CI)
