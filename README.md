@@ -3,20 +3,28 @@
 **A composable, evidence-first operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations.
 
-> Status: **Phase 2 P1 complete — personal-edition MVP (v0.6.0)** (2026-10-25). Building on the phase-1
-> operating-AI core (real headed browser A2/A4/A5, real Windows desktop A3, safety modules A8/A9, Scout
-> A7, A10 dummy branch, A11 release readiness, A12 prompts), P1 adds the **business steward**: an
-> auditable business-domain engine (8 concepts: mandate / 3-level budget / project / task / agent /
-> evidence / ledger / tombstone, with confidence levels), a simulated business line
-> (`examples/demo-business`), a **local-only web console** (127.0.0.1, token-protected writes,
-> dashboard / project timeline / ledger six-facts drawer / approvals / takeover key / monthly report),
-> real human approval + takeover/resume, monthly report, L0/L1/L2 summaries and **18 personal-mode
-> boundary rules**. **113/113** unit + integration tests pass (14 test files); the CLI ships
-> **18 implemented commands + 0 placeholders**. Acceptance **A1–A12 pass**, plus phase-2
-> **B1/B2/B5/B6/B7 pass** (B3/B4 deferred to P2 fault drills, B8 to P3 enterprise edition).
-> P1 evidence:
-> [`docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.md`](docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.md).
-> See [ROADMAP.md](ROADMAP.md) and [`docs/en/delivery-checklist.md`](docs/en/delivery-checklist.md).
+> Status: **Phase 2 P3 complete — enterprise MVP (v0.8.0, release pending)** (2026-10-25). Building on the
+> phase-1 operating-AI core (real headed browser A2/A4/A5, real Windows desktop A3, safety modules A8/A9,
+> Scout A7, A10 dummy branch, A11 release readiness, A12 prompts) and the phase-2 personal-edition MVP
+> (P1: business-domain engine, simulated business line, local-only web console, approvals/takeover/monthly
+> report, 18 personal-mode boundary rules), phase 2 now adds:
+> **P2 fault drills** — real localhost HTTP fault injection (real `ECONNREFUSED` network outage and real
+> `403` platform ban), an offline promise gate (no new promises while offline), an idempotent outbox/replay
+> so the ledger never double-books, and alternative-plan notifications on a ban (B3/B4; **short run passed,
+> the real 2-hour outage + 15-minute ban long run is still in progress** — long-run evidence to be archived
+> by the Lead);
+> **P3 enterprise edition** — company entity & authorization checks (license/tax number/human-signed
+> authorization letter/human seal), corporate account, VAT special invoices with title/tax/contract
+> validation, **invoice drafts pending a human**, tax-filing drafts the AI never submits, **dual review**
+> (one reviewer ineffective, two different roles required), org approval chain (1/2/3 levels by amount),
+> **the AI never signs** (`ai_may_sign=false`), employment/qualification hand-offs, multi-agent
+> serialization, **B8 dual-mode consistency with all 6 mismatch classes blocked**, and a **30-rule
+> dual-mode boundary table**.
+> **151/151** unit + integration tests pass (16 test files); the CLI ships **19 implemented commands +
+> 0 placeholders**. Acceptance **A1–A12 pass**, phase-2 **B1/B2/B5/B6/B7/B8 pass**, P2 **short run passed**
+> (11/11 checks) and the P2 long run is in progress. See
+> [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md) / [`docs/en/enterprise.md`](docs/en/enterprise.md),
+> [ROADMAP.md](ROADMAP.md) and [`docs/en/delivery-checklist.md`](docs/en/delivery-checklist.md).
 > 中文说明见 [README.zh-CN.md](README.zh-CN.md).
 
 ---
@@ -52,11 +60,12 @@ CAPTCHAs, 2FA and face verification always hand off to a human.
 | Phase | Scope | Status |
 |---|---|---|
 | Phase 1 | Open-source "operating-AI core": Operator + Harness code loop + Scout + Conductor; 12 reproducible acceptance checks | ✅ **Complete (v0.5.0, A1–A12 pass)** |
-| Phase 2 | Steward business agent: **personal edition first** (one simulated business line end-to-end), then enterprise edition; 8 acceptance checks + 30 legal/compliance boundaries | 🔄 **In progress — P1 personal-edition MVP complete (v0.6.0, B1/B2/B5/B6/B7 pass)**; P2 fault drills next |
+| Phase 2 | Steward business agent: **personal edition first** (one simulated business line end-to-end), then enterprise edition; 8 acceptance checks + 30 legal/compliance boundaries | 🔄 **In progress — P1 personal-edition MVP (v0.6.0) complete; P2 fault drills (short run passed, long run in progress); P3 enterprise MVP (v0.8.0) complete with B8 pass**; P4 (v1.0.0 + promo video) next |
 
-Phase 1 is complete and released as **v0.5.0**; phase 2 has started — **P1 personal-edition MVP is
-complete as v0.6.0**, and P2 (fault drills B3/B4), P3 (enterprise edition B8 + 30 boundaries) and P4
-(v1.0.0 + promo video) are next — see [ROADMAP.md](ROADMAP.md).
+Phase 1 is complete and released as **v0.5.0**; phase 2 has delivered the **P1 personal-edition MVP
+(v0.6.0)** and the **P3 enterprise MVP (v0.8.0, release pending)**, while **P2 fault drills are
+short-run complete and the real 2-hour outage + 15-minute ban long run is still running**; P4
+(v1.0.0 + promo video) is next — see [ROADMAP.md](ROADMAP.md).
 
 ## Architecture at a glance
 
@@ -83,6 +92,22 @@ approvals, takeover pack, monthly report, L0/L1/L2 summaries, 18 personal-mode b
 dashboard, project timeline, ledger six-facts drawer, approval cards and the takeover key — driven by
 one fictional simulated business line (`examples/demo-business`).
 
+Phase 2 P2 adds the **fault-drill module** (`steward-fault`): it injects **real** localhost HTTP faults
+(`examples/demo-platform` can be switched to a real `ECONNREFUSED` outage, or return a real
+`403 + x-platform-ban: true`), blocks new promises while offline, queues actions in an **idempotent
+outbox**, replays them on recovery (ledger duplicates = 0), and generates a readable **alternative plan**
+plus local notifications when platform B bans the account. `steward fault-drill --case net-outage |
+platform-ban` runs the drills; the short acceptance run measured `outage=120007 ms`, 25 blocked promises,
+25 queued/replayed actions, 0 duplicates, ban detected in 11 ms with 5 alternative items.
+
+Phase 2 P3 adds the **enterprise edition** (`steward-enterprise`): entity/authorization checks,
+corporate account, VAT special invoices with title/tax/contract validation (drafts pending a human),
+tax-filing drafts (never auto-submitted), dual review (2 different roles), org approval chain by amount,
+human-only seal (`ai_may_sign=false`), employment/qualification hand-offs, multi-agent serialization,
+**B8 dual-mode consistency** (one personal order + one enterprise order, 6 mismatch classes 100% blocked)
+and the **30-rule dual-mode boundary table** — see
+[`docs/en/enterprise.md`](docs/en/enterprise.md) / [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md).
+
 ## Repository layout
 
 The repository is a **single package** (no pnpm workspace): `tsconfig.json` compiles
@@ -94,26 +119,34 @@ packages/   core packages (steward-core: runtime/policy/events/artifacts/prompts
             patch + two-round code loop; steward-browser: Playwright real-browser adapter;
             steward-desktop: real Windows desktop adapter — ctypes sidecar + SendInput;
             steward-scout: customer-branch engine — ICP/scoring/drafts/approval queue, no network;
-            steward-domain: phase-2 business-domain engine; steward-console: local web console)
+            steward-domain: phase-2 business-domain engine; steward-console: local web console;
+            steward-fault: P2 real-fault drills (outage gate, idempotent outbox, ban detection,
+            alternative plans); steward-enterprise: P3 enterprise edition — entity/auth/seal,
+            corporate invoices, dual review, org approval chain, 30 dual-mode boundary rules)
 apps/       CLI entry (steward: demo/browser-flow/desktop-flow/scout/dummy-branch/business/console/
-            boundary-check/approve/takeover/code-loop/run/branch/report/stop/safety-check/version/help)
+            boundary-check/fault-drill/enterprise-demo/approve/takeover/code-loop/run/branch/report/
+            stop/safety-check/version/help — 19 implemented commands, 0 placeholders)
 prompts/    versioned runtime prompts (4 roles, loaded by PromptManager, tested)
 examples/   demo-web, demo-desktop, mock-harness (scripted patches), scout-fixtures (14 fictional
-            compliant leads), demo-business (simulated personal-edition business line)
-tests/      unit tests (14 files / 113 at v0.6.0) + e2e-browser + e2e-desktop + e2e-console; contract / fault drills later
+            compliant leads), demo-business (personal-edition business line), demo-platform (P2 real
+            localhost fault-injection platform), demo-enterprise (P3 8 enterprise orders: 2 normal + 6
+            mismatch)
+tests/      unit tests (16 files / 151 at v0.8.0) + e2e-browser + e2e-desktop + e2e-console
 docs/       bilingual docs (en/ and zh-CN/) + test evidence
 scripts/    check/build helpers, secret scan, evidence + acceptance runners, delivery sync
 runs/       per-run artifacts (gitignored; evidence lives here)
 dist/       build output (gitignored; single-package build)
 ```
 
-## Quickstart (M0 → v0.6.0)
+## Quickstart (M0 → v0.8.0)
 
-Phase 1 is complete and phase 2 P1 is delivered; every milestone can be reproduced locally and offline.
-M0 runs with no paid API (MockHarness); M1 adds a real-browser loop; M2 adds the real Windows desktop
-loop and safety modules; M3 adds the fixture-driven Scout customer branch; M4 adds the A10 read-only
-dummy branch and release-readiness acceptance; **P1 adds the business domain, the local web console and
-the simulated business line (B1/B2/B5/B6/B7)**:
+Phase 1 is complete and phase 2 P1/P3 are delivered (P2 fault drills: short run passed, long run in
+progress); every milestone can be reproduced locally and offline. M0 runs with no paid API
+(MockHarness); M1 adds a real-browser loop; M2 adds the real Windows desktop loop and safety modules;
+M3 adds the fixture-driven Scout customer branch; M4 adds the A10 read-only dummy branch and
+release-readiness acceptance; **P1 adds the business domain, the local web console and the simulated
+business line (B1/B2/B5/B6/B7)**; **P2 adds real localhost fault drills (B3/B4 short run)**;
+**P3 adds the enterprise edition, B8 and the 30-rule dual-mode boundary table**:
 
 ```bash
 git clone https://github.com/minzzj/daizhang-steward.git
@@ -124,32 +157,41 @@ npm install
 npm run check          # repo/config check
 npm run check:secrets  # secret scan
 npm run build          # tsc -p tsconfig.json → dist/
-npm test               # 113/113 unit + integration tests (14 files)
+npm test               # 151/151 unit + integration tests (16 files)
 npm run demo           # M0 empty loop → runs/<run-id>/ + report.md (MockHarness)
 npm run test:prompts   # prompt versioning/safety tests (acceptance A12)
 npm run evidence       # offline evidence bundle → docs/test-evidence/test-result-<stamp>.{md,json}
 npm run acceptance     # M1 headed real-browser acceptance (A2/A4/A5) → docs/test-evidence/m1-acceptance-<stamp>.*
 npm run acceptance:m2  # M2 real-desktop + stop/checkpoint/isolation acceptance (A3/A8/A9), local-only
 npm run acceptance:m3  # M3 Scout acceptance (A7: 14 leads → 4 discarded → 8 qualified → 3 drafts, 0 sent)
-npm run acceptance:m4  # M4 (phase-1) release readiness (version check is dynamic; re-runnable on later commits; current phase-2 work uses acceptance:p1)
+npm run acceptance:m4  # M4 (phase-1) release readiness (version check is dynamic; re-runnable on later commits)
 npm run acceptance:p1  # P1 personal-edition MVP acceptance (B1/B2/B5/B6/B7 + console E2E + 113 tests), local-only
-# phase-2 P1 quick tour (all offline, fictional data):
+npm run acceptance:p2  # P2 fault drills SHORT run (B3/B4; ~2 min outage + ~2 min ban, real localhost HTTP), local-only
+npm run acceptance:p3  # P3 enterprise acceptance (B8 + 30 boundaries + dual review/seal/invoice/org chain), local-only
+# phase-2 P1 tour (offline, fictional data):
 node dist/apps/cli/src/index.js business       # proposal + simulated business line + ledger 6 facts + promise trace + takeover pack + monthly report + boundaries
 node dist/apps/cli/src/index.js boundary-check # 18 personal-mode boundary rules; 4 out-of-scope classes denied
 node dist/apps/cli/src/index.js console        # local web console at http://127.0.0.1:4180 (token-protected writes)
 node dist/apps/cli/src/index.js approve --json    # human approval queue (expires = suspend, never auto-approve)
 node dist/apps/cli/src/index.js takeover --json   # takeover key: halt + 6-section takeover pack; --resume to continue
+# phase-2 P2/P3 tour:
+node dist/apps/cli/src/index.js fault-drill --case net-outage --outage-minutes 0.2 --json   # real outage drill (short)
+node dist/apps/cli/src/index.js fault-drill --case platform-ban --ban-minutes 0.2 --json   # real 403 ban drill (short)
+node dist/apps/cli/src/index.js enterprise-demo --json  # B8 dual-mode orders + 6 mismatch blocks + 30 boundaries table
 ```
 
-CI runs the repository self-check, secret scan, build, 113 tests, demo evidence, the fixture-driven
+CI runs the repository self-check, secret scan, build, 151 tests, demo evidence, the fixture-driven
 `scout` demo (drafts only, never auto-sent), the phase-2 `business`/`boundary-check` demos, the A10
-`dummy-branch` demo, `safety-check`, the **headless real-browser console E2E** and the headless
-real-browser demo-web E2E; headed acceptance (`npm run acceptance`, `npm run acceptance:p1`) and the
-real-desktop `npm run acceptance:m2` are local-only (hosted CI has no interactive desktop).
+`dummy-branch` demo, `safety-check`, **real localhost fault drills (B3/B4 short)**, the **P3 enterprise
+demo (B8 + 30 boundaries)**, the **headless real-browser console E2E** and the headless real-browser
+demo-web E2E; headed acceptance (`npm run acceptance` / `acceptance:p1` / `acceptance:p2` /
+`acceptance:p3`) and the real-desktop `npm run acceptance:m2` are local-only (hosted CI has no
+interactive desktop).
 
-What v0.6.0 can do: the CLI implements `demo`, `browser-flow`, `desktop-flow`, `scout`, `dummy-branch`,
-`business`, `console`, `boundary-check`, `approve`, `takeover`, `code-loop`, `run`, `branch`, `report`,
-`stop`, `safety-check`, `version` and `help` (**18 commands, 0 placeholders**).
+What v0.8.0 can do: the CLI implements `demo`, `browser-flow`, `desktop-flow`, `scout`, `dummy-branch`,
+`business`, `console`, `boundary-check`, `fault-drill`, `enterprise-demo`, `approve`, `takeover`,
+`code-loop`, `run`, `branch`, `report`, `stop`, `safety-check` and `version` (**19 business commands,
+0 placeholders**; `steward help` lists them).
 `browser-flow` drives the real demo-web login/project flow in headed Chrome with per-step screenshots;
 `desktop-flow` drives the real `demo-desktop` window with real mouse/keyboard input (SendInput, Unicode
 typing) and per-step screenshots; `scout` loads the fictional compliant fixtures, builds the ICP + 3
@@ -158,29 +200,26 @@ compliance 20%), hard-checks and dedupes sources, drafts at most 3 outreach draf
 citing a concrete signal) and queues them for **human approval** (all `pending`, `sent=0`; daily
 per-channel limit 10; unsubscribe honored; no network I/O); `dummy-branch` shows A10 — a new read-only
 branch needs only a BranchSpec + an existing prompt (`reviewer@1.0.0`), with no core change;
-**`business`** runs the phase-2 business steward end to end on the fictional fixture — topic selection
-(3 candidate lines with checkable sources), one simulated business line (project → tasks → deliverables →
-acceptance → income/invoice), ledger with mandatory **six facts**, **promise traces** (conversation
-source → mandate clause → project; unrecorded = unauthorized), a **6-section takeover pack**, a monthly
-report and the 18 personal-mode boundary rules; **`console`** serves the local web control panel
-(binding **only 127.0.0.1**, writes protected by an `X-Steward-Token`, no CDN/external links;
-dashboard, project timeline, ledger six-facts drawer, approval cards, takeover key, monthly report);
-**`boundary-check`** self-checks the boundary rules (4 out-of-scope classes → 100% deny; payment →
-human; quote → draft-only); **`approve`** and **`takeover`** are real human commands (approval expires =
-suspend, never auto-approve; takeover halts all new writes and produces the pack, `--resume` continues)
-— and the real console E2E (headed Chrome in acceptance) measured the takeover stop in the browser at
-**88 ms** (limit 10000 ms). `code-loop` runs CodeTask → patch → isolated git worktree → real-browser
-acceptance (`code-loop --fail` injects a broken patch and escalates after two rounds); `safety-check`
-self-checks the stop key (≤5s), checkpoint save/load/resume and branch isolation; `run --resume <runId>`
-resumes from the last checkpoint and skips steps already completed. Every run writes its evidence bundle
-to `runs/<run-id>/`: `prompt.md`, `report.md`, `console.log`, `meta.json`, `events.jsonl`
-(hash-chained ledger), `checkpoint.json`, plus `patch.diff`, `test.log`, `code-task.json`,
-`code-result.json`, `e2e/<case>/screenshots/`, `e2e-desktop/screenshots/`, and (for Scout)
-`scout-report.md/.json`, `leads-scored.json`, `drafts.json`, `approval-queue.json`, `outreach-drafts/`;
-the phase-2 `business` command also writes `proposal.json`, `business-result.json`,
-`ledger-facts.json`, `promise-traces.json`, `takeover-pack.json`, `boundary-check.json`,
-`monthly-report.{json,md}`, `summaries.json`. The built CLI can also be invoked directly:
-`node dist/apps/cli/src/index.js help`.
+**`business`** runs the personal-edition business steward end to end on the fictional fixture — topic
+selection (3 candidate lines with checkable sources), one simulated business line (project → tasks →
+deliverables → acceptance → income/invoice), ledger with mandatory **six facts**, **promise traces**
+(conversation source → mandate clause → project; unrecorded = unauthorized), a **6-section takeover
+pack**, a monthly report and the 18 personal-mode boundary rules; **`console`** serves the local web
+control panel (binding **only 127.0.0.1**, writes protected by an `X-Steward-Token`, no CDN/external
+links; dashboard, project timeline, ledger six-facts drawer, approval cards, takeover key, monthly
+report); **`boundary-check`** self-checks the boundary rules (4 out-of-scope classes → 100% deny;
+payment → human; quote → draft-only); **`approve`** and **`takeover`** are real human commands
+(approval expires = suspend, never auto-approve; takeover halts all new writes and produces the pack,
+`--resume` continues) — the real console E2E (headed Chrome in acceptance) measured the takeover stop in
+the browser at **88 ms** (limit 10000 ms); **`fault-drill --case net-outage`** and **`--case platform-ban`**
+inject **real** localhost HTTP faults against `examples/demo-platform`: no new promises while offline,
+actions queue in an idempotent outbox and replay on recovery with **0 duplicate ledger entries**, and a
+real `403+x-platform-ban` stops actions (detected in 11 ms) and produces an alternative plan + local
+notifications; **`enterprise-demo`** runs the P3 enterprise flow — entity/authorization checks, corporate
+account, VAT special invoice validation (draft pending human), dual review (1 reviewer ineffective, 2
+different roles effective), org approval chain by amount, human-only seal (`ai_may_sign=false`),
+**B8 dual-mode consistency with all 6 mismatch classes blocked** and the **30-rule dual-mode boundary
+table** (payment/invoice/tax filing never automatic).
 
 Latest P1 personal-edition MVP acceptance (2026-10-25, local headed Chrome, `npm run acceptance:p1` OK,
 12/12 checks): [`docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.md`](docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.md)
@@ -190,8 +229,32 @@ Latest P1 personal-edition MVP acceptance (2026-10-25, local headed Chrome, `npm
 6 facts), `promise-traces.json` (3-segment authorized chain), `takeover-pack.json` (6 sections),
 `boundary-check.json` (18 rules; 4/4 deny + human + draft-only), `monthly-report.{json,md}`;
 `console-e2e/` with 9 step screenshots / 73 checks / browser takeover stop **88 ms**; `console-cli/`
-real-browser screenshots of the CLI-launched console; `unit-tests.log` 113/113). B1/B2/B5/B6/B7 pass;
-B3/B4 are deferred to P2 fault drills and B8 to P3 enterprise edition.
+real-browser screenshots of the CLI-launched console; `unit-tests.log` 113/113). B1/B2/B5/B6/B7 pass.
+
+Latest P3 enterprise MVP acceptance (2026-10-25, local-only, `npm run acceptance:p3` OK, **12/12 checks**):
+[`docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.md`](docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.md)
+(· [`.json`](docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.json)); evidence bundle
+[`docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`](docs/test-evidence/evidence-p3-2026-10-25_15-23-46/)
+(18 files, sanitized, enterprise run `run-20261025-232357-2ce6f6`): B8 dual-mode orders
+(`subject/invoice/payment consistent` + **6/6 mismatch classes blocked**, blocked orders produce no
+invoice/payment), **30-row dual-mode boundary table** (4 key out-of-scope classes denied in both modes),
+dual review (1 reviewer `applied=false`, 2 different roles `applied=true`), seal `ai_may_sign=false`
+(human-signed), VAT special invoice validation with `draft_pending_human`, tax-filing draft
+(`ai_may_submit=false`), org approval chain 1/2/3 levels (3000/20000/80000), employment/qualification
+hand-off, enterprise fixture cross-check 8/8; **151/151** tests. Details:
+[`docs/en/enterprise.md`](docs/en/enterprise.md) / [`docs/zh-CN/enterprise.md`](docs/zh-CN/enterprise.md).
+B8 passes; see also the 30-rule table.
+
+Latest P2 fault-drill acceptance — **short run passed, long run in progress** (2026-10-25,
+`npm run acceptance:p2` OK, **11/11 checks** on the short run; the real 2-hour outage + 15-minute ban
+long run is still running and its evidence will be archived by the Lead):
+[`docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.md)
+(· [`.json`](docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.json)); evidence bundle
+[`docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`](docs/test-evidence/evidence-p2-2026-10-25_15-02-52/)
+(10 files, sanitized): B3 net outage (real `ECONNREFUSED`; outage 120007 ms short run, **25 blocked
+promises**, **25 queued/replayed actions**, **0 duplicate ledger entries**, recovery within 10 min),
+B4 platform ban (real `403 + x-platform-ban`; detected in **11 ms**, stopped, **5 alternative items**,
+local notifications). Short-run checks are ✅; the **long run is not yet complete**.
 
 Latest M4 phase-1 release acceptance (2026-10-25, `npm run acceptance:m4` OK, 10/10 checks): checks A10
 read-only `dummy-branch`, A11 release readiness (CC BY-NC-SA 4.0 license text, third-party NOTICE,
@@ -245,12 +308,23 @@ Latest M0 offline loop run: `runs/run-20261025-172017-eb9116/` — evidence in
   (limit 10000 ms). The business data is a purely fictional simulated line (no real customers, money or
   outreach), and `approve` / `takeover` are always human commands — an expired approval suspends, it is
   never auto-approved.
-- CI uses a mock harness (no paid keys) and runs: self-check, secret scan, build, 113 tests, demo
+- **P2 fault drills use real network faults, not mocks**: the drill starts a real localhost platform and
+  injects a real `ECONNREFUSED` outage or a real `403 + x-platform-ban` ban; no new promises are made
+  while offline, actions queue in an idempotent outbox and replay on recovery (0 duplicate ledger
+  entries), and a ban stops actions and produces a readable alternative plan with local notifications.
+- **P3 enterprise edition is human-controlled**: all enterprise data is fictional (license/tax number/
+  bank account/signers are invented), no real bank/tax/CA/e-signature system is connected, invoices and
+  tax filings are **drafts only**, and the AI **never signs** (`ai_may_sign=false`), never issues
+  invoices, never submits filings and never changes accounts; dual review needs two different roles and
+  the org approval chain is executed by humans. B8 dual-mode consistency blocks all 6 mismatch classes
+  before any invoice or payment is produced.
+- CI uses a mock harness (no paid keys) and runs: self-check, secret scan, build, 151 tests, demo
   evidence, the fixture-driven `scout` demo (drafts only, never auto-sent), the phase-2
-  `business`/`boundary-check` demos, the A10 `dummy-branch` demo, `safety-check`, the headless real-browser
+  `business`/`boundary-check` demos, the A10 `dummy-branch` demo, `safety-check`, **real localhost fault
+  drills (B3/B4 short run)**, the **P3 enterprise demo (B8 + 30 boundaries)**, the headless real-browser
   **console E2E** and the headless real-browser demo-web E2E; headed acceptance (`npm run acceptance`,
-  `npm run acceptance:p1`) and real-desktop acceptance (`npm run acceptance:m2`) are local-only. Before
-  release, the full suite is re-run from a clean path.
+  `acceptance:p1`, `acceptance:p2`, `acceptance:p3`) and real-desktop acceptance (`npm run acceptance:m2`)
+  are local-only. Before release, the full suite is re-run from a clean path.
 
 ## License
 
@@ -266,23 +340,28 @@ runs before every commit/CI. See [`SECURITY.md`](SECURITY.md).
 
 ## Docs
 
-- [ROADMAP.md](ROADMAP.md) — milestones and approval gates (Phase 1 complete; Phase 2 P1 complete, P2 next)
-- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) — v0.5.0 (phase 1) release notes (bilingual)
+- [ROADMAP.md](ROADMAP.md) — milestones and approval gates (Phase 1 complete; Phase 2 P1 + P3 complete, P2 long run in progress, P4 next)
+- [docs/RELEASE_NOTES_v0.5.0.md](docs/RELEASE_NOTES_v0.5.0.md) · [docs/RELEASE_NOTES_v0.6.0.md](docs/RELEASE_NOTES_v0.6.0.md) — phase-1 / P1 release notes (bilingual)
+- [docs/zh-CN/enterprise.md](docs/zh-CN/enterprise.md) · [docs/en/enterprise.md](docs/en/enterprise.md) — P3 enterprise edition + the 30-rule dual-mode boundary table
 - [docs/demo-script.md](docs/demo-script.md) · [docs/demo-script.zh-CN.md](docs/demo-script.zh-CN.md) — 3-minute demo script
 - [docs/good-first-issues.md](docs/good-first-issues.md) — 5 good first issues (bilingual)
 - [docs/en/delivery-checklist.md](docs/en/delivery-checklist.md) — acceptance items with evidence
-  (A1–A12 pass; phase 2 B1/B2/B5/B6/B7 pass, B3/B4/B8 pending P2/P3)
+  (A1–A12 pass; phase 2 B1/B2/B5/B6/B7/B8 pass; P2 short run passed / long run in progress)
 - [docs/test-evidence/](docs/test-evidence/) — evidence archive (`test-result-*`, `m1-acceptance-*` …
-  `m4-acceptance-*` + `evidence-m1-*` … `evidence-m4-*`, and `p1-acceptance-2026-10-25_14-18-54.*` +
-  `evidence-p1-2026-10-25_14-18-54/`)
+  `m4-acceptance-*`, `p1-acceptance-*` + `evidence-p1-*`, `p2-acceptance-*` + `evidence-p2-*` (short run),
+  `p3-acceptance-*` + `evidence-p3-*`; long-drill evidence to be archived)
 - [docs/en/architecture.md](docs/en/architecture.md) · [docs/en/adapters.md](docs/en/adapters.md)
   · [docs/en/contracts.md](docs/en/contracts.md) · [docs/en/threat-model.md](docs/en/threat-model.md)
 - [packages/steward-desktop/README.md](packages/steward-desktop/README.md) — real Windows desktop adapter
 - [packages/steward-scout/README.md](packages/steward-scout/README.md) — Scout customer-branch engine
 - [packages/steward-domain/README.md](packages/steward-domain/README.md) — phase-2 business-domain engine
 - [packages/steward-console/README.md](packages/steward-console/README.md) — local web console
+- [packages/steward-fault/README.md](packages/steward-fault/README.md) — P2 fault-drill module (B3/B4)
+- [packages/steward-enterprise/README.md](packages/steward-enterprise/README.md) — P3 enterprise edition
 - [examples/scout-fixtures/README.zh-CN.md](examples/scout-fixtures/README.zh-CN.md) — 14 fictional compliant leads
 - [examples/demo-business/README.zh-CN.md](examples/demo-business/README.zh-CN.md) — simulated personal-edition business line
+- [examples/demo-platform/README.zh-CN.md](examples/demo-platform/README.zh-CN.md) — P2 real localhost fault-injection platform
+- [examples/demo-enterprise/README.zh-CN.md](examples/demo-enterprise/README.zh-CN.md) — P3 enterprise fixtures (8 orders)
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — assumptions and known gaps
 - [HANDOFF.md](HANDOFF.md) — current handoff status
 

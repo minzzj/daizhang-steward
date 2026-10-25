@@ -15,9 +15,9 @@
 | 1 | M4 开源发布 | 双语文档、LICENSE 校验、CI、Release、5 个 good-first-issue、3 分钟演示 | A10、A11、A12 | ✅ 完成（2026-10-25；阶段一收尾，**v0.5.0 已发布**；`npm run acceptance:m4` OK；证据 `docs/test-evidence/m4-acceptance-2026-10-25_13-43-07.{md,json}` + `evidence-m4-2026-10-25_13-43-07/`；Release https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0） |
 | — | **阶段一停止点** | 输出 `HANDOFF.md`，**结束会话省额度**（按用户要求），等待阶段二启动 | 用户确认 | ✅ 完成（2026-10-25 v0.5.0 发布；阶段二已启动） |
 | 2 | P1 个人版 MVP | 经营域（委托/预算/项目/任务/代理/证据/账本/墓碑）、五能力、控制台、审批、接管、月报 | B1、B2、B5、B6、B7 | ✅ 完成（2026-10-25；B1/B2/B5/B6/B7 通过，`npm run acceptance:p1` OK，**v0.6.0**；证据 `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` + `evidence-p1-2026-10-25_14-18-54/`） |
-| 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | ⏳ 下一步（阶段二第二步） |
-| 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ⏳ |
-| 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ |
+| 2 | P2 个人版故障 | 断网 2h、强杀恢复、封号模拟、72h 失联、循环超限 | B3、B4 | 🟡 **短跑已通过，长跑进行中**（`npm run acceptance:p2` 短跑 11/11 OK，证据 `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` + `evidence-p2-2026-10-25_15-02-52/`；真实 2 小时断网 + 15 分钟封禁长跑仍在运行，长跑证据由 Lead 后续入库） |
+| 2 | P3 企业版 | 对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性；30 条边界表 | B8 + 边界 100% 拒绝 | ✅ 完成（2026-10-25；**B8 通过** + 30 条边界双模式表，`npm run acceptance:p3` OK，**v0.8.0 待发版**；证据 `docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` + `evidence-p3-2026-10-25_15-23-46/`；边界表全文见 `docs/zh-CN/enterprise.md`） |
+| 2 | P4 发布与宣传片 | v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音） | 全部证据 + 用户确认 | ⏳ 下一步（P2 长跑收尾后） |
 
 > **M0 验收结论（2026-10-25）**：A1 / A6 / A12 通过；`npm run check`、`npm run check:secrets`、
 > `npm test`（30/30）、`npm run demo`、`npm run evidence` 全部退出码 0。证据：
@@ -95,6 +95,32 @@
 > `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` +
 > `docs/test-evidence/evidence-p1-2026-10-25_14-18-54/`（39 文件：business-run / boundary-run /
 > console-e2e / console-cli / takeover-result / unit-tests.log，已脱敏）。
+>
+> **P2 验收结论（2026-10-25，故障演练，短跑通过 / 长跑进行中）**：`npm run acceptance:p2` 短跑
+> **11/11 检查 ✅**（build + **133/133** 测试 + B3/B4 演练）；**B3** 断网（真实 `ECONNREFUSED`，短跑
+> `outage=120007ms`）：断网期间**不产生新承诺**（25 次被拒）、动作进入 **Outbox 排队**（25 条）、
+> 恢复后 **10 分钟内补记**（重放 25 条）、**账本重复 0**（幂等）；**B4** 平台封禁（真实
+> `403+x-platform-ban`）：**11ms 内检测**并停止动作、生成**替代方案 5 条**、本地通知留痕、解禁恢复。
+> 证据：`docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` +
+> `docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`（10 文件，已脱敏）。
+> **真实 2 小时断网 + 15 分钟封禁长跑仍在后台运行，长跑证据（`long-drill-*`）由 Lead 后续入库；
+> 长跑完成前 P2 不算完整通过。**
+>
+> **P3 验收结论（2026-10-25，企业版，v0.8.0 待发版）**：**B8 通过**，`npm run acceptance:p3` OK
+> （**12/12 检查全 ✅**；build + **151/151** 测试 + 企业版流程）。B8：个人/企业双模式各跑一单，
+> 主体/抬头/收款/发票类型一致（subject/invoice/payment consistent=true），**6 类不一致全部阻断**
+> （阻断时不产生发票/收款）；**30 条边界双模式标注表**（个人/企业 × 已实现/人工/不适用；四类重点
+> 越界 EB-01/02/03/04 双模式 deny）；双人复核（1 人 `applied=false`、2 位不同角色 `applied=true`）；
+> 用印 **`ai_may_sign=false`**（仅自然人签署）；专票校验（抬头/税号/合同一致）→ `draft_pending_human`；
+> 申报草稿 `ai_may_submit=false`；组织审批链 **1/2/3 级**（3000/20000/80000）；用工/资质类转人工；
+> 企业 fixtures 8 条（2 正常 + 6 不一致）交叉验证 8/8；企业 run `run-20261025-232357-2ce6f6`。
+> 测试 **151/151**（P1 113 + fault 20 + enterprise 18，共 16 个测试文件）；CLI 现为 **19 个已实现
+> 命令 + 0 个占位**（P2 新增 `fault-drill`、P3 新增 `enterprise-demo`）。边界表全文与已知限制见
+> `docs/zh-CN/enterprise.md` / `docs/en/enterprise.md`；证据：
+> `docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` +
+> `docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`（18 文件：enterprise-run 的
+> profile/entity/seal/dual-review/invoice/org-approval/dual-mode-orders/boundary-table/fixture-checks +
+> `unit-tests.log`，已脱敏）。
 
 ## 每个里程碑的 Definition of Done
 
@@ -109,12 +135,16 @@
 - 支付/退款/合同/账号权限/批量外联/生产部署：默认拒绝或只出草稿。
 - 验证码/2FA/人脸：停止交人，不绕过。
 - 无资质业务、借用资质、陌生外呼、超预算：100% 拒绝并留痕。
-- 个人/企业模式冲突（主体、抬头、收款、发票）：阻断并说明原因。
+- 个人/企业模式冲突（主体、抬头、收款、发票）：阻断并说明原因（P3 已实现 6 类阻断）。
+- 企业版：AI 不代签（`ai_may_sign=false`）、不自动开票（仅草稿待人工）、不代提交申报、不自动变更账户；
+  对公/专票/授权书人签/双人复核/组织审批链均由人完成。
 
 ## 额度与停止点策略
 
-- 每个里程碑完成即汇报，等用户确认（或用户明确“连续做完阶段一”）。
+- 每个里程碑完成即汇报，等用户确认（或用户明确“连续做完阶段二”）。
 - 阶段一完成 → 输出 HANDOFF → **结束会话**；阶段二在新会话从 HANDOFF 继续。
+- 当前：P1 已交付 v0.6.0、P3 已交付 v0.8.0（待发版）；P2 短跑已过、长跑进行中；**P2 长跑收尾 + P4
+  v1.0.0/宣传片**是剩余步骤。
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
-_Last updated: 2026-10-25 (Phase 2 P1 personal-edition MVP complete — v0.6.0; next milestone: P2 fault drills B3/B4)._
+_Last updated: 2026-10-25 (Phase 2 P3 enterprise MVP complete — v0.8.0 pending release; P2 short run passed / long run in progress; next: P2 long-run close-out + P4 v1.0.0)._

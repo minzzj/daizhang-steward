@@ -1,10 +1,11 @@
 # Architecture
 
-> Status: design fixed; **Phase 1 (M0 kernel + M1 real browser + M2 real desktop & safety + M3 Scout +
-> M4 release close-out) is fully implemented and verified, released as v0.5.0; Phase 2 P1
-> personal-edition MVP is implemented and delivered as v0.6.0 (2026-10-25)**; Phase 2 P2–P4 proceeds
-> per the ROADMAP.
-> Companions: `contracts.md`, `threat-model.md`, `adapters.md`.
+> Status: design fixed; **Phase 1 (M0–M4) is fully implemented and released as v0.5.0; Phase 2 P1
+> personal-edition MVP was delivered as v0.6.0; P2 fault drills passed the short run (long run in
+> progress); P3 enterprise MVP is implemented and delivered as v0.8.0 (release pending) (2026-10-25)**;
+> P4 (v1.0.0 + promo video) proceeds per the ROADMAP.
+> Companions: `contracts.md`, `threat-model.md`, `adapters.md`, `docs/en/enterprise.md` (enterprise
+> edition + the 30-rule dual-mode boundary table).
 
 ## 1. Design principles
 
@@ -23,12 +24,14 @@
 ## 2. Layers
 
 ```text
-┌ Interface ─ CLI / local web console (P1, binds 127.0.0.1 only + token-protected writes) / notification channels / MCP
+┌ Interface ─ CLI / local web console (P1, 127.0.0.1 + token-protected writes) / notifications (P2 local) / MCP
 ├ Orchestration ─ Conductor (goal decomposition, branch lifecycle, budget, acceptance) / steward-domain business engine
 ├ Execution ─ AgentRuntime (plan-act-observe-reflect-report) → Operator / Scout / Reviewer
 ├ Capability ─ ToolRegistry (browser, desktop, fs, HTTP, messaging, code exec, payment[disabled])
 │              HarnessAdapter (mock / DSH headless / DeepSeek API)
-├ Governance ─ PolicyEngine, budget gates, stop key, checkpoints, audit, boundary rules (P1: 18 personal-mode)
+├ Governance ─ PolicyEngine, budget gates, stop key, checkpoints, audit, boundary rules (P1 personal 18 / P3 dual-mode 30)
+├ Enterprise ─ steward-enterprise: entity/auth/seal, corporate account & VAT invoices, dual review, org approval chain, filing drafts (P3)
+├ Drill ─ steward-fault: real localhost outage/ban injection, promise gate, idempotent outbox, alternative plans (P2)
 └ Data ─ SQLite (WAL) + events.jsonl (hash chain) + runs/ artifacts + versioned prompts/
       + <root>/domain/state.json + domain/events.jsonl (P1 business domain; atomic, append-only, redacted)
 ```
@@ -37,17 +40,20 @@
 
 | Mode | Command | Purpose |
 |---|---|---|
-| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/dummy-branch/business/boundary-check/console/approve/takeover/code-loop/run/branch/report/stop/safety-check/version/help` | 24/7 operation, demos, acceptance |
+| Core CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/dummy-branch/business/boundary-check/fault-drill/enterprise-demo/console/approve/takeover/code-loop/run/branch/report/stop/safety-check/version/help` | 24/7 operation, demos, acceptance |
 | Local web console (P1) | `node dist/apps/cli/src/index.js console [--port 4180]` | Dashboard / project timeline / ledger six facts / approval cards / takeover key / monthly report; binds 127.0.0.1 only |
+| Fault drill (P2) | `node dist/apps/cli/src/index.js fault-drill --case net-outage\|platform-ban [--outage-minutes N] [--ban-minutes N]` | Real localhost HTTP outage/ban drills against `demo-platform` |
+| Enterprise demo (P3) | `node dist/apps/cli/src/index.js enterprise-demo` | B8 dual-mode orders + 6 mismatch classes blocked + 30 boundaries + dual review/seal/VAT invoice/org approval |
 | DSH cockpit (optional) | `dsh --profile daizhang web` | Human oversight GUI; mounts `steward-mcp` plus `dsh-browser`/`dsh-computer-use` |
 
 The core is a standalone Node/TS process; the cockpit is only an optional human interface.
 
 The repository is a **single package** (no pnpm workspace): `packages/*/src` + `apps/cli/src` are
 compiled by `tsc -p tsconfig.json` into `dist/`, and all commands use npm (`npm run build`, `npm test`,
-`npm run demo`, `npm run acceptance`, `npm run acceptance:m2`, `npm run acceptance:m3`,
-`npm run acceptance:m4`, `npm run acceptance:p1`). **Since P1, `takeover` and `approve` are real human
-commands** (18 implemented commands + 0 placeholders).
+`npm run demo`, `npm run acceptance`, `acceptance:m2`, `acceptance:m3`, `acceptance:m4`,
+`acceptance:p1`, `acceptance:p2` (short run), `acceptance:p3`). **`takeover` and `approve` are real
+human commands since P1**; P2 adds `fault-drill` and P3 adds `enterprise-demo` — **19 business
+commands + the `help` entry, 0 placeholders**.
 
 **M1 implementation status**: `packages/steward-browser` provides the Playwright real-browser adapter
 (headed by default, `chrome→msedge` fallback, per-run `userDataDir`, per-step screenshot / DOM /
@@ -116,6 +122,41 @@ CC BY-NC-SA 4.0 license text, NOTICE/COMMERCIAL, bilingual doc pairing, no telem
   a one-command acceptance (12 checks, local headed Chrome). **B3/B4 (fault drills) → P2, B8
   (enterprise) → P3; full Conductor/Reviewer orchestration remains later work.**
 
+**P2 implementation status (fault drills, v0.7.0 pending release; short run passed / long run in progress)**:
+- `packages/steward-fault`: **real localhost HTTP fault drills** — B3 network outage (real
+  `ECONNREFUSED`): a `PromisesGate` rejects new promises while offline and counts them, actions go to an
+  **idempotent Outbox**, and after recovery `Outbox.replay()` + `LedgerReconciler` reconcile with
+  `duplicates_found=0`; B4 platform ban (real `403 + x-platform-ban: true`): `BanDetector` stops actions
+  on detection, `buildAlternativePlan()` produces alternatives (channel/reason/next step/owner), and
+  `notifyLocal()` writes local notifications; recovery after the ban is lifted.
+- `examples/demo-platform/`: a real localhost fault-injection platform (main port + `/admin/*` control
+  port) used by the drills.
+- The CLI adds `fault-drill --case net-outage|platform-ban`; `npm run acceptance:p2` **short run passes
+  11/11 checks ✅** (the real 2-hour outage + 15-minute ban long run is still running;
+  `evidence-long-drill-*` will be archived by the Lead).
+- CI adds real localhost fault-drill steps (B3/B4 short run).
+
+**P3 implementation status (enterprise MVP, v0.8.0 pending release; B8 passes)**:
+- `packages/steward-enterprise`: enterprise engine — `validateEntity()` entity authorization (business
+  license / unified social credit code + human-signed company authorization letter + corporate account +
+  tax number, four hard checks); corporate-account payment validation; VAT general/special invoices;
+  `createInvoiceDraft()` validates title/tax/contract → `draft_pending_human`; `createTaxFilingDraft()`
+  produces a filing draft (`ai_may_submit=false`); `requestAccountChange()` + `reviewAccountChange()`
+  **dual review** (2 different roles required before `applied=true`); `approvalChainFor()` **org
+  approval chain** (≤5000: 1 level / 5000–50000: 2 / >50000: 3); `sealFlow()` seal flow
+  (**`ai_may_sign=false`, human signing only**); `acquireAgentSlot()` serializes agents/accounts;
+  `checkBoundary()` 30 boundaries; `runDualModeOrders()` **B8** (one personal + one enterprise order, all
+  6 mismatch classes blocked; no invoice/payment when blocked); `boundaryRules30()` the 30-rule dual-mode
+  table.
+- `examples/demo-enterprise/`: `enterprise.json` (entity/authorization/seal/corporate account/tax number/
+  dual review/3-level approval chain/serialization) + `orders.json` 8 orders (2 normal + 6 mismatch, all
+  fictional).
+- The CLI adds `enterprise-demo`; `npm run acceptance:p3` **12/12 checks ✅** (build + 151 tests +
+  enterprise flow); full table in `docs/en/enterprise.md`. CI adds the P3 enterprise demo step
+  (B8 + 30 boundaries, no network).
+- Later work: enterprise-specific UI, real bank/tax/CA/e-signature integration, full Conductor/Reviewer
+  orchestration.
+
 ## 4. Branch lifecycle
 
 ```text
@@ -137,6 +178,12 @@ locks and per-branch credential references. Conductor branch spawning, Reviewer 
 Conductor acceptance interface remain later work; in P1 approvals/takeover are handled by the domain
 engine + human commands/console.
 
+P2/P3 status: `fault-drill` exercises outage/ban behaviour on a real localhost platform (no new branch
+types; it verifies the current no-promise-while-offline and idempotent recovery paths);
+`enterprise-demo` runs dual-mode orders and the 30-boundary checks through the enterprise engine and
+blocks all mismatches before any invoice/payment is produced. The enterprise edition adds no new branch
+type and reuses the operator/scout branches plus the domain engine.
+
 ## 5. Evidence and ledger
 
 - `events.jsonl`: append-only with `seq` and a hash chain; fields in `contracts.md`; secrets redacted.
@@ -151,8 +198,12 @@ engine + human commands/console.
   contain `proposal.json`, `business-result.json`, `ledger-facts.json` (six facts),
   `promise-traces.json`, `takeover-pack.json`, `boundary-check.json`, `monthly-report.{json,md}` and
   `summaries.json`**; console E2E runs also contain `result.json` + 9 step screenshots +
-  `console-server.log`. Acceptance copies them to `docs/test-evidence/evidence-m1-<stamp>/` …
-  `evidence-m4-<stamp>/` and `evidence-p1-<stamp>/`.
+  `console-server.log`; **P2 `fault-drill` runs also contain `drill-net-outage.json`, `outbox.json`,
+  `ledger.json`, `drill-platform-ban.json`, `alternative-plan.json` and `notifications/`; P3
+  `enterprise-demo` runs also contain `profile.json`, `entity-validation.json`, `seal-flow.json`,
+  `dual-review.json`, `invoice-validation.json`, `org-approval.json`, `dual-mode-orders.json`,
+  `boundary-table.{md,json}`, `boundary-checks.json` and `fixture-checks.json`**. Acceptance copies them
+  to `docs/test-evidence/evidence-m1-<stamp>/` … `evidence-p3-<stamp>/`.
 - Business-domain state is persisted separately in `<root>/domain/state.json` (atomic write) +
   `domain/events.jsonl` (append-only audit, redacted detail); approval cards, takeover state and the
   monthly report are produced by the domain engine, and `approve` / `takeover` commands share the same
@@ -172,6 +223,8 @@ Each level states "as of when" and "coverage (complete / partial / not covered)"
 P1 status: `steward-domain`'s `summaries()` produces L0/L1/L2 and `buildMonthlyReport("YYYY-MM")`
 produces the L2 monthly report (income/expense/margin/budget headroom/compliance events/next-month
 proposals/as_of/coverage); the console consumes them via `/api/summary?level=` and the `/report` page.
+P3 reuses the same summary system; the monthly report also carries enterprise compliance events
+(VAT special invoice / tax filing / seal / dual review, etc.).
 
 ## 7. Extension points
 
@@ -186,5 +239,7 @@ proposals/as_of/coverage); the console consumes them via `/api/summary?level=` a
 
 ## 8. Explicit non-goals
 
-Multi-tenant SaaS, billing, heavy frontend (phase 1; P1 only ships a zero-dependency local web console),
-unapproved payments/contracts/account-permission changes, bypassing CAPTCHAs or risk controls.
+Multi-tenant SaaS, billing, heavy frontend (phase 1; P1 only ships a zero-dependency local web console
+and P3 adds no enterprise-specific UI), unapproved payments/contracts/account-permission changes,
+bypassing CAPTCHAs or risk controls, real bank/tax/CA/e-signature integration (P3 only drafts and human
+records).

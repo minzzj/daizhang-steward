@@ -5,13 +5,76 @@
 
 ## [Unreleased]
 
-### Planned — Phase 2 (P2–P4)
-- P2 个人版故障演练：断网 2h 不产生新承诺 + 恢复 10 分钟补记账本不重复（B3）、模拟平台封禁 15 分钟
-  停止并出替代方案（B4）、强杀恢复、72h 失联、循环超限
-- P3 企业版：对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性 + 30 条边界（B8）
-- P4 发布：v1.0.0 + GitHub Release + 验收包 + 真实截图宣传片（BGM/静音双版本）
+### Planned — Phase 2 (remaining)
+- **P2 长跑收尾**：真实 2 小时断网 + 15 分钟封禁长跑证据（`long-drill-*`）入库；强杀恢复、72h 失联、
+  循环超限等扩展故障演练
+- **P4 发布**：v1.0.0 + GitHub Release + 验收包 + 真实截图宣传片（BGM/静音双版本）
 - 通知与协助：Windows Toast / 邮件 / Webhook / 交接流程
 - IoT 适配器契约（stub）+ MCP server
+- 企业专属 UI（企业看板/工作流页面）
+
+## [0.8.0] — 2026-10-25
+
+### Added — 阶段二 P3 企业版 MVP（B8 通过 + 30 条边界双模式表）
+
+- **企业版引擎 `packages/steward-enterprise`**：企业主体认证（营业执照/统一社会信用代码 + 公司授权书
+  **人签** + 对公账户 + 税号四项硬校验）；对公账户收款校验；增值税**普通/专用**发票；
+  `createInvoiceDraft()` 开票校验（抬头/税号/合同一致）→ `draft_pending_human`（人工确认，不自动开票）；
+  `createTaxFilingDraft()` 税务申报**草稿**（`ai_may_submit=false`，不自动提交）；
+  **双人复核** `requestAccountChange()` / `reviewAccountChange()`（1 位不生效；2 位不同角色 finance +
+  legal 才生效）；**组织审批链** `approvalChainFor()`（≤5000 1 级 / 5000–50000 2 级 / >50000 3 级）；
+  **用印** `sealFlow()` + `markSealSignedByHuman()`（**`ai_may_sign=false`，仅自然人签署**）；
+  用工/派遣/资质类转人工；`acquireAgentSlot()` 多代理/多账号**串行**；经营范围校验。
+- **30 条边界双模式标注表**：`boundaryRules30()` 恰好 30 条（EB-01…EB-30，个人/企业 ×
+  已实现/人工/不适用；四类重点越界 EB-01 无证 / EB-02 借资质 / EB-03 陌生外呼 / EB-04 超预算 =
+  双模式 **deny**）；`boundaryTableMarkdown()` 生成可入库表格；全文见新增
+  `docs/zh-CN/enterprise.md` + `docs/en/enterprise.md`。
+- **B8 双模式一致性**：`runDualModeOrders()`——个人/企业各跑一单（主体/抬头/收款/发票类型一致），
+  **6 类不一致全部阻断**（`MODE_CLIENT_TYPE_MISMATCH` / `MODE_INVOICE_TYPE_MISMATCH` /
+  `MODE_PAYMENT_METHOD_MISMATCH` / `AUTHORIZATION_LETTER_NOT_SIGNED` / `TAX_NO_MISMATCH` /
+  `SIGNATORY_NOT_AUTHORIZED` / `SEAL_NOT_SIGNED` 等冲突码，阻断时不产生发票/收款）。
+- **企业版仿真 fixtures `examples/demo-enterprise/`**：`enterprise.json`（主体/授权书/用印/对公账户/
+  税号/双人复核/3 档审批链/多代理串行）+ `orders.json` 8 条订单（2 正常 + 6 不一致，纯虚构数据）。
+- **CLI**：新增 `enterprise-demo [--json]`（别名 `demo-enterprise`）→ 业务命令 19 个 + `help` 入口，
+  **0 占位**。
+- **测试**：133 → **151/151** 通过（新增 `tests/unit/enterprise.test.mjs` 18 条；共 16 个测试文件）。
+- **`npm run acceptance:p3`**：一键验收（build + 151 测试 + 企业版流程，**12/12 检查 ✅**），生成
+  `docs/test-evidence/p3-acceptance-<stamp>.{md,json}` + `evidence-p3-<stamp>/`（18 文件，已脱敏；
+  企业 run `run-20261025-232357-2ce6f6`）。
+- **CI**：新增 P3 企业版演示步骤（B8 + 30 条边界，无网络）。
+
+### Changed
+- 验收：**B8 通过**；30 条边界双模式标注表完成；企业 run `run-20261025-232357-2ce6f6`；P3 交付
+  **v0.8.0**（GitHub Release/tag 待 Lead 按发布节奏处理；`package.json` 当前版本以仓库为准）。
+- 文档同步：README 中英、ROADMAP、HANDOFF、ASSUMPTIONS、docs/README、delivery-checklist 中英、
+  architecture 中英、packages/apps/tests/examples README 更新到「阶段二 P3 完成 / v0.8.0 待发版」，
+  并新增 `docs/zh-CN/enterprise.md` + `docs/en/enterprise.md`。
+
+## [0.7.0] — 2026-10-25
+
+### Added — 阶段二 P2 故障演练（B3 / B4 短跑通过；长跑进行中）
+
+- **故障演练模块 `packages/steward-fault`**：**真实 localhost HTTP 故障注入**（不用 mock/stub）——
+  B3 断网（真实 `ECONNREFUSED`）：断网期间**不产生新承诺**（`PromisesGate` 拒绝并计数）、动作进入
+  **幂等 Outbox** 排队、恢复后重放 + 对账（**账本重复 0**，二次对账全部跳过）；B4 平台封禁
+  （真实 `403 + x-platform-ban: true`）：**检测后停止动作**、生成可读**替代方案**（渠道/原因/下一步/
+  负责人）、本地通知留痕、解禁恢复。
+- **故障注入平台 `examples/demo-platform/`**：真实 localhost 平台（主端口 `/health`/`/quote`/`/message`
+  幂等 + 控制端口 `/admin/outage`、`/admin/ban`），用于断网/封禁演练。
+- **CLI**：新增 `fault-drill --case net-outage|platform-ban [--outage-minutes N] [--ban-minutes N] [--json]`
+  → 命令数 18 → 19。
+- **测试**：113 → **133/133** 通过（新增 `tests/unit/fault.test.mjs` 20 条；P2 时点共 15 个测试文件）。
+- **`npm run acceptance:p2`（短跑）**：一键短跑验收（约 2 分钟断网 + 2 分钟封禁，**11/11 检查 ✅**），
+  生成 `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` + `evidence-p2-.../`
+  （10 文件，已脱敏；断网 `outage=120007ms`、25 次承诺被拒、25 条排队/重放、账本重复 0；
+  封禁 11ms 检测、替代方案 5 条、通知留痕）。
+- **CI**：新增真实 localhost 故障演练步骤（B3/B4 短跑，`--outage-minutes 0.2 --ban-minutes 0.2`）。
+
+### Changed
+- 验收：**B3/B4 短跑通过**（11/11 检查）；**真实 2 小时断网 + 15 分钟封禁长跑仍在后台运行**，
+  长跑证据（`long-drill-*`）待 Lead 入库后才算完整通过。P2 交付 **v0.7.0 待发版**。
+- 文档同步：README 中英、ROADMAP、HANDOFF、ASSUMPTIONS、docs/README、delivery-checklist 中英、
+  architecture 中英、packages/apps/tests/examples README 更新到「P2 短跑通过 / 长跑进行中」。
 
 ## [0.6.0] — 2026-10-25
 
@@ -230,7 +293,9 @@
 - 双语文档骨架：architecture / contracts / threat-model / adapters / runtime-prompts / delivery-checklist
 - 脚手架自检 `pnpm check`、密钥扫描 `pnpm check:secrets`、交付同步脚本 `scripts/sync-delivery.ps1`
 
-[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/minzzj/daizhang-steward/compare/v0.6.0...HEAD
+[0.8.0]: https://github.com/minzzj/daizhang-steward/compare/v0.6.0...0185e50
+[0.7.0]: https://github.com/minzzj/daizhang-steward/compare/v0.6.0...a41fe68
 [0.6.0]: https://github.com/minzzj/daizhang-steward/compare/v0.5.0...2db8da3
 [0.5.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0
 [0.4.0]: https://github.com/minzzj/daizhang-steward/releases/tag/v0.4.0

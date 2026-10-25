@@ -1,18 +1,21 @@
 # HANDOFF / 交接状态
 
 > 给下一次会话（或下一位执行者）的现状交接。每次里程碑结束更新。
-> 最后更新：2026-10-25（**阶段二 P1 个人版 MVP 完成，v0.6.0**；下一步 P2 故障演练 B3/B4）
+> 最后更新：2026-10-25（**阶段二 P3 企业版完成，v0.8.0 待发版；P2 短跑通过、长跑进行中**；
+> 下一步 P2 长跑收尾 + P4 v1.0.0/宣传片）
 
 ## 当前状态（一句话）
 
-**阶段二 P1（个人版 MVP）已完成并交付 v0.6.0**：在阶段一内核（真实浏览器/桌面、Scout、安全模块，
-A1–A12 通过）之上新增**经营代理**——`packages/steward-domain` 经营域引擎（8 概念 + 置信度、审批 /
-接管包 / 月报 / L0-L1-L2 摘要 / 18 条个人模式边界规则）、`packages/steward-console` 本地 Web 控制台
-（只监听 127.0.0.1、写操作 token 保护）、`examples/demo-business` 仿真业务线；CLI 新增
-`business`/`boundary-check`/`console`/`approve`/`takeover` 5 个命令 → **18 个已实现命令 + 0 个占位**。
-**113/113** 测试（14 个文件），阶段二 **B1/B2/B5/B6/B7 通过**（P1 验收 12/12 检查，真实浏览器控制台
-E2E 9 步/73 检查/9 截图、浏览器接管停止 88ms）；**B3/B4 延后 P2、B8 延后 P3**。代码已推送 GitHub
-`main`（P1 提交 `2db8da3`）；**等待进入阶段二 P2（故障演练）**。
+**阶段二 P3（企业版 MVP）已完成并交付 v0.8.0（待发版）；P2 故障演练短跑已通过、真实长跑进行中**：
+在阶段一内核（A1–A12 通过）与 P1 个人版（v0.6.0）之上，新增
+`packages/steward-fault` 故障演练（真实 localhost HTTP 断网/封禁、离线承诺闸门、幂等 Outbox 重放、
+替代方案 + 本地通知；B3/B4 短跑 11/11 通过，2 小时断网 + 15 分钟封禁长跑仍在后台运行）、
+`packages/steward-enterprise` 企业版（主体/授权/用印、对公账户、专票校验、发票/申报仅草稿、
+双人复核、组织审批链、AI 不代签、B8 双模式 6 类不一致阻断、30 条边界双模式表）、
+`examples/demo-platform` 与 `examples/demo-enterprise`；CLI 新增 `fault-drill`、`enterprise-demo` →
+**19 个已实现命令 + 0 个占位**。**151/151** 测试（16 个文件）；阶段二 **B1/B2/B5/B6/B7/B8 通过**
+（P3 验收 12/12 检查）；代码已推送 GitHub `main`（P3 提交 `0185e50`）；**等待 P2 长跑完成 + P4
+（v1.0.0/宣传片）**。
 
 ## M0 已完成清单（2026-10-25）
 
@@ -142,6 +145,54 @@ E2E 9 步/73 检查/9 截图、浏览器接管停止 88ms）；**B3/B4 延后 P2
   四类越界 4/4 拒绝、支付→human、报价→draft_only）；B3/B4 延后 P2、B8 延后 P3
 - [x] `package.json` 0.5.0 → **0.6.0**；CLI `VERSION` 同步 0.6.0；P1 提交已推送 `main`（`2db8da3`）
 
+## P2 已完成清单（2026-10-25，故障演练 → 短跑通过 / 长跑进行中，v0.7.0 待发版）
+
+- [x] `packages/steward-fault`：**真实故障演练模块**——真实 localhost HTTP 故障注入
+  （真实 `ECONNREFUSED` 断网 / 真实 `403 + x-platform-ban: true` 封禁，不用 mock/stub）、
+  断网期间**承诺闸门**（`PromisesGate` 拒绝新承诺并计数）、**幂等 Outbox**（排队动作 + 恢复后重放 +
+  对账，账本 `duplicates_found=0`）、**平台封禁检测**（检测后停止动作）、**替代方案**生成与本地通知留痕
+- [x] `examples/demo-platform/`：真实 localhost 故障注入平台（主端口 + 控制端口 `/admin/*`，可模拟断网/封禁）
+- [x] CLI 新增 `fault-drill --case net-outage|platform-ban [--outage-minutes N] [--ban-minutes N] [--json]`
+  → 命令数 18 → **19**
+- [x] `tests/unit/fault.test.mjs` 20 条；测试 113 → **133/133**（P2 时点）
+- [x] `npm run acceptance:p2` 短跑验收（build + 133 测试 + B3/B4 演练，**11/11 检查 ✅**）；证据
+  `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` +
+  `evidence-p2-2026-10-25_15-02-52/`（10 文件，已脱敏）；短跑实测：断网 `outage=120007ms`、
+  25 次承诺被拒、25 条排队/重放、账本重复 **0**、恢复 10 分钟内；封禁 **11ms 检测**、替代方案 5 条、
+  本地通知留痕、解禁恢复
+- [x] CI 增加真实 localhost 故障演练步骤（B3/B4 短跑，`--outage-minutes 0.2 --ban-minutes 0.2`）
+- [ ] **真实 2 小时断网 + 15 分钟封禁长跑仍在后台运行**；长跑证据（`long-drill-*`）待由 Lead 入库后
+  才能判定 P2 完整通过（当前状态：**短跑通过 / 长跑进行中**）
+
+## P3 已完成清单（2026-10-25，企业版 MVP → v0.8.0 待发版）
+
+- [x] `packages/steward-enterprise`：**企业版引擎**——主体认证（营业执照/统一社会信用代码 + 公司授权书
+  **人签** + 对公账户 + 税号四项校验）；对公账户；增值税**普通/专用**发票；`createInvoiceDraft()`
+  开票校验（抬头/税号/合同一致）→ `draft_pending_human`；`createTaxFilingDraft()` 申报草稿
+  （`ai_may_submit=false`）；**双人复核**（1 位不生效、2 位不同角色 finance+legal 才生效）；
+  `approvalChainFor()` **组织审批链**（≤5000 1 级 / 5000–50000 2 级 / >50000 3 级）；
+  `sealFlow()` 用印（**`ai_may_sign=false`，仅自然人可签**）；用工/派遣/资质类转人工；
+  `acquireAgentSlot()` 多代理串行；**B8 `runDualModeOrders()`**（个人/企业各一单 + 6 类不一致阻断）；
+  `boundaryRules30()` **30 条边界双模式标注表**
+- [x] **30 条边界双模式标注表**：完整 30 行（EB-01…EB-30，个人/企业 × 已实现/人工/不适用），
+  四类重点越界（EB-01 无证 / EB-02 借资质 / EB-03 陌生外呼 / EB-04 超预算）双模式 **deny**；
+  全文见新建 `docs/zh-CN/enterprise.md` + `docs/en/enterprise.md`（来源
+  `evidence-p3-2026-10-25_15-23-46/enterprise-run/boundary-table.md` 逐行一致）
+- [x] `examples/demo-enterprise/`：纯虚构企业 fixtures——`enterprise.json`（主体/授权书/用印/对公账户/
+  税号/双人复核/3 档审批链/多代理串行）+ `orders.json` 8 条订单（2 正常 + 6 不一致）
+- [x] CLI 新增 `enterprise-demo [--json]`（别名 `demo-enterprise`）→ 业务命令 **19 个 + `help` 入口**
+  （P1 18 → P2 +`fault-drill` → P3 +`enterprise-demo`；**0 个占位**；`steward help` 列出全部）
+- [x] `tests/unit/enterprise.test.mjs` 18 条；测试 133 → **151/151**（共 16 个测试文件）
+- [x] `npm run acceptance:p3` 一键验收（build + 151 测试 + 企业版全流程，**12/12 检查 ✅**）；
+  证据 `docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` +
+  `evidence-p3-2026-10-25_15-23-46/`（18 文件，已脱敏；企业 run `run-20261025-232357-2ce6f6`）
+- [x] **B8 通过**：个人/企业双模式各跑一单（subject/invoice/payment consistent=true），
+  **6 类不一致全部阻断**（`mismatch_scenarios` 1–6，冲突码可读；blocked 时不产生发票/收款）；
+  企业 fixtures 8/8 交叉验证
+- [x] CI 增加 P3 企业版演示步骤（B8 + 30 条边界，无网络）
+- [x] P2/P3 提交已推送 `main`（P2 `a41fe68`、P3 `0185e50`）；版本升级与 GitHub Release 由 Lead 决定
+  （**当前 `package.json` 仍 0.6.0，P2/P3 待发 v0.7.0 / v0.8.0**）
+
 ## 现在能做什么
 
 | 操作 | 命令 | 说明 |
@@ -149,7 +200,7 @@ E2E 9 步/73 检查/9 截图、浏览器接管停止 88ms）；**B3/B4 延后 P2
 | 安装依赖 | `npm install` | Node.js ≥ 22.18；用 npm（不是 pnpm） |
 | 构建 | `npm run build` | `tsc -p tsconfig.json` → `dist/`（单包布局） |
 | 类型检查 / lint | `npm run lint` | `tsc --noEmit` |
-| 单元+集成测试 | `npm test` | 先 build 再 `node --test "tests/unit/*.test.mjs"`；v0.6.0 共 **113/113** 通过（14 个测试文件） |
+| 单元+集成测试 | `npm test` | 先 build 再 `node --test "tests/unit/*.test.mjs"`；v0.8.0 共 **151/151** 通过（16 个测试文件） |
 | 只跑测试（不 build） | `npm run test:unit` | `node --test "tests/unit/*.test.mjs"` |
 | 提示词测试（A12） | `npm run test:prompts` | 4 角色安全条款、禁止项、无密钥/本机路径、sha256 校验 |
 | M0 空回路演示 | `npm run demo` | MockHarness，无付费 API；产物写入 `runs/<run-id>/` |
@@ -160,6 +211,8 @@ E2E 9 步/73 检查/9 截图、浏览器接管停止 88ms）；**B3/B4 延后 P2
 | 只读 dummy 分支（A10） | `node dist/apps/cli/src/index.js dummy-branch [--json]` | 仅 BranchSpec + 已有 `reviewer@1.0.0` 提示词，不改核心；产物含 `role=dummy`/`tools=[echo]`/`prompt_ref` |
 | 经营域业务线（B1/B2/B5/B6/B7） | `node dist/apps/cli/src/index.js business [--json]` | 选题/仿真业务线/账本 6 要素/承诺追溯/6 类接管包/月报/边界；产物 `runs/<run-id>/` 下 `proposal.json`、`business-result.json`、`ledger-facts.json`、`promise-traces.json`、`takeover-pack.json`、`boundary-check.json`、`monthly-report.{json,md}`、`summaries.json` |
 | 边界规则自检（B7） | `node dist/apps/cli/src/index.js boundary-check [--json]` | 18 条个人模式边界规则；四类越界 100% 拒绝（deny）、支付→human、报价→draft_only |
+| 故障演练（B3/B4） | `node dist/apps/cli/src/index.js fault-drill --case net-outage\|platform-ban [--outage-minutes N] [--ban-minutes N] [--json]` | **真实 localhost HTTP 故障注入**（非 mock）；断网承诺闸门/幂等 Outbox 重放/封禁检测/替代方案 + 本地通知；产物 `drill-net-outage.json`、`outbox.json`、`ledger.json`、`alternative-plan.json`、`notifications/` |
+| 企业版演示（B8） | `node dist/apps/cli/src/index.js enterprise-demo [--json]` | 主体/授权/用印/对公/专票/双人复核/组织审批链/30 条边界；产物 `profile.json`、`entity-validation.json`、`seal-flow.json`、`dual-review.json`、`invoice-validation.json`、`org-approval.json`、`dual-mode-orders.json`、`boundary-table.{md,json}`、`fixture-checks.json` |
 | 本地 Web 控制台 | `node dist/apps/cli/src/index.js console [--port 4180]` | 默认 http://127.0.0.1:4180；只监听本机、写操作 token 保护；看板/项目时间线/账本 6 要素抽屉/审批卡/接管键/月报 |
 | 人工审批 | `node dist/apps/cli/src/index.js approve [--id <cardId> --decision approve\|reject] [--json]` | 审批卡默认 pending，超时=挂起不自动放行；决策人和时间必填 |
 | 接管键 / 恢复（B6） | `node dist/apps/cli/src/index.js takeover [--json]` / `takeover --resume` | 停止所有新写操作并生成 6 类接管包（含凭据引用）；`--resume` 恢复运行 |
@@ -172,6 +225,8 @@ E2E 9 步/73 检查/9 截图、浏览器接管停止 88ms）；**B3/B4 延后 P2
 | M3 一键验收 | `npm run acceptance:m3` | fixture 驱动 Scout（无网络、只起草）；生成 `docs/test-evidence/m3-acceptance-<stamp>.*` + `evidence-m3-<stamp>/` |
 | M4 一键验收 | `npm run acceptance:m4` | M4 一键验收 | `npm run acceptance:m4` | 阶段一发布就绪（A10 dummy 分支 + A11 许可证/双语文档/无遥测/版本一致 + 发布文档 + 测试）；版本一致性为动态检查，可在后续版本重跑；生成 `docs/test-evidence/m4-acceptance-<stamp>.*` + `evidence-m4-<stamp>/` ||
 | P1 一键验收 | `npm run acceptance:p1` | 本机有头真实浏览器（控制台 E2E）；B1/B2/B5/B6/B7 + 113 测试（12 项检查）；生成 `docs/test-evidence/p1-acceptance-<stamp>.*` + `evidence-p1-<stamp>/` |
+| P2 一键验收（短跑） | `npm run acceptance:p2` | B3/B4 真实 localhost 故障演练**短跑**（约 2 分钟断网 + 2 分钟封禁），11 项检查；生成 `docs/test-evidence/p2-acceptance-<stamp>.*` + `evidence-p2-<stamp>/`；**真实长跑（2h 断网 + 15min 封禁）另跑，证据待入库** |
+| P3 一键验收 | `npm run acceptance:p3` | 企业版：B8 双模式 + 30 条边界 + 双人复核/用印/发票/组织审批链，12 项检查；生成 `docs/test-evidence/p3-acceptance-<stamp>.*` + `evidence-p3-<stamp>/` |
 | 真实浏览器 E2E | `node tests/e2e-browser/login-flow.mjs --case normal\|login-timeout\|all [--expect-red login-timeout] [--headless 1]` | normal 应绿；login-timeout 修复前应红；`adapter-smoke.mjs` 28/28 |
 | 控制台真实浏览器 E2E | `node tests/e2e-console/run.mjs [--headless 1] [--evidence-dir <目录>]` | 有头默认；9 步 / 73 项检查 / 9 截图 / `measured_stop_ms`（本机实测 88ms ≤10000）；需先 `npm run build` |
 | 真实桌面 E2E（A3） | `node tests/e2e-desktop/run.mjs [--evidence-dir <目录>]` | 真实 Windows 窗口 + 真实键鼠 + 20 张截图 + JSON 内容断言；需先 `npm run build` |
@@ -182,33 +237,39 @@ E2E 9 步/73 检查/9 截图、浏览器接管停止 88ms）；**B3/B4 延后 P2
 | 查看路线图 | [ROADMAP.md](ROADMAP.md) | 里程碑与批准门 |
 
 CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-branch` / `business` /
-`boundary-check` / `console` / `approve` / `takeover` / `code-loop` / `run` / `branch` / `report` /
-`stop` / `safety-check` / `version` / `help` 已实现（共 **18 个，0 个占位**；`takeover`/`approve`
-自 P1 起为真实人工命令）；别名 `demo-browser` / `demo-code-loop` / `demo-desktop` / `demo-dummy` /
-`demo-business` 保留。`run` 支持 `--resume <runId>` 从检查点恢复；`scout` 支持 `--fixture <path>`
-（只起草，不发送）；`console` 支持 `--port <端口>`（默认 4180）；`takeover --resume` 恢复运行。
+`boundary-check` / `fault-drill` / `enterprise-demo` / `console` / `approve` / `takeover` / `code-loop` /
+`run` / `branch` / `report` / `stop` / `safety-check` / `version` 已实现（**19 个业务命令 + `help` 入口，
+0 个占位**；P2 新增 `fault-drill`、P3 新增 `enterprise-demo`；`takeover`/`approve` 自 P1 起为真实人工
+命令）；别名 `demo-browser` / `demo-code-loop` / `demo-desktop` / `demo-dummy` / `demo-business` /
+`demo-enterprise` 保留。`run` 支持 `--resume <runId>` 从检查点恢复；`scout` 支持 `--fixture <path>`
+（只起草，不发送）；`console` 支持 `--port <端口>`（默认 4180）；`takeover --resume` 恢复运行；
+`fault-drill --case net-outage|platform-ban` 支持 `--outage-minutes` / `--ban-minutes`。
 
 ## 还不能做什么
 
-- **P2/P3 尚未开始**：B3（断网 2h 不产生新承诺 + 恢复 10 分钟补记账本不重复）与 B4（模拟平台封禁
-  15 分钟停止 + 出替代方案）属于 P2 故障演练；B8（个人/企业双模式各跑一单、不一致阻断）属于 P3
-  企业版；P4 才是 v1.0.0 + 宣传片。
+- **P2 长跑尚未完成**：短跑（约 2 分钟断网 + 2 分钟封禁）已通过；**真实 2 小时断网 + 15 分钟封禁长跑
+  仍在后台运行**，长跑证据（`long-drill-*`）待 Lead 入库前不能宣布 P2 完整通过。
+- **P4 尚未开始**：v1.0.0、GitHub Release、验收包、真实截图宣传片（BGM+静音）属于 P4；
+  阶段一以真实命令演示脚本（`docs/demo-script.*`）替代宣传片，正式宣传片计划 P4。
 - 桌面适配器暂无 **UIA 可访问性树**、拖拽、滚轮/触控板手势、右键菜单语义、剪贴板、多窗口批处理
   会话编排——M2 已实现真实键鼠 + 截图 + 白名单的核心能力，其余按契约留待后续迭代。
 - Scout **没有真实来源抓取与真实发送通道**（按产品边界：M3 只做 fixture 驱动、只起草不发送；
   真实发送必须由审批后的人工流程完成，留给后续阶段）。
+- **企业版未连接真实系统**：不接真实银行/税务/CA/电子签章平台；企业数据全部虚构；发票与申报仅草稿；
+  用印仅记录人工签署状态、不生成真实签章文件；企业专属 UI 未新增（复用个人控制台）。
 - 真实桌面 E2E 只能在未锁屏的真实交互 Windows 会话跑；托管 CI/无桌面环境不能跑（CI 跑控制台
-  无头 E2E、Scout/business/boundary demo、`dummy-branch`、`safety-check` 与 build）。
+  无头 E2E、Scout/business/boundary/fault/enterprise demo、`dummy-branch`、`safety-check` 与 build）。
 - 不能调用真实 DSH / DeepSeek Harness——目前用 MockHarness + 脚本化补丁（真实浏览器/桌面/Scout/
-  经营域验收已跑通）。
-- 不能生成宣传片——阶段一以真实命令演示脚本（`docs/demo-script.*`）替代；正式宣传片计划 P4。
-- **v0.6.0 尚未发布 GitHub Release / tag**：P1 已交付并推送 `main`（`2db8da3`）；是否按里程碑打 tag
-  由 Lead 决定（v0.5.0 Release 已存在）。
+  经营域/故障演练/企业版验收已跑通）。
+- **v0.7.0（P2）/ v0.8.0（P3）尚未升级与发布**：P2/P3 代码已推送 `main`（`a41fe68` / `0185e50`），
+  当前 `package.json` 仍 **0.6.0**；版本升级、tag 与 GitHub Release 由 Lead 决定
+  （v0.5.0 / v0.6.0 Release 已存在）。
 
 ## 代码在哪
 
 - **权威仓库（唯一开发位置）**：`H:\minzzj文件\技术部\项目\官方\代掌\daizhang-steward`
-  （GitHub `main` 分支；P1 提交 **`2db8da3` 已推送**；不要 git commit，除非用户明确要求）
+  （GitHub `main` 分支；**P3 提交 `0185e50` 已推送**（P2 `a41fe68`、P1 `2db8da3`）；
+  不要 git commit，除非用户明确要求）
 - **C: 旧副本为归档**：`C:\daizhang-build\daizhang-steward` 只读参考，**不要再在这里改文件**。
 - **方案文档**：`H:\minzzj文件\技术部\项目\官方\代掌\代掌-实施总方案-v0.1.md`
 - 工程已从 pnpm workspace 改为**单包布局**（H: 为 exFAT，不支持符号链接，pnpm workspace 装不起来）：
@@ -221,12 +282,14 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
   [`docs/test-evidence/2026-10-25-repo-publish.md`](docs/test-evidence/2026-10-25-repo-publish.md)）
 - **v0.5.0 Release**：https://github.com/minzzj/daizhang-steward/releases/tag/v0.5.0
   （阶段一发布，2026-10-25；发布说明见 [`docs/RELEASE_NOTES_v0.5.0.md`](docs/RELEASE_NOTES_v0.5.0.md)）
-- **代码位置**：GitHub `main` 分支（P1 提交 **`2db8da3` 已推送**；当前 `package.json` 版本 **0.6.0**，
-  CLI `VERSION` 同步 0.6.0）。
+- **v0.6.0（P1）**：已发布并验证（见 [`docs/test-evidence/release-v0.6.0-check.md`](docs/test-evidence/release-v0.6.0-check.md)、
+  [`docs/RELEASE_NOTES_v0.6.0.md`](docs/RELEASE_NOTES_v0.6.0.md)）
+- **代码位置**：GitHub `main` 分支（P3 提交 **`0185e50` 已推送**；当前 `package.json` 版本 **0.6.0**，
+  CLI `VERSION` 同步 0.6.0；**P2/P3 版本 0.7.0 / 0.8.0 待 Lead 升级并发版**）。
 - **M0 验证证据**：`runs/run-20261025-172017-eb9116/`（prompt.md / patch.diff / test.log / report.md /
   events.jsonl / code-task.json / code-result.json 等）与
   [`docs/test-evidence/test-result-2026-10-25_09-52-08.md`](docs/test-evidence/test-result-2026-10-25_09-52-08.md)
-  （该文件为 Windows CI 修复前快照，tests 34；**当前测试数为 113**，以 `npm test` 为准）；
+  （该文件为 Windows CI 修复前快照，tests 34；**当前测试数为 151**，以 `npm test` 为准）；
   `npm run check` / `npm run check:secrets` / `npm run demo` / `npm run evidence` 均通过。
 - **M1 验证证据**：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
   `docs/test-evidence/evidence-m1-2026-10-25_09-52-12/`（45 文件：A2 / A4 / A5 三组截图与日志；
@@ -249,7 +312,20 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
   business-result / ledger-facts / promise-traces / takeover-pack / boundary-check / monthly-report /
   summaries，`boundary-run/` 18 条规则，`console-e2e/` 9 步截图 + result.json，`console-cli/` 看板+账本
   截图，`takeover-result.json`、`unit-tests.log` 113/113；已脱敏、只保留最新）；`npm run acceptance:p1`
-  OK（本机有头 Chrome，12/12 检查）；**B1/B2/B5/B6/B7 通过**；`npm test` **113/113**（14 个测试文件）。
+  OK（本机有头 Chrome，12/12 检查）；**B1/B2/B5/B6/B7 通过**；`npm test` **113/113**（P1 历史）。
+- **P2 验证证据（短跑）**：`docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` +
+  `docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`（10 文件：`B3-net-outage/` 的
+  drill-net-outage/outbox/ledger + 断网/恢复通知；`B4-platform-ban/` 的 drill-platform-ban /
+  alternative-plan + 封禁/恢复通知；`unit-tests.log` 133/133；已脱敏）；短跑 **11/11 检查 ✅**
+  （断网 `outage=120007ms`、25 次承诺被拒、25 条排队/重放、账本重复 0；封禁 11ms 检测、替代方案 5 条）。
+  **长跑（2h 断网 + 15min 封禁）进行中**，`evidence-long-drill-*` 目录已预留（当前为空），
+  长跑证据由 Lead 后续入库。
+- **P3 验证证据**：`docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` +
+  `docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`（18 文件：`enterprise-run/` 的 profile /
+  entity-validation / seal-flow / org-approval / dual-review / invoice-validation / dual-mode-orders /
+  boundary-table.{md,json} / boundary-checks / fixture-checks / report，+ `unit-tests.log` 151/151；
+  已脱敏）；`npm run acceptance:p3` OK（12/12 检查）；**B8 通过**；`npm test` **151/151**
+  （16 个测试文件）；企业 run `run-20261025-232357-2ce6f6`。
 
 ## 本机踩坑（2026-10-25 实测）
 
@@ -292,20 +368,30 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
     并在运行前清理 `.steward/`。控制台 E2E 默认随机端口、只监听 127.0.0.1；写操作必须带
     `X-Steward-Token`（测试断言无 token → 401）。`business`/`boundary-check` 为纯 fixture 离线运行，
     不会访问网络、不会外发。`npm run acceptance:p1` 只在本机跑（托管 CI 只跑无头控制台 E2E）。
+15. **P2 故障演练验收**：`npm run acceptance:p2` 默认是**短跑**（约 2 分钟断网 + 2 分钟封禁，真实
+    localhost HTTP），会重建 `p2-acceptance-*` + `evidence-p2-*`；`--outage-minutes` / `--ban-minutes`
+    控制真实时长。**长跑（120 分钟断网 + 15 分钟封禁）必须单独后台运行**，完成后把
+    `long-drill-*` 证据复制到 `docs/test-evidence/evidence-long-drill-*` 并更新本文件/ROADMAP；
+    在长跑证据入库前 P2 不算完整通过。示例：
+    `node dist/apps/cli/src/index.js fault-drill --case net-outage --outage-minutes 120 --json`。
+16. **P3 企业版验收**：`npm run acceptance:p3` 纯本地、无网络、无真实银行/税务系统；会重建
+    `p3-acceptance-*` + `evidence-p3-*`。企业数据全部虚构（执照/税号/账号/签署人均编造），
+    发票与申报只出草稿，用印 `ai_may_sign=false`；不要把 fixture 用于真实签约/收款/开票/申报。
+    CI 只跑 `enterprise-demo`（B8 + 30 条边界），有头/真实数据验收仅本机。
 
 ## 下一步（按序执行）
 
-0. **推送状态**：阶段一（v0.5.0）与阶段二 P1（v0.6.0）代码均已推送 GitHub `main`（P1 最新 `2db8da3`）；
-   v0.5.0 Release 已创建；v0.6.0 是否打 tag/发 Release 由 Lead 决定。
-1. **阶段二 P2 故障演练（下一步）**：B3 —— 断网 2 小时不产生新承诺、恢复后 10 分钟内补记账本且不重复；
-   B4 —— 模拟平台封禁 15 分钟：全部动作停止并给出替代方案（故障注入 + 证据）。
-2. **阶段二后续**：P3 企业版（对公/专票/授权书用印/多账号串行/用工资质转人工/模式一致性 + 30 条边界，
-   B8）→ P4 v1.0.0 发布 + 宣传片（BGM/静音双版本）。
+0. **推送状态**：阶段一（v0.5.0）与阶段二 P1/P2/P3 代码均已推送 GitHub `main`（最新 `0185e50`）；
+   v0.5.0 / v0.6.0 已发布；**P2/P3 待发 v0.7.0 / v0.8.0（由 Lead 升级版本并决定 Release/tag）**。
+1. **P2 长跑收尾（下一步）**：等待后台真实 2 小时断网 + 15 分钟封禁长跑完成 → 由 Lead 把
+   `long-drill-*` 证据入库到 `docs/test-evidence/evidence-long-drill-*` → 更新 P2 状态为「通过」，
+   并在 delivery-checklist / ROADMAP / HANDOFF 补长跑结论。
+2. **P4 发布与宣传片**：v1.0.0 版本号、GitHub Release、验收包、真实截图宣传片（BGM/静音双版本）+ 发布说明。
 3. 按用户要求继续阶段二（或视额度停会话）；新会话从本文件 + [ROADMAP.md](ROADMAP.md) 续。
 
 ## 等待用户确认的事项
 
-- [ ] 是否进入阶段二 P2（故障演练 B3/B4）——默认按 ROADMAP 继续
+- [ ] 是否继续 P4（v1.0.0/宣传片）——默认按 ROADMAP 继续
 - [ ] 测试 key 仅用于联调（默认是；建议联调后轮换）
 - [x] GitHub 认证（已通过本机凭据完成建仓与推送；令牌未落盘）
 - [x] 仓库名（`minzzj/daizhang-steward` 已创建）
@@ -315,16 +401,18 @@ CLI 子命令：`demo` / `browser-flow` / `desktop-flow` / `scout` / `dummy-bran
 - [x] M2 验收（2026-10-25：A3/A8/A9 通过；`npm run acceptance:m2` OK）
 - [x] M3 验收（2026-10-25：A7 通过；`npm run acceptance:m3` OK）
 - [x] M4 验收 / 阶段一完成（2026-10-25：A10/A11/A12 通过，A1–A12 全部通过；v0.5.0 Release）
-- [x] P1 验收 / 阶段二个人版 MVP（2026-10-25：B1/B2/B5/B6/B7 通过；
-  `npm run acceptance:p1` OK，113/113 测试，v0.6.0）
-- [ ] v0.6.0 是否发布 GitHub Release / tag（P1 已推送 `main`，由 Lead 按节奏决定）
+- [x] P1 验收 / 阶段二个人版 MVP（2026-10-25：B1/B2/B5/B6/B7 通过；113/113 测试，v0.6.0）
+- [x] P3 验收 / 阶段二企业版 MVP（2026-10-25：B8 通过 + 30 条边界；`npm run acceptance:p3` OK，
+  151/151 测试，v0.8.0 待发版）
+- [ ] P2 长跑（120min 断网 + 15min 封禁）完成确认与证据入库
+- [ ] v0.7.0 / v0.8.0 是否升级并发布 GitHub Release / tag（代码已推送 `main`，由 Lead 按节奏决定）
 
 ## 已知风险
 
 见 [ASSUMPTIONS.md](ASSUMPTIONS.md) 与方案 §11：DSH RC 版本漂移、Windows 桌面自动化稳定性、
 GitHub 认证、非商用许可预期、法律边界需人工复核、额度控制。
 
-## 交接给后续阶段（P2 及以后）的内容
+## 交接给后续阶段（P4 及以后）的内容
 
 - [x] M0 验收证据索引：`runs/run-20261025-172017-eb9116/` + `docs/test-evidence/test-result-2026-10-25_09-52-08.md`
 - [x] M1 验收证据索引：`docs/test-evidence/m1-acceptance-2026-10-25_09-52-12.{md,json}` +
@@ -342,5 +430,10 @@ GitHub 认证、非商用许可预期、法律边界需人工复核、额度控�
   `docs/RELEASE_NOTES_v0.5.0.md`、演示脚本 `docs/demo-script.*`、GFI `docs/good-first-issues.md`）
 - [x] P1 个人版 MVP 实施与验收（经营域 8 概念、控制台、审批/接管、月报、18 条个人模式边界、
   仿真业务线；`docs/test-evidence/evidence-p1-2026-10-25_14-18-54/`）
-- [ ] P2 故障演练实施计划（B3/B4，基于方案 §5 / §11）
-- [ ] 企业版边界清单人工复核记录（P3）
+- [x] P2 短跑验收与故障演练实现（fault 模块、demo-platform、fault-drill、短跑 11/11 通过；
+  `docs/test-evidence/evidence-p2-2026-10-25_15-02-52/`）；**长跑证据待 Lead 入库**
+- [x] P3 企业版实施与验收（enterprise 模块、30 条边界双模式表全文、B8 双模式、双人复核/用印/专票/
+  申报草稿/组织审批链；`docs/test-evidence/evidence-p3-2026-10-25_15-23-46/`；
+  `docs/zh-CN/enterprise.md` + `docs/en/enterprise.md`）
+- [ ] P2 长跑证据入库与 P2 完成结论（`long-drill-*` → `docs/test-evidence/evidence-long-drill-*`）
+- [ ] P4 v1.0.0 发布与宣传片（BGM/静音双版本）

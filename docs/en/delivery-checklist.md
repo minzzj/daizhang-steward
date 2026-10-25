@@ -1,9 +1,10 @@
 # Delivery & Acceptance Checklist
 
 > Each acceptance item = id + command/operation + evidence path + latest result (evidence must be openable).
-> **Phase 1 (M0–M4) is complete and released as v0.5.0: A1–A12 all `pass`. Phase 2 P1 (personal-edition
-> MVP) is complete and delivered as v0.6.0: B1/B2/B5/B6/B7 pass; B3/B4 pending P2, B8 pending P3.**
-> Last updated: 2026-10-25 (Phase 2 P1 complete, v0.6.0)
+> **Phase 1 (M0–M4) is complete and released as v0.5.0: A1–A12 all `pass`. Phase 2: P1 personal-edition
+> MVP (v0.6.0) — B1/B2/B5/B6/B7 pass; P2 fault drills — short run passed, long run in progress;
+> P3 enterprise MVP (v0.8.0 pending release) — B8 passes + 30-rule dual-mode boundary table.**
+> Last updated: 2026-10-25 (Phase 2 P3 complete, v0.8.0 pending release)
 
 ## A. Phase 1 (doc 1 — 12 items)
 
@@ -92,22 +93,50 @@
 > `docs/test-evidence/p1-acceptance-2026-10-25_14-18-54.{md,json}` +
 > `docs/test-evidence/evidence-p1-2026-10-25_14-18-54/` (39 files: business-run / boundary-run /
 > console-e2e / console-cli / takeover-result / unit-tests.log, sanitized).
+>
+> **P2 verdict (2026-10-25, fault drills — short run passed / long run in progress)**:
+> `npm run acceptance:p2` **short run 11/11 checks ✅** (build + **133/133** tests + B3/B4 drills).
+> B3 network outage (real `ECONNREFUSED`, short run `outage=120007ms`): **no new promises while offline**
+> (25 blocked), actions queued in the **outbox** (25), **recovered within 10 min** (25 replayed),
+> **0 duplicate ledger entries**; B4 platform ban (real `403+x-platform-ban`): **detected in 11 ms**,
+> actions stopped, **5 alternative items**, local notifications, recovery after unban. Evidence:
+> `docs/test-evidence/p2-acceptance-2026-10-25_15-02-52.{md,json}` +
+> `docs/test-evidence/evidence-p2-2026-10-25_15-02-52/` (10 files, sanitized). **The real 2-hour outage +
+> 15-minute ban long run is still running; `evidence-long-drill-*` will be archived by the Lead — B3/B4
+> are not fully passed until the long run finishes.**
+>
+> **P3 verdict (2026-10-25, enterprise MVP, v0.8.0 pending release)**: **B8 passes**,
+> `npm run acceptance:p3` OK (**12/12 checks ✅**; build + **151/151** tests + enterprise flow).
+> B8: one personal order + one enterprise order, subject/invoice/payment consistency all true,
+> **all 6 mismatch classes blocked** (no invoice/payment is produced when blocked); **30-row dual-mode
+> boundary table** (personal/enterprise × implemented/human/n-a; four key out-of-scope classes
+> EB-01/02/03/04 denied in both modes); dual review (1 reviewer `applied=false`, 2 different roles
+> `applied=true`); seal **`ai_may_sign=false`** (human-signed only); VAT special invoice validation
+> (title/tax/contract) → `draft_pending_human`; tax-filing draft `ai_may_submit=false`; org approval
+> chain **1/2/3 levels** (3000/20000/80000); employment/qualification hand-off; enterprise fixtures
+> 8/8 cross-checked; enterprise run `run-20261025-232357-2ce6f6`. Tests **151/151** (P1 113 + fault 20 +
+> enterprise 18, 16 test files); the CLI now ships **19 implemented commands + 0 placeholders**
+> (P2 `fault-drill`, P3 `enterprise-demo`). Full 30-rule table and limitations: `docs/en/enterprise.md`;
+> evidence: `docs/test-evidence/p3-acceptance-2026-10-25_15-23-46.{md,json}` +
+> `docs/test-evidence/evidence-p3-2026-10-25_15-23-46/` (18 files: enterprise-run
+> profile/entity/seal/dual-review/invoice/org-approval/dual-mode-orders/boundary-table/fixture-checks +
+> `unit-tests.log`, sanitized).
 
 ## B. Phase 2 (doc 2 — 8 items)
 
-> P1 (personal-edition MVP) covers **B1 / B2 / B5 / B6 / B7** (all pass); **B3 / B4 → P2 fault drills**,
-> **B8 → P3 enterprise edition**.
+> P1 (personal-edition MVP) covers **B1 / B2 / B5 / B6 / B7** (all pass); **P2 fault drills cover
+> B3 / B4 (short run passed, long run in progress)**; **P3 enterprise edition covers B8 (passes)**.
 
 | # | Acceptance | Scenario | Evidence | Status |
 |---|---|---|---|---|
 | B1 | Topic selection: ≥3 business lines under ¥50k/30d, sources open in 30s | simulated proposal | `evidence-p1-2026-10-25_14-18-54/business-run/proposal.json` (3 qualified, sources checkable, proposal=true; business command 157ms); run `run-20261025-221904-b56b1a` | ✅ pass (2026-10-25, P1) |
 | B2 | Bookkeeping: one expense shows 6 facts within 30s | ledger detail | `evidence-p1-2026-10-25_14-18-54/business-run/ledger-facts.json` (2 entries × 6 facts); console `/ledger` detail drawer + `console-e2e/screenshots/004-ledger-facts.png` | ✅ pass (2026-10-25, P1) |
-| B3 | 2h offline produces no new promises; recovery reconciles in 10min | real network-off drill | gap list + reconciliation log | todo (P2 fault drills) |
-| B4 | Platform B ban → all actions stop in 15min + alternatives | ban fault injection | stop event + alternatives | todo (P2 fault drills) |
+| B3 | 2h offline produces no new promises; recovery reconciles in 10min | real network-off drill | short run: `evidence-p2-2026-10-25_15-02-52/B3-net-outage/` (`drill-net-outage.json`: outage=120007ms, blocked_promises=25, queued_actions=25, replayed=25, `duplicates_found=0`, recovered_within_10min=true; outbox/ledger + outage/recovery notifications); **long run (120 min) in progress, evidence to be archived** | 🟡 **short run ✅ pass / long run in progress** (2026-10-25, P2) |
+| B4 | Platform B ban → all actions stop in 15min + alternatives | ban fault injection | short run: `evidence-p2-2026-10-25_15-02-52/B4-platform-ban/` (`drill-platform-ban.json`: ban_detected_within_ms=11, stopped=true, actions_attempted_during_ban=24; `alternative-plan.json` with 5 items; ban/recovery notifications); **long run (15 min) in progress, evidence to be archived** | 🟡 **short run ✅ pass / long run in progress** (2026-10-25, P2) |
 | B5 | Any external promise traces to conversation text and authorization | promise trace | `evidence-p1-.../business-run/promise-traces.json` (3-segment chain: conversation text → mandate clause → project; unrecorded returns "unauthorized") | ✅ pass (2026-10-25, P1) |
 | B6 | Takeover key stops in 10s + pack within 30min | takeover drill | `evidence-p1-.../takeover-result.json` (`stop_ms=3` ≤10000) + `business-run/takeover-pack.json` (6 sections: open orders / pending threads / payables / credentials / risks / coverage); console E2E `006-takeover-stop.png` / `007-takeover-resume.png` (browser-measured 88ms) | ✅ pass (2026-10-25, P1) |
 | B7 | Four out-of-scope request classes denied 100% with readable reasons | boundary tests | `evidence-p1-.../business-run/boundary-check.json` + `boundary-run/boundary-rules.json` (18 personal-mode rules; 4/4 out-of-scope denied, payment → human, quote → draft_only, each with a readable user_message) | ✅ pass (2026-10-25, P1) |
-| B8 | Personal and enterprise modes each run one order; mismatches blocked | dual-mode e2e | evidence for both | todo (P3 enterprise edition) |
+| B8 | Personal and enterprise modes each run one order; mismatches blocked | dual-mode e2e | `evidence-p3-2026-10-25_15-23-46/enterprise-run/dual-mode-orders.json`: personal order (vat_general + personal_account) and enterprise order (vat_special + corporate_account) both ok; `subject_consistent/invoice_consistent/payment_consistent/all_mismatches_blocked=true`; **all 6 mismatch classes blocked** (`mismatch_scenarios` 1–6 with readable conflict codes; `invoice_produced=false`, `payment_captured=false` when blocked); `fixture-checks.json` 8/8 cross-checked | ✅ pass (2026-10-25, P3) |
 
 ## C. User requirements (U1–U8)
 

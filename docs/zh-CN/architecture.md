@@ -1,9 +1,10 @@
 # 架构 / Architecture（中文）
 
-> 状态：设计定稿；**阶段一（M0 内核 + M1 真实浏览器 + M2 真实桌面与安全 + M3 Scout + M4 发布收尾）
-> 已全部实现并验证，v0.5.0 已发布；阶段二 P1 个人版 MVP 已实现并交付 v0.6.0（2026-10-25）**；
-> 阶段二 P2–P4 按 ROADMAP 推进，细节改动以 PR 为准。
-> 配套：`docs/zh-CN/contracts.md`、`docs/zh-CN/threat-model.md`、`docs/zh-CN/adapters.md`。
+> 状态：设计定稿；**阶段一（M0–M4）已实现并发布 v0.5.0；阶段二 P1 个人版 MVP 已交付 v0.6.0；
+> P2 故障演练短跑通过（长跑进行中）；P3 企业版 MVP 已实现并交付 v0.8.0（待发版）（2026-10-25）**；
+> P4（v1.0.0/宣传片）按 ROADMAP 推进，细节改动以 PR 为准。
+> 配套：`docs/zh-CN/contracts.md`、`docs/zh-CN/threat-model.md`、`docs/zh-CN/adapters.md`、
+> `docs/zh-CN/enterprise.md`（企业版 + 30 条边界双模式表）。
 
 ## 1. 设计原则
 
@@ -17,12 +18,14 @@
 ## 2. 分层
 
 ```text
-┌ 接口层 ─ CLI / 本地 Web 控制台（P1 已实现，只监听 127.0.0.1 + token 写保护） / 通知通道 / MCP（给 DSH 驾驶舱、物联软件）
+┌ 接口层 ─ CLI / 本地 Web 控制台（P1，只监听 127.0.0.1 + token 写保护） / 通知（P2 本地通知） / MCP（给 DSH 驾驶舱、物联软件）
 ├ 编排层 ─ Conductor（目标拆解、分支生命周期、预算、验收）/ 经营域引擎 steward-domain（委托-预算-项目-任务-账本-审批-接管）
 ├ 执行层 ─ AgentRuntime（计划-行动-观察-反思-报告）→ Operator / Scout / Reviewer
 ├ 能力层 ─ ToolRegistry（浏览器、桌面、文件、HTTP、消息、代码执行、支付[禁用]）
 │          HarnessAdapter（mock / DSH headless / DeepSeek API）
-├ 治理层 ─ PolicyEngine、预算门、停止键、检查点、审计、边界规则（P1 个人模式 18 条）
+├ 治理层 ─ PolicyEngine、预算门、停止键、检查点、审计、边界规则（P1 个人 18 条 / P3 双模式 30 条）
+├ 企业层 ─ steward-enterprise：主体/授权/用印、对公/专票、双人复核、组织审批链、申报草稿（P3）
+├ 演练层 ─ steward-fault：真实 localhost 断网/封禁注入、承诺闸门、幂等 Outbox、替代方案（P2）
 └ 数据层 ─ SQLite（WAL）+ events.jsonl（哈希链）+ runs/ 产物 + prompts/ 版本化提示词
            + <root>/domain/state.json + domain/events.jsonl（P1 经营域，原子写/只追加/脱敏）
 ```
@@ -31,17 +34,19 @@
 
 | 形态 | 命令 | 用途 |
 |---|---|---|
-| 内核 CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/dummy-branch/business/boundary-check/console/approve/takeover/code-loop/run/branch/report/stop/safety-check/version/help` | 24h 运行、演示、验收 |
+| 内核 CLI | `node dist/apps/cli/src/index.js demo/browser-flow/desktop-flow/scout/dummy-branch/business/boundary-check/fault-drill/enterprise-demo/console/approve/takeover/code-loop/run/branch/report/stop/safety-check/version/help` | 24h 运行、演示、验收 |
 | 本地 Web 控制台（P1） | `node dist/apps/cli/src/index.js console [--port 4180]` | 看板/项目时间线/账本 6 要素/审批卡/接管键/月报；只监听 127.0.0.1 |
+| 故障演练（P2） | `node dist/apps/cli/src/index.js fault-drill --case net-outage\|platform-ban [--outage-minutes N] [--ban-minutes N]` | 真实 localhost HTTP 断网/封禁演练（demo-platform） |
+| 企业版演示（P3） | `node dist/apps/cli/src/index.js enterprise-demo` | B8 双模式订单 + 6 类阻断 + 30 条边界表 + 双人复核/用印/专票/组织审批链 |
 | DSH 驾驶舱（可选） | `dsh --profile daizhang web` | 人用 DSH GUI 观察/审批/接管；挂 `steward-mcp` 与 `dsh-browser`/`dsh-computer-use` |
 
 内核是独立 Node/TS 进程；驾驶舱只是可选的“人机接口”，不参与核心决策。
 
 工程为**单包布局**（无 pnpm workspace）：`packages/*/src` + `apps/cli/src` 由
 `tsc -p tsconfig.json` 编译到 `dist/`，命令一律用 npm（`npm run build` / `npm test` / `npm run demo` /
-`npm run acceptance` / `npm run acceptance:m2` / `npm run acceptance:m3` / `npm run acceptance:m4` /
-`npm run acceptance:p1`）。**P1 起 `takeover` 与 `approve` 已从占位转为真实人工命令**（共 18 个已实现
-命令 + 0 个占位）。
+`npm run acceptance` / `acceptance:m2` / `acceptance:m3` / `acceptance:m4` / `acceptance:p1` /
+`acceptance:p2`（短跑）/ `acceptance:p3`）。**`takeover` 与 `approve` 自 P1 起为真实人工命令**；
+P2 新增 `fault-drill`、P3 新增 `enterprise-demo` —— 业务命令 **19 个 + `help` 入口，0 占位**。
 
 **M1 实现现状**：`packages/steward-browser` 提供 Playwright 真实浏览器适配器（有头默认、
 `chrome→msedge` 回退、每 run 独立 `userDataDir`、每步截图/DOM/console、5 类失败分类、
@@ -95,6 +100,33 @@ Good First Issues `docs/good-first-issues.md`）。
   → 命令数 **13 → 18 个已实现 + 0 个占位**；`npm run acceptance:p1` 一键验收（12 项检查，本机有头
   Chrome）。**B3/B4（故障演练）→ P2，B8（企业版）→ P3；Conductor / Reviewer 的完整编排仍为后续阶段。**
 
+**P2 实现现状（故障演练，v0.7.0 待发版；短跑通过 / 长跑进行中）**：
+- `packages/steward-fault`：**真实 localhost HTTP 故障演练**——B3 断网（真实 `ECONNREFUSED`）：
+  `PromisesGate` 断网期间拒绝新承诺并计数、动作写入**幂等 Outbox**、恢复后 `Outbox.replay()` +
+  `LedgerReconciler` 对账（`duplicates_found=0`）；B4 平台封禁（真实 `403 + x-platform-ban: true`）：
+  `BanDetector` 检测后停止动作、`buildAlternativePlan()` 生成替代方案（渠道/原因/下一步/负责人）、
+  `notifyLocal()` 本地通知留痕、解禁恢复。
+- `examples/demo-platform/`：真实 localhost 故障注入平台（主端口 + `/admin/*` 控制端口）。
+- CLI 新增 `fault-drill --case net-outage|platform-ban`；`npm run acceptance:p2` **短跑 11/11 检查 ✅**
+  （真实 2h 断网 + 15min 封禁长跑仍在后台运行，`evidence-long-drill-*` 待 Lead 入库）。
+- CI 新增真实 localhost 故障演练步骤（B3/B4 短跑）。
+
+**P3 实现现状（企业版 MVP，v0.8.0 待发版；B8 通过）**：
+- `packages/steward-enterprise`：企业版引擎——`validateEntity()` 主体认证（营业执照/统一社会信用代码 +
+  公司授权书人签 + 对公账户 + 税号四项校验）；对公账户收款校验；增值税普通/专用发票；
+  `createInvoiceDraft()` 开票校验（抬头/税号/合同一致）→ `draft_pending_human`；
+  `createTaxFilingDraft()` 申报草稿（`ai_may_submit=false`）；`requestAccountChange()` +
+  `reviewAccountChange()` **双人复核**（2 位不同角色才 `applied=true`）；`approvalChainFor()`
+  **组织审批链**（≤5000 1 级 / 5000–50000 2 级 / >50000 3 级）；`sealFlow()` 用印
+  （**`ai_may_sign=false`，仅自然人签**）；`acquireAgentSlot()` 多代理串行；`checkBoundary()` 30 条边界；
+  `runDualModeOrders()` **B8**（个人/企业各一单 + 6 类不一致阻断，blocked 时无发票/收款）；
+  `boundaryRules30()` 30 条双模式标注表。
+- `examples/demo-enterprise/`：`enterprise.json`（主体/授权/用印/对公/税号/双人复核/3 档审批链/串行）+
+  `orders.json` 8 条订单（2 正常 + 6 不一致，纯虚构）。
+- CLI 新增 `enterprise-demo`；`npm run acceptance:p3` **12/12 检查 ✅**（build + 151 测试 + 企业流程）；
+  边界表全文见 `docs/zh-CN/enterprise.md`。CI 新增 P3 企业版演示步骤（B8 + 30 条边界，无网络）。
+- 仍为后续阶段：企业专属 UI、真实银行/税务/CA/电子签章对接、Conductor/Reviewer 完整编排。
+
 ## 4. 分支生命周期
 
 ```text
@@ -112,6 +144,10 @@ P1 现状：CLI 直接装配 operator 分支（BranchSpec + 工具白名单）�
 `run --resume`）、profile 锁与按分支隔离的凭据引用。Conductor 的分支派生、Reviewer 证据复核与
 Conductor 验收接口仍是后续阶段规划；P1 的审批/接管由 domain 引擎 + 人工命令/控制台承担。
 
+P2/P3 现状：`fault-drill` 在真实 localhost 平台上演练断网/封禁（不派生新分支，只验证现行断网/封禁
+行为与幂等恢复）；`enterprise-demo` 由 enterprise 引擎执行双模式订单与 30 条边界判定，B8 不一致时
+在产生发票/收款前阻断。企业版不新增分支类型，仍复用 operator/scout 分支与 domain 引擎。
+
 ## 5. 证据与账本
 
 - `events.jsonl`：只追加、带 `seq` 与哈希链，字段见 contracts.md；密钥脱敏。
@@ -124,8 +160,12 @@ Conductor 验收接口仍是后续阶段规划；P1 的审批/接管由 domain �
   另含 `role`/`tools`/`prompt_ref` 报告字段；**P1 起 `business` 运行另含 `proposal.json`、
   `business-result.json`、`ledger-facts.json`（6 要素）、`promise-traces.json`、`takeover-pack.json`、
   `boundary-check.json`、`monthly-report.{json,md}`、`summaries.json`**；控制台 E2E 另含
-  `result.json` + 9 张逐步截图 + `console-server.log`。验收时复制到
-  `docs/test-evidence/evidence-m1-<stamp>/`…`evidence-m4-<stamp>/` 与 `evidence-p1-<stamp>/`。
+  `result.json` + 9 张逐步截图 + `console-server.log`；**P2 `fault-drill` 运行另含
+  `drill-net-outage.json`、`outbox.json`、`ledger.json`、`drill-platform-ban.json`、
+  `alternative-plan.json` 与 `notifications/`；P3 `enterprise-demo` 运行另含 `profile.json`、
+  `entity-validation.json`、`seal-flow.json`、`dual-review.json`、`invoice-validation.json`、
+  `org-approval.json`、`dual-mode-orders.json`、`boundary-table.{md,json}`、`boundary-checks.json`、
+  `fixture-checks.json`**。验收时复制到 `docs/test-evidence/evidence-m1-<stamp>/`…`evidence-p3-<stamp>/`。
 - 经营域数据单独持久化在 `<root>/domain/state.json`（原子写）+ `domain/events.jsonl`（只追加审计，
   detail 脱敏）；审批卡、接管状态、月报均由 domain 引擎产生，`approve` / `takeover` 命令与控制台
   操作同一份状态（人工决策，不自动放行）。
@@ -141,7 +181,7 @@ Conductor 验收接口仍是后续阶段规划；P1 的审批/接管由 domain �
 
 P1 现状：`steward-domain` 的 `summaries()` 提供 L0/L1/L2，`buildMonthlyReport("YYYY-MM")` 生成 L2 月报
 （收支/毛利/预算余量/合规事件/下月提案/as_of/coverage），控制台 `/api/summary?level=` 与 `/report`
-页面直接消费。
+页面直接消费。P3 企业版复用同一摘要体系，月报增加企业合规事件（专票/申报/用印/双人复核等）。
 
 ## 7. 扩展点
 
@@ -156,5 +196,5 @@ P1 现状：`steward-domain` 的 `summaries()` 提供 L0/L1/L2，`buildMonthlyRe
 
 ## 8. 明确不做
 
-多租户 SaaS、计费系统、复杂前端（阶段一；P1 只做零依赖本地 Web 控制台）、无审批的支付/合同/账号权限、
-绕过验证码与风控。
+多租户 SaaS、计费系统、复杂前端（阶段一；P1 只做零依赖本地 Web 控制台；P3 未新增企业专属 UI）、
+无审批的支付/合同/账号权限、绕过验证码与风控、真实银行/税务/CA/电子签章对接（P3 仅草稿与人工记录）。
