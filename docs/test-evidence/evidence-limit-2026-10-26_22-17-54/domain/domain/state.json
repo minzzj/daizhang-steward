@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "created_at": "2026-10-26T14:17:55.398Z",
+  "updated_at": "2026-10-26T14:17:55.457Z",
+  "event_seq": 3,
+  "halted": false,
+  "halted_at": null,
+  "halted_reason": null,
+  "mandates": [
+    {
+      "id": "mand-c203567a7c",
+      "principal": "个人经营者（本人）",
+      "scope": [
+        "承接无需经营资质的软件/自动化小额订单，单笔不超过单笔额度",
+        "对外报价、交付与收款须经本人审批后执行",
+        "账本每笔须有依据、审批人与回执，可追溯"
+      ],
+      "valid_from": "2026-10-26T14:17:55.450Z",
+      "valid_to": "2027-10-26T14:17:55.450Z",
+      "budget_limits": {
+        "month_cny": 0.01,
+        "project_cny": 0.01,
+        "per_txn_cny": 0.01
+      },
+      "prohibited": [
+        "借用或挂靠资质",
+        "陌生外呼与名单触达",
+        "垫资/借贷",
+        "未授权对外承诺",
+        "代签合同"
+      ],
+      "status": "active",
+      "confidence": "certain",
+      "created_at": "2026-10-26T14:17:55.450Z"
+    }
+  ],
+  "business_lines": [
+    {
+      "id": "bl-limit-weekly",
+      "name": "单页项目周报交付",
+      "who_pays": "示例个人客户（虚构）",
+      "quote_cny": 10,
+      "cost_cny": 0,
+      "gross_margin": 10,
+      "gross_margin_rate": 1,
+      "worst_case_cny": 0,
+      "sources": [
+        {
+          "title": "本地虚构需求单",
+          "url": "https://example.com/limit-test"
+        }
+      ],
+      "risks": [
+        "个人模式：无合同、无签字，仅微信/支付宝/个人银行卡人工确认"
+      ],
+      "requires_offline": false,
+      "requires_license": false,
+      "certainty": "certain",
+      "delivery_days": 1
+    }
+  ],
+  "projects": [
+    {
+      "id": "prj-39abe81cb8",
+      "name": "单页项目周报交付",
+      "business_line_id": "bl-limit-weekly",
+      "client": "示例个人客户（虚构）",
+      "status": "active",
+      "timeline": [
+        {
+          "at": "2026-10-26T14:17:55.453Z",
+          "kind": "created",
+          "summary": "项目创建：单页项目周报交付（业务线 bl-limit-weekly）",
+          "evidence_ids": [],
+          "confidence": "certain"
+        },
+        {
+          "at": "2026-10-26T14:17:55.457Z",
+          "kind": "income",
+          "summary": "账本记录（income）：¥10 来自 示例个人客户（虚构）（回执 rcpt-limit-2026-10-26_14-17-54）",
+          "evidence_ids": [],
+          "confidence": "certain"
+        }
+      ],
+      "created_at": "2026-10-26T14:17:55.453Z",
+      "updated_at": "2026-10-26T14:17:55.457Z",
+      "confidence": "certain"
+    }
+  ],
+  "tasks": [],
+  "evidence": [],
+  "ledger": [
+    {
+      "id": "led-569d9c9145",
+      "project_id": "prj-39abe81cb8",
+      "type": "income",
+      "amount_cny": 10,
+      "payee_or_payer": "示例个人客户（虚构）",
+      "basis": "项目周报交付验收单（个人模式，无合同/无签字；渠道：微信支付）",
+      "approved_by": "本人（个人模式，人工确认到账）",
+      "receipt_ref": "rcpt-limit-2026-10-26_14-17-54",
+      "occurred_at": "2026-10-26T14:17:55.456Z",
+      "confidence": "certain",
+      "created_at": "2026-10-26T14:17:55.457Z"
+    }
+  ],
+  "promises": [],
+  "approvals": [],
+  "compliance_events": [],
+  "budget": {
+    "month_key": "2026-10",
+    "spent_cny": 0,
+    "by_project": {}
+  },
+  "last_proposal": null,
+  "last_takeover": null
+}

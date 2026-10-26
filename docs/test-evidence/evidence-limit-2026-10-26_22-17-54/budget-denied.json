@@ -1,0 +1,10 @@
+{
+  "allowed": false,
+  "kind": "per_txn",
+  "amount_cny": 1,
+  "limit_cny": 0,
+  "zero_budget_mode": true,
+  "requiresHuman": true,
+  "remaining_cny": 0,
+  "reason": "0 元极限模式：任何支出都被拒绝（本次 ¥1，单笔额度 ¥0）；仅允许免费本地动作"
+}

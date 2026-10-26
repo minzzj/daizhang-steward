@@ -22,6 +22,8 @@ import {
   type TakeoverPack,
 } from "../../../packages/steward-domain/src/index.js";
 import { createConsoleServer, createDemoConsoleProvider } from "../../../packages/steward-console/src/index.js";
+import { ConfigEngine } from "../../../packages/steward-config/src/index.js";
+import { createConfigAdminProvider } from "./console-admin.js";
 
 type Flags = Record<string, string | boolean>;
 export interface Phase2Args {
@@ -334,10 +336,14 @@ export async function cmdConsole(parsed: Phase2Args): Promise<number> {
   const portFlag = flag(parsed.flags, "port");
   const port = portFlag === undefined ? 4180 : Number(portFlag);
   const provider = createDemoConsoleProvider();
-  const handle = await createConsoleServer({ provider, port });
+  // 管理页（配置中心/智能体/后台/数据）使用真实 ConfigEngine + runs 数据；运营页仍为演示数据。
+  const configEngine = new ConfigEngine({ root: join(root, ".steward") });
+  const adminProvider = createConfigAdminProvider(configEngine, { repo_root: root, data_root: join(root, "runs") });
+  const handle = await createConsoleServer({ provider, adminProvider, port });
   console.log(`代掌控制台已启动：${handle.url}（只监听 ${handle.host}）`);
-  console.log(`  - 看板 / 项目时间线 / 账本（6 要素）/ 审批卡 / 接管键 / 月报`);
-  console.log(`  - 本地单机模式；写操作使用进程内 token；Ctrl+C 退出`);
+  console.log(`  - 运营：看板 / 项目时间线 / 账本（6 要素）/ 审批卡 / 接管键 / 月报（演示数据）`);
+  console.log(`  - 管理：/settings 配置中心（三模式+支付银行卡+Token）/agents 智能体 /backend 后台 /data 数据管理（真实配置）`);
+  console.log(`  - 本地单机模式；写操作 token 已注入页面；Ctrl+C 退出`);
   if (parsed.flags.json === true) {
     console.log(JSON.stringify({ ok: true, url: handle.url, host: handle.host, port: handle.port, token: handle.token }, null, 2));
   }

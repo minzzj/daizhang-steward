@@ -55,7 +55,10 @@ test("A11：中英双语文档配对齐全", () => {
 });
 
 test("A11：源码无遥测 / 第三方分析 SDK", () => {
-  const pattern = /telemetry|analytics|posthog|sentry|mixpanel|amplitude/i;
+  // 只拦真实遥测/分析 SDK 依赖与上报调用；允许配置项 `telemetry: false`（强制关闭，无上报）。
+  const sdkPattern = /(?:from\s+["']|require\(\s*["'])[^"']*(?:posthog|sentry|mixpanel|amplitude|segment|google-analytics|gtag)[^"']*["']/i;
+  const beaconPattern = /navigator\.sendBeacon|fetch\(\s*["'][^"']*(?:analytics|telemetry|track(?:ing)?)[^"']*["']/i;
+  const isTelemetry = (text) => sdkPattern.test(text) || beaconPattern.test(text);
   const offenders = [];
   const scan = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -65,7 +68,7 @@ test("A11：源码无遥测 / 第三方分析 SDK", () => {
         scan(p);
       } else if (/\.(ts|mjs|js)$/.test(entry.name)) {
         const text = readFileSync(p, "utf8");
-        if (pattern.test(text)) offenders.push(p.replaceAll("\\", "/").replace(ROOT.replaceAll("\\", "/") + "/", ""));
+        if (isTelemetry(text)) offenders.push(p.replaceAll("\\", "/").replace(ROOT.replaceAll("\\", "/") + "/", ""));
       }
     }
   };

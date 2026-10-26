@@ -26,13 +26,38 @@ import type {
   ConsoleTimelineItem,
 } from "./provider.js";
 
-export type ConsolePageName = "dashboard" | "project" | "ledger" | "approvals" | "report" | "takeover";
+export type ConsolePageName =
+  | "dashboard"
+  | "projects"
+  | "project"
+  | "ledger"
+  | "approvals"
+  | "report"
+  | "takeover"
+  | "agents"
+  | "backend"
+  | "settings"
+  | "data";
+
+/** 顶部状态栏数据（由 server.ts 从 data + admin provider 汇总）。 */
+export interface ShellStatus {
+  /** demo / personal / enterprise */
+  mode: string;
+  modeLabel: string;
+  budgetLeftCny: number;
+  tokenRemaining: number;
+  tokenLimit: number;
+  halted: boolean;
+  lastEventAt: string | null;
+}
 
 export interface PageRenderOptions {
   /** 写操作 token：通过 `<meta name="steward-token">` 注入页面，同源 JS 读取。 */
   token: string;
   active: ConsolePageName;
   halted: boolean;
+  /** 顶部状态栏；缺省时降级为演示占位（保持旧调用兼容）。 */
+  status?: ShellStatus;
 }
 
 // ---------------------------------------------------------------------------
@@ -144,26 +169,88 @@ function statusBadge(status: string): string {
 // 页面骨架
 // ---------------------------------------------------------------------------
 
-const NAV_ITEMS: ReadonlyArray<{ page: ConsolePageName; href: string; label: string }> = [
-  { page: "dashboard", href: "/", label: "看板" },
-  { page: "ledger", href: "/ledger", label: "账本" },
-  { page: "approvals", href: "/approvals", label: "审批" },
-  { page: "report", href: "/report", label: "月报" },
-  { page: "takeover", href: "/takeover", label: "接管" },
+interface NavItem {
+  page: ConsolePageName;
+  href: string;
+  label: string;
+  icon: string;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: readonly NavGroup[] = [
+  {
+    title: "运营",
+    items: [
+      { page: "dashboard", href: "/", label: "总览", icon: "▦" },
+      { page: "projects", href: "/projects", label: "项目", icon: "▤" },
+      { page: "ledger", href: "/ledger", label: "账本", icon: "≡" },
+      { page: "approvals", href: "/approvals", label: "审批", icon: "✓" },
+      { page: "report", href: "/report", label: "月报", icon: "▥" },
+      { page: "takeover", href: "/takeover", label: "接管", icon: "■" },
+    ],
+  },
+  {
+    title: "管理",
+    items: [
+      { page: "agents", href: "/agents", label: "智能体", icon: "◈" },
+      { page: "backend", href: "/backend", label: "后台", icon: "▣" },
+      { page: "settings", href: "/settings", label: "配置", icon: "⚙" },
+      { page: "data", href: "/data", label: "数据", icon: "◫" },
+    ],
+  },
 ];
 
 function renderNav(active: ConsolePageName): string {
-  return NAV_ITEMS.map((item) => {
-    const className = item.page === active ? "active" : "";
-    return `<a id="nav-${item.page}" class="${className}" href="${item.href}">${item.label}</a>`;
+  return NAV_GROUPS.map((group) => {
+    const links = group.items
+      .map((item) => {
+        const className = item.page === active ? "nav-link active" : "nav-link";
+        return `<a id="nav-${item.page}" class="${className}" href="${item.href}" data-nav="${item.page}"><span class="nav-icon" aria-hidden="true">${item.icon}</span>${item.label}</a>`;
+      })
+      .join("");
+    return `<div class="nav-group"><div class="nav-group-title">${group.title}</div>${links}</div>`;
   }).join("");
 }
 
-function renderShell(options: PageRenderOptions, title: string, content: string): string {
+function shortToken(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(value);
+}
+
+function formatClock(iso: string | null): string {
+  if (iso === null || iso === "") return "—";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
+/**
+ * 专业版页面骨架（导出给 pages-admin.ts 复用）：
+ * 左侧固定导航 + 顶部状态栏（运行模式 / 预算余量 / Token 余量 / 接管状态 / 最近事件）+ 内容区。
+ */
+export function renderShell(options: PageRenderOptions, title: string, content: string): string {
+  const status: ShellStatus =
+    options.status === undefined
+      ? {
+          mode: "demo",
+          modeLabel: "体验模式",
+          budgetLeftCny: 0,
+          tokenRemaining: 0,
+          tokenLimit: 0,
+          halted: options.halted === true,
+          lastEventAt: null,
+        }
+      : options.status;
   const haltedBanner =
     options.halted === true
       ? `<div class="halt-banner" id="halt-banner" role="alert">⚠ 已接管停止（halted=true）：新动作已冻结，等待人工处理。<a href="/takeover">查看接管包</a></div>`
       : "";
+  const haltedChipClass = status.halted ? "status-chip halted" : "status-chip";
   return `<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
@@ -172,25 +259,46 @@ function renderShell(options: PageRenderOptions, title: string, content: string)
     <meta name="steward-token" content="${escapeAttr(options.token)}" />
     <title>${escapeHtml(title)} · 代掌 Steward 本地控制台</title>
     <link rel="stylesheet" href="/assets/app.css" />
+    <link rel="stylesheet" href="/assets/pro.css" />
   </head>
   <body>
-    <header class="site-header">
-      <div class="header-inner">
-        <div class="brand">代掌 Steward<small>本地控制台 · Local Console</small></div>
-        <span class="local-badge" id="local-mode-badge">只监听 127.0.0.1 · 本地模式</span>
-        <nav class="main-nav">${renderNav(options.active)}</nav>
-      </div>
-    </header>
-    ${haltedBanner}
-    <main>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-name">代掌 Steward</span>
+          <span class="brand-sub">LOCAL CONSOLE · v1.1</span>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav" aria-label="主导航">${renderNav(options.active)}</nav>
+        <div class="sidebar-footer">
+          <span class="local-badge" id="local-mode-badge">只监听 127.0.0.1 · 本地模式</span>
+          <span class="safety-note">写操作需 X-Steward-Token · 无 CDN/外链 · 数据仅本机</span>
+        </div>
+      </aside>
+      <div class="app-main">
+        <header class="topbar" id="topbar">
+          <span class="topbar-title">本地控制台</span>
+          <span class="topbar-context" id="page-context">${escapeHtml(title)}</span>
+          <div class="topbar-status">
+            <span class="mode-badge mode-${escapeAttr(status.mode)}" id="status-mode">${escapeHtml(status.modeLabel)}</span>
+            <span class="status-chip">预算余量 <b id="status-budget">${escapeHtml(formatCny(status.budgetLeftCny))}</b></span>
+            <span class="status-chip">Token <b id="status-token">${escapeHtml(shortToken(status.tokenRemaining))}</b> / ${escapeHtml(shortToken(status.tokenLimit))}</span>
+            <span class="${haltedChipClass}" id="status-halted-chip"><span class="dot"></span><b id="status-halted">${status.halted ? "已接管停止" : "运行中"}</b></span>
+            <span class="status-chip">最近事件 <b id="status-last-event">${escapeHtml(formatClock(status.lastEventAt))}</b></span>
+          </div>
+        </header>
+        ${haltedBanner}
+        <main>
 ${content}
-    </main>
-    <footer class="site-footer">
-      <p>安全边界：只监听 <code>127.0.0.1</code> · 本地单机 · 写操作需 <code>X-Steward-Token</code> · 无 CDN / 无外链 / 无第三方脚本。</p>
-      <p>数据来源：<code>ConsoleDataProvider</code>（当前为内置仿真数据；审批/接管会真实修改内存状态）。存活探测：<a href="/health">/health</a></p>
-    </footer>
+        </main>
+        <footer class="site-footer">
+          <p>安全边界：只监听 <code>127.0.0.1</code> · 本地单机 · 写操作需 <code>X-Steward-Token</code> · 无 CDN / 无外链 / 无第三方脚本。</p>
+          <p>数据来源：<code>ConsoleDataProvider</code> + <code>ConsoleAdminProvider</code>（内置演示实现；真实 ConfigEngine 接入后持久化到 config.json）。存活探测：<a href="/health">/health</a></p>
+        </footer>
+      </div>
+    </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="/assets/app.js" defer></script>
+    <script src="/assets/admin.js" defer></script>
   </body>
 </html>`;
 }
@@ -307,7 +415,7 @@ export function renderDashboardPage(input: DashboardPageInput): string {
     .join("");
 
   const content = `
-${renderPageTitle("看板", overview.asOf, "项目 / 任务 / 预算 / 代理状态")}
+${renderPageTitle("看板", overview.asOf, "项目 / 任务 / 预算 / 代理状态（运营页演示数据；真实配置/智能体/后台请用左侧管理导航）")}
 <div class="grid grid-2">
   <section class="panel">
     <h2>预算条 <span class="hint">月 / 项目 / 单笔</span></h2>

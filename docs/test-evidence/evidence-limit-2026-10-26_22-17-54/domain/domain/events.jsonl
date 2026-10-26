@@ -1,0 +1,3 @@
+{"seq":1,"ts":"2026-10-26T14:17:55.450Z","action":"mandate.create","object_type":"mandate","object_id":"mand-c203567a7c","result":"ok","evidence_refs":[],"detail":"principal=个人经营者（本人）; scope=3 条; 月=0.01; 项目=0.01; 单笔=0.01"}
+{"seq":2,"ts":"2026-10-26T14:17:55.453Z","action":"project.create","object_type":"project","object_id":"prj-39abe81cb8","result":"ok","evidence_refs":[],"detail":"business_line=bl-limit-weekly; client=示例个人客户（虚构）"}
+{"seq":3,"ts":"2026-10-26T14:17:55.457Z","action":"ledger.record","object_type":"ledger","object_id":"led-569d9c9145","result":"ok","evidence_refs":["rcpt-limit-2026-10-26_14-17-54"],"detail":"type=income; amount=10; payee=示例个人客户（虚构）; ref=rcpt-limit-2026-10-26_14-17-54"}

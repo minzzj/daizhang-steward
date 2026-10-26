@@ -16,6 +16,19 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { BASE_CSS, CLIENT_JS } from "./assets.js";
+import { ADMIN_JS, PRO_CSS } from "./assets-admin.js";
+import {
+  renderAgentsPage,
+  renderBackendPage,
+  renderDataPage,
+  renderProjectsPage,
+  renderSettingsPage,
+  type AgentsPageInput,
+  type BackendPageInput,
+  type DataPageInput,
+  type ProjectsPageInput,
+  type SettingsPageInput,
+} from "./pages-admin.js";
 import {
   renderApprovalsPage,
   renderDashboardPage,
@@ -26,6 +39,7 @@ import {
   renderTakeoverPage,
   type ConsolePageName,
   type PageRenderOptions,
+  type ShellStatus,
 } from "./pages.js";
 import type {
   ConsoleDataProvider,
@@ -33,6 +47,7 @@ import type {
   ConsoleSummaryLevel,
   ConsoleTakeoverStatus,
 } from "./provider.js";
+import type { AgentConfig, ConsoleAdminProvider, RunMode, StewardConfig } from "./admin.js";
 
 export const CONSOLE_DEFAULT_HOST = "127.0.0.1";
 export const CONSOLE_DEFAULT_PORT = 4180;
@@ -55,6 +70,8 @@ const CONTENT_SECURITY_POLICY = [
 
 export interface ConsoleServerOptions {
   provider: ConsoleDataProvider;
+  /** 管理侧 provider（配置中心/智能体中心/后台/数据管理）；不传时管理页与 API 返回 503（向后兼容）。 */
+  adminProvider?: ConsoleAdminProvider;
   /** 默认 127.0.0.1；只允许回环地址（localhost/::1 等价放行）。 */
   host?: string;
   /** 默认 4180；传 0 表示随机端口（E2E/CI 推荐）。 */
@@ -73,6 +90,7 @@ export interface ConsoleServerHandle {
   port: number;
   token: string;
   provider: ConsoleDataProvider;
+  adminProvider?: ConsoleAdminProvider;
   close(): Promise<void>;
 }
 
@@ -120,6 +138,7 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   if (provider === null || typeof provider !== "object") {
     throw new Error("createConsoleServer 需要 provider（ConsoleDataProvider）");
   }
+  const adminProvider = options.adminProvider;
   const host = options.host ?? CONSOLE_DEFAULT_HOST;
   assertLoopbackHost(host);
   const port = options.port ?? CONSOLE_DEFAULT_PORT;
@@ -237,9 +256,44 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     }
   };
 
+  const shellStatus = async (): Promise<ShellStatus | undefined> => {
+    if (adminProvider === undefined) return undefined;
+    try {
+      const [adminStatus, takeover] = await Promise.all([adminProvider.getAdminStatus(), safeTakeoverStatus()]);
+      return {
+        mode: adminStatus.mode,
+        modeLabel: adminStatus.mode_label,
+        budgetLeftCny: adminStatus.budget_left_cny,
+        tokenRemaining: adminStatus.token_remaining,
+        tokenLimit: adminStatus.token_limit_tokens,
+        halted: takeover !== null && takeover.halted === true,
+        lastEventAt: adminStatus.last_event_at,
+      };
+    } catch {
+      return undefined;
+    }
+  };
+
   const pageOptions = async (active: ConsolePageName): Promise<PageRenderOptions> => {
     const status = await safeTakeoverStatus();
-    return { token, active, halted: status !== null && status.halted === true };
+    const shell = await shellStatus();
+    const options: PageRenderOptions = { token, active, halted: status !== null && status.halted === true };
+    if (shell !== undefined) options.status = shell;
+    return options;
+  };
+
+  const adminUnavailablePage = async (res: ServerResponse, what: string): Promise<number> => {
+    const options = await pageOptions("dashboard");
+    return sendHtml(
+      res,
+      503,
+      renderErrorPage(
+        options,
+        503,
+        `${what}不可用`,
+        "该页面需要管理侧 provider。请在 createConsoleServer({ provider, adminProvider }) 中传入 createDemoAdminProvider() 或真实 ConfigEngine 适配器。",
+      ),
+    );
   };
 
   const notFoundPage = async (res: ServerResponse, message: string): Promise<number> => {
@@ -283,9 +337,53 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       }
       return sendHtml(res, 200, renderTakeoverPage({ status, options }));
     }
+    // ---- v1.1 专业版页面：项目 / 配置中心 / 智能体中心 / 后台 / 数据管理 ----
+    if (pathname === "/projects") {
+      const overview = await provider.overview();
+      const options = await pageOptions("projects");
+      return sendHtml(res, 200, renderProjectsPage({ projects: overview.projects, options }));
+    }
+    if (pathname === "/settings") {
+      if (adminProvider === undefined) return adminUnavailablePage(res, "配置中心");
+      const [config, adminStatus] = await Promise.all([adminProvider.getConfig(), adminProvider.getAdminStatus()]);
+      const options = await pageOptions("settings");
+      return sendHtml(res, 200, renderSettingsPage({ config, status: adminStatus, options }));
+    }
+    if (pathname === "/agents") {
+      if (adminProvider === undefined) return adminUnavailablePage(res, "智能体中心");
+      const [agents, config] = await Promise.all([adminProvider.getAgents(), adminProvider.getConfig()]);
+      const options = await pageOptions("agents");
+      return sendHtml(res, 200, renderAgentsPage({ agents, mode: config.profile.mode, options }));
+    }
+    if (pathname === "/backend") {
+      if (adminProvider === undefined) return adminUnavailablePage(res, "后台");
+      const [runs, queue, token, stats, config] = await Promise.all([
+        adminProvider.getFlow(),
+        adminProvider.getQueue(),
+        adminProvider.getTokenBudget(),
+        adminProvider.getDataStats(),
+        adminProvider.getConfig(),
+      ]);
+      const options = await pageOptions("backend");
+      return sendHtml(
+        res,
+        200,
+        renderBackendPage({ runs, queue, token, stats, halted: options.halted, monthBudgetCny: config.budgets.month_cny, options }),
+      );
+    }
+    if (pathname === "/data") {
+      if (adminProvider === undefined) return adminUnavailablePage(res, "数据管理");
+      const [stats, config, agents] = await Promise.all([
+        adminProvider.getDataStats(),
+        adminProvider.getConfig(),
+        adminProvider.getAgents(),
+      ]);
+      const options = await pageOptions("data");
+      return sendHtml(res, 200, renderDataPage({ stats, config, agents, options }));
+    }
     if (pathname.startsWith("/project/")) {
       const projectId = pathname.slice("/project/".length).trim();
-      const options = await pageOptions("project");
+      const options = await pageOptions("projects");
       if (projectId === "") return sendHtml(res, 404, renderErrorPage(options, 404, "项目不存在", "缺少项目 ID"));
       const overview = await provider.overview();
       const project = overview.projects.find((item) => item.id === projectId);
@@ -299,6 +397,223 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   };
 
   // -------------------------------------------------------------------------
+  // 管理侧 API（v1.1）：配置中心 / 智能体中心 / 后台 / 数据管理
+  // -------------------------------------------------------------------------
+
+  const isAdminApiPath = (pathname: string): boolean =>
+    pathname === "/api/config" ||
+    pathname === "/api/config/export" ||
+    pathname === "/api/config/apply-mode" ||
+    pathname === "/api/config/reset" ||
+    pathname === "/api/agents" ||
+    /^\/api\/agents\/[^/]+$/.test(pathname) ||
+    pathname === "/api/flow" ||
+    pathname === "/api/queue" ||
+    pathname === "/api/data/stats" ||
+    pathname === "/api/data/reset" ||
+    pathname === "/api/data/reset-demo" ||
+    pathname === "/api/token-budget" ||
+    pathname === "/api/payment-config" ||
+    pathname === "/api/admin/status" ||
+    pathname === "/api/admin/audit";
+
+  const parseRunMode = (value: unknown): RunMode | null => {
+    if (value === "demo" || value === "personal" || value === "enterprise") return value;
+    return null;
+  };
+
+  const requireAdmin = (res: ServerResponse): number | null => {
+    if (adminProvider !== undefined) return null;
+    return sendJson(res, 503, {
+      ok: false,
+      error: "admin_unavailable",
+      message: "管理 API 未启用：createConsoleServer 需要传入 adminProvider（演示可用 createDemoAdminProvider）",
+    });
+  };
+
+  const handleAdminApi = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+    method: string,
+    pathname: string,
+    requestUrl: URL,
+  ): Promise<number | null> => {
+    if (!isAdminApiPath(pathname)) return null;
+    const unavailable = requireAdmin(res);
+    if (unavailable !== null) return unavailable;
+    const admin = adminProvider;
+    if (admin === undefined) return null;
+    const isRead = method === "GET" || method === "HEAD";
+
+    if (pathname === "/api/config") {
+      if (isRead) return sendJson(res, 200, { ok: true, data: await admin.getConfig() });
+      if (method !== "PUT") return methodNotAllowed(res, ["GET", "HEAD", "PUT"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const nested = body.value.patch;
+      const patchValue = nested !== null && typeof nested === "object" && !Array.isArray(nested) ? nested : body.value;
+      const result = await admin.saveConfig(patchValue as unknown as Partial<StewardConfig>);
+      if (!result.ok) {
+        return sendJson(res, 400, {
+          ok: false,
+          error: "invalid_config",
+          message: result.errors.join("；") || "配置校验未通过",
+          data: { errors: result.errors },
+        });
+      }
+      return sendJson(res, 200, { ok: true, data: { config: result.config } });
+    }
+
+    if (pathname === "/api/config/export" && isRead) {
+      return sendJson(res, 200, { ok: true, data: { json: await admin.exportConfig(), filename: "steward-config.json" } });
+    }
+
+    if (pathname === "/api/config/apply-mode") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const mode = parseRunMode(body.value.mode);
+      if (mode === null) {
+        return sendJson(res, 400, { ok: false, error: "invalid_mode", message: 'mode 只支持 "demo" / "personal" / "enterprise"' });
+      }
+      const result = await admin.applyMode(mode);
+      if (!result.ok) {
+        return sendJson(res, 400, { ok: false, error: "invalid_mode", message: result.errors.join("；") || "模式切换失败", data: result });
+      }
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    if (pathname === "/api/config/reset") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      let mode: RunMode | undefined;
+      if (body.value.mode !== undefined) {
+        const parsed = parseRunMode(body.value.mode);
+        if (parsed === null) {
+          return sendJson(res, 400, { ok: false, error: "invalid_mode", message: 'mode 只支持 "demo" / "personal" / "enterprise"' });
+        }
+        mode = parsed;
+      }
+      const config = mode === undefined ? await admin.resetConfig() : await admin.resetConfig(mode);
+      return sendJson(res, 200, { ok: true, data: { config } });
+    }
+
+    if (pathname === "/api/agents") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await admin.getAgents() });
+    }
+
+    const agentMatch = /^\/api\/agents\/([^/]+)$/.exec(pathname);
+    if (agentMatch !== null) {
+      const role = agentMatch[1] ?? "";
+      if (isRead) {
+        const agent = await admin.getAgentDetail(role);
+        if (agent === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `智能体不存在：${role}` });
+        return sendJson(res, 200, { ok: true, data: agent });
+      }
+      if (method !== "POST") return methodNotAllowed(res, ["GET", "HEAD", "POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const patch: Partial<AgentConfig> = {};
+      if (typeof body.value.enabled === "boolean") patch.enabled = body.value.enabled;
+      const autonomy = body.value.autonomy;
+      if (autonomy === "readonly" || autonomy === "draft" || autonomy === "approval_required" || autonomy === "autonomous_limited") {
+        patch.autonomy = autonomy;
+      }
+      if (typeof body.value.token_limit === "number" && Number.isFinite(body.value.token_limit)) {
+        patch.token_limit = body.value.token_limit;
+      }
+      const result = await admin.updateAgent(role, patch);
+      if (!result.ok) {
+        return sendJson(res, 400, { ok: false, error: "invalid_agent", message: result.errors.join("；") || "智能体参数不合法", data: { errors: result.errors } });
+      }
+      return sendJson(res, 200, { ok: true, data: { config: result.config } });
+    }
+
+    if (pathname === "/api/flow") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      const filter: { phase?: string; run_id?: string; limit?: number } = {};
+      const phase = requestUrl.searchParams.get("phase");
+      if (phase !== null && phase !== "") filter.phase = phase;
+      const runId = requestUrl.searchParams.get("run_id");
+      if (runId !== null && runId !== "") filter.run_id = runId;
+      const limitText = requestUrl.searchParams.get("limit");
+      if (limitText !== null && /^\d+$/.test(limitText)) filter.limit = Number.parseInt(limitText, 10);
+      return sendJson(res, 200, { ok: true, data: await admin.getFlow(filter) });
+    }
+
+    if (pathname === "/api/queue") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await admin.getQueue() });
+    }
+
+    if (pathname === "/api/data/stats") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await admin.getDataStats() });
+    }
+
+    if (pathname === "/api/data/reset") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      if (body.value.confirm !== true) {
+        return sendJson(res, 400, {
+          ok: false,
+          error: "confirm_required",
+          message: "清空数据需要二次确认：请求体必须包含 {\"confirm\": true}",
+        });
+      }
+      return sendJson(res, 200, { ok: true, data: await admin.resetData() });
+    }
+
+    if (pathname === "/api/data/reset-demo") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      return sendJson(res, 200, { ok: true, data: await admin.resetDemoData() });
+    }
+
+    if (pathname === "/api/token-budget") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await admin.getTokenBudget() });
+    }
+
+    if (pathname === "/api/payment-config") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await admin.getPaymentConfig() });
+    }
+
+    if (pathname === "/api/admin/status") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      const [status, takeover] = await Promise.all([admin.getAdminStatus(), safeTakeoverStatus()]);
+      return sendJson(res, 200, {
+        ok: true,
+        data: { ...status, halted: status.halted || (takeover !== null && takeover.halted === true) },
+      });
+    }
+
+    if (pathname === "/api/admin/audit") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await admin.auditTrail() });
+    }
+
+    return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到管理 API：${pathname}` });
+  };
+
+  // -------------------------------------------------------------------------
   // API 路由
   // -------------------------------------------------------------------------
   const handleApi = async (
@@ -308,6 +623,9 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     pathname: string,
     requestUrl: URL,
   ): Promise<number> => {
+    const adminResult = await handleAdminApi(req, res, method, pathname, requestUrl);
+    if (adminResult !== null) return adminResult;
+
     const isRead = method === "GET" || method === "HEAD";
     const readOnlyRoute =
       pathname === "/api/overview" ||
@@ -471,6 +789,14 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
       return sendText(res, "text/javascript; charset=utf-8", CLIENT_JS);
     }
+    if (pathname === "/assets/pro.css") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/css; charset=utf-8", PRO_CSS);
+    }
+    if (pathname === "/assets/admin.js") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/javascript; charset=utf-8", ADMIN_JS);
+    }
     if (pathname === "/favicon.ico") {
       res.writeHead(204, baseHeaders());
       res.end();
@@ -479,13 +805,23 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     if (pathname === "/health") {
       if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
       const status = await safeTakeoverStatus();
+      let mode: string | null = null;
+      if (adminProvider !== undefined) {
+        try {
+          mode = (await adminProvider.getConfig()).profile.mode;
+        } catch {
+          mode = null;
+        }
+      }
       return sendJson(res, 200, {
         ok: true,
         service: "steward-console",
-        version: "0.6.0",
+        version: "1.1.0",
         host,
         port,
         local_only: true,
+        admin_enabled: adminProvider !== undefined,
+        mode,
         halted: status !== null && status.halted === true,
         started_at: startedAt,
         uptime_ms: Date.now() - Date.parse(startedAt),
@@ -549,5 +885,14 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     log("[console] 已关闭");
   };
 
-  return { server, url, host, port: actualPort, token, provider, close };
+  return {
+    server,
+    url,
+    host,
+    port: actualPort,
+    token,
+    provider,
+    ...(adminProvider === undefined ? {} : { adminProvider }),
+    close,
+  };
 }

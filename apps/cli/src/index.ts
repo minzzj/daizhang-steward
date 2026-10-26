@@ -47,8 +47,10 @@ import {
 } from "./phase2.js";
 import { cmdEnterpriseDemo } from "./enterprise-cli.js";
 import { cmdFaultDrill } from "./fault-cli.js";
+import { cmdConfig, cmdAgents, cmdData } from "./config-cli.js";
+import { cmdLimitRun } from "./limit-run.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -99,6 +101,12 @@ function printHelp(): void {
                                               阶段二：真实故障演练（断网 B3 / 平台封禁 B4，真实 localhost HTTP）
   steward console [--port 4180]              阶段二：本地 Web 控制台（只监听 127.0.0.1）
   steward enterprise-demo [--json]           阶段三：企业版（主体/授权/用印/对公/专票/双人复核/30 条边界/B8 双模式）
+  steward config [--action get|mode|set|reset|export|import|validate] [--json]
+                                              配置中心：体验/个人/企业三模式、预算/Token/银行卡/支付/功能开关
+  steward agents [--json]                     智能体列表（含写代码 Harness、核查、后台）与 Token 用量
+  steward data [--action stats|reset] [--yes] 数据统计 / 清空运行时数据（清空需 --yes）
+  steward limit-run [--budget 0] [--token-limit 10000000] [--revenue 10] [--json]
+                                              0 元预算极限测试：真实交付 + 真实浏览器验收 + 变现记账（个人模式）
   steward approve [--id <cardId> --decision approve|reject] [--json]  审批队列（超时挂起，不自动放行）
   steward takeover [--resume] [--json]       接管键：停止新动作并生成 6 类接管包
   steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
@@ -854,6 +862,15 @@ async function main(): Promise<number> {
     case "enterprise-demo":
     case "demo-enterprise":
       return cmdEnterpriseDemo(parsed);
+    case "config":
+      return cmdConfig(parsed);
+    case "agents":
+      return cmdAgents(parsed);
+    case "data":
+      return cmdData(parsed);
+    case "limit-run":
+    case "limit-test":
+      return cmdLimitRun(parsed);
     case "version":
       console.log(`steward ${VERSION} (node ${process.version})`);
       return 0;

@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "profile": {
+    "mode": "personal",
+    "operator_type": "individual",
+    "language": "zh-CN",
+    "currency": "CNY",
+    "timezone": "Asia/Shanghai",
+    "principal_name": "本人"
+  },
+  "features": {
+    "browser": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "desktop": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "coding_loop": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "scout": {
+      "enabled": false,
+      "requires_approval": false,
+      "note": "本次 0 元极限测试不需要找客户"
+    },
+    "content": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "research": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "payments": {
+      "enabled": true,
+      "requires_approval": true
+    },
+    "invoicing": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "notifications": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "auto_send": {
+      "enabled": false,
+      "requires_approval": true,
+      "note": "不自动外发"
+    },
+    "console": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "fault_drills": {
+      "enabled": true,
+      "requires_approval": false
+    },
+    "enterprise": {
+      "enabled": false,
+      "requires_approval": false,
+      "note": "个人模式不含企业能力（对公/专票/双人复核）"
+    },
+    "demo_data": {
+      "enabled": false,
+      "requires_approval": false,
+      "note": "个人模式不使用内置演示数据"
+    }
+  },
+  "budgets": {
+    "month_cny": 0,
+    "project_cny": 0,
+    "per_txn_cny": 0,
+    "zero_budget_mode": true,
+    "allow_free_local_actions": true
+  },
+  "token_budget": {
+    "limit_tokens": 10000000,
+    "per_action_limit": 6000,
+    "used_tokens": 12000,
+    "on_exceed": "block"
+  },
+  "payments": {
+    "providers": [
+      {
+        "id": "wechat",
+        "kind": "wechat_pay",
+        "name": "微信支付",
+        "enabled": true,
+        "mode": "manual_approval",
+        "account_masked": "wx_***89",
+        "note": "个人收款；每笔需人工确认"
+      },
+      {
+        "id": "alipay",
+        "kind": "alipay",
+        "name": "支付宝",
+        "enabled": true,
+        "mode": "manual_approval",
+        "account_masked": "ali***90",
+        "note": "个人收款；每笔需人工确认"
+      },
+      {
+        "id": "personal-card",
+        "kind": "personal_bank_card",
+        "name": "个人银行卡",
+        "enabled": true,
+        "mode": "manual_approval",
+        "account_masked": "**** **** **** 6789",
+        "note": "个人储蓄卡收款；卡号只存掩码，绝不存明文"
+      }
+    ],
+    "payout_account": {
+      "holder": "示例本人（虚构，个人模式）",
+      "bank_name": "示例银行储蓄卡（虚构）",
+      "card_no_masked": "**** **** **** 6688",
+      "type": "personal",
+      "wechat_id_masked": "wx***01",
+      "alipay_id_masked": "al***01"
+    },
+    "invoice": {
+      "default_type": "personal_receipt",
+      "title": "个人收款收据（无合同/无签字）",
+      "draft_only": true
+    },
+    "require_dual_review": false,
+    "sign_contract": false,
+    "ai_may_sign": false
+  },
+  "agents": [
+    {
+      "role": "conductor",
+      "name": "总调度",
+      "enabled": true,
+      "autonomy": "autonomous_limited",
+      "tools": [
+        "agent.dispatch",
+        "budget.check",
+        "task.plan",
+        "approval.request"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "operator",
+      "name": "办公执行",
+      "enabled": true,
+      "autonomy": "approval_required",
+      "tools": [
+        "browser.flow",
+        "desktop.flow",
+        "artifact.write"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "harness",
+      "name": "编码代理",
+      "enabled": true,
+      "autonomy": "approval_required",
+      "tools": [
+        "harness.request",
+        "patch.apply",
+        "test.run"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "customer",
+      "name": "客户沟通",
+      "enabled": true,
+      "autonomy": "draft",
+      "tools": [
+        "message.draft",
+        "thread.reply",
+        "evidence.attach"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "finance",
+      "name": "财务",
+      "enabled": true,
+      "autonomy": "approval_required",
+      "tools": [
+        "ledger.record",
+        "invoice.draft",
+        "budget.check"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "reviewer",
+      "name": "核查",
+      "enabled": true,
+      "autonomy": "readonly",
+      "tools": [
+        "evidence.verify",
+        "policy.check",
+        "report.render"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "backend",
+      "name": "后台运维",
+      "enabled": true,
+      "autonomy": "readonly",
+      "tools": [
+        "data.backup",
+        "data.reset",
+        "log.rotate"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "scout",
+      "name": "线索",
+      "enabled": true,
+      "autonomy": "draft",
+      "tools": [
+        "scout.score",
+        "outreach.draft",
+        "lead.import"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "content",
+      "name": "内容",
+      "enabled": true,
+      "autonomy": "draft",
+      "tools": [
+        "content.plan",
+        "copy.draft",
+        "artifact.write"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    },
+    {
+      "role": "research",
+      "name": "调研",
+      "enabled": true,
+      "autonomy": "readonly",
+      "tools": [
+        "web.search",
+        "source.summarize",
+        "evidence.attach"
+      ],
+      "token_limit": 200000,
+      "model_ref": "deepseek-chat@v1"
+    }
+  ],
+  "approval": {
+    "timeout_minutes": 120,
+    "auto_approve": false,
+    "dual_review_threshold_cny": 5000,
+    "takeover_shortcut": "Ctrl+Alt+S"
+  },
+  "data": {
+    "retention_days": 30,
+    "telemetry": false
+  },
+  "updated_at": "2026-10-26T14:17:55.463Z"
+}

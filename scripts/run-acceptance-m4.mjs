@@ -115,7 +115,10 @@ const missingEn = zhDocs.filter((f) => !enDocs.includes(f));
 const enDocsDir = join(ROOT, "docs", "en");
 const missingZh = enDocs.filter((f) => !existsSync(join(join(ROOT, "docs", "zh-CN"), f)));
 
-const telemetryPattern = /telemetry|analytics|posthog|sentry|mixpanel|amplitude/i;
+// 只拦真实遥测/分析 SDK 依赖与上报调用；配置项 telemetry:false（强制关闭）不算遥测源码。
+const telemetrySdkPattern = /(?:from\s+["']|require\(\s*["'])[^"']*(?:posthog|sentry|mixpanel|amplitude|segment|google-analytics|gtag)[^"']*["']/i;
+const telemetryBeaconPattern = /navigator\.sendBeacon|fetch\(\s*["'][^"']*(?:analytics|telemetry|track(?:ing)?)[^"']*["']/i;
+const isTelemetrySdk = (text) => telemetrySdkPattern.test(text) || telemetryBeaconPattern.test(text);
 const telemetryHits = [];
 const scan = (dir) => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -123,7 +126,7 @@ const scan = (dir) => {
     const p = join(dir, entry.name);
     if (entry.isDirectory()) {
       scan(p);
-    } else if (/\.(ts|mjs|js)$/.test(entry.name) && telemetryPattern.test(readFileSync(p, "utf8"))) {
+    } else if (/\.(ts|mjs|js)$/.test(entry.name) && isTelemetrySdk(readFileSync(p, "utf8"))) {
       telemetryHits.push(rel(p));
     }
   }

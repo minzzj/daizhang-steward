@@ -648,9 +648,13 @@ export const CLIENT_JS = `(function () {
       banner.id = 'halt-banner';
       banner.setAttribute('role', 'alert');
       banner.textContent = '⚠ 已接管停止（halted=true）：新动作已冻结，等待人工处理。';
-      var header = document.querySelector('.site-header');
-      if (header !== null && header.parentNode !== null) {
-        header.parentNode.insertBefore(banner, header.nextSibling);
+      var anchor = document.querySelector('.topbar');
+      if (anchor === null) { anchor = document.querySelector('.site-header'); }
+      if (anchor !== null && anchor.parentNode !== null) {
+        anchor.parentNode.insertBefore(banner, anchor.nextSibling);
+      } else {
+        var main = document.querySelector('.app-main');
+        if (main !== null) { main.insertBefore(banner, main.firstChild); } else { document.body.insertBefore(banner, document.body.firstChild); }
       }
     } else if (!halted && existing !== null && existing.parentNode !== null) {
       existing.parentNode.removeChild(existing);

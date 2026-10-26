@@ -1,0 +1,161 @@
+{
+  "used_tokens": 12000,
+  "limit_tokens": 10000000,
+  "remaining_tokens": 9988000,
+  "per_action_limit": 6000,
+  "on_exceed": "block",
+  "by_agent": {
+    "conductor": 4800,
+    "operator": 7200,
+    "reviewer": 2400,
+    "harness": 2400,
+    "finance": 3600,
+    "backend": 1200
+  },
+  "history": [
+    {
+      "at": "2026-10-26T14:17:20.988Z",
+      "agent_role": "conductor",
+      "action": "初始化配置中心",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 1200
+    },
+    {
+      "at": "2026-10-26T14:17:20.991Z",
+      "agent_role": "conductor",
+      "action": "拆解小项目",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 2400
+    },
+    {
+      "at": "2026-10-26T14:17:20.994Z",
+      "agent_role": "operator",
+      "action": "本地生成交付物（免费动作）",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 3600
+    },
+    {
+      "at": "2026-10-26T14:17:20.996Z",
+      "agent_role": "operator",
+      "action": "读取交付物状态",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 4800
+    },
+    {
+      "at": "2026-10-26T14:17:20.999Z",
+      "agent_role": "reviewer",
+      "action": "交付核查",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 6000
+    },
+    {
+      "at": "2026-10-26T14:17:21.002Z",
+      "agent_role": "harness",
+      "action": "QC 结果",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 7200
+    },
+    {
+      "at": "2026-10-26T14:17:22.204Z",
+      "agent_role": "operator",
+      "action": "真实浏览器验收",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 8400
+    },
+    {
+      "at": "2026-10-26T14:17:22.208Z",
+      "agent_role": "finance",
+      "action": "尝试 ¥1 外部付费（预算极限验证）",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 9600
+    },
+    {
+      "at": "2026-10-26T14:17:54.254Z",
+      "agent_role": "conductor",
+      "action": "初始化配置中心",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 1200
+    },
+    {
+      "at": "2026-10-26T14:17:54.256Z",
+      "agent_role": "conductor",
+      "action": "拆解小项目",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 2400
+    },
+    {
+      "at": "2026-10-26T14:17:54.259Z",
+      "agent_role": "operator",
+      "action": "本地生成交付物（免费动作）",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 3600
+    },
+    {
+      "at": "2026-10-26T14:17:54.262Z",
+      "agent_role": "operator",
+      "action": "读取交付物状态",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 4800
+    },
+    {
+      "at": "2026-10-26T14:17:54.264Z",
+      "agent_role": "reviewer",
+      "action": "交付核查",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 6000
+    },
+    {
+      "at": "2026-10-26T14:17:54.266Z",
+      "agent_role": "harness",
+      "action": "QC 结果",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 7200
+    },
+    {
+      "at": "2026-10-26T14:17:55.394Z",
+      "agent_role": "operator",
+      "action": "真实浏览器验收",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 8400
+    },
+    {
+      "at": "2026-10-26T14:17:55.397Z",
+      "agent_role": "finance",
+      "action": "尝试 ¥1 外部付费（预算极限验证）",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 9600
+    },
+    {
+      "at": "2026-10-26T14:17:55.462Z",
+      "agent_role": "finance",
+      "action": "记录收入（变现）",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 10800
+    },
+    {
+      "at": "2026-10-26T14:17:55.465Z",
+      "agent_role": "backend",
+      "action": "后台留痕",
+      "amount": 1200,
+      "ok": true,
+      "used_after": 12000
+    }
+  ]
+}

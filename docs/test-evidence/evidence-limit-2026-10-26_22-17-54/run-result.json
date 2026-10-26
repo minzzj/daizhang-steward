@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "mode": "personal",
+  "project_id": "prj-39abe81cb8",
+  "project_name": "单页 HTML 项目周报（小项目，0 元预算极限测试）",
+  "budget_limit_cny": 0,
+  "budget_denied": true,
+  "budget_denied_reason": "0 元极限模式：任何支出都被拒绝（本次 ¥1，单笔额度 ¥0）；仅允许免费本地动作",
+  "token_limit": 10000000,
+  "token_used": 12000,
+  "token_remaining": 9988000,
+  "browser_ok": true,
+  "browser_title": "项目周报 — 单页 HTML 项目周报（小项目，0 元预算极限测试）",
+  "browser_headless": false,
+  "revenue_cny": 10,
+  "payment_provider": "微信支付",
+  "receipt_ref": "rcpt-limit-2026-10-26_14-17-54",
+  "ledger_facts": {
+    "entry_id": "led-569d9c9145",
+    "amount_cny": 10,
+    "payee_or_payer": "示例个人客户（虚构）",
+    "basis": "项目周报交付验收单（个人模式，无合同/无签字；渠道：微信支付）",
+    "approved_by": "本人（个人模式，人工确认到账）",
+    "receipt_ref": "rcpt-limit-2026-10-26_14-17-54",
+    "project_id": "prj-39abe81cb8"
+  },
+  "monthly_income_cny": 10,
+  "deliverable": ".\\runs\\run-limit-2026-10-26_14-17-54\\deliverable.html",
+  "screenshot": ".\\runs\\run-limit-2026-10-26_14-17-54\\browser-screenshot.png",
+  "agents": [
+    "conductor",
+    "operator",
+    "harness",
+    "reviewer",
+    "finance",
+    "backend"
+  ],
+  "steps": 11,
+  "run_dir": ".\\runs\\run-limit-2026-10-26_14-17-54"
+}

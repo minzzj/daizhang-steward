@@ -1,23 +1,22 @@
 #!/usr/bin/env node
 /**
- * tests/e2e-console/run.mjs — 阶段二 P1-C：本地 Web 控制台真实浏览器 E2E（B2 / B6 等 UI 验收点）
+ * tests/e2e-console/run.mjs — v1.1 本地 Web 控制台（专业版）真实浏览器 E2E
  *
  * 铁律：真实有头 Chrome/Edge + 真实点击/输入/等待 + 每步截图；**不使用任何 mock 路由/假 DOM**。
- * 被测对象是 packages/steward-console 的真实 HTTP 服务（进程内启动，随机端口），provider 为内置
- * `createDemoConsoleProvider()`（仿真数据；审批/接管会真实修改内存状态并在页面体现）。
+ * 被测对象是 packages/steward-console 的真实 HTTP 服务（进程内启动，随机端口）：
+ *   - provider      = createDemoConsoleProvider()（经营数据：审批/接管真实修改内存状态）
+ *   - adminProvider = createDemoAdminProvider()（配置中心/智能体/后台/数据，保存与清空真实生效）
  *
  * 验收流程（每步截图到 --evidence-dir/screenshots/）：
- *   1) 看板加载：预算条（月/项目/单笔）、项目卡、任务数、代理状态、L0 摘要可见；
- *   2) 项目页：真实点击项目卡 → 时间线 ≥5 条 → 点开证据显示路径/类型/置信度；
- *   3) 账本：点第一笔 → 详情抽屉显示 6 要素（金额/收付方/依据/审批人/回执/所属项目，B2）；
- *   4) 审批：批准一张 → approved，驳回另一张 → rejected，刷新后状态仍在（服务端状态）；
- *   5) 接管：点接管键 → ≤10s 内 halted=true + 6 类接管包 + 计时，记录 measured_stop_ms；再 resume；
- *   6) 月报：收入/成本/毛利/预算余量/合规事件/下月提案/as_of/coverage 可见；
- *   7) 只监听本机：页面文本 + 服务端绑定地址 + 局域网地址不可达 + 无 token 写操作被拒 + 请求无外链。
+ *   原有 9 步（P1-C）：看板 → 项目时间线/证据 → 账本 6 要素 → 审批批准/驳回 → 接管（measured_stop_ms）
+ *                      → resume → 月报 → 只监听本机；
+ *   v1.1 新增 6 步：专业版导航/状态栏 → 配置中心（三模式 + 支付银行卡 + 切个人模式 + 禁用 scout 持久化）
+ *                      → 智能体中心（≥8 个 + 企业专属不适用 + 展开详情）→ 后台全流程时间线（≥5 事件 + 过滤 + 证据）
+ *                      → 数据管理（统计 + 二次确认清空 + 空档案 + 重置演示）→ 收尾 sanity（无 JS 错误/无外链/配置持久）。
  *
  * 用法：
  *   npm run build
- *   node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console
+ *   node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console-v11
  *   node tests/e2e-console/run.mjs --headless 1 --port 4180
  *
  * 退出码：0 全部通过 / 1 验收失败 / 2 用法或环境错误（缺构建产物等）。
@@ -93,6 +92,43 @@ function check(ok, message, detail) {
 
 function skipped(message) {
   return { ok: true, skipped: true, message };
+}
+
+/** 等待某元素文本包含 needle（跨页面导航时自动重试，避免 strict 的 context destroyed）。 */
+async function waitForTextContains(page, selector, needle, timeoutMs = 9000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const text = await page.locator(selector).first().innerText({ timeout: 1200 });
+      if (text.includes(needle)) return text;
+    } catch {
+      // 页面正在导航/重载，重试
+    }
+    await page.waitForTimeout(150);
+  }
+  try {
+    return await page.locator(selector).first().innerText({ timeout: 1500 });
+  } catch {
+    return "";
+  }
+}
+
+/** 等待页面重载完成（导航后可能触发 reload）。 */
+async function settleReload(page, timeoutMs = 8000) {
+  try {
+    await page.waitForLoadState("domcontentloaded", { timeout: timeoutMs });
+  } catch {
+    // 忽略超时，由后续断言兜底
+  }
+  await page.waitForTimeout(300);
+}
+
+async function countVisible(page, selector) {
+  try {
+    return await page.locator(selector).count();
+  } catch {
+    return 0;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -554,6 +590,308 @@ async function stepLocalOnly(page, recorder, context) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// v1.1 新增步骤：专业版导航 / 配置中心 / 智能体中心 / 后台 / 数据管理 / 收尾
+// ---------------------------------------------------------------------------
+
+async function stepProNav(page, recorder) {
+  return recorder.step(page, "pro-nav-status", async () => {
+    const checks = [];
+    checks.push(check(await page.locator("#sidebar").isVisible(), "左侧固定导航可见"));
+    for (const [id, label] of [
+      ["nav-agents", "智能体"],
+      ["nav-backend", "后台"],
+      ["nav-settings", "配置"],
+      ["nav-data", "数据"],
+    ]) {
+      const nav = page.locator(`#${id}`);
+      const count = await nav.count();
+      checks.push(check(count === 1 && (await nav.isVisible()), `导航出现新入口「${label}」（#${id}）`));
+    }
+    checks.push(check(await page.locator("#topbar").isVisible(), "顶部状态栏可见"));
+    const modeText = (await page.locator("#status-mode").innerText()).trim();
+    checks.push(check(modeText.includes("体验模式"), `顶部状态栏：运行模式徽章=体验模式（实际「${modeText}」）`));
+    const budgetText = (await page.locator("#status-budget").innerText()).trim();
+    checks.push(check(budgetText.includes("¥"), `顶部状态栏：预算余量可见（${budgetText}）`));
+    const tokenText = (await page.locator("#status-token").innerText()).trim();
+    checks.push(check(tokenText.length > 0 && tokenText !== "—", `顶部状态栏：Token 余量可见（${tokenText}）`));
+    const haltedText = (await page.locator("#status-halted").innerText()).trim();
+    checks.push(check(haltedText.includes("运行中"), `顶部状态栏：接管状态=运行中（实际「${haltedText}」）`));
+    const lastEvent = (await page.locator("#status-last-event").innerText()).trim();
+    checks.push(check(lastEvent.length > 0, `顶部状态栏：最近事件时间可见（${lastEvent}）`));
+    return { checks };
+  });
+}
+
+async function stepSettings(page, recorder) {
+  return recorder.step(page, "settings-config", async () => {
+    await page.locator("#nav-settings").click();
+    await page.waitForSelector("#mode-cards", { timeout: STEP_TIMEOUT_MS });
+    const checks = [];
+
+    for (const mode of ["demo", "personal", "enterprise"]) {
+      checks.push(check((await page.locator(`#mode-card-${mode}`).count()) === 1, `配置中心三模式卡片：${mode}`));
+    }
+    checks.push(check(await page.locator("#payment-section").isVisible(), "「支付与银行卡」分组可见（用户明确要求）"));
+    checks.push(check(await page.locator("#pay-personal").isVisible(), "个人渠道分组（微信/支付宝/个人银行卡）可见"));
+    for (const kind of ["wechat_pay", "alipay", "personal_bank_card"]) {
+      checks.push(check((await page.locator(`#pay-channel-${kind}`).count()) === 1, `支付渠道行可见：${kind}`));
+    }
+    checks.push(check((await page.locator("#payment-section").innerText()).includes("AI 不代签"), "支付分组含「AI 不代签」说明"));
+    checks.push(check(await page.locator("#payout-account").isVisible(), "收款账户（个人卡/微信/支付宝掩码）可见"));
+    const demoTokenLimit = await page.locator("#token-limit").inputValue();
+    checks.push(check(demoTokenLimit === "10000000", `体验模式 Token 上限=10,000,000（实际 ${demoTokenLimit}）`));
+    const featureRows = await page.locator(".feature-row[data-feature]").count();
+    checks.push(check(featureRows >= 14, `功能开关逐项可配置（${featureRows} 项）`));
+
+    // 切到个人模式并保存
+    await page.locator("#mode-card-personal").click();
+    await page.locator("#settings-save").click();
+    await page.waitForTimeout(900);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await settleReload(page);
+    await page.waitForSelector("#mode-cards", { timeout: STEP_TIMEOUT_MS });
+    const personalModeText = (await page.locator("#status-mode").innerText()).trim();
+    checks.push(check(personalModeText.includes("个人模式"), `切换后顶部状态=个人模式（实际「${personalModeText}」）`));
+    checks.push(check((await page.locator("#mode-card-personal.selected").count()) === 1, "个人模式卡片为选中态"));
+    checks.push(check((await page.locator("#pay-personal").getAttribute("data-applicable")) === "true", "个人渠道分组标记为适用"));
+    for (const kind of ["wechat_pay", "alipay", "personal_bank_card"]) {
+      checks.push(check(await page.locator(`#pay-${kind}-enabled`).isChecked(), `个人模式渠道已启用：${kind}`));
+      const modeText = (await page.locator(`#pay-${kind}-mode`).innerText()).trim();
+      checks.push(check(modeText.includes("人工审批"), `渠道 ${kind} 仅人工审批（${modeText}）`));
+      const account = (await page.locator(`#pay-${kind}-account`).innerText()).trim();
+      checks.push(check(account.length > 0 && account !== "—", `渠道 ${kind} 显示掩码账户（${account}）`));
+    }
+    checks.push(check((await page.locator("#payout-account").innerText()).includes("个人账户"), "收款账户：个人账户类型可见"));
+    const personalTokenLimit = await page.locator("#token-limit").inputValue();
+    checks.push(check(personalTokenLimit === "2000000", `个人模式 Token 上限=2,000,000（实际 ${personalTokenLimit}）`));
+
+    // 逐项禁用 scout 并保存
+    const scoutToggle = page.locator("#feature-scout-enabled");
+    checks.push(check(await scoutToggle.isChecked(), "scout 功能默认启用"));
+    if (await scoutToggle.isChecked()) await scoutToggle.click();
+    await page.locator("#feature-scout-note").fill("E2E：临时禁用 scout（验证功能可逐项禁用）");
+    await page.locator("#settings-save").click();
+    await page.waitForTimeout(800);
+    const feedback = (await page.locator("#settings-feedback").innerText()).trim();
+    checks.push(check(feedback.includes("已保存"), `保存 scout 禁用成功（${feedback}）`));
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await settleReload(page);
+    await page.waitForSelector("#feature-scout-enabled", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(!(await page.locator("#feature-scout-enabled").isChecked()), "刷新后 scout 仍为禁用（配置持久化）"));
+    const scoutBadge = (await page.locator("#feature-row-scout .feature-badge").innerText()).trim();
+    checks.push(check(scoutBadge.includes("已禁用"), `scout 功能行显示已禁用（${scoutBadge}）`));
+
+    // 0 元极限模式提示
+    await page.locator("#budget-zero").check();
+    checks.push(check(await page.locator("#zero-budget-hint").isVisible(), "勾选「0 元极限模式」后提示可见"));
+    const zeroHint = (await page.locator("#zero-budget-hint").innerText()).trim();
+    checks.push(check(zeroHint.includes("只允许免费本地动作"), `0 元提示文案可读（${zeroHint}）`));
+    await page.locator("#budget-zero").uncheck();
+
+    // 保存校验错误提示：单步 Token 上限 > 总上限 → 保存失败并显示可读错误
+    await page.locator("#token-per-action").fill("999999999");
+    await page.locator("#settings-save").click();
+    await page.waitForTimeout(900);
+    const errorsVisible = await page.locator("#settings-errors").isVisible();
+    checks.push(check(errorsVisible, "非法配置保存时显示校验错误（不静默失败）"));
+    if (errorsVisible) {
+      const errorText = (await page.locator("#settings-errors").innerText()).trim();
+      checks.push(check(errorText.includes("单步"), `校验错误文案可读（${errorText.slice(0, 80)}）`));
+    }
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await settleReload(page);
+    await page.waitForSelector("#token-per-action", { timeout: STEP_TIMEOUT_MS });
+    return { checks };
+  });
+}
+
+async function stepAgentsCenter(page, recorder) {
+  return recorder.step(page, "agents-center", async () => {
+    await page.locator("#nav-agents").click();
+    await page.waitForSelector("#agents-grid .agent-card", { timeout: STEP_TIMEOUT_MS });
+    const checks = [];
+    const agentCount = await page.locator("#agents-grid .agent-card").count();
+    checks.push(check(agentCount >= 8, `智能体 ≥8 个（实际 ${agentCount}）`));
+    for (const role of ["conductor", "operator", "harness", "reviewer", "backend", "scout"]) {
+      checks.push(check((await page.locator(`#agent-${role}`).count()) === 1, `含智能体：${role}`));
+    }
+    const harnessText = await page.locator("#agent-harness").innerText();
+    checks.push(check(harnessText.includes("写代码"), "harness 显示为「写代码 Harness」"));
+    const backendText = await page.locator("#agent-backend").innerText();
+    checks.push(check(backendText.includes("后台"), "backend 显示为「后台值守」"));
+    const enterpriseAgentText = await page.locator("#agent-enterprise_admin").innerText();
+    checks.push(check(enterpriseAgentText.includes("该模式不适用"), "企业专属智能体在个人模式显示「该模式不适用」"));
+    checks.push(check((await page.locator("#agent-conductor").innerText()).includes("今日动作"), "卡片含今日动作数"));
+    checks.push(check((await page.locator("#agent-conductor").innerText()).includes("Token"), "卡片含 Token 消耗"));
+    const logCount = await page.locator("#agent-operator .agent-logs li").count();
+    checks.push(check(logCount >= 1 && logCount <= 3, `卡片最近日志 1–3 条（实际 ${logCount}）`));
+
+    await page.locator("#agent-harness [data-agent-expand]").click();
+    await page.waitForSelector("#agent-detail-harness:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#agent-detail-harness").isVisible(), "点击智能体可展开详情"));
+    const detailText = await page.locator("#agent-detail-harness").innerText();
+    checks.push(check(detailText.includes("Token 限额"), "详情含 Token 限额"));
+    checks.push(check(detailText.includes("工具"), "详情含工具清单"));
+    return { checks };
+  });
+}
+
+async function stepBackendFlow(page, recorder) {
+  return recorder.step(page, "backend-flow", async () => {
+    await page.locator("#nav-backend").click();
+    await page.waitForSelector("#flow-timeline .flow-run", { timeout: STEP_TIMEOUT_MS });
+    const checks = [];
+    const runCount = await page.locator("#flow-timeline .flow-run").count();
+    const itemCount = await page.locator("#flow-timeline .flow-item").count();
+    checks.push(check(runCount >= 2, `后台按 run 分组（${runCount} 个 run）`));
+    checks.push(check(itemCount >= 5, `全流程时间线 ≥5 条事件（实际 ${itemCount}）`));
+    for (const phase of ["plan", "action", "observe", "verify", "evidence"]) {
+      const count = await page.locator(`#flow-timeline .flow-item[data-phase="${phase}"]`).count();
+      checks.push(check(count >= 1, `时间线含阶段「${phase}」（${count} 条）`));
+    }
+    const queueCount = await page.locator("#queue-panel .queue-item").count();
+    checks.push(check(queueCount >= 1, `运行队列可见（${queueCount} 项）`));
+    checks.push(check((await page.locator("#consume-panel").innerText()).includes("已用"), "Token/预算消耗可见"));
+    checks.push(check((await page.locator("#anomaly").innerText()).length > 0, "异常/接管记录可见"));
+
+    // 事件流过滤：action
+    await page.locator("#flow-filter").selectOption("action");
+    await page.waitForTimeout(250);
+    const actionVisible = await page.locator('#flow-timeline .flow-item[data-phase="action"]').count();
+    const allVisible = await page.locator("#flow-timeline .flow-item:visible").count();
+    checks.push(check(actionVisible >= 1 && allVisible === actionVisible, `事件流过滤生效（action 可见 ${allVisible} / ${actionVisible}）`));
+    await page.locator("#flow-filter").selectOption("all");
+    await page.waitForTimeout(200);
+
+    // 展开证据引用
+    const evidenceButton = page.locator("#flow-timeline [data-evidence-ref]").first();
+    checks.push(check((await evidenceButton.count()) === 1, "流程事件含证据引用入口"));
+    if ((await evidenceButton.count()) === 1) {
+      await evidenceButton.click();
+      await page.waitForSelector('#evidence-detail[data-evidence-ready="true"]', { timeout: STEP_TIMEOUT_MS });
+      const path = (await page.locator("#evidence-path").innerText()).trim();
+      const kind = (await page.locator("#evidence-type").innerText()).trim();
+      checks.push(check(path.length > 0 && path !== "—", `展开证据路径可见（${path}）`));
+      checks.push(check(kind.length > 0 && kind !== "—", `展开证据类型可见（${kind}）`));
+    }
+    return { checks };
+  });
+}
+
+async function stepDataManage(page, recorder) {
+  return recorder.step(page, "data-manage", async () => {
+    await page.locator("#nav-data").click();
+    await page.waitForSelector("#data-stats", { timeout: STEP_TIMEOUT_MS });
+    const checks = [];
+    const runsBefore = Number.parseInt((await page.locator("#data-runs").innerText()).trim(), 10);
+    const evidenceBefore = Number.parseInt((await page.locator("#data-evidence-files").innerText()).trim(), 10);
+    checks.push(check(Number.isFinite(runsBefore) && runsBefore > 0, `数据统计：运行记录 ${String(runsBefore)}`));
+    checks.push(check(Number.isFinite(evidenceBefore) && evidenceBefore > 0, `数据统计：证据文件 ${String(evidenceBefore)}`));
+    const updatedText = (await page.locator("#data-config-updated").innerText()).trim();
+    checks.push(check(updatedText.length > 0 && updatedText !== "—", `数据统计：配置更新时间可见（${updatedText}）`));
+
+    // 二次确认：先打开确认框，取消不执行
+    await page.locator("#data-clear").click();
+    await page.waitForSelector("#data-confirm-modal:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#data-confirm-modal").isVisible(), "清空数据需二次确认（确认框弹出）"));
+    checks.push(check((await page.locator("#data-confirm-title").innerText()).includes("确认清空"), "确认框标题说明清空"));
+    await page.locator("#data-confirm-cancel").click();
+    await page.waitForTimeout(200);
+    checks.push(check(await page.locator("#data-confirm-modal").isHidden(), "取消后不执行清空"));
+    const runsAfterCancel = Number.parseInt((await page.locator("#data-runs").innerText()).trim(), 10);
+    checks.push(check(runsAfterCancel === runsBefore, "取消后数据未变化"));
+
+    // 再次打开并确认清空
+    await page.locator("#data-clear").click();
+    await page.waitForSelector("#data-confirm-modal:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    await page.locator("#data-confirm-yes").click();
+    await page.waitForTimeout(900);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await settleReload(page);
+    await page.waitForSelector("#data-stats", { timeout: STEP_TIMEOUT_MS });
+    const runsAfter = Number.parseInt((await page.locator("#data-runs").innerText()).trim(), 10);
+    const evidenceAfter = Number.parseInt((await page.locator("#data-evidence-files").innerText()).trim(), 10);
+    checks.push(check(runsAfter === 0, `确认清空后运行记录归零（实际 ${String(runsAfter)}）`));
+    checks.push(check(evidenceAfter === 0, `确认清空后证据文件归零（实际 ${String(evidenceAfter)}）`));
+    checks.push(check((await page.locator("#data-empty").count()) === 1, "清空后显示「空档案」引导"));
+    checks.push(check((await page.locator("#data-empty").innerText()).includes("空档案"), "空档案文案可读"));
+
+    // 重置为演示数据（恢复可测试状态）
+    await page.locator("#data-reset-demo-empty").click();
+    await page.waitForTimeout(900);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await settleReload(page);
+    await page.waitForSelector("#data-stats", { timeout: STEP_TIMEOUT_MS });
+    const runsRestored = Number.parseInt((await page.locator("#data-runs").innerText()).trim(), 10);
+    checks.push(check(runsRestored > 0, `重置为演示数据后记录恢复（${String(runsRestored)}）`));
+    checks.push(check((await page.locator("#data-empty").count()) === 0, "重置后空档案引导消失"));
+    return { checks };
+  });
+}
+
+async function stepProSanity(page, recorder, context) {
+  const { baseUrl, port, requestLog, pageErrors } = context;
+  return recorder.step(page, "pro-sanity", async () => {
+    const checks = [];
+    checks.push(check(pageErrors.length === 0, `全程无页面 JS 错误（实际 ${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
+
+    const configResponse = await fetch(`${baseUrl}/api/config`, { signal: AbortSignal.timeout(3000) });
+    const configPayload = await configResponse.json();
+    checks.push(check(configResponse.status === 200 && configPayload.ok === true, `GET /api/config 200（实际 ${configResponse.status}）`));
+    const config = configPayload.data;
+    checks.push(check(config.profile.mode === "personal", `配置持久化：运行模式=personal（实际 ${config.profile.mode}）`));
+    checks.push(check(config.features.scout.enabled === false, "配置持久化：scout 功能=禁用"));
+    checks.push(check(config.features.scout.note.includes("E2E"), "配置持久化：禁用原因已保存"));
+    checks.push(check(config.payments.payout_account.type === "personal", "配置持久化：收款账户=个人类型"));
+    checks.push(check(config.payments.ai_may_sign === false, "支付配置：AI 不代签（固定 false）"));
+
+    const agentsResponse = await fetch(`${baseUrl}/api/agents`, { signal: AbortSignal.timeout(3000) });
+    const agentsPayload = await agentsResponse.json();
+    checks.push(check(agentsResponse.status === 200 && Array.isArray(agentsPayload.data) && agentsPayload.data.length >= 8, `GET /api/agents 返回 ${agentsPayload.data?.length ?? 0} 个智能体`));
+
+    const statsResponse = await fetch(`${baseUrl}/api/data/stats`, { signal: AbortSignal.timeout(3000) });
+    const statsPayload = await statsResponse.json();
+    checks.push(check(statsResponse.status === 200 && statsPayload.data.cleared === false, "GET /api/data/stats：数据已重置为演示态"));
+
+    const flowResponse = await fetch(`${baseUrl}/api/flow`, { signal: AbortSignal.timeout(3000) });
+    const flowPayload = await flowResponse.json();
+    const flowItems = Array.isArray(flowPayload.data) ? flowPayload.data.reduce((sum, run) => sum + run.events.length, 0) : 0;
+    checks.push(check(flowItems >= 5, `GET /api/flow 返回 ${flowItems} 条事件`));
+
+    // 无外链请求：所有网络请求均为同源 127.0.0.1:<port>
+    const external = requestLog.filter((url) => {
+      try {
+        const parsed = new URL(url);
+        return !(parsed.hostname === "127.0.0.1" && parsed.port === String(port));
+      } catch {
+        return false;
+      }
+    });
+    checks.push(check(external.length === 0, `全程无外链请求（${requestLog.length} 个请求全部同源）`, external.slice(0, 5).join(", ")));
+    checks.push(check(requestLog.some((url) => url.endsWith("/assets/pro.css")), "专业版样式已同源加载（pro.css）"));
+    checks.push(check(requestLog.some((url) => url.endsWith("/assets/admin.js")), "专业版脚本已同源加载（admin.js）"));
+
+    // 管理写 API 的 token 保护：无 token 必须 401（不修改数据）
+    let unauthStatus = 0;
+    try {
+      const response = await fetch(`${baseUrl}/api/data/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: true }),
+        signal: AbortSignal.timeout(2000),
+      });
+      unauthStatus = response.status;
+    } catch {
+      unauthStatus = 0;
+    }
+    checks.push(check(unauthStatus === 401, `无 X-Steward-Token 的管理写操作被拒（实际 ${unauthStatus}）`));
+    const statsAfterUnauth = await fetch(`${baseUrl}/api/data/stats`, { signal: AbortSignal.timeout(2000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(statsAfterUnauth !== null && statsAfterUnauth.data.cleared === false, "未授权请求未修改数据（仍为演示态）"));
+    return { checks };
+  });
+}
+
 function findLanIpv4() {
   const interfaces = networkInterfaces();
   for (const addresses of Object.values(interfaces)) {
@@ -592,7 +930,7 @@ async function main() {
   await rm(join(evidenceDir, "dom"), { recursive: true, force: true });
 
   const consolePackage = await import(pathToFileURL(options.consoleDist).href);
-  const { createConsoleServer, createDemoConsoleProvider } = consolePackage;
+  const { createConsoleServer, createDemoConsoleProvider, createDemoAdminProvider } = consolePackage;
 
   const recorder = new Recorder(evidenceDir);
   await recorder.prepare();
@@ -602,6 +940,8 @@ async function main() {
   const pageErrors = [];
   const requestLog = [];
   let measuredStopMs = null;
+  let consoleBootMs = null;
+  let firstPageLoadMs = null;
   let fatalError = null;
   let browserInfo = null;
   let browser = null;
@@ -609,22 +949,26 @@ async function main() {
   let baseUrl = "";
 
   console.log("=".repeat(72));
-  console.log("代掌 Steward · 本地 Web 控制台真实浏览器 E2E（阶段二 P1-C）");
+  console.log("代掌 Steward · 本地 Web 控制台（v1.1 专业版）真实浏览器 E2E");
   console.log(`构建产物: ${options.consoleDist}`);
   console.log(`浏览器  : ${options.headless ? "无头 headless=1" : "有头（默认，产品验收必须）"}；通道 chrome → msedge`);
+  console.log(`数据提供: provider=demo · adminProvider=demo（配置中心/智能体/后台/数据）`);
   console.log(`证据目录: ${evidenceDir}`);
   console.log("=".repeat(72));
 
   const suiteStartedAt = Date.now();
   try {
+    const bootStart = Date.now();
     consoleHandle = await createConsoleServer({
       provider: createDemoConsoleProvider(),
+      adminProvider: createDemoAdminProvider(),
       port: options.port,
       log: (line) => serverLog.push(line),
     });
+    consoleBootMs = Date.now() - bootStart;
     baseUrl = consoleHandle.url;
     console.log(
-      `\n[console] 已启动 ${baseUrl}（host=${consoleHandle.host} port=${consoleHandle.port}，写操作需 X-Steward-Token，页面已注入）`,
+      `\n[console] 已启动 ${baseUrl}（host=${consoleHandle.host} port=${consoleHandle.port} boot=${String(consoleBootMs)}ms，写操作需 X-Steward-Token，页面已注入）`,
     );
 
     browserInfo = await launchRealBrowser({ headless: options.headless });
@@ -640,15 +984,19 @@ async function main() {
     });
     page.on("request", (request) => requestLog.push(request.url()));
 
+    const firstLoadStart = Date.now();
     await recorder.step(page, "open-console", async () => {
       const response = await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
       return {
         checks: [
           check(response !== null && response.status() === 200, `控制台首页 HTTP 200（实际 ${response === null ? "无响应" : response.status()}）`),
           check((await page.title()).includes("本地控制台"), "页面标题含「本地控制台」"),
+          check(await page.locator("#sidebar").isVisible(), "专业版左侧导航已渲染"),
+          check(await page.locator("#status-mode").isVisible(), "顶部状态栏已渲染"),
         ],
       };
     });
+    firstPageLoadMs = Date.now() - firstLoadStart;
     await stepDashboardLoad(page, recorder, baseUrl);
     await stepProjectTimeline(page, recorder);
     await stepLedgerFacts(page, recorder);
@@ -664,6 +1012,18 @@ async function main() {
       requestLog,
       pageErrors,
       consoleHandle,
+    });
+    // ---- v1.1 新增：专业版导航 / 配置中心 / 智能体中心 / 后台 / 数据管理 / 收尾 ----
+    await stepProNav(page, recorder);
+    await stepSettings(page, recorder);
+    await stepAgentsCenter(page, recorder);
+    await stepBackendFlow(page, recorder);
+    await stepDataManage(page, recorder);
+    await stepProSanity(page, recorder, {
+      baseUrl,
+      port: consoleHandle.port,
+      requestLog,
+      pageErrors,
     });
   } catch (error) {
     fatalError = errorText(error);
@@ -699,13 +1059,22 @@ async function main() {
   const durationMs = Date.now() - suiteStartedAt;
   const result = {
     suite: "e2e-console",
+    version: "1.1.0",
     ok: fatalError === null && recorder.ok,
     as_of: new Date().toISOString(),
     headless: options.headless,
     browser: browserInfo === null
       ? null
       : { channel: browserInfo.channel, version: browserInfo.version, fallbacks: browserInfo.fallbacks.map((item) => item.channel), headless: options.headless },
-    console: { url: baseUrl, host: consoleHandle === null ? null : consoleHandle.host, port: consoleHandle === null ? null : consoleHandle.port, provider: "demo" },
+    console: {
+      url: baseUrl,
+      host: consoleHandle === null ? null : consoleHandle.host,
+      port: consoleHandle === null ? null : consoleHandle.port,
+      provider: "demo",
+      admin_provider: "demo",
+      console_boot_ms: consoleBootMs,
+      first_page_load_ms: firstPageLoadMs,
+    },
     stop_limit_ms: STOP_LIMIT_MS,
     measured_stop_ms: measuredStopMs,
     steps: recorder.steps,
@@ -723,7 +1092,8 @@ async function main() {
   console.log("\n" + "=".repeat(72));
   console.log("结果汇总");
   console.log(`  浏览器: ${browserInfo === null ? "未启动" : `${browserInfo.channel} ${browserInfo.version}（${options.headless ? "headless" : "headed"}）`}`);
-  console.log(`  控制台: ${baseUrl}（provider=demo，仅监听 ${consoleHandle === null ? "?" : consoleHandle.host}）`);
+  console.log(`  控制台: ${baseUrl}（provider=demo + adminProvider=demo，仅监听 ${consoleHandle === null ? "?" : consoleHandle.host}）`);
+  console.log(`  启动  : console_boot_ms=${consoleBootMs === null ? "未测" : String(consoleBootMs)} · first_page_load_ms=${firstPageLoadMs === null ? "未测" : String(firstPageLoadMs)}`);
   console.log(`  步骤  : ${recorder.steps.filter((step) => step.ok).length}/${recorder.steps.length} 通过；截图 ${recorder.screenshotCount} 张；证据 ${recorder.evidence.length} 个`);
   console.log(`  检查  : ${passedChecks}/${recorder.checks.length} 通过${skippedChecks > 0 ? `（跳过 ${skippedChecks}）` : ""}`);
   console.log(`  停止键: measured_stop_ms=${measuredStopMs === null ? "未测" : String(measuredStopMs)}（上限 ${STOP_LIMIT_MS}ms）`);

@@ -1,0 +1,43 @@
+{
+  "mode": "personal",
+  "revenue_cny": 10,
+  "provider": {
+    "id": "wechat",
+    "kind": "wechat_pay",
+    "name": "微信支付",
+    "enabled": true,
+    "mode": "manual_approval",
+    "account_masked": "wx_***89",
+    "note": "个人收款；每笔需人工确认"
+  },
+  "receipt_ref": "rcpt-limit-2026-10-26_14-17-54",
+  "ledger": {
+    "id": "led-569d9c9145",
+    "project_id": "prj-39abe81cb8",
+    "type": "income",
+    "amount_cny": 10,
+    "payee_or_payer": "示例个人客户（虚构）",
+    "basis": "项目周报交付验收单（个人模式，无合同/无签字；渠道：微信支付）",
+    "approved_by": "本人（个人模式，人工确认到账）",
+    "receipt_ref": "rcpt-limit-2026-10-26_14-17-54",
+    "occurred_at": "2026-10-26T14:17:55.456Z",
+    "confidence": "certain",
+    "created_at": "2026-10-26T14:17:55.457Z"
+  },
+  "ledger_facts": {
+    "entry_id": "led-569d9c9145",
+    "amount_cny": 10,
+    "payee_or_payer": "示例个人客户（虚构）",
+    "basis": "项目周报交付验收单（个人模式，无合同/无签字；渠道：微信支付）",
+    "approved_by": "本人（个人模式，人工确认到账）",
+    "receipt_ref": "rcpt-limit-2026-10-26_14-17-54",
+    "project_id": "prj-39abe81cb8"
+  },
+  "sign_contract": false,
+  "require_dual_review": false,
+  "invoice": {
+    "default_type": "personal_receipt",
+    "title": "个人收款收据（无合同/无签字）",
+    "draft_only": true
+  }
+}
