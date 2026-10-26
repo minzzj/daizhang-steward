@@ -1,4 +1,4 @@
-/**
+﻿/**
  * packages/steward-console/src/server.ts
  *
  * 本地 Web 控制台 HTTP 服务（零第三方依赖，只用 node:http）：
@@ -17,18 +17,24 @@ import { createServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { BASE_CSS, CLIENT_JS } from "./assets.js";
 import { ADMIN_JS, PRO_CSS } from "./assets-admin.js";
+import { CHAT_CSS, CHAT_JS } from "./assets-chat.js";
+import { SYSTEM_CSS, SYSTEM_JS } from "./assets-system.js";
 import {
   renderAgentsPage,
   renderBackendPage,
   renderDataPage,
   renderProjectsPage,
   renderSettingsPage,
-  type AgentsPageInput,
-  type BackendPageInput,
-  type DataPageInput,
-  type ProjectsPageInput,
   type SettingsPageInput,
 } from "./pages-admin.js";
+import {
+  renderAgentRolePage,
+  renderChatPage,
+  renderChatSessionPage,
+  renderMoneyPage,
+  renderMoneyRequestPage,
+  renderRunDetailPage,
+} from "./pages-chat.js";
 import {
   renderApprovalsPage,
   renderDashboardPage,
@@ -48,6 +54,19 @@ import type {
   ConsoleTakeoverStatus,
 } from "./provider.js";
 import type { AgentConfig, ConsoleAdminProvider, RunMode, StewardConfig } from "./admin.js";
+import {
+  MONEY_METHOD_LABELS,
+  MONEY_METHODS,
+  chatAgentTitle,
+  createDemoChatProvider,
+  type AgentModelBinding,
+  type ConsoleChatProvider,
+  type ModelProviderConfig,
+  type MoneyMethod,
+} from "./chat.js";
+import { createDemoSystemProvider, type ConsoleSystemProvider, type EpayConfig, type EpayMethod } from "./system.js";
+import { renderSystemPage } from "./pages-system.js";
+import type { MoneyPageInput } from "./pages-chat.js";
 
 export const CONSOLE_DEFAULT_HOST = "127.0.0.1";
 export const CONSOLE_DEFAULT_PORT = 4180;
@@ -72,6 +91,17 @@ export interface ConsoleServerOptions {
   provider: ConsoleDataProvider;
   /** 管理侧 provider（配置中心/智能体中心/后台/数据管理）；不传时管理页与 API 返回 503（向后兼容）。 */
   adminProvider?: ConsoleAdminProvider;
+  /**
+   * 对话/智能体记录/证据/变现/模型配置 provider（v1.2）。
+   * 缺省：自动启用 `createDemoChatProvider()`（本地演示可用，确认到账会写演示账本）；
+   * 传 `null`：显式关闭（相关页面/API 返回 503）。真实 Orchestrator/MoneyEngine 接线时传入适配器。
+   */
+  chatProvider?: ConsoleChatProvider | null;
+  /**
+   * 系统总控 provider（v1.3：/system 超级总调度、程序/插件、危险动作、易支付配置）。
+   * 缺省：自动启用内置演示实现；传 `null` 关闭 /system 与易支付 API。
+   */
+  systemProvider?: ConsoleSystemProvider | null;
   /** 默认 127.0.0.1；只允许回环地址（localhost/::1 等价放行）。 */
   host?: string;
   /** 默认 4180；传 0 表示随机端口（E2E/CI 推荐）。 */
@@ -91,6 +121,9 @@ export interface ConsoleServerHandle {
   token: string;
   provider: ConsoleDataProvider;
   adminProvider?: ConsoleAdminProvider;
+  chatProvider?: ConsoleChatProvider;
+  /** v1.3：系统总控（/system、易支付配置）。 */
+  systemProvider?: ConsoleSystemProvider;
   close(): Promise<void>;
 }
 
@@ -139,6 +172,36 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     throw new Error("createConsoleServer 需要 provider（ConsoleDataProvider）");
   }
   const adminProvider = options.adminProvider;
+  // v1.3：系统总控 provider（默认启用内置演示实现；显式传 null 关闭）
+  const systemProvider: ConsoleSystemProvider | undefined =
+    options.systemProvider === null ? undefined : options.systemProvider ?? createDemoSystemProvider();
+  const chatProvider: ConsoleChatProvider | undefined =
+    options.chatProvider === null
+      ? undefined
+      : options.chatProvider ??
+        createDemoChatProvider({
+          onIncome: async (input) => {
+            if (provider.recordIncome === undefined) return null;
+            try {
+              const result = await provider.recordIncome({
+                amount_cny: input.amount_cny,
+                client: input.client,
+                purpose: input.purpose,
+                occurred_at: input.occurred_at,
+                source_ref: input.source_ref,
+              });
+              return { entry_id: result.entry.id };
+            } catch {
+              return null;
+            }
+          },
+          ...(systemProvider === undefined
+            ? {}
+            : {
+                epayLinkBuilder: async (input: { amount_cny: number; client: string; purpose: string; out_trade_no: string }) =>
+                  systemProvider.buildEpayPayLink(input),
+              }),
+        });
   const host = options.host ?? CONSOLE_DEFAULT_HOST;
   assertLoopbackHost(host);
   const port = options.port ?? CONSOLE_DEFAULT_PORT;
@@ -301,6 +364,74 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     return sendHtml(res, 404, renderErrorPage(options, 404, "页面不存在", message));
   };
 
+  const chatUnavailablePage = async (res: ServerResponse, what: string): Promise<number> => {
+    const options = await pageOptions("chat");
+    return sendHtml(
+      res,
+      503,
+      renderErrorPage(
+        options,
+        503,
+        `${what}不可用`,
+        "该页面需要对话侧 provider（v1.2 默认自动启用内置演示实现）。若显式传了 createConsoleServer({ chatProvider: null })，请改为传入 createDemoChatProvider() 或真实 Orchestrator 适配器。",
+      ),
+    );
+  };
+
+  const systemUnavailablePage = async (res: ServerResponse, what: string): Promise<number> => {
+    const options = await pageOptions("system");
+    return sendHtml(
+      res,
+      503,
+      renderErrorPage(
+        options,
+        503,
+        `${what}不可用`,
+        "该页面需要系统总控 provider（v1.3 默认自动启用内置演示实现）。若显式传了 createConsoleServer({ systemProvider: null })，请改为传入 createDemoSystemProvider() 或真实 supervisor/程序管理适配器。",
+      ),
+    );
+  };
+
+  /** 变现页：收款渠道来自真实配置（adminProvider）或演示默认值。 */
+  const resolveMoneyChannels = async (): Promise<{
+    mode: string;
+    channels: Array<{ kind: string; label: string; enabled: boolean; account_masked?: string }>;
+  }> => {
+    let mode = "demo";
+    let channels: Array<{ kind: string; label: string; enabled: boolean; account_masked?: string }> | null = null;
+    if (adminProvider !== undefined) {
+      try {
+        const config = await adminProvider.getConfig();
+        mode = config.profile.mode;
+        const payout = config.payments.payout_account;
+        channels = config.payments.providers.map((payment) => ({
+          kind: payment.kind,
+          label: MONEY_METHOD_LABELS[payment.kind as MoneyMethod] ?? payment.name,
+          enabled: payment.enabled,
+          account_masked:
+            payment.kind === "personal_bank_card"
+              ? `${payout.bank_name} ${payout.card_no_masked}`
+              : payment.kind === "wechat_pay"
+                ? payout.wechat_id_masked ?? payment.account_masked
+                : payment.kind === "alipay"
+                  ? payout.alipay_id_masked ?? payment.account_masked
+                  : payment.account_masked,
+        }));
+      } catch {
+        channels = null;
+      }
+    }
+    if (channels === null) {
+      channels = [
+        { kind: "wechat_pay", label: "微信支付", enabled: true, account_masked: "wxid_****demo88" },
+        { kind: "alipay", label: "支付宝", enabled: true, account_masked: "dem***@example.com" },
+        { kind: "personal_bank_card", label: "个人银行卡", enabled: true, account_masked: "招商银行 **** **** 8888" },
+        { kind: "manual", label: "人工记账", enabled: true, account_masked: "—" },
+      ];
+    }
+    return { mode, channels };
+  };
+
   // -------------------------------------------------------------------------
   // 页面路由
   // -------------------------------------------------------------------------
@@ -345,9 +476,22 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     }
     if (pathname === "/settings") {
       if (adminProvider === undefined) return adminUnavailablePage(res, "配置中心");
-      const [config, adminStatus] = await Promise.all([adminProvider.getConfig(), adminProvider.getAdminStatus()]);
+      const [config, adminStatus, chatSettings] = await Promise.all([
+        adminProvider.getConfig(),
+        adminProvider.getAdminStatus(),
+        chatProvider === undefined ? Promise.resolve(undefined) : chatProvider.getModelSettings(),
+      ]);
       const options = await pageOptions("settings");
-      return sendHtml(res, 200, renderSettingsPage({ config, status: adminStatus, options }));
+      const input: SettingsPageInput = { config, status: adminStatus, options };
+      if (chatSettings !== undefined) input.chatSettings = chatSettings;
+      if (systemProvider !== undefined) {
+        try {
+          input.epayConfig = await systemProvider.getEpayConfig();
+        } catch {
+          /* 易支付配置不可用时不渲染该分组 */
+        }
+      }
+      return sendHtml(res, 200, renderSettingsPage(input));
     }
     if (pathname === "/agents") {
       if (adminProvider === undefined) return adminUnavailablePage(res, "智能体中心");
@@ -380,6 +524,94 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       ]);
       const options = await pageOptions("data");
       return sendHtml(res, 200, renderDataPage({ stats, config, agents, options }));
+    }
+    // ---- v1.2：对话 / 智能体对话记录 / run 证据 / 变现 ----
+    if (pathname === "/chat") {
+      if (chatProvider === undefined) return chatUnavailablePage(res, "对话");
+      const sessions = await chatProvider.listSessions();
+      const options = await pageOptions("chat");
+      return sendHtml(res, 200, renderChatPage({ sessions, options }));
+    }
+    if (pathname === "/money") {
+      if (chatProvider === undefined) return chatUnavailablePage(res, "变现");
+      const requests = await chatProvider.listMoneyRequests();
+      const ledger = await provider.ledger();
+      const money = await resolveMoneyChannels();
+      const epay: EpayConfig | null = systemProvider === undefined ? null : await Promise.resolve(systemProvider.getEpayConfig()).catch(() => null);
+      const options = await pageOptions("money");
+      const income = ledger.filter((entry) => entry.type === "income");
+      const channels = [...money.channels];
+      if (epay !== null) {
+        channels.push({
+          kind: "epay",
+          label: "易支付（epay）",
+          enabled: epay.enabled,
+          account_masked: `mode=${epay.mode} · 商户 ${epay.merchant_id || "—"} · ${epay.methods.join("/") || "未选支付方式"}`,
+        });
+      }
+      const input: MoneyPageInput = { requests, ledgerIncome: income, channels, mode: money.mode, options };
+      if (epay !== null) input.epayConfig = epay;
+      return sendHtml(res, 200, renderMoneyPage(input));
+    }
+    const moneyRequestMatch = /^\/money\/request\/([^/]+)$/.exec(pathname);
+    if (moneyRequestMatch !== null) {
+      if (chatProvider === undefined) return chatUnavailablePage(res, "变现");
+      const requestId = decodeURIComponent(moneyRequestMatch[1] ?? "");
+      const requests = await chatProvider.listMoneyRequests();
+      const request = requests.find((item) => item.id === requestId);
+      const options = await pageOptions("money");
+      if (request === undefined) {
+        return sendHtml(res, 404, renderErrorPage(options, 404, "收款请求不存在", `未找到收款请求：${requestId}`));
+      }
+      return sendHtml(res, 200, renderMoneyRequestPage({ request, options }));
+    }
+    const chatSessionMatch = /^\/chat\/([^/]+)$/.exec(pathname);
+    if (chatSessionMatch !== null) {
+      if (chatProvider === undefined) return chatUnavailablePage(res, "对话");
+      const sessionId = decodeURIComponent(chatSessionMatch[1] ?? "");
+      const session = await chatProvider.getSession(sessionId);
+      const options = await pageOptions("chat");
+      if (session === null) {
+        return sendHtml(res, 404, renderErrorPage(options, 404, "会话不存在", `未找到会话：${sessionId}`));
+      }
+      return sendHtml(res, 200, renderChatSessionPage({ session, options }));
+    }
+    const agentRoleMatch = /^\/agents\/([^/]+)$/.exec(pathname);
+    if (agentRoleMatch !== null) {
+      if (chatProvider === undefined) return chatUnavailablePage(res, "智能体对话记录");
+      const role = decodeURIComponent(agentRoleMatch[1] ?? "");
+      const [transcripts, runs] = await Promise.all([chatProvider.getAgentTranscripts(role), chatProvider.listRuns()]);
+      let agentInfo = null;
+      if (adminProvider !== undefined) {
+        try {
+          agentInfo = await Promise.resolve(adminProvider.getAgentDetail(role));
+        } catch {
+          agentInfo = null;
+        }
+      }
+      const options = await pageOptions("agents");
+      return sendHtml(res, 200, renderAgentRolePage({ role, title: chatAgentTitle(role), transcripts, agentInfo, runs, options }));
+    }
+    const runDetailMatch = /^\/runs\/([^/]+)$/.exec(pathname);
+    if (runDetailMatch !== null) {
+      if (chatProvider === undefined) return chatUnavailablePage(res, "run 证据");
+      const runId = decodeURIComponent(runDetailMatch[1] ?? "");
+      const run = await chatProvider.getRunDetail(runId);
+      const options = await pageOptions("run");
+      if (run === null) {
+        return sendHtml(res, 404, renderErrorPage(options, 404, "run 不存在", `未找到 run：${runId}`));
+      }
+      return sendHtml(res, 200, renderRunDetailPage({ run, options }));
+    }
+    if (pathname === "/system") {
+      if (systemProvider === undefined) return systemUnavailablePage(res, "系统总控");
+      const [status, supervisorMessages, epay] = await Promise.all([
+        systemProvider.getSystemStatus(),
+        systemProvider.supervisorMessages(),
+        systemProvider.getEpayConfig(),
+      ]);
+      const options = await pageOptions("system");
+      return sendHtml(res, 200, renderSystemPage({ status, supervisorMessages, epay, options }));
     }
     if (pathname.startsWith("/project/")) {
       const projectId = pathname.slice("/project/".length).trim();
@@ -614,6 +846,418 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   };
 
   // -------------------------------------------------------------------------
+  // 对话 / 智能体记录 / 证据 / 变现 / 模型配置 API（v1.2）
+  // -------------------------------------------------------------------------
+
+  const isChatApiPath = (pathname: string): boolean =>
+    pathname.startsWith("/api/chat/") ||
+    pathname === "/api/model-settings" ||
+    pathname === "/api/model-settings/sync" ||
+    pathname === "/api/prompts" ||
+    pathname.startsWith("/api/money/");
+
+  const requireChat = (res: ServerResponse): number | null => {
+    if (chatProvider !== undefined) return null;
+    return sendJson(res, 503, {
+      ok: false,
+      error: "chat_unavailable",
+      message:
+        "对话/变现 API 未启用：createConsoleServer 默认启用内置 createDemoChatProvider()；若显式传了 chatProvider: null，请改为传入 createDemoChatProvider() 或真实 Orchestrator 适配器",
+    });
+  };
+
+  const handleChatApi = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+    method: string,
+    pathname: string,
+    requestUrl: URL,
+  ): Promise<number | null> => {
+    if (!isChatApiPath(pathname)) return null;
+    const unavailable = requireChat(res);
+    if (unavailable !== null) return unavailable;
+    const chat = chatProvider;
+    if (chat === undefined) return null;
+    const isRead = method === "GET" || method === "HEAD";
+
+    const sessionMatch = /^\/api\/chat\/sessions\/([^/]+)(?:\/(messages|start|interrupt|resume|approvals))?$/.exec(pathname);
+    if (pathname === "/api/chat/sessions") {
+      if (isRead) return sendJson(res, 200, { ok: true, data: await chat.listSessions() });
+      if (method !== "POST") return methodNotAllowed(res, ["GET", "HEAD", "POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      try {
+        const session = await chat.createSession({
+          goal: readString(body.value.goal, ""),
+          budget_cny: Number(body.value.budget_cny ?? 0),
+          token_limit: Number(body.value.token_limit ?? 200_000),
+          mode: readString(body.value.mode, "demo"),
+        });
+        return sendJson(res, 200, { ok: true, data: session });
+      } catch (error) {
+        return sendJson(res, 400, { ok: false, error: "invalid_session", message: errorMessage(error) });
+      }
+    }
+
+    if (sessionMatch !== null) {
+      const sessionId = decodeURIComponent(sessionMatch[1] ?? "");
+      const action = sessionMatch[2];
+      if (action === undefined) {
+        if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+        const session = await chat.getSession(sessionId);
+        if (session === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到会话：${sessionId}` });
+        return sendJson(res, 200, { ok: true, data: session });
+      }
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      if (action === "start" || action === "interrupt" || action === "resume") {
+        const session =
+          action === "start"
+            ? await chat.startProject(sessionId)
+            : action === "interrupt"
+              ? await chat.interrupt(sessionId)
+              : await chat.resume(sessionId);
+        if (session === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到会话：${sessionId}` });
+        return sendJson(res, 200, { ok: true, data: session });
+      }
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      if (action === "messages") {
+        const text = readString(body.value.text, "");
+        if (text === "") return sendJson(res, 400, { ok: false, error: "invalid_message", message: "消息不能为空" });
+        try {
+          const session = await chat.sendMessage(sessionId, text);
+          if (session === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到会话：${sessionId}` });
+          return sendJson(res, 200, { ok: true, data: session });
+        } catch (error) {
+          return sendJson(res, 400, { ok: false, error: "invalid_message", message: errorMessage(error) });
+        }
+      }
+      // approvals
+      const step = Number(body.value.step ?? 0);
+      const decision = body.value.decision;
+      if (decision !== "approve" && decision !== "reject") {
+        return sendJson(res, 400, { ok: false, error: "invalid_decision", message: 'decision 只支持 "approve" / "reject"' });
+      }
+      try {
+        const session = await chat.decideApproval(sessionId, step, decision);
+        if (session === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到会话：${sessionId}` });
+        return sendJson(res, 200, { ok: true, data: session });
+      } catch (error) {
+        return sendJson(res, 400, { ok: false, error: "invalid_approval", message: errorMessage(error) });
+      }
+    }
+
+    if (pathname === "/api/chat/runs") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await chat.listRuns() });
+    }
+    const runDetailMatch = /^\/api\/chat\/runs\/([^/]+)$/.exec(pathname);
+    if (runDetailMatch !== null) {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      const runId = decodeURIComponent(runDetailMatch[1] ?? "");
+      const run = await chat.getRunDetail(runId);
+      if (run === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到 run：${runId}` });
+      return sendJson(res, 200, { ok: true, data: run });
+    }
+    const transcriptMatch = /^\/api\/chat\/agents\/([^/]+)\/transcripts$/.exec(pathname);
+    if (transcriptMatch !== null) {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      const role = decodeURIComponent(transcriptMatch[1] ?? "");
+      return sendJson(res, 200, { ok: true, data: await chat.getAgentTranscripts(role) });
+    }
+    if (pathname === "/api/chat/evidence") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      const runId = requestUrl.searchParams.get("run_id");
+      if (runId === null || runId === "") {
+        return sendJson(res, 400, { ok: false, error: "missing_run_id", message: "需要 query 参数 run_id" });
+      }
+      return sendJson(res, 200, { ok: true, data: await chat.listEvidence(runId) });
+    }
+
+    if (pathname === "/api/model-settings") {
+      if (isRead) return sendJson(res, 200, { ok: true, data: await chat.getModelSettings() });
+      if (method !== "PUT") return methodNotAllowed(res, ["GET", "HEAD", "PUT"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const providersRaw = body.value.providers;
+      const bindingsRaw = body.value.agent_bindings;
+      if (providersRaw !== undefined && !Array.isArray(providersRaw)) {
+        return sendJson(res, 400, { ok: false, error: "invalid_providers", message: "providers 必须是数组" });
+      }
+      if (bindingsRaw !== undefined && !Array.isArray(bindingsRaw)) {
+        return sendJson(res, 400, { ok: false, error: "invalid_bindings", message: "agent_bindings 必须是数组" });
+      }
+      const partial: {
+        providers?: ModelProviderConfig[];
+        agent_bindings?: AgentModelBinding[];
+        default_provider_id?: string;
+      } = {};
+      if (providersRaw !== undefined) partial.providers = providersRaw as ModelProviderConfig[];
+      if (bindingsRaw !== undefined) partial.agent_bindings = bindingsRaw as AgentModelBinding[];
+      if (typeof body.value.default_provider_id === "string") partial.default_provider_id = body.value.default_provider_id;
+      const result = await chat.saveModelSettings(partial);
+      if (!result.ok) {
+        return sendJson(res, 400, { ok: false, error: "invalid_model_settings", message: result.errors.join("；"), data: { errors: result.errors } });
+      }
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    if (pathname === "/api/model-settings/sync") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const result = await chat.syncKeysToAll();
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    if (pathname === "/api/prompts") {
+      if (isRead) {
+        const settings = await chat.getModelSettings();
+        return sendJson(res, 200, { ok: true, data: settings.prompts });
+      }
+      if (method !== "PUT") return methodNotAllowed(res, ["GET", "HEAD", "PUT"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const rawPrompts = body.value.prompts;
+      if (!Array.isArray(rawPrompts) || rawPrompts.length === 0) {
+        return sendJson(res, 400, { ok: false, error: "invalid_prompts", message: "prompts 必须是非空数组 [{id, content}]" });
+      }
+      const patches: Array<{ id: string; content: string }> = [];
+      for (const item of rawPrompts) {
+        if (item === null || typeof item !== "object") {
+          return sendJson(res, 400, { ok: false, error: "invalid_prompts", message: "prompts[] 必须是 {id, content}" });
+        }
+        const record = item as Record<string, unknown>;
+        patches.push({ id: readString(record.id, ""), content: typeof record.content === "string" ? record.content : "" });
+      }
+      const result = await chat.savePrompts(patches);
+      if (!result.ok) {
+        return sendJson(res, 400, { ok: false, error: "invalid_prompts", message: result.errors.join("；"), data: { errors: result.errors } });
+      }
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    if (pathname === "/api/money/requests") {
+      if (isRead) return sendJson(res, 200, { ok: true, data: await chat.listMoneyRequests() });
+      if (method !== "POST") return methodNotAllowed(res, ["GET", "HEAD", "POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const methodValue = readString(body.value.payment_method, "manual");
+      const paymentMethod = (MONEY_METHODS as readonly string[]).includes(methodValue) ? (methodValue as MoneyMethod) : null;
+      if (paymentMethod === null) {
+        return sendJson(res, 400, {
+          ok: false,
+          error: "invalid_method",
+          message: `payment_method 只支持：${MONEY_METHODS.join(" / ")}`,
+        });
+      }
+      const result = await chat.createMoneyRequest({
+        amount_cny: Number(body.value.amount_cny ?? 0),
+        client: readString(body.value.client, ""),
+        purpose: readString(body.value.purpose, ""),
+        payment_method: paymentMethod,
+      });
+      if (!result.ok) {
+        return sendJson(res, 400, { ok: false, error: "invalid_money_request", message: result.errors.join("；"), data: { errors: result.errors } });
+      }
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    const moneyConfirmMatch = /^\/api\/money\/requests\/([^/]+)\/confirm$/.exec(pathname);
+    if (moneyConfirmMatch !== null) {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const requestId = decodeURIComponent(moneyConfirmMatch[1] ?? "");
+      const by = readString(body.value.by, "人工确认（控制台）");
+      const result = await chat.confirmMoneyReceived(requestId, by);
+      if (!result.ok) {
+        const status = result.errors.some((line) => line.includes("不存在")) ? 404 : 400;
+        return sendJson(res, status, { ok: false, error: "confirm_failed", message: result.errors.join("；"), data: result });
+      }
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到对话/变现 API：${pathname}` });
+  };
+
+  // -------------------------------------------------------------------------
+  // 系统总控 API（v1.3）：supervisor 对话 / 程序 / 插件 / 日志 / 危险动作 / 易支付
+  // -------------------------------------------------------------------------
+
+  const isSystemApiPath = (pathname: string): boolean => pathname.startsWith("/api/system/");
+
+  const requireSystem = (res: ServerResponse): number | null => {
+    if (systemProvider !== undefined) return null;
+    return sendJson(res, 503, {
+      ok: false,
+      error: "system_unavailable",
+      message:
+        "系统总控 API 未启用：createConsoleServer 默认启用内置 createDemoSystemProvider()；若显式传了 systemProvider: null，请改为传入 createDemoSystemProvider() 或真实 supervisor/程序管理适配器",
+    });
+  };
+
+  const handleSystemApi = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+    method: string,
+    pathname: string,
+    requestUrl: URL,
+  ): Promise<number | null> => {
+    if (!isSystemApiPath(pathname)) return null;
+    const unavailable = requireSystem(res);
+    if (unavailable !== null) return unavailable;
+    const system = systemProvider;
+    if (system === undefined) return null;
+    const isRead = method === "GET" || method === "HEAD";
+
+    if (pathname === "/api/system/status") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await system.getSystemStatus() });
+    }
+
+    if (pathname === "/api/system/supervisor/messages") {
+      if (isRead) return sendJson(res, 200, { ok: true, data: await system.supervisorMessages() });
+      if (method !== "POST") return methodNotAllowed(res, ["GET", "HEAD", "POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      try {
+        const messages = await system.sendSupervisorMessage(readString(body.value.text, ""));
+        return sendJson(res, 200, { ok: true, data: messages });
+      } catch (error) {
+        return sendJson(res, 400, { ok: false, error: "invalid_message", message: errorMessage(error) });
+      }
+    }
+
+    if (pathname === "/api/system/logs") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      const limitText = requestUrl.searchParams.get("limit");
+      const limit = limitText !== null && /^\d+$/.test(limitText) ? Number.parseInt(limitText, 10) : undefined;
+      return sendJson(res, 200, { ok: true, data: await system.getSystemLogs(limit) });
+    }
+
+    const programActionMatch = /^\/api\/system\/programs\/([^/]+)\/action$/.exec(pathname);
+    if (programActionMatch !== null) {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const actionValue = body.value.action;
+      if (actionValue !== "start" && actionValue !== "stop" && actionValue !== "restart") {
+        return sendJson(res, 400, { ok: false, error: "invalid_action", message: 'action 只支持 "start" / "stop" / "restart"' });
+      }
+      const programId = decodeURIComponent(programActionMatch[1] ?? "");
+      const result = await system.programAction(programId, actionValue);
+      if (!result.ok) return sendJson(res, 400, { ok: false, error: "program_action_failed", message: result.message, data: result });
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    const pluginActionMatch = /^\/api\/system\/plugins\/([^/]+)\/action$/.exec(pathname);
+    if (pluginActionMatch !== null) {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      if (typeof body.value.enabled !== "boolean") {
+        return sendJson(res, 400, { ok: false, error: "invalid_body", message: "enabled 必须是布尔值" });
+      }
+      const pluginId = decodeURIComponent(pluginActionMatch[1] ?? "");
+      const result = await system.pluginAction(pluginId, body.value.enabled);
+      if (!result.ok) return sendJson(res, 400, { ok: false, error: "plugin_action_failed", message: result.message, data: result });
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    if (pathname === "/api/system/command") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const command = readString(body.value.command, "");
+      if (command === "") return sendJson(res, 400, { ok: false, error: "invalid_command", message: "command 不能为空" });
+      const result = await system.runQuickCommand(command);
+      if (!result.ok) return sendJson(res, 400, { ok: false, error: "command_failed", message: result.message, data: result });
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    if (pathname === "/api/system/danger/prepare") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const actionValue = body.value.action;
+      if (actionValue !== "delete_program" && actionValue !== "delete_plugin") {
+        return sendJson(res, 400, { ok: false, error: "invalid_action", message: 'action 只支持 "delete_program" / "delete_plugin"' });
+      }
+      const targetId = readString(body.value.target_id, "");
+      if (targetId === "") return sendJson(res, 400, { ok: false, error: "invalid_target", message: "target_id 不能为空" });
+      const confirm = await system.prepareDangerousAction({ action: actionValue, target_id: targetId });
+      if (!confirm.ok) return sendJson(res, 400, { ok: false, error: "danger_prepare_failed", message: confirm.errors.join("；"), data: confirm });
+      return sendJson(res, 200, { ok: true, data: confirm });
+    }
+
+    if (pathname === "/api/system/danger/execute") {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const actionValue = body.value.action;
+      if (actionValue !== "delete_program" && actionValue !== "delete_plugin") {
+        return sendJson(res, 400, { ok: false, error: "invalid_action", message: 'action 只支持 "delete_program" / "delete_plugin"' });
+      }
+      const result = await system.executeDangerousAction({
+        action: actionValue,
+        target_id: readString(body.value.target_id, ""),
+        confirm_token: readString(body.value.confirm_token, ""),
+        confirm_text: readString(body.value.confirm_text, ""),
+      });
+      if (!result.ok) return sendJson(res, 400, { ok: false, error: "danger_execute_rejected", message: result.message, data: result });
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    if (pathname === "/api/system/epay") {
+      if (isRead) return sendJson(res, 200, { ok: true, data: await system.getEpayConfig() });
+      if (method !== "PUT") return methodNotAllowed(res, ["GET", "HEAD", "PUT"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const partial: Partial<EpayConfig> = {};
+      if (typeof body.value.enabled === "boolean") partial.enabled = body.value.enabled;
+      if (body.value.mode === "demo" || body.value.mode === "live") partial.mode = body.value.mode;
+      for (const key of ["gateway_url", "merchant_id", "api_key_ref", "notify_url", "return_url"] as const) {
+        if (typeof body.value[key] === "string") partial[key] = body.value[key] as string;
+      }
+      if (Array.isArray(body.value.methods)) {
+        partial.methods = body.value.methods.filter((method): method is EpayMethod => method === "alipay" || method === "wxpay");
+      }
+      const result = await system.saveEpayConfig(partial);
+      if (!result.ok) return sendJson(res, 400, { ok: false, error: "invalid_epay_config", message: result.errors.join("；"), data: { errors: result.errors } });
+      return sendJson(res, 200, { ok: true, data: result });
+    }
+
+    return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到系统 API：${pathname}` });
+  };
+
+  // -------------------------------------------------------------------------
   // API 路由
   // -------------------------------------------------------------------------
   const handleApi = async (
@@ -625,6 +1269,10 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   ): Promise<number> => {
     const adminResult = await handleAdminApi(req, res, method, pathname, requestUrl);
     if (adminResult !== null) return adminResult;
+    const chatResult = await handleChatApi(req, res, method, pathname, requestUrl);
+    if (chatResult !== null) return chatResult;
+    const systemResult = await handleSystemApi(req, res, method, pathname, requestUrl);
+    if (systemResult !== null) return systemResult;
 
     const isRead = method === "GET" || method === "HEAD";
     const readOnlyRoute =
@@ -797,6 +1445,22 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
       return sendText(res, "text/javascript; charset=utf-8", ADMIN_JS);
     }
+    if (pathname === "/assets/chat.css") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/css; charset=utf-8", CHAT_CSS);
+    }
+    if (pathname === "/assets/chat.js") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/javascript; charset=utf-8", CHAT_JS);
+    }
+    if (pathname === "/assets/system.css") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/css; charset=utf-8", SYSTEM_CSS);
+    }
+    if (pathname === "/assets/system.js") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/javascript; charset=utf-8", SYSTEM_JS);
+    }
     if (pathname === "/favicon.ico") {
       res.writeHead(204, baseHeaders());
       res.end();
@@ -816,11 +1480,13 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       return sendJson(res, 200, {
         ok: true,
         service: "steward-console",
-        version: "1.1.0",
+        version: "1.3.0",
         host,
         port,
         local_only: true,
         admin_enabled: adminProvider !== undefined,
+        chat_enabled: chatProvider !== undefined,
+        system_enabled: systemProvider !== undefined,
         mode,
         halted: status !== null && status.halted === true,
         started_at: startedAt,
@@ -893,6 +1559,8 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     token,
     provider,
     ...(adminProvider === undefined ? {} : { adminProvider }),
+    ...(chatProvider === undefined ? {} : { chatProvider }),
+    ...(systemProvider === undefined ? {} : { systemProvider }),
     close,
   };
 }

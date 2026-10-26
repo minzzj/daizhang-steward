@@ -44,3 +44,7 @@ desktop.ini
 
 # Local delivery snapshots (never commit H: copies)
 交付/
+
+# system-demo runtime heartbeat
+examples/system-demo/heartbeat/
+

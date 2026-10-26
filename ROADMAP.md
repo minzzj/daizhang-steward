@@ -166,3 +166,13 @@
 - 重活交给子代理/Agent Teams，Lead 保留契约与最终验收。
 
 _Last updated: 2026-10-26 (v1.0.0 released — two-phase delivery complete; optional future extensions only)._
+
+
+## v1.3.0 — 2026-10-26（已完成）
+
+- 多模型与 API 密钥（一键同步、各智能体独立模型、密钥只存引用）
+- 两层总调度：supervisor 系统总控 + conductor 项目总调度 + 10 专项智能体
+- 控制台：/chat 对话与新建项目/打断恢复/审批、每轮摘要、证据灯箱、/system 系统总控、/money 变现与易支付、/settings 模型与提示词
+- 系统动作层：受管应用/插件、风险分级、二次确认令牌、回收站备份、审计
+- 变现：收款请求/人工确认到账/账本 6 要素/易支付 MD5 验签到账
+- CLI：chat/supervisor/project/system/money；测试 290 条；E2E 25 步 303 检查

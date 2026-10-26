@@ -1,0 +1,3072 @@
+{
+  "suite": "e2e-console",
+  "version": "1.3.0",
+  "ok": true,
+  "as_of": "2026-10-26T15:22:32.081Z",
+  "headless": false,
+  "browser": {
+    "channel": "chrome",
+    "version": "155.0.8059.85",
+    "fallbacks": [],
+    "headless": false
+  },
+  "console": {
+    "url": "http://127.0.0.1:60861",
+    "host": "127.0.0.1",
+    "port": 60861,
+    "provider": "demo",
+    "admin_provider": "demo",
+    "chat_provider": "demo",
+    "system_provider": "demo",
+    "console_boot_ms": 67,
+    "first_page_load_ms": 468
+  },
+  "stop_limit_ms": 10000,
+  "measured_stop_ms": 81,
+  "steps": [
+    {
+      "action": "open-console",
+      "ok": true,
+      "durationMs": 468,
+      "evidence": [
+        "screenshots/001-open-console.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "控制台首页 HTTP 200（实际 200）"
+        },
+        {
+          "ok": true,
+          "message": "页面标题含「本地控制台」"
+        },
+        {
+          "ok": true,
+          "message": "专业版左侧导航已渲染"
+        },
+        {
+          "ok": true,
+          "message": "顶部状态栏已渲染"
+        }
+      ]
+    },
+    {
+      "action": "dashboard-load",
+      "ok": true,
+      "durationMs": 121,
+      "evidence": [
+        "screenshots/002-dashboard-load.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "看板应返回 HTTP 200，实际 200"
+        },
+        {
+          "ok": true,
+          "message": "全局显示「只监听 127.0.0.1」"
+        },
+        {
+          "ok": true,
+          "message": "全局显示「本地模式」"
+        },
+        {
+          "ok": true,
+          "message": "预算条：月度预算可见",
+          "detail": "月度预算 已用 ¥18,600.00 / ¥50,000.00（剩 ¥31,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "预算条：项目预算可见",
+          "detail": "项目预算（本月项目支出） 已用 ¥8,600.00 / ¥20,000.00（剩 ¥11,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "预算条：单笔上限可见",
+          "detail": "单笔上限 上限 ¥15,000.00 · 本月最大单笔 ¥12,000.00"
+        },
+        {
+          "ok": true,
+          "message": "预算条元素可见"
+        },
+        {
+          "ok": true,
+          "message": "项目卡 ≥3（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "项目卡含客户与进度"
+        },
+        {
+          "ok": true,
+          "message": "任务列表非空（实际 10 条）"
+        },
+        {
+          "ok": true,
+          "message": "任务数文案与任务行一致（文案「共 10 个任务」，列表 10 条）"
+        },
+        {
+          "ok": true,
+          "message": "任务按代理分组（实际 4 组）"
+        },
+        {
+          "ok": true,
+          "message": "代理状态行 ≥4（实际 4）"
+        },
+        {
+          "ok": true,
+          "message": "L0 摘要可见",
+          "detail": "本月 3 个项目；待批 3 张；预算余量 ¥31,400.00"
+        }
+      ]
+    },
+    {
+      "action": "project-timeline",
+      "ok": true,
+      "durationMs": 200,
+      "evidence": [
+        "screenshots/003-project-timeline.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "项目标题非空（示例客户官网改版）"
+        },
+        {
+          "ok": true,
+          "message": "项目时间线 ≥5 条（实际 6）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含证据入口（实际 2 个）"
+        },
+        {
+          "ok": true,
+          "message": "证据路径可见（runs/run-20261023-101500-demo1/screenshots/007-homepage.png）"
+        },
+        {
+          "ok": true,
+          "message": "证据类型可见（screenshot）"
+        },
+        {
+          "ok": true,
+          "message": "证据置信度可见（certain）"
+        },
+        {
+          "ok": true,
+          "message": "置信度取值合理"
+        }
+      ]
+    },
+    {
+      "action": "ledger-facts",
+      "ok": true,
+      "durationMs": 180,
+      "evidence": [
+        "screenshots/004-ledger-facts.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "账本 ≥4 笔（实际 5）"
+        },
+        {
+          "ok": true,
+          "message": "账本详情抽屉已打开"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：金额 有值",
+          "detail": "¥2,800.00"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：收付方 有值",
+          "detail": "示例设计素材工作室（供应商）"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：依据 有值",
+          "detail": "审批卡 ap-001：官网素材采购（图标与插画包）"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：审批人 有值",
+          "detail": "客户 王示例（书面确认）"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：回执 有值",
+          "detail": "rcpt-20261022-001"
+        },
+        {
+          "ok": true,
+          "message": "6 要素：所属项目 有值",
+          "detail": "示例客户官网改版 · prj-001"
+        }
+      ]
+    },
+    {
+      "action": "approvals-decide",
+      "ok": true,
+      "durationMs": 517,
+      "evidence": [
+        "screenshots/005-approvals-decide.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "待批准审批卡 ≥2（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "审批卡含金额与证据"
+        },
+        {
+          "ok": true,
+          "message": "审批卡含到期倒计时",
+          "detail": "剩余 01:59:57"
+        },
+        {
+          "ok": true,
+          "message": "批准后状态即时更新（ap-001 → 已批准）"
+        },
+        {
+          "ok": true,
+          "message": "驳回后状态即时更新（ap-002 → 已驳回）"
+        },
+        {
+          "ok": true,
+          "message": "刷新后 approved 状态仍在（服务端状态）"
+        },
+        {
+          "ok": true,
+          "message": "刷新后 rejected 状态仍在（服务端状态）"
+        }
+      ]
+    },
+    {
+      "action": "takeover-stop",
+      "ok": true,
+      "durationMs": 219,
+      "evidence": [
+        "screenshots/006-takeover-stop.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "初始状态 halted=false"
+        },
+        {
+          "ok": true,
+          "message": "接管大按钮可见"
+        },
+        {
+          "ok": true,
+          "message": "接管停止实测 81ms ≤ 10000ms"
+        },
+        {
+          "ok": true,
+          "message": "measured_stop_ms 有效（81）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：开放订单 有内容（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：待处理对话 有内容（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：应付款 有内容（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：凭据引用 有内容（1 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包：风险 有内容（3 条）"
+        },
+        {
+          "ok": true,
+          "message": "接管包覆盖度可见（部分覆盖（partial））"
+        },
+        {
+          "ok": true,
+          "message": "接管计时可见（已停止 00:00:03）"
+        },
+        {
+          "ok": true,
+          "message": "页面显示实测停止耗时（实测停止耗时 11 ms（要求 ≤10000 ms））"
+        },
+        {
+          "ok": true,
+          "message": "halted 后全局显示接管横幅"
+        }
+      ]
+    },
+    {
+      "action": "takeover-resume",
+      "ok": true,
+      "durationMs": 120,
+      "evidence": [
+        "screenshots/007-takeover-resume.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "resume 后恢复空闲态（halted=false）"
+        },
+        {
+          "ok": true,
+          "message": "resume 后全局接管横幅消失"
+        },
+        {
+          "ok": true,
+          "message": "显示恢复时间（已于 2026-10-26 23:21 恢复运行（halted=false））"
+        }
+      ]
+    },
+    {
+      "action": "monthly-report",
+      "ok": true,
+      "durationMs": 166,
+      "evidence": [
+        "screenshots/008-monthly-report.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "月报：收入 可见（¥32,000.00）"
+        },
+        {
+          "ok": true,
+          "message": "月报：成本 可见（¥18,600.00）"
+        },
+        {
+          "ok": true,
+          "message": "月报：毛利 可见（¥13,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "月报：预算余量 可见（¥31,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "合规事件 ≥2 条（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "下月提案 ≥2 条（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "as_of 可见（2026-10-26 23:21）"
+        },
+        {
+          "ok": true,
+          "message": "coverage 可见（部分覆盖（partial））"
+        }
+      ]
+    },
+    {
+      "action": "local-only",
+      "ok": true,
+      "durationMs": 1608,
+      "evidence": [
+        "screenshots/009-local-only.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "页面文本含 127.0.0.1"
+        },
+        {
+          "ok": true,
+          "message": "页面文本含「本地」"
+        },
+        {
+          "ok": true,
+          "message": "服务端只绑定 127.0.0.1（实际 127.0.0.1）"
+        },
+        {
+          "ok": true,
+          "message": "控制台 host=127.0.0.1（实际 127.0.0.1）"
+        },
+        {
+          "ok": true,
+          "message": "局域网地址 192.168.3.123:60861 不可访问（只监听回环）"
+        },
+        {
+          "ok": true,
+          "message": "无 X-Steward-Token 写操作被拒（实际 401）"
+        },
+        {
+          "ok": true,
+          "message": "读接口无需 token（/api/overview → 200）"
+        },
+        {
+          "ok": true,
+          "message": "无外链请求（86 个请求全部同源 127.0.0.1）",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "message": "同源静态资源已加载（64 个 /assets/ 请求）"
+        },
+        {
+          "ok": true,
+          "message": "无页面 JS 错误（实际 0）",
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "action": "pro-nav-status",
+      "ok": true,
+      "durationMs": 75,
+      "evidence": [
+        "screenshots/010-pro-nav-status.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "左侧固定导航可见"
+        },
+        {
+          "ok": true,
+          "message": "导航出现新入口「智能体」（#nav-agents）"
+        },
+        {
+          "ok": true,
+          "message": "导航出现新入口「后台」（#nav-backend）"
+        },
+        {
+          "ok": true,
+          "message": "导航出现新入口「配置」（#nav-settings）"
+        },
+        {
+          "ok": true,
+          "message": "导航出现新入口「数据」（#nav-data）"
+        },
+        {
+          "ok": true,
+          "message": "顶部状态栏可见"
+        },
+        {
+          "ok": true,
+          "message": "顶部状态栏：运行模式徽章=体验模式（实际「体验模式」）"
+        },
+        {
+          "ok": true,
+          "message": "顶部状态栏：预算余量可见（¥31,400.00）"
+        },
+        {
+          "ok": true,
+          "message": "顶部状态栏：Token 余量可见（6.75M）"
+        },
+        {
+          "ok": true,
+          "message": "顶部状态栏：接管状态=运行中（实际「运行中」）"
+        },
+        {
+          "ok": true,
+          "message": "顶部状态栏：最近事件时间可见（22:55）"
+        }
+      ]
+    },
+    {
+      "action": "settings-config",
+      "ok": true,
+      "durationMs": 4961,
+      "evidence": [
+        "screenshots/011-settings-config.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "配置中心三模式卡片：demo"
+        },
+        {
+          "ok": true,
+          "message": "配置中心三模式卡片：personal"
+        },
+        {
+          "ok": true,
+          "message": "配置中心三模式卡片：enterprise"
+        },
+        {
+          "ok": true,
+          "message": "「支付与银行卡」分组可见（用户明确要求）"
+        },
+        {
+          "ok": true,
+          "message": "个人渠道分组（微信/支付宝/个人银行卡）可见"
+        },
+        {
+          "ok": true,
+          "message": "支付渠道行可见：wechat_pay"
+        },
+        {
+          "ok": true,
+          "message": "支付渠道行可见：alipay"
+        },
+        {
+          "ok": true,
+          "message": "支付渠道行可见：personal_bank_card"
+        },
+        {
+          "ok": true,
+          "message": "支付分组含「AI 不代签」说明"
+        },
+        {
+          "ok": true,
+          "message": "收款账户（个人卡/微信/支付宝掩码）可见"
+        },
+        {
+          "ok": true,
+          "message": "体验模式 Token 上限=10,000,000（实际 10000000）"
+        },
+        {
+          "ok": true,
+          "message": "功能开关逐项可配置（14 项）"
+        },
+        {
+          "ok": true,
+          "message": "切换后顶部状态=个人模式（实际「个人模式」）"
+        },
+        {
+          "ok": true,
+          "message": "个人模式卡片为选中态"
+        },
+        {
+          "ok": true,
+          "message": "个人渠道分组标记为适用"
+        },
+        {
+          "ok": true,
+          "message": "个人模式渠道已启用：wechat_pay"
+        },
+        {
+          "ok": true,
+          "message": "渠道 wechat_pay 仅人工审批（仅人工审批）"
+        },
+        {
+          "ok": true,
+          "message": "渠道 wechat_pay 显示掩码账户（wxid_****demo88）"
+        },
+        {
+          "ok": true,
+          "message": "个人模式渠道已启用：alipay"
+        },
+        {
+          "ok": true,
+          "message": "渠道 alipay 仅人工审批（仅人工审批）"
+        },
+        {
+          "ok": true,
+          "message": "渠道 alipay 显示掩码账户（dem***@example.com）"
+        },
+        {
+          "ok": true,
+          "message": "个人模式渠道已启用：personal_bank_card"
+        },
+        {
+          "ok": true,
+          "message": "渠道 personal_bank_card 仅人工审批（仅人工审批）"
+        },
+        {
+          "ok": true,
+          "message": "渠道 personal_bank_card 显示掩码账户（招商银行 **** **** 8888）"
+        },
+        {
+          "ok": true,
+          "message": "收款账户：个人账户类型可见"
+        },
+        {
+          "ok": true,
+          "message": "个人模式 Token 上限=2,000,000（实际 2000000）"
+        },
+        {
+          "ok": true,
+          "message": "scout 功能默认启用"
+        },
+        {
+          "ok": true,
+          "message": "保存 scout 禁用成功（已保存配置（23:22:05））"
+        },
+        {
+          "ok": true,
+          "message": "刷新后 scout 仍为禁用（配置持久化）"
+        },
+        {
+          "ok": true,
+          "message": "scout 功能行显示已禁用（已禁用）"
+        },
+        {
+          "ok": true,
+          "message": "勾选「0 元极限模式」后提示可见"
+        },
+        {
+          "ok": true,
+          "message": "0 元提示文案可读（0 元极限模式：任何支出都会被拒绝，只允许免费本地动作（演示/检索/本地文件）。）"
+        },
+        {
+          "ok": true,
+          "message": "非法配置保存时显示校验错误（不静默失败）"
+        },
+        {
+          "ok": true,
+          "message": "校验错误文案可读（保存失败：单步 Token 上限不能超过总上限）"
+        }
+      ]
+    },
+    {
+      "action": "agents-center",
+      "ok": true,
+      "durationMs": 247,
+      "evidence": [
+        "screenshots/012-agents-center.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "智能体 ≥8 个（实际 12）"
+        },
+        {
+          "ok": true,
+          "message": "含智能体：conductor"
+        },
+        {
+          "ok": true,
+          "message": "含智能体：operator"
+        },
+        {
+          "ok": true,
+          "message": "含智能体：harness"
+        },
+        {
+          "ok": true,
+          "message": "含智能体：reviewer"
+        },
+        {
+          "ok": true,
+          "message": "含智能体：backend"
+        },
+        {
+          "ok": true,
+          "message": "含智能体：scout"
+        },
+        {
+          "ok": true,
+          "message": "harness 显示为「写代码 Harness」"
+        },
+        {
+          "ok": true,
+          "message": "backend 显示为「后台值守」"
+        },
+        {
+          "ok": true,
+          "message": "企业专属智能体在个人模式显示「该模式不适用」"
+        },
+        {
+          "ok": true,
+          "message": "卡片含今日动作数"
+        },
+        {
+          "ok": true,
+          "message": "卡片含 Token 消耗"
+        },
+        {
+          "ok": true,
+          "message": "卡片最近日志 1–3 条（实际 3）"
+        },
+        {
+          "ok": true,
+          "message": "点击智能体可展开详情"
+        },
+        {
+          "ok": true,
+          "message": "详情含 Token 限额"
+        },
+        {
+          "ok": true,
+          "message": "详情含工具清单"
+        }
+      ]
+    },
+    {
+      "action": "backend-flow",
+      "ok": true,
+      "durationMs": 791,
+      "evidence": [
+        "screenshots/013-backend-flow.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "后台按 run 分组（4 个 run）"
+        },
+        {
+          "ok": true,
+          "message": "全流程时间线 ≥5 条事件（实际 19）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段「plan」（4 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段「action」（4 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段「observe」（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段「verify」（3 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段「evidence」（4 条）"
+        },
+        {
+          "ok": true,
+          "message": "运行队列可见（3 项）"
+        },
+        {
+          "ok": true,
+          "message": "Token/预算消耗可见"
+        },
+        {
+          "ok": true,
+          "message": "异常/接管记录可见"
+        },
+        {
+          "ok": true,
+          "message": "事件流过滤生效（action 可见 4 / 4）"
+        },
+        {
+          "ok": true,
+          "message": "流程事件含证据引用入口"
+        },
+        {
+          "ok": true,
+          "message": "展开证据路径可见（runs/run-20261023-101500-demo1/screenshots/007-homepage.png）"
+        },
+        {
+          "ok": true,
+          "message": "展开证据类型可见（screenshot）"
+        }
+      ]
+    },
+    {
+      "action": "data-manage",
+      "ok": true,
+      "durationMs": 3476,
+      "evidence": [
+        "screenshots/014-data-manage.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "数据统计：运行记录 46"
+        },
+        {
+          "ok": true,
+          "message": "数据统计：证据文件 187"
+        },
+        {
+          "ok": true,
+          "message": "数据统计：配置更新时间可见（2026-10-26 23:22）"
+        },
+        {
+          "ok": true,
+          "message": "清空数据需二次确认（确认框弹出）"
+        },
+        {
+          "ok": true,
+          "message": "确认框标题说明清空"
+        },
+        {
+          "ok": true,
+          "message": "取消后不执行清空"
+        },
+        {
+          "ok": true,
+          "message": "取消后数据未变化"
+        },
+        {
+          "ok": true,
+          "message": "确认清空后运行记录归零（实际 0）"
+        },
+        {
+          "ok": true,
+          "message": "确认清空后证据文件归零（实际 0）"
+        },
+        {
+          "ok": true,
+          "message": "清空后显示「空档案」引导"
+        },
+        {
+          "ok": true,
+          "message": "空档案文案可读"
+        },
+        {
+          "ok": true,
+          "message": "重置为演示数据后记录恢复（46）"
+        },
+        {
+          "ok": true,
+          "message": "重置后空档案引导消失"
+        }
+      ]
+    },
+    {
+      "action": "pro-sanity",
+      "ok": true,
+      "durationMs": 75,
+      "evidence": [
+        "screenshots/015-pro-sanity.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "全程无页面 JS 错误（实际 0）",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "message": "GET /api/config 200（实际 200）"
+        },
+        {
+          "ok": true,
+          "message": "配置持久化：运行模式=personal（实际 personal）"
+        },
+        {
+          "ok": true,
+          "message": "配置持久化：scout 功能=禁用"
+        },
+        {
+          "ok": true,
+          "message": "配置持久化：禁用原因已保存"
+        },
+        {
+          "ok": true,
+          "message": "配置持久化：收款账户=个人类型"
+        },
+        {
+          "ok": true,
+          "message": "支付配置：AI 不代签（固定 false）"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/agents 返回 12 个智能体"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/data/stats：数据已重置为演示态"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/flow 返回 19 条事件"
+        },
+        {
+          "ok": true,
+          "message": "全程无外链请求（220 个请求全部同源）",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "message": "专业版样式已同源加载（pro.css）"
+        },
+        {
+          "ok": true,
+          "message": "专业版脚本已同源加载（admin.js）"
+        },
+        {
+          "ok": true,
+          "message": "无 X-Steward-Token 的管理写操作被拒（实际 401）"
+        },
+        {
+          "ok": true,
+          "message": "未授权请求未修改数据（仍为演示态）"
+        }
+      ]
+    },
+    {
+      "action": "chat-open",
+      "ok": true,
+      "durationMs": 215,
+      "evidence": [
+        "screenshots/016-chat-open.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "左侧导航出现「对话」入口"
+        },
+        {
+          "ok": true,
+          "message": "左侧导航出现「变现」入口"
+        },
+        {
+          "ok": true,
+          "message": "左侧导航出现「系统」入口"
+        },
+        {
+          "ok": true,
+          "message": "会话记录列表可见（2 个）"
+        },
+        {
+          "ok": true,
+          "message": "新建项目参数：目标/预算/Token 上限/模式 可见"
+        },
+        {
+          "ok": true,
+          "message": "对话页说明总调度会先拆解计划"
+        }
+      ]
+    },
+    {
+      "action": "chat-create-project",
+      "ok": true,
+      "durationMs": 995,
+      "evidence": [
+        "screenshots/017-chat-create-project.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "创建后进入会话详情（http://127.0.0.1:60861/chat/chat-010）"
+        },
+        {
+          "ok": true,
+          "message": "会话显示我的目标"
+        },
+        {
+          "ok": true,
+          "message": "会话显示预算上限 2,600.00"
+        },
+        {
+          "ok": true,
+          "message": "会话显示 Token 上限 180,000"
+        },
+        {
+          "ok": true,
+          "message": "总调度生成计划 ≥4 步（实际 5）"
+        },
+        {
+          "ok": true,
+          "message": "对话含用户消息 + 总调度拆解回复（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "总调度回复包含计划说明"
+        },
+        {
+          "ok": true,
+          "message": "每轮含简略摘要（2 条摘要）"
+        },
+        {
+          "ok": true,
+          "message": "初始状态=计划中"
+        },
+        {
+          "ok": true,
+          "message": "点「开始执行」后状态=执行中"
+        },
+        {
+          "ok": true,
+          "message": "执行后出现 run 详情链接"
+        }
+      ]
+    },
+    {
+      "action": "chat-interrupt-resume",
+      "ok": true,
+      "durationMs": 2805,
+      "evidence": [
+        "screenshots/018-chat-interrupt-resume.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "打断后状态=已打断（暂停）"
+        },
+        {
+          "ok": true,
+          "message": "出现「恢复执行」按钮"
+        },
+        {
+          "ok": true,
+          "message": "恢复后状态=执行中"
+        },
+        {
+          "ok": true,
+          "message": "关键步骤出现审批卡"
+        },
+        {
+          "ok": true,
+          "message": "批准后状态=已完成"
+        },
+        {
+          "ok": true,
+          "message": "批准后审批卡消失"
+        },
+        {
+          "ok": true,
+          "message": "批准后计划步骤已完成（4 步 done）"
+        }
+      ]
+    },
+    {
+      "action": "chat-run-evidence",
+      "ok": true,
+      "durationMs": 587,
+      "evidence": [
+        "screenshots/020-chat-run-evidence.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "会话可跳转 run 详情（/runs/run-chat-chat-010）"
+        },
+        {
+          "ok": true,
+          "message": "run 时间线 ≥5 条事件（实际 6）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段 plan（1 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段 action（2 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段 observe（1 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段 verify（1 条）"
+        },
+        {
+          "ok": true,
+          "message": "时间线含阶段 evidence（1 条）"
+        },
+        {
+          "ok": true,
+          "message": "证据截图缩略图 ≥2 张（实际 2）"
+        },
+        {
+          "ok": true,
+          "message": "report.md 已渲染（含运行报告标题）"
+        },
+        {
+          "ok": true,
+          "message": "日志 evidence 可展开查看（console.log 内容）"
+        },
+        {
+          "ok": true,
+          "message": "JSON evidence 可展开查看（events.jsonl）"
+        },
+        {
+          "ok": true,
+          "message": "各 agent 对话摘要可见（4 个 agent）"
+        },
+        {
+          "ok": true,
+          "message": "run 内包含写代码 Harness 的对话摘要"
+        },
+        {
+          "ok": true,
+          "message": "点击缩略图打开证据大图（灯箱）"
+        },
+        {
+          "ok": true,
+          "message": "大图为内联 SVG（无外链请求）"
+        },
+        {
+          "ok": true,
+          "message": "大图显示证据标题"
+        },
+        {
+          "ok": true,
+          "message": "关闭大图后灯箱隐藏"
+        }
+      ]
+    },
+    {
+      "action": "agent-transcript",
+      "ok": true,
+      "durationMs": 188,
+      "evidence": [
+        "screenshots/021-agent-transcript.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "智能体详情页标题=写代码 Harness"
+        },
+        {
+          "ok": true,
+          "message": "智能体对话轮次可见（4 轮）"
+        },
+        {
+          "ok": true,
+          "message": "每轮含输入/输出摘要"
+        },
+        {
+          "ok": true,
+          "message": "每轮显示 Token 消耗"
+        },
+        {
+          "ok": true,
+          "message": "智能体详情显示状态/自主等级/模型"
+        },
+        {
+          "ok": true,
+          "message": "详情页显示轮次合计"
+        },
+        {
+          "ok": true,
+          "message": "轮次可跳证据（4 条证据引用）"
+        }
+      ]
+    },
+    {
+      "action": "money-epay",
+      "ok": true,
+      "durationMs": 3468,
+      "evidence": [
+        "screenshots/024-money-epay.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "变现页说明：演示渠道未接真实支付"
+        },
+        {
+          "ok": true,
+          "message": "变现页说明：此前 ¥10 只是测试金额"
+        },
+        {
+          "ok": true,
+          "message": "收款账户/渠道摘要可见（4 行，含易支付）"
+        },
+        {
+          "ok": true,
+          "message": "易支付设置分组可见（/money）"
+        },
+        {
+          "ok": true,
+          "message": "易支付默认 demo 模式（不真实扣款）"
+        },
+        {
+          "ok": true,
+          "message": "易支付设置保存成功"
+        },
+        {
+          "ok": true,
+          "message": "刷新后易支付网关已持久化"
+        },
+        {
+          "ok": true,
+          "message": "刷新后商户 ID 已持久化（密钥只存引用）"
+        },
+        {
+          "ok": true,
+          "message": "易支付收款请求已创建（待收款）"
+        },
+        {
+          "ok": true,
+          "message": "收款请求金额正确（¥1,288.00）"
+        },
+        {
+          "ok": true,
+          "message": "易支付跳转链接已生成（含网关/金额/out_trade_no）"
+        },
+        {
+          "ok": true,
+          "message": "易支付二维码占位可见"
+        },
+        {
+          "ok": true,
+          "message": "二维码为内联占位（无外链请求）"
+        },
+        {
+          "ok": true,
+          "message": "请求标注易支付渠道"
+        },
+        {
+          "ok": true,
+          "message": "人工确认到账后状态=已到账"
+        },
+        {
+          "ok": true,
+          "message": "确认到账后显示已记入账本（ledger_entry_id）"
+        },
+        {
+          "ok": true,
+          "message": "账本新增易支付收入 ¥1,288.00"
+        },
+        {
+          "ok": true,
+          "message": "账本收入含客户名（6 要素）"
+        }
+      ]
+    },
+    {
+      "action": "settings-models-prompts",
+      "ok": true,
+      "durationMs": 3671,
+      "evidence": [
+        "screenshots/025-settings-models-prompts.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "多模型 provider ≥3（实际 3：DeepSeek/OpenAI 兼容/本地）"
+        },
+        {
+          "ok": true,
+          "message": "模型分组含 DeepSeek provider"
+        },
+        {
+          "ok": true,
+          "message": "模型分组含 OpenAI 兼容 provider"
+        },
+        {
+          "ok": true,
+          "message": "API 密钥只显示掩码/引用"
+        },
+        {
+          "ok": true,
+          "message": "系统提示词分组说明校验规则"
+        },
+        {
+          "ok": true,
+          "message": "总调度提示词可编辑"
+        },
+        {
+          "ok": true,
+          "message": "超级总调度提示词可编辑（v1.3）"
+        },
+        {
+          "ok": true,
+          "message": "模型分组含 supervisor 的模型绑定"
+        },
+        {
+          "ok": true,
+          "message": "智能体开关分组含 supervisor"
+        },
+        {
+          "ok": true,
+          "message": "支付分组含易支付字段（/settings）"
+        },
+        {
+          "ok": true,
+          "message": "提示词非法时显示校验错误"
+        },
+        {
+          "ok": true,
+          "message": "校验错误说明长度要求"
+        },
+        {
+          "ok": true,
+          "message": "模型配置保存成功"
+        },
+        {
+          "ok": true,
+          "message": "一键同步密钥成功"
+        },
+        {
+          "ok": true,
+          "message": "同步状态更新为已同步"
+        },
+        {
+          "ok": true,
+          "message": "系统提示词保存成功"
+        },
+        {
+          "ok": true,
+          "message": "刷新后提示词修改已持久化"
+        },
+        {
+          "ok": true,
+          "message": "刷新后模型绑定已持久化"
+        }
+      ]
+    },
+    {
+      "action": "system-control",
+      "ok": true,
+      "durationMs": 3869,
+      "evidence": [
+        "screenshots/027-system-control.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "与超级总调度对话记录可见（3 条消息）"
+        },
+        {
+          "ok": true,
+          "message": "supervisor 自我介绍可见（两层结构/危险动作规则）"
+        },
+        {
+          "ok": true,
+          "message": "两层结构：L1 超级总调度 + L2 项目总调度 可见"
+        },
+        {
+          "ok": true,
+          "message": "第 3 层专项智能体 ≥10（实际 10）"
+        },
+        {
+          "ok": true,
+          "message": "受管程序列表可见（5 个）"
+        },
+        {
+          "ok": true,
+          "message": "插件列表可见（5 个）"
+        },
+        {
+          "ok": true,
+          "message": "各 agent 当前模型/Token 可见（12 行，含 supervisor）"
+        },
+        {
+          "ok": true,
+          "message": "模型列表含超级总调度"
+        },
+        {
+          "ok": true,
+          "message": "全部日志入口可见（6 条日志）"
+        },
+        {
+          "ok": true,
+          "message": "快捷命令示例 ≥8（8 个）"
+        },
+        {
+          "ok": true,
+          "message": "发送命令后 supervisor 回复（3 → 5 条）"
+        },
+        {
+          "ok": true,
+          "message": "快捷命令执行后写入系统日志"
+        },
+        {
+          "ok": true,
+          "message": "插件启用/禁用生效（false → true）"
+        }
+      ]
+    },
+    {
+      "action": "system-danger-confirm",
+      "ok": true,
+      "durationMs": 2287,
+      "evidence": [
+        "screenshots/029-system-danger-confirm.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "删除程序触发危险动作二次确认弹窗"
+        },
+        {
+          "ok": true,
+          "message": "弹窗展示风险说明（删除程序会立即停止该进程并移除管理条目；正在执行的任务会被中断，可能导致 run…）"
+        },
+        {
+          "ok": true,
+          "message": "弹窗展示备份路径（backups/system/programs/prog-scout-worker-2026-10-26T152228.json）"
+        },
+        {
+          "ok": true,
+          "message": "弹窗展示确认 token（DEL-N-0007）"
+        },
+        {
+          "ok": true,
+          "message": "错误确认 token 被拒绝（显示错误）"
+        },
+        {
+          "ok": true,
+          "message": "拒绝后弹窗保留（未执行删除）"
+        },
+        {
+          "ok": true,
+          "message": "二次确认后删除成功（程序 5 → 4）"
+        },
+        {
+          "ok": true,
+          "message": "被删除程序已从列表移除"
+        },
+        {
+          "ok": true,
+          "message": "危险动作写入系统日志（审计）"
+        }
+      ]
+    },
+    {
+      "action": "v12-sanity",
+      "ok": true,
+      "durationMs": 93,
+      "evidence": [
+        "screenshots/030-v12-sanity.png"
+      ],
+      "checks": [
+        {
+          "ok": true,
+          "message": "v1.2/v1.3 流程全程无页面 JS 错误（0）",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "message": "health version=1.3.0（实际 1.3.0）"
+        },
+        {
+          "ok": true,
+          "message": "health 标记 chat_enabled/system_enabled=true"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/chat/sessions（3 个会话）"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/chat/runs（3 个 run）"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/chat/agents/:role/transcripts 返回记录"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/chat/evidence 返回证据列表"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/system/status（程序 4 个）"
+        },
+        {
+          "ok": true,
+          "message": "系统状态含各 agent 模型（12 个）"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/system/epay：易支付配置持久化（demo）"
+        },
+        {
+          "ok": true,
+          "message": "易支付只存密钥引用（无明文）"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/model-settings：密钥已同步"
+        },
+        {
+          "ok": true,
+          "message": "模型绑定已持久化（harness → OpenAI 兼容）"
+        },
+        {
+          "ok": true,
+          "message": "系统提示词已持久化（含 E2E 标记）"
+        },
+        {
+          "ok": true,
+          "message": "GET /api/money/requests：易支付请求已到账并写入账本"
+        },
+        {
+          "ok": true,
+          "message": "无 token 的危险动作 API 被拒（实际 401）"
+        },
+        {
+          "ok": true,
+          "message": "无 token 的对话写 API 被拒（实际 401）"
+        },
+        {
+          "ok": true,
+          "message": "v1.2/v1.3 全程无外链请求（471 个请求全部同源）",
+          "detail": ""
+        },
+        {
+          "ok": true,
+          "message": "聊天/系统脚本已同源加载"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "step": "open-console",
+      "ok": true,
+      "message": "控制台首页 HTTP 200（实际 200）"
+    },
+    {
+      "step": "open-console",
+      "ok": true,
+      "message": "页面标题含「本地控制台」"
+    },
+    {
+      "step": "open-console",
+      "ok": true,
+      "message": "专业版左侧导航已渲染"
+    },
+    {
+      "step": "open-console",
+      "ok": true,
+      "message": "顶部状态栏已渲染"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "看板应返回 HTTP 200，实际 200"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "全局显示「只监听 127.0.0.1」"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "全局显示「本地模式」"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条：月度预算可见",
+      "detail": "月度预算 已用 ¥18,600.00 / ¥50,000.00（剩 ¥31,400.00）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条：项目预算可见",
+      "detail": "项目预算（本月项目支出） 已用 ¥8,600.00 / ¥20,000.00（剩 ¥11,400.00）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条：单笔上限可见",
+      "detail": "单笔上限 上限 ¥15,000.00 · 本月最大单笔 ¥12,000.00"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "预算条元素可见"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "项目卡 ≥3（实际 3）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "项目卡含客户与进度"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "任务列表非空（实际 10 条）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "任务数文案与任务行一致（文案「共 10 个任务」，列表 10 条）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "任务按代理分组（实际 4 组）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "代理状态行 ≥4（实际 4）"
+    },
+    {
+      "step": "dashboard-load",
+      "ok": true,
+      "message": "L0 摘要可见",
+      "detail": "本月 3 个项目；待批 3 张；预算余量 ¥31,400.00"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "项目标题非空（示例客户官网改版）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "项目时间线 ≥5 条（实际 6）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "时间线含证据入口（实际 2 个）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "证据路径可见（runs/run-20261023-101500-demo1/screenshots/007-homepage.png）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "证据类型可见（screenshot）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "证据置信度可见（certain）"
+    },
+    {
+      "step": "project-timeline",
+      "ok": true,
+      "message": "置信度取值合理"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "账本 ≥4 笔（实际 5）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "账本详情抽屉已打开"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：金额 有值",
+      "detail": "¥2,800.00"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：收付方 有值",
+      "detail": "示例设计素材工作室（供应商）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：依据 有值",
+      "detail": "审批卡 ap-001：官网素材采购（图标与插画包）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：审批人 有值",
+      "detail": "客户 王示例（书面确认）"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：回执 有值",
+      "detail": "rcpt-20261022-001"
+    },
+    {
+      "step": "ledger-facts",
+      "ok": true,
+      "message": "6 要素：所属项目 有值",
+      "detail": "示例客户官网改版 · prj-001"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "待批准审批卡 ≥2（实际 3）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "审批卡含金额与证据"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "审批卡含到期倒计时",
+      "detail": "剩余 01:59:57"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "批准后状态即时更新（ap-001 → 已批准）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "驳回后状态即时更新（ap-002 → 已驳回）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "刷新后 approved 状态仍在（服务端状态）"
+    },
+    {
+      "step": "approvals-decide",
+      "ok": true,
+      "message": "刷新后 rejected 状态仍在（服务端状态）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "初始状态 halted=false"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管大按钮可见"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管停止实测 81ms ≤ 10000ms"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "measured_stop_ms 有效（81）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：开放订单 有内容（2 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：待处理对话 有内容（2 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：应付款 有内容（2 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：凭据引用 有内容（1 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包：风险 有内容（3 条）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管包覆盖度可见（部分覆盖（partial））"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "接管计时可见（已停止 00:00:03）"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "页面显示实测停止耗时（实测停止耗时 11 ms（要求 ≤10000 ms））"
+    },
+    {
+      "step": "takeover-stop",
+      "ok": true,
+      "message": "halted 后全局显示接管横幅"
+    },
+    {
+      "step": "takeover-resume",
+      "ok": true,
+      "message": "resume 后恢复空闲态（halted=false）"
+    },
+    {
+      "step": "takeover-resume",
+      "ok": true,
+      "message": "resume 后全局接管横幅消失"
+    },
+    {
+      "step": "takeover-resume",
+      "ok": true,
+      "message": "显示恢复时间（已于 2026-10-26 23:21 恢复运行（halted=false））"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：收入 可见（¥32,000.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：成本 可见（¥18,600.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：毛利 可见（¥13,400.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "月报：预算余量 可见（¥31,400.00）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "合规事件 ≥2 条（实际 3）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "下月提案 ≥2 条（实际 3）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "as_of 可见（2026-10-26 23:21）"
+    },
+    {
+      "step": "monthly-report",
+      "ok": true,
+      "message": "coverage 可见（部分覆盖（partial））"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "页面文本含 127.0.0.1"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "页面文本含「本地」"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "服务端只绑定 127.0.0.1（实际 127.0.0.1）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "控制台 host=127.0.0.1（实际 127.0.0.1）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "局域网地址 192.168.3.123:60861 不可访问（只监听回环）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "无 X-Steward-Token 写操作被拒（实际 401）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "读接口无需 token（/api/overview → 200）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "无外链请求（86 个请求全部同源 127.0.0.1）",
+      "detail": ""
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "同源静态资源已加载（64 个 /assets/ 请求）"
+    },
+    {
+      "step": "local-only",
+      "ok": true,
+      "message": "无页面 JS 错误（实际 0）",
+      "detail": ""
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "左侧固定导航可见"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "导航出现新入口「智能体」（#nav-agents）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "导航出现新入口「后台」（#nav-backend）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "导航出现新入口「配置」（#nav-settings）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "导航出现新入口「数据」（#nav-data）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "顶部状态栏可见"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "顶部状态栏：运行模式徽章=体验模式（实际「体验模式」）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "顶部状态栏：预算余量可见（¥31,400.00）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "顶部状态栏：Token 余量可见（6.75M）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "顶部状态栏：接管状态=运行中（实际「运行中」）"
+    },
+    {
+      "step": "pro-nav-status",
+      "ok": true,
+      "message": "顶部状态栏：最近事件时间可见（22:55）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "配置中心三模式卡片：demo"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "配置中心三模式卡片：personal"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "配置中心三模式卡片：enterprise"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "「支付与银行卡」分组可见（用户明确要求）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "个人渠道分组（微信/支付宝/个人银行卡）可见"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "支付渠道行可见：wechat_pay"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "支付渠道行可见：alipay"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "支付渠道行可见：personal_bank_card"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "支付分组含「AI 不代签」说明"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "收款账户（个人卡/微信/支付宝掩码）可见"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "体验模式 Token 上限=10,000,000（实际 10000000）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "功能开关逐项可配置（14 项）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "切换后顶部状态=个人模式（实际「个人模式」）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "个人模式卡片为选中态"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "个人渠道分组标记为适用"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "个人模式渠道已启用：wechat_pay"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "渠道 wechat_pay 仅人工审批（仅人工审批）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "渠道 wechat_pay 显示掩码账户（wxid_****demo88）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "个人模式渠道已启用：alipay"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "渠道 alipay 仅人工审批（仅人工审批）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "渠道 alipay 显示掩码账户（dem***@example.com）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "个人模式渠道已启用：personal_bank_card"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "渠道 personal_bank_card 仅人工审批（仅人工审批）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "渠道 personal_bank_card 显示掩码账户（招商银行 **** **** 8888）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "收款账户：个人账户类型可见"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "个人模式 Token 上限=2,000,000（实际 2000000）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "scout 功能默认启用"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "保存 scout 禁用成功（已保存配置（23:22:05））"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "刷新后 scout 仍为禁用（配置持久化）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "scout 功能行显示已禁用（已禁用）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "勾选「0 元极限模式」后提示可见"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "0 元提示文案可读（0 元极限模式：任何支出都会被拒绝，只允许免费本地动作（演示/检索/本地文件）。）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "非法配置保存时显示校验错误（不静默失败）"
+    },
+    {
+      "step": "settings-config",
+      "ok": true,
+      "message": "校验错误文案可读（保存失败：单步 Token 上限不能超过总上限）"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "智能体 ≥8 个（实际 12）"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "含智能体：conductor"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "含智能体：operator"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "含智能体：harness"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "含智能体：reviewer"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "含智能体：backend"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "含智能体：scout"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "harness 显示为「写代码 Harness」"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "backend 显示为「后台值守」"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "企业专属智能体在个人模式显示「该模式不适用」"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "卡片含今日动作数"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "卡片含 Token 消耗"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "卡片最近日志 1–3 条（实际 3）"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "点击智能体可展开详情"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "详情含 Token 限额"
+    },
+    {
+      "step": "agents-center",
+      "ok": true,
+      "message": "详情含工具清单"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "后台按 run 分组（4 个 run）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "全流程时间线 ≥5 条事件（实际 19）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "时间线含阶段「plan」（4 条）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "时间线含阶段「action」（4 条）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "时间线含阶段「observe」（2 条）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "时间线含阶段「verify」（3 条）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "时间线含阶段「evidence」（4 条）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "运行队列可见（3 项）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "Token/预算消耗可见"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "异常/接管记录可见"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "事件流过滤生效（action 可见 4 / 4）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "流程事件含证据引用入口"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "展开证据路径可见（runs/run-20261023-101500-demo1/screenshots/007-homepage.png）"
+    },
+    {
+      "step": "backend-flow",
+      "ok": true,
+      "message": "展开证据类型可见（screenshot）"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "数据统计：运行记录 46"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "数据统计：证据文件 187"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "数据统计：配置更新时间可见（2026-10-26 23:22）"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "清空数据需二次确认（确认框弹出）"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "确认框标题说明清空"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "取消后不执行清空"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "取消后数据未变化"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "确认清空后运行记录归零（实际 0）"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "确认清空后证据文件归零（实际 0）"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "清空后显示「空档案」引导"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "空档案文案可读"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "重置为演示数据后记录恢复（46）"
+    },
+    {
+      "step": "data-manage",
+      "ok": true,
+      "message": "重置后空档案引导消失"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "全程无页面 JS 错误（实际 0）",
+      "detail": ""
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "GET /api/config 200（实际 200）"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "配置持久化：运行模式=personal（实际 personal）"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "配置持久化：scout 功能=禁用"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "配置持久化：禁用原因已保存"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "配置持久化：收款账户=个人类型"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "支付配置：AI 不代签（固定 false）"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "GET /api/agents 返回 12 个智能体"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "GET /api/data/stats：数据已重置为演示态"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "GET /api/flow 返回 19 条事件"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "全程无外链请求（220 个请求全部同源）",
+      "detail": ""
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "专业版样式已同源加载（pro.css）"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "专业版脚本已同源加载（admin.js）"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "无 X-Steward-Token 的管理写操作被拒（实际 401）"
+    },
+    {
+      "step": "pro-sanity",
+      "ok": true,
+      "message": "未授权请求未修改数据（仍为演示态）"
+    },
+    {
+      "step": "chat-open",
+      "ok": true,
+      "message": "左侧导航出现「对话」入口"
+    },
+    {
+      "step": "chat-open",
+      "ok": true,
+      "message": "左侧导航出现「变现」入口"
+    },
+    {
+      "step": "chat-open",
+      "ok": true,
+      "message": "左侧导航出现「系统」入口"
+    },
+    {
+      "step": "chat-open",
+      "ok": true,
+      "message": "会话记录列表可见（2 个）"
+    },
+    {
+      "step": "chat-open",
+      "ok": true,
+      "message": "新建项目参数：目标/预算/Token 上限/模式 可见"
+    },
+    {
+      "step": "chat-open",
+      "ok": true,
+      "message": "对话页说明总调度会先拆解计划"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "创建后进入会话详情（http://127.0.0.1:60861/chat/chat-010）"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "会话显示我的目标"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "会话显示预算上限 2,600.00"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "会话显示 Token 上限 180,000"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "总调度生成计划 ≥4 步（实际 5）"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "对话含用户消息 + 总调度拆解回复（2 条）"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "总调度回复包含计划说明"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "每轮含简略摘要（2 条摘要）"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "初始状态=计划中"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "点「开始执行」后状态=执行中"
+    },
+    {
+      "step": "chat-create-project",
+      "ok": true,
+      "message": "执行后出现 run 详情链接"
+    },
+    {
+      "step": "chat-interrupt-resume",
+      "ok": true,
+      "message": "打断后状态=已打断（暂停）"
+    },
+    {
+      "step": "chat-interrupt-resume",
+      "ok": true,
+      "message": "出现「恢复执行」按钮"
+    },
+    {
+      "step": "chat-interrupt-resume",
+      "ok": true,
+      "message": "恢复后状态=执行中"
+    },
+    {
+      "step": "chat-interrupt-resume",
+      "ok": true,
+      "message": "关键步骤出现审批卡"
+    },
+    {
+      "step": "chat-interrupt-resume",
+      "ok": true,
+      "message": "批准后状态=已完成"
+    },
+    {
+      "step": "chat-interrupt-resume",
+      "ok": true,
+      "message": "批准后审批卡消失"
+    },
+    {
+      "step": "chat-interrupt-resume",
+      "ok": true,
+      "message": "批准后计划步骤已完成（4 步 done）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "会话可跳转 run 详情（/runs/run-chat-chat-010）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "run 时间线 ≥5 条事件（实际 6）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "时间线含阶段 plan（1 条）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "时间线含阶段 action（2 条）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "时间线含阶段 observe（1 条）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "时间线含阶段 verify（1 条）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "时间线含阶段 evidence（1 条）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "证据截图缩略图 ≥2 张（实际 2）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "report.md 已渲染（含运行报告标题）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "日志 evidence 可展开查看（console.log 内容）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "JSON evidence 可展开查看（events.jsonl）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "各 agent 对话摘要可见（4 个 agent）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "run 内包含写代码 Harness 的对话摘要"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "点击缩略图打开证据大图（灯箱）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "大图为内联 SVG（无外链请求）"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "大图显示证据标题"
+    },
+    {
+      "step": "chat-run-evidence",
+      "ok": true,
+      "message": "关闭大图后灯箱隐藏"
+    },
+    {
+      "step": "agent-transcript",
+      "ok": true,
+      "message": "智能体详情页标题=写代码 Harness"
+    },
+    {
+      "step": "agent-transcript",
+      "ok": true,
+      "message": "智能体对话轮次可见（4 轮）"
+    },
+    {
+      "step": "agent-transcript",
+      "ok": true,
+      "message": "每轮含输入/输出摘要"
+    },
+    {
+      "step": "agent-transcript",
+      "ok": true,
+      "message": "每轮显示 Token 消耗"
+    },
+    {
+      "step": "agent-transcript",
+      "ok": true,
+      "message": "智能体详情显示状态/自主等级/模型"
+    },
+    {
+      "step": "agent-transcript",
+      "ok": true,
+      "message": "详情页显示轮次合计"
+    },
+    {
+      "step": "agent-transcript",
+      "ok": true,
+      "message": "轮次可跳证据（4 条证据引用）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "变现页说明：演示渠道未接真实支付"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "变现页说明：此前 ¥10 只是测试金额"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "收款账户/渠道摘要可见（4 行，含易支付）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "易支付设置分组可见（/money）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "易支付默认 demo 模式（不真实扣款）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "易支付设置保存成功"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "刷新后易支付网关已持久化"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "刷新后商户 ID 已持久化（密钥只存引用）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "易支付收款请求已创建（待收款）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "收款请求金额正确（¥1,288.00）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "易支付跳转链接已生成（含网关/金额/out_trade_no）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "易支付二维码占位可见"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "二维码为内联占位（无外链请求）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "请求标注易支付渠道"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "人工确认到账后状态=已到账"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "确认到账后显示已记入账本（ledger_entry_id）"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "账本新增易支付收入 ¥1,288.00"
+    },
+    {
+      "step": "money-epay",
+      "ok": true,
+      "message": "账本收入含客户名（6 要素）"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "多模型 provider ≥3（实际 3：DeepSeek/OpenAI 兼容/本地）"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "模型分组含 DeepSeek provider"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "模型分组含 OpenAI 兼容 provider"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "API 密钥只显示掩码/引用"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "系统提示词分组说明校验规则"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "总调度提示词可编辑"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "超级总调度提示词可编辑（v1.3）"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "模型分组含 supervisor 的模型绑定"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "智能体开关分组含 supervisor"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "支付分组含易支付字段（/settings）"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "提示词非法时显示校验错误"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "校验错误说明长度要求"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "模型配置保存成功"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "一键同步密钥成功"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "同步状态更新为已同步"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "系统提示词保存成功"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "刷新后提示词修改已持久化"
+    },
+    {
+      "step": "settings-models-prompts",
+      "ok": true,
+      "message": "刷新后模型绑定已持久化"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "与超级总调度对话记录可见（3 条消息）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "supervisor 自我介绍可见（两层结构/危险动作规则）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "两层结构：L1 超级总调度 + L2 项目总调度 可见"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "第 3 层专项智能体 ≥10（实际 10）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "受管程序列表可见（5 个）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "插件列表可见（5 个）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "各 agent 当前模型/Token 可见（12 行，含 supervisor）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "模型列表含超级总调度"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "全部日志入口可见（6 条日志）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "快捷命令示例 ≥8（8 个）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "发送命令后 supervisor 回复（3 → 5 条）"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "快捷命令执行后写入系统日志"
+    },
+    {
+      "step": "system-control",
+      "ok": true,
+      "message": "插件启用/禁用生效（false → true）"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "删除程序触发危险动作二次确认弹窗"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "弹窗展示风险说明（删除程序会立即停止该进程并移除管理条目；正在执行的任务会被中断，可能导致 run…）"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "弹窗展示备份路径（backups/system/programs/prog-scout-worker-2026-10-26T152228.json）"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "弹窗展示确认 token（DEL-N-0007）"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "错误确认 token 被拒绝（显示错误）"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "拒绝后弹窗保留（未执行删除）"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "二次确认后删除成功（程序 5 → 4）"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "被删除程序已从列表移除"
+    },
+    {
+      "step": "system-danger-confirm",
+      "ok": true,
+      "message": "危险动作写入系统日志（审计）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "v1.2/v1.3 流程全程无页面 JS 错误（0）",
+      "detail": ""
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "health version=1.3.0（实际 1.3.0）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "health 标记 chat_enabled/system_enabled=true"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/chat/sessions（3 个会话）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/chat/runs（3 个 run）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/chat/agents/:role/transcripts 返回记录"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/chat/evidence 返回证据列表"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/system/status（程序 4 个）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "系统状态含各 agent 模型（12 个）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/system/epay：易支付配置持久化（demo）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "易支付只存密钥引用（无明文）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/model-settings：密钥已同步"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "模型绑定已持久化（harness → OpenAI 兼容）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "系统提示词已持久化（含 E2E 标记）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "GET /api/money/requests：易支付请求已到账并写入账本"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "无 token 的危险动作 API 被拒（实际 401）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "无 token 的对话写 API 被拒（实际 401）"
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "v1.2/v1.3 全程无外链请求（471 个请求全部同源）",
+      "detail": ""
+    },
+    {
+      "step": "v12-sanity",
+      "ok": true,
+      "message": "聊天/系统脚本已同源加载"
+    },
+    {
+      "step": "post-run",
+      "ok": true,
+      "message": "close() 后控制台端口已释放（无残留）"
+    }
+  ],
+  "failures": [],
+  "evidence": [
+    "screenshots/001-open-console.png",
+    "screenshots/002-dashboard-load.png",
+    "screenshots/003-project-timeline.png",
+    "screenshots/004-ledger-facts.png",
+    "screenshots/005-approvals-decide.png",
+    "screenshots/006-takeover-stop.png",
+    "screenshots/007-takeover-resume.png",
+    "screenshots/008-monthly-report.png",
+    "screenshots/009-local-only.png",
+    "screenshots/010-pro-nav-status.png",
+    "screenshots/011-settings-config.png",
+    "screenshots/012-agents-center.png",
+    "screenshots/013-backend-flow.png",
+    "screenshots/014-data-manage.png",
+    "screenshots/015-pro-sanity.png",
+    "screenshots/016-chat-open.png",
+    "screenshots/017-chat-create-project.png",
+    "screenshots/018-chat-interrupt-resume.png",
+    "screenshots/019-run-evidence-lightbox.png",
+    "screenshots/020-chat-run-evidence.png",
+    "screenshots/021-agent-transcript.png",
+    "screenshots/022-money-epay-config.png",
+    "screenshots/023-money-epay-request.png",
+    "screenshots/024-money-epay.png",
+    "screenshots/025-settings-models-prompts.png",
+    "screenshots/026-system-overview-layers.png",
+    "screenshots/027-system-control.png",
+    "screenshots/028-system-danger-modal.png",
+    "screenshots/029-system-danger-confirm.png",
+    "screenshots/030-v12-sanity.png"
+  ],
+  "screenshot_count": 30,
+  "durationMs": 34232
+}

@@ -1,0 +1,19 @@
+{
+  "session_id": "sess-20261026151401-0005",
+  "step": 2,
+  "action": "listPlugins",
+  "target": "*",
+  "args": {},
+  "risk": "low",
+  "requires_confirmation": false,
+  "confirmed_by": null,
+  "result_ok": true,
+  "result_summary": "列出受管插件：共 1 个",
+  "result_detail": "{\"plugins\":[{\"id\":\"demo-plugin\",\"name\":\"demo-plugin\",\"path\":\"H:\\\\minzzj文件\\\\技术部\\\\项目\\\\官方\\\\代掌\\\\daizhang-steward\\\\plugins\\\\demo-plugin\",\"enabled\":false}]}",
+  "result_data": {
+    "audit_id": "6e3ad19e-0917-4350-b5f4-b0d238566993",
+    "risk": "readonly"
+  },
+  "generated_at": "2026-10-26T15:14:05.036Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

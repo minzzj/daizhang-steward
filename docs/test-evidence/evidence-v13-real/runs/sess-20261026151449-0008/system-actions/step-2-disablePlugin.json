@@ -1,0 +1,21 @@
+{
+  "session_id": "sess-20261026151449-0008",
+  "step": 2,
+  "action": "disablePlugin",
+  "target": "demo-plugin",
+  "args": {
+    "reason": "删除前置隔离"
+  },
+  "risk": "medium",
+  "requires_confirmation": false,
+  "confirmed_by": null,
+  "result_ok": true,
+  "result_summary": "禁用受管插件 demo-plugin（写 plugin.json: enabled=false）",
+  "result_detail": "{\"plugin_id\":\"demo-plugin\",\"enabled\":false,\"manifest_path\":\"<repo>/plugins/demo-plugin/plugin.json\",\"version\":\"1.0.0\"}",
+  "result_data": {
+    "audit_id": "46e7d4a3-cebd-46ba-882c-18888f004403",
+    "risk": "low"
+  },
+  "generated_at": "2026-10-26T15:14:52.234Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

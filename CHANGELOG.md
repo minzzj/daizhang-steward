@@ -13,6 +13,25 @@
 - 企业专属 UI（企业看板/工作流页面）
 - 真实银行/税务/CA/电子签章系统对接
 
+## [1.3.0] — 2026-10-26
+
+### Added
+- **多模型与 API 密钥**：4 类 provider（DeepSeek/OpenAI 兼容/Anthropic/本地）、base_url/模型/密钥引用可配、一键同步密钥、11 个智能体独立选模型、密钥只存引用与掩码（config.json 无明文）、真实模型适配 + 本地回退标注。
+- **两层总调度**：L1 系统总控 supervisor（受管程序/插件、切换模型与提示词、读全部日志、委派项目、**危险动作二次确认+回收站备份**）+ L2 项目总调度 conductor（计划/派发/预算/验收）+ L3 专项智能体；每轮 AgentTurn（输入/输出摘要、全文、Token、证据、模型来源）。
+- **控制台 v1.3**：/chat 对话与新建项目、打断/恢复/审批；/agents/:role 每轮摘要；/runs/:id 时间线+证据灯箱；/money 变现与易支付；/system 系统总控与危险确认；/settings 模型密钥/系统提示词/易支付分组。
+- **变现/易支付**：收款请求→确认到账→账本 6 要素+发票草稿；彩虹易支付兼容 MD5 签名、收银台链接、notify 验签自动到账；demo/live 模式。
+- **CLI**：steward chat/supervisor/project/system/money/config/agents/data（均支持 --json）。
+- **系统动作层**：受管应用/插件白名单、风险分级、一次性确认令牌（120s）、回收站备份与恢复、审计 JSONL。
+- 文档：docs/{zh-CN,en}/{configuration,chat,system,money}.md、docs/RELEASE_NOTES_v1.3.0.md、prompts/v2 + manifest-v2.json；测试 290 条。
+
+### Changed
+- 版本 1.1.0 → **1.3.0**；控制台管理页与对话/系统/变现全部接入真实引擎（OrchestratorEngine + SystemController + MoneyEngine + ConfigEngine）；运营页为演示数据并标注。
+
+### Fixed
+- 演示质检证据缺失时 reviewer 自行做结构/金额/外链复核并留证（不再误判阻断）。
+- 插件 manifest 带 BOM 时拒绝改写的问题（演示插件文件改为无 BOM）。
+- 控制台真实对话 start 未调用引擎 startProject 的问题。
+
 ## [1.1.0] — 2026-10-26
 
 ### Added

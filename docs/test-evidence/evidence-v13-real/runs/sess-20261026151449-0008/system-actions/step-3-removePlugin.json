@@ -1,0 +1,26 @@
+{
+  "session_id": "sess-20261026151449-0008",
+  "step": 3,
+  "action": "removePlugin",
+  "target": "demo-plugin",
+  "args": {
+    "backup": true,
+    "toRecycleBin": true,
+    "requireHumanConfirm": true,
+    "confirmCount": 2,
+    "auditLog": true
+  },
+  "risk": "high",
+  "requires_confirmation": true,
+  "confirmed_by": "human:cli",
+  "result_ok": true,
+  "result_summary": "删除受管插件 demo-plugin——破坏性：先备份到回收站再删除，目标 <repo>/plugins/demo-plugin，需用户确认；备份：H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\.steward\\system\\recycle\\20261026-231452-442\\plugin-demo-plugin\\demo-plugin",
+  "result_detail": "{\"plugin_id\":\"demo-plugin\",\"removed\":true}",
+  "result_data": {
+    "audit_id": "c21b4436-9bba-4f0c-b7fa-0309f4a8c105",
+    "backup_path": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\.steward\\system\\recycle\\20261026-231452-442\\plugin-demo-plugin\\demo-plugin",
+    "risk": "destructive"
+  },
+  "generated_at": "2026-10-26T15:14:52.542Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

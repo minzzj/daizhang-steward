@@ -1,0 +1,535 @@
+{
+  "session_id": "sess-20261026151440-0007",
+  "step": 7,
+  "action": "readLogs",
+  "target": "*",
+  "args": {
+    "scope": "all"
+  },
+  "risk": "low",
+  "requires_confirmation": false,
+  "confirmed_by": null,
+  "result_ok": true,
+  "result_summary": "已读取全部日志/记录：会话 7 个，审计 49 条",
+  "result_detail": null,
+  "result_data": {
+    "generated_at": "2026-10-26T15:14:43.568Z",
+    "sessions": [
+      {
+        "id": "sess-20261026151235-0001",
+        "kind": "project",
+        "status": "blocked",
+        "goal": "帮我做一份单页 HTML 报价单页面，并在完成后记录一笔10元收款请求",
+        "parent_id": null,
+        "messages": 3,
+        "turns": 1,
+        "plan_steps": 0
+      },
+      {
+        "id": "sess-20261026151250-0002",
+        "kind": "project",
+        "status": "blocked",
+        "goal": "帮我做一份单页 HTML 报价单页面，并在完成后记录一笔10元收款请求",
+        "parent_id": null,
+        "messages": 7,
+        "turns": 3,
+        "plan_steps": 3
+      },
+      {
+        "id": "sess-20261026151322-0003",
+        "kind": "project",
+        "status": "done",
+        "goal": "帮我做一份单页 HTML 报价单页面，并在完成后记录一笔10元收款请求",
+        "parent_id": null,
+        "messages": 11,
+        "turns": 5,
+        "plan_steps": 4
+      },
+      {
+        "id": "sess-20261026151347-0004",
+        "kind": "system",
+        "status": "paused",
+        "goal": "检查系统状态：列出受管程序与插件，启动 demo-app，把 demo-plugin 禁用，然后读取全部日志",
+        "parent_id": null,
+        "messages": 5,
+        "turns": 1,
+        "plan_steps": 5
+      },
+      {
+        "id": "sess-20261026151401-0005",
+        "kind": "system",
+        "status": "blocked",
+        "goal": "检查系统状态：列出受管程序与插件，启动 demo-app 检查心跳后停止它，把 demo-plugin 禁用，然后读取全部日志",
+        "parent_id": null,
+        "messages": 7,
+        "turns": 4,
+        "plan_steps": 6
+      },
+      {
+        "id": "sess-20261026151424-0006",
+        "kind": "system",
+        "status": "blocked",
+        "goal": "检查系统状态：列出受管程序与插件，启动 demo-app 检查心跳后停止它，把 demo-plugin 禁用，然后读取全部日志",
+        "parent_id": null,
+        "messages": 10,
+        "turns": 7,
+        "plan_steps": 7
+      },
+      {
+        "id": "sess-20261026151440-0007",
+        "kind": "system",
+        "status": "running",
+        "goal": "检查系统状态：列出受管程序与插件，启动 demo-app 检查心跳后停止它，把 demo-plugin 禁用，然后读取全部日志",
+        "parent_id": null,
+        "messages": 10,
+        "turns": 7,
+        "plan_steps": 7
+      }
+    ],
+    "audit": [
+      {
+        "seq": 1,
+        "at": "2026-10-26T15:12:35.797Z",
+        "session_id": "sess-20261026151235-0001",
+        "action": "session.create",
+        "object": "sess-20261026151235-0001",
+        "result": "ok",
+        "reason": "kind=project; parent=none"
+      },
+      {
+        "seq": 2,
+        "at": "2026-10-26T15:12:35.825Z",
+        "session_id": "sess-20261026151235-0001",
+        "action": "plan.blocked",
+        "object": "sess-20261026151235-0001",
+        "result": "blocked",
+        "reason": "计划生成被阻断：Token 预算校验失败：source.consumeTokens is not a function"
+      },
+      {
+        "seq": 3,
+        "at": "2026-10-26T15:12:50.068Z",
+        "session_id": "sess-20261026151250-0002",
+        "action": "session.create",
+        "object": "sess-20261026151250-0002",
+        "result": "ok",
+        "reason": "kind=project; parent=none"
+      },
+      {
+        "seq": 4,
+        "at": "2026-10-26T15:12:54.234Z",
+        "session_id": "sess-20261026151250-0002",
+        "action": "conductor.plan",
+        "object": "plan",
+        "result": "ok",
+        "reason": "3 steps; mode=remote"
+      },
+      {
+        "seq": 5,
+        "at": "2026-10-26T15:12:54.263Z",
+        "session_id": "sess-20261026151250-0002",
+        "action": "workspace.create",
+        "object": "sess-20261026151250-0002",
+        "result": "ok",
+        "reason": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\runs\\sess-20261026151250-0002"
+      },
+      {
+        "seq": 6,
+        "at": "2026-10-26T15:12:54.264Z",
+        "session_id": "sess-20261026151250-0002",
+        "action": "run.start",
+        "object": "proj-sess-20261026151250-0002",
+        "result": "ok",
+        "reason": "3 steps"
+      },
+      {
+        "seq": 7,
+        "at": "2026-10-26T15:12:55.425Z",
+        "session_id": "sess-20261026151250-0002",
+        "action": "agent.operator.build_deliverable",
+        "object": "step:1",
+        "result": "ok",
+        "reason": "已生成交付物页面与报告（sess-20261026151250-0002/deliverable.html、sess-20261026151250-0002/deliverable.md）"
+      },
+      {
+        "seq": 8,
+        "at": "2026-10-26T15:12:57.958Z",
+        "session_id": "sess-20261026151250-0002",
+        "action": "agent.reviewer.verify_deliverable",
+        "object": "step:2",
+        "result": "blocked",
+        "reason": "证据核查未通过：缺少质检证据（quality-check.json）"
+      },
+      {
+        "seq": 9,
+        "at": "2026-10-26T15:13:22.796Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "session.create",
+        "object": "sess-20261026151322-0003",
+        "result": "ok",
+        "reason": "kind=project; parent=none"
+      },
+      {
+        "seq": 10,
+        "at": "2026-10-26T15:13:25.855Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "conductor.plan",
+        "object": "plan",
+        "result": "ok",
+        "reason": "4 steps; mode=remote"
+      },
+      {
+        "seq": 11,
+        "at": "2026-10-26T15:13:25.884Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "workspace.create",
+        "object": "sess-20261026151322-0003",
+        "result": "ok",
+        "reason": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\runs\\sess-20261026151322-0003"
+      },
+      {
+        "seq": 12,
+        "at": "2026-10-26T15:13:25.885Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "run.start",
+        "object": "proj-sess-20261026151322-0003",
+        "result": "ok",
+        "reason": "4 steps"
+      },
+      {
+        "seq": 13,
+        "at": "2026-10-26T15:13:26.754Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "agent.operator.build_deliverable",
+        "object": "step:1",
+        "result": "ok",
+        "reason": "已生成交付物页面与报告（sess-20261026151322-0003/deliverable.html、sess-20261026151322-0003/deliverable.md）"
+      },
+      {
+        "seq": 14,
+        "at": "2026-10-26T15:13:27.884Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "agent.harness.code_review",
+        "object": "step:2",
+        "result": "ok",
+        "reason": "本地质检通过（6/6 项：file_exists/has_html_tag/has_title/has_body/has_plan_table/size_ok）"
+      },
+      {
+        "seq": 15,
+        "at": "2026-10-26T15:13:31.060Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "agent.reviewer.verify_deliverable",
+        "object": "step:3",
+        "result": "ok",
+        "reason": "证据核查通过（3 个证据文件可核对）"
+      },
+      {
+        "seq": 16,
+        "at": "2026-10-26T15:13:31.324Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "approval.decide",
+        "object": "step:4",
+        "result": "ok",
+        "reason": "approved by human:cli"
+      },
+      {
+        "seq": 17,
+        "at": "2026-10-26T15:13:32.033Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "agent.finance.record_payment_request",
+        "object": "step:4",
+        "result": "ok",
+        "reason": "已生成收款请求 ¥10（pay-sess-20261026151322-0003，待人工确认到账）；已通过注入的 ledger 记录收入 ¥10（依据 sess-20261026151322-0003:pay-sess-20261026151322-0003）"
+      },
+      {
+        "seq": 18,
+        "at": "2026-10-26T15:13:32.034Z",
+        "session_id": "sess-20261026151322-0003",
+        "action": "run.done",
+        "object": "sess-20261026151322-0003",
+        "result": "ok",
+        "reason": "4 steps"
+      },
+      {
+        "seq": 19,
+        "at": "2026-10-26T15:13:47.134Z",
+        "session_id": "sess-20261026151347-0004",
+        "action": "session.create",
+        "object": "sess-20261026151347-0004",
+        "result": "ok",
+        "reason": "kind=system; parent=none"
+      },
+      {
+        "seq": 20,
+        "at": "2026-10-26T15:13:49.246Z",
+        "session_id": "sess-20261026151347-0004",
+        "action": "supervisor.plan",
+        "object": "plan",
+        "result": "ok",
+        "reason": "5 steps; mode=remote"
+      },
+      {
+        "seq": 21,
+        "at": "2026-10-26T15:13:49.278Z",
+        "session_id": "sess-20261026151347-0004",
+        "action": "workspace.create",
+        "object": "sess-20261026151347-0004",
+        "result": "ok",
+        "reason": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\runs\\sess-20261026151347-0004"
+      },
+      {
+        "seq": 22,
+        "at": "2026-10-26T15:13:49.278Z",
+        "session_id": "sess-20261026151347-0004",
+        "action": "run.start",
+        "object": "sess-20261026151347-0004",
+        "result": "ok",
+        "reason": "5 steps"
+      },
+      {
+        "seq": 23,
+        "at": "2026-10-26T15:14:01.909Z",
+        "session_id": "sess-20261026151401-0005",
+        "action": "session.create",
+        "object": "sess-20261026151401-0005",
+        "result": "ok",
+        "reason": "kind=system; parent=none"
+      },
+      {
+        "seq": 24,
+        "at": "2026-10-26T15:14:04.943Z",
+        "session_id": "sess-20261026151401-0005",
+        "action": "supervisor.plan",
+        "object": "plan",
+        "result": "ok",
+        "reason": "6 steps; mode=remote"
+      },
+      {
+        "seq": 25,
+        "at": "2026-10-26T15:14:04.974Z",
+        "session_id": "sess-20261026151401-0005",
+        "action": "workspace.create",
+        "object": "sess-20261026151401-0005",
+        "result": "ok",
+        "reason": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\runs\\sess-20261026151401-0005"
+      },
+      {
+        "seq": 26,
+        "at": "2026-10-26T15:14:04.974Z",
+        "session_id": "sess-20261026151401-0005",
+        "action": "run.start",
+        "object": "sess-20261026151401-0005",
+        "result": "ok",
+        "reason": "6 steps"
+      },
+      {
+        "seq": 27,
+        "at": "2026-10-26T15:14:05.031Z",
+        "session_id": "sess-20261026151401-0005",
+        "action": "system.listApps",
+        "object": "*",
+        "result": "ok",
+        "reason": "列出受管应用：共 3 个"
+      },
+      {
+        "seq": 28,
+        "at": "2026-10-26T15:14:05.038Z",
+        "session_id": "sess-20261026151401-0005",
+        "action": "system.listPlugins",
+        "object": "*",
+        "result": "ok",
+        "reason": "列出受管插件：共 1 个"
+      },
+      {
+        "seq": 29,
+        "at": "2026-10-26T15:14:05.043Z",
+        "session_id": "sess-20261026151401-0005",
+        "action": "system.startApp",
+        "object": "demo-app",
+        "result": "blocked",
+        "reason": "启动受管应用 demo-app（演示受管程序（examples/system-demo））"
+      },
+      {
+        "seq": 30,
+        "at": "2026-10-26T15:14:24.029Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "session.create",
+        "object": "sess-20261026151424-0006",
+        "result": "ok",
+        "reason": "kind=system; parent=none"
+      },
+      {
+        "seq": 31,
+        "at": "2026-10-26T15:14:27.221Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "supervisor.plan",
+        "object": "plan",
+        "result": "ok",
+        "reason": "7 steps; mode=remote"
+      },
+      {
+        "seq": 32,
+        "at": "2026-10-26T15:14:27.252Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "workspace.create",
+        "object": "sess-20261026151424-0006",
+        "result": "ok",
+        "reason": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\runs\\sess-20261026151424-0006"
+      },
+      {
+        "seq": 33,
+        "at": "2026-10-26T15:14:27.253Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "run.start",
+        "object": "sess-20261026151424-0006",
+        "result": "ok",
+        "reason": "7 steps"
+      },
+      {
+        "seq": 34,
+        "at": "2026-10-26T15:14:27.285Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "system.listApps",
+        "object": "*",
+        "result": "ok",
+        "reason": "列出受管应用：共 3 个"
+      },
+      {
+        "seq": 35,
+        "at": "2026-10-26T15:14:27.292Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "system.listPlugins",
+        "object": "*",
+        "result": "ok",
+        "reason": "列出受管插件：共 1 个"
+      },
+      {
+        "seq": 36,
+        "at": "2026-10-26T15:14:27.302Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "system.startApp",
+        "object": "demo-app",
+        "result": "ok",
+        "reason": "启动受管应用 demo-app（演示受管程序（examples/system-demo））"
+      },
+      {
+        "seq": 37,
+        "at": "2026-10-26T15:14:27.307Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "system.readLogs",
+        "object": "demo-app",
+        "result": "ok",
+        "reason": "已读取全部日志/记录：会话 6 个，审计 36 条"
+      },
+      {
+        "seq": 38,
+        "at": "2026-10-26T15:14:27.479Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "system.stopApp",
+        "object": "demo-app",
+        "result": "ok",
+        "reason": "停止受管应用 demo-app（演示受管程序（examples/system-demo））"
+      },
+      {
+        "seq": 39,
+        "at": "2026-10-26T15:14:27.485Z",
+        "session_id": "sess-20261026151424-0006",
+        "action": "system.disablePlugin",
+        "object": "demo-plugin",
+        "result": "blocked",
+        "reason": "禁用受管插件 demo-plugin（写 plugin.json: enabled=false）"
+      },
+      {
+        "seq": 40,
+        "at": "2026-10-26T15:14:40.235Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "session.create",
+        "object": "sess-20261026151440-0007",
+        "result": "ok",
+        "reason": "kind=system; parent=none"
+      },
+      {
+        "seq": 41,
+        "at": "2026-10-26T15:14:43.311Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "supervisor.plan",
+        "object": "plan",
+        "result": "ok",
+        "reason": "7 steps; mode=remote"
+      },
+      {
+        "seq": 42,
+        "at": "2026-10-26T15:14:43.341Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "workspace.create",
+        "object": "sess-20261026151440-0007",
+        "result": "ok",
+        "reason": "H:\\minzzj文件\\技术部\\项目\\官方\\代掌\\daizhang-steward\\runs\\sess-20261026151440-0007"
+      },
+      {
+        "seq": 43,
+        "at": "2026-10-26T15:14:43.342Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "run.start",
+        "object": "sess-20261026151440-0007",
+        "result": "ok",
+        "reason": "7 steps"
+      },
+      {
+        "seq": 44,
+        "at": "2026-10-26T15:14:43.371Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "system.listApps",
+        "object": "*",
+        "result": "ok",
+        "reason": "列出受管应用：共 3 个"
+      },
+      {
+        "seq": 45,
+        "at": "2026-10-26T15:14:43.377Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "system.listPlugins",
+        "object": "*",
+        "result": "ok",
+        "reason": "列出受管插件：共 1 个"
+      },
+      {
+        "seq": 46,
+        "at": "2026-10-26T15:14:43.387Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "system.startApp",
+        "object": "demo-app",
+        "result": "ok",
+        "reason": "启动受管应用 demo-app（演示受管程序（examples/system-demo））"
+      },
+      {
+        "seq": 47,
+        "at": "2026-10-26T15:14:43.391Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "system.readLogs",
+        "object": "demo-app",
+        "result": "ok",
+        "reason": "已读取全部日志/记录：会话 7 个，审计 46 条"
+      },
+      {
+        "seq": 48,
+        "at": "2026-10-26T15:14:43.558Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "system.stopApp",
+        "object": "demo-app",
+        "result": "ok",
+        "reason": "停止受管应用 demo-app（演示受管程序（examples/system-demo））"
+      },
+      {
+        "seq": 49,
+        "at": "2026-10-26T15:14:43.565Z",
+        "session_id": "sess-20261026151440-0007",
+        "action": "system.disablePlugin",
+        "object": "demo-plugin",
+        "result": "ok",
+        "reason": "禁用受管插件 demo-plugin（写 plugin.json: enabled=false）"
+      }
+    ]
+  },
+  "generated_at": "2026-10-26T15:14:43.568Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

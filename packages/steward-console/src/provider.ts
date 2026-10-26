@@ -195,6 +195,23 @@ export interface ConsoleMonthlyReport {
 export type ConsoleSummaryLevel = "L0" | "L1" | "L2";
 
 // ---------------------------------------------------------------------------
+// v1.2 扩展：人工确认到账 → 写入账本收入
+// ---------------------------------------------------------------------------
+
+export interface ConsoleIncomeInput {
+  amount_cny: number;
+  client: string;
+  purpose: string;
+  occurred_at: string;
+  /** 来源引用（如 money:money-003 / 真实渠道回调单号）。 */
+  source_ref: string;
+}
+
+export interface ConsoleIncomeResult {
+  entry: ConsoleLedgerEntry;
+}
+
+// ---------------------------------------------------------------------------
 // 契约
 // ---------------------------------------------------------------------------
 
@@ -218,6 +235,11 @@ export interface ConsoleDataProvider {
   resume(by: string): MaybePromise<ConsoleResumeResult>;
   /** 扩展：证据详情（时间线证据点开显示路径/类型/置信度）。 */
   evidenceDetail(ref: string): MaybePromise<ConsoleEvidence | null>;
+  /**
+   * 扩展（v1.2）：把「人工确认到账」的收入写入账本（含 6 要素）。
+   * 缺省实现时变现页仍可确认到账，只是不写账本；真实 domain 适配器应写到 ledger 并留审计。
+   */
+  recordIncome?(input: ConsoleIncomeInput): MaybePromise<ConsoleIncomeResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -600,6 +622,24 @@ export function createDemoConsoleProvider(): ConsoleDataProvider {
     evidenceDetail: (ref) => {
       const found = evidence.get(ref);
       return found === undefined ? null : { ...found };
+    },
+    recordIncome: (input) => {
+      const amount = Math.max(0, Math.round(Number(input.amount_cny) * 100) / 100);
+      const entry: ConsoleLedgerEntry = {
+        id: `led-income-${String(ledger.length + 1).padStart(3, "0")}`,
+        occurred_at: input.occurred_at,
+        type: "income",
+        amount_cny: amount,
+        payee_or_payer: input.client,
+        basis: `收款确认：${input.purpose}`,
+        approved_by: "人工确认到账（演示）",
+        receipt_ref: input.source_ref,
+        project_id: "prj-001",
+      };
+      ledger.unshift(entry);
+      monthly.income_cny += amount;
+      monthly.gross_margin_cny += amount;
+      return { entry: { ...entry } };
     },
   };
 }

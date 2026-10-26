@@ -1,0 +1,19 @@
+{
+  "session_id": "sess-20261026151424-0006",
+  "step": 5,
+  "action": "stopApp",
+  "target": "demo-app",
+  "args": {},
+  "risk": "medium",
+  "requires_confirmation": false,
+  "confirmed_by": null,
+  "result_ok": true,
+  "result_summary": "停止受管应用 demo-app（演示受管程序（examples/system-demo））",
+  "result_detail": "{\"app_id\":\"demo-app\",\"stopped\":true}",
+  "result_data": {
+    "audit_id": "ab974211-601c-4742-95ed-5947d0f87126",
+    "risk": "low"
+  },
+  "generated_at": "2026-10-26T15:14:27.478Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

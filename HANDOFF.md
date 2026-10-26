@@ -481,3 +481,11 @@ GitHub 认证、非商用许可预期、法律边界需人工复核、额度控�
   `docs/images/release-v1.0.0.png`；发布说明 `docs/RELEASE_NOTES_v1.0.0.md`；宣传片 3 Assets
   （BGM/silent/poster，工程与分镜 `docs/media/promo/`）；**两阶段交付完成**
 - [ ] 可选后续扩展（通知通道、IoT、MCP、真实 DSH Harness、真实银行/税务/CA 对接、企业 UI、扩展故障演练）
+
+
+## v1.3.0 交付（2026-10-26）
+
+- 版本 **1.3.0**；真实模型端到端（DeepSeek API，密钥仅本地）、两层总调度与系统总控、控制台对话/证据/变现/系统页、易支付验签、系统动作二次确认与回收站备份。
+- 测试：290/290 单测；控制台真实浏览器 E2E 25/25 步、303/303 检查、30 张截图。
+- 文档：docs/{zh-CN,en}/{configuration,chat,system,money}.md、docs/RELEASE_NOTES_v1.3.0.md；证据：docs/test-evidence/evidence-console-v13-*、evidence-v13-real、evidence-limit-*。
+- 复跑：`npm run build && node --test "tests/unit/*.test.mjs" && node tests/e2e-console/run.mjs`；控制台 `node dist/apps/cli/src/index.js console --port 4180`。

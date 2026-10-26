@@ -49,8 +49,10 @@ import { cmdEnterpriseDemo } from "./enterprise-cli.js";
 import { cmdFaultDrill } from "./fault-cli.js";
 import { cmdConfig, cmdAgents, cmdData } from "./config-cli.js";
 import { cmdLimitRun } from "./limit-run.js";
+import { cmdMoney } from "./money-cli.js";
+import { cmdAgent, cmdSystem } from "./agent-cli.js";
 
-const VERSION = "1.1.0";
+const VERSION = "1.3.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -107,6 +109,15 @@ function printHelp(): void {
   steward data [--action stats|reset] [--yes] 数据统计 / 清空运行时数据（清空需 --yes）
   steward limit-run [--budget 0] [--token-limit 10000000] [--revenue 10] [--json]
                                               0 元预算极限测试：真实交付 + 真实浏览器验收 + 变现记账（个人模式）
+  steward chat --goal "<目标>" [--kind system|project] [--auto] [--json]     总调度对话：拆计划/派发/每轮摘要/打断恢复/审批
+  steward supervisor --goal "<目标>" [--json]  系统总控（最高层）：程序/插件/模型/提示词/委派项目/危险动作二次确认
+  steward project --goal "<目标>" [--json]     项目总调度（conductor）：拆解→派发→交付→证据
+  steward chat --action run|approve|reject|interrupt|resume|list|detail|logs --session <id> [--step N] [--json]
+  steward system [--action info|list|plan|exec|audit] [--op app.start] [--target <id>] [--yes] [--json]
+                                              系统动作：受管程序/插件；删除类需二次确认+备份回收站
+  steward money [--action create|list|confirm|cancel|summary|explain|ledger|reset]
+                [--amount 10] [--client "..."] [--purpose "..."] [--method wechat_pay|alipay|personal_bank_card|corporate_account|manual] [--json]
+                                              变现实收：创建收款请求 → 人工确认到账 → 账本 6 要素 + 发票草稿（演示渠道，未接真实支付）
   steward approve [--id <cardId> --decision approve|reject] [--json]  审批队列（超时挂起，不自动放行）
   steward takeover [--resume] [--json]       接管键：停止新动作并生成 6 类接管包
   steward code-loop [--fail] [--json]         CodeTask→Harness→隔离 worktree 应用补丁→真实浏览器验收（A4/A5）
@@ -871,6 +882,22 @@ async function main(): Promise<number> {
     case "limit-run":
     case "limit-test":
       return cmdLimitRun(parsed);
+    case "money":
+    case "pay":
+      return cmdMoney(parsed);
+    case "chat":
+    case "ask":
+      return cmdAgent(parsed);
+    case "supervisor":
+    case "system-supervisor":
+      parsed.flags.supervisor = true;
+      return cmdAgent(parsed);
+    case "project":
+    case "conductor":
+      parsed.flags.project = true;
+      return cmdAgent(parsed);
+    case "system":
+      return cmdSystem(parsed);
     case "version":
       console.log(`steward ${VERSION} (node ${process.version})`);
       return 0;

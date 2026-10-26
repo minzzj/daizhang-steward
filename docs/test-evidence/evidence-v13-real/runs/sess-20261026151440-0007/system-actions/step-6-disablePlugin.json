@@ -1,0 +1,19 @@
+{
+  "session_id": "sess-20261026151440-0007",
+  "step": 6,
+  "action": "disablePlugin",
+  "target": "demo-plugin",
+  "args": {},
+  "risk": "medium",
+  "requires_confirmation": false,
+  "confirmed_by": null,
+  "result_ok": true,
+  "result_summary": "禁用受管插件 demo-plugin（写 plugin.json: enabled=false）",
+  "result_detail": "{\"plugin_id\":\"demo-plugin\",\"enabled\":false,\"manifest_path\":\"<repo>/plugins/demo-plugin/plugin.json\",\"version\":\"1.0.0\"}",
+  "result_data": {
+    "audit_id": "e41c5021-40e7-46aa-993e-1379d1024b16",
+    "risk": "low"
+  },
+  "generated_at": "2026-10-26T15:14:43.565Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

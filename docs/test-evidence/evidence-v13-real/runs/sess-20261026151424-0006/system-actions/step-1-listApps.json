@@ -1,0 +1,19 @@
+{
+  "session_id": "sess-20261026151424-0006",
+  "step": 1,
+  "action": "listApps",
+  "target": "*",
+  "args": {},
+  "risk": "low",
+  "requires_confirmation": false,
+  "confirmed_by": null,
+  "result_ok": true,
+  "result_summary": "列出受管应用：共 3 个",
+  "result_detail": "{\"apps\":[{\"id\":\"demo-app\",\"name\":\"演示受管程序（examples/system-demo）\",\"command\":\"node\",\"kind\":\"program\",\"allow_start\":true,\"allow_stop\":true,\"allow_remove\":true,\"args\":[\"\\\"H:\\\\minzzj文件\\\\技术部\\\\项目\\\\官方\\\\代掌\\\\daizhang-steward\\\\examples\\\\system-demo\\\\demo-app.mjs\\\"\"]},{\"id\":\"demo-node\",\"name\":\"Node 演示服务（examples/demo-web）\",\"command\":\"node\",\"kind\":\"program\",\"allow_start\":true,\"allow_stop\":true,\"allow_remove\":false,\"args\":[\"examples/demo-web/server.mjs\"]},{\"id\":\"notepad\",\"name\":\"记事本（Notepad）\",\"command\":\"notepad.exe\",\"kind\":\"program\",\"allow_start\":true,\"allow_stop\":true,\"allow_remove\":false}]}",
+  "result_data": {
+    "audit_id": "e4cbf4f0-5907-45ea-b554-c347b3d53c85",
+    "risk": "readonly"
+  },
+  "generated_at": "2026-10-26T15:14:27.257Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

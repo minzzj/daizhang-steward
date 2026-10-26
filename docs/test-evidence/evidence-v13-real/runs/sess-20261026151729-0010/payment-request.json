@@ -1,0 +1,11 @@
+{
+  "id": "pay-sess-20261026151729-0010",
+  "session_id": "sess-20261026151729-0010",
+  "amount_cny": 10,
+  "client": "示例客户（虚构）",
+  "purpose": "帮我做一份单页 HTML 报价单页面，并在完成后记录一笔10元收款请求（真实模型执行）",
+  "status": "pending",
+  "payment_method": "manual_approval",
+  "note": "演示资金渠道（未接真实支付）：创建请求后需人工确认到账才记收入；¥10 仅为历史测试值。",
+  "created_at": "2026-10-26T15:17:38.424Z"
+}

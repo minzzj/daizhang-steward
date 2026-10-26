@@ -197,6 +197,43 @@ export interface InvoiceConfig {
   draft_only: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// 6.2) 易支付（epay，v1.3 新增；默认 demo 模式，未填商家信息时 disabled）
+// ---------------------------------------------------------------------------
+
+export type EpayMode = "demo" | "live";
+export type EpayPayType = "alipay" | "wxpay";
+
+/**
+ * 易支付（epay）聚合支付配置。`key_ref` 只存密钥**引用**（`env:EPAY_KEY` /
+ * `file:secrets.json#epay`），绝不存明文；`mode="live"` 时必须补齐商家信息（pid/key_ref/回调地址）。
+ */
+export interface EpayConfig {
+  enabled: boolean;
+  /** 网关地址，必须 https。 */
+  gateway_url: string;
+  /** 商户 ID（demo 模式可留空；live 必填）。 */
+  pid: string;
+  /** 商户密钥引用：env:EPAY_KEY / file:secrets.json#epay / ""（未配置）。 */
+  key_ref: string;
+  pay_types: EpayPayType[];
+  notify_url: string;
+  return_url: string;
+  mode: EpayMode;
+  sign_type: "MD5";
+}
+
+export interface EpayConfigUpdate {
+  enabled?: boolean;
+  gateway_url?: string;
+  pid?: string;
+  key_ref?: string;
+  pay_types?: EpayPayType[];
+  notify_url?: string;
+  return_url?: string;
+  mode?: EpayMode;
+}
+
 export interface PaymentsConfig {
   providers: PaymentProvider[];
   payout_account: PayoutAccount;
@@ -205,6 +242,8 @@ export interface PaymentsConfig {
   sign_contract: boolean;
   /** 硬约束：AI 永远不得代签。 */
   ai_may_sign: false;
+  /** 易支付配置（v1.3；旧 config 自动补默认）。 */
+  epay?: EpayConfig;
 }
 
 export interface PaymentProviderUpdate {
@@ -251,6 +290,170 @@ export interface AgentUpdate {
 }
 
 // ---------------------------------------------------------------------------
+// 6.5) 多模型 / API 密钥引用 / 各智能体模型分配（v1.2 新增）
+// ---------------------------------------------------------------------------
+
+export type ModelProviderKind = "deepseek" | "openai_compatible" | "anthropic" | "local";
+
+/**
+ * 模型服务商配置。`api_key_ref` 只存**引用**（环境变量名/本地 secrets 文件片段），
+ * 绝不存明文密钥；空字符串表示尚未配置。
+ * 例：`env:DEEPSEEK_API_KEY`、`file:secrets.json#deepseek`。
+ */
+export interface ModelProviderConfig {
+  id: string;
+  name: string;
+  kind: ModelProviderKind;
+  /** 如 https://api.deepseek.com（必须是 http(s) 绝对地址）。 */
+  base_url: string;
+  /** 密钥引用：`env:NAME` | `file:<path>#<key>` | ""（未配置）。 */
+  api_key_ref: string;
+  enabled: boolean;
+  default_model: string;
+  /** 该服务商可用的模型名（用户可增删）。 */
+  models: string[];
+  note?: string;
+}
+
+/** 一键同步模式：single_key_all=所有功能共用同一个密钥引用；per_provider=各服务商独立。 */
+export type ModelSyncMode = "single_key_all" | "per_provider";
+
+export interface AgentModelBinding {
+  provider_id: string;
+  model: string;
+  /** 采样温度（可选，0-2）。 */
+  temperature?: number;
+  max_tokens?: number;
+}
+
+export interface ModelRoutingConfig {
+  sync_mode: ModelSyncMode;
+  default_provider_id: string;
+  providers: ModelProviderConfig[];
+  /** role -> 绑定（10 个角色默认绑定默认服务商）。 */
+  agent_models: Record<string, AgentModelBinding>;
+}
+
+/** 单个智能体的专业系统提示词。 */
+export interface SystemPromptConfig {
+  role: string;
+  title: string;
+  system_prompt: string;
+  updated_at: string;
+}
+
+/**
+ * 总调度（最上层智能体）负责管理的核心设置：conductor 专业系统提示词、
+ * 各 agent 系统提示词、自动规划/步数上限/提交前确认。
+ */
+export interface OrchestratorSettings {
+  conductor_prompt: string;
+  system_prompts: SystemPromptConfig[];
+  auto_plan: boolean;
+  max_steps_per_run: number;
+  ask_before_commit: boolean;
+}
+
+/** resolveAgentModel 的返回：只给 has_key，绝不返回明文密钥。 */
+export interface ResolvedAgentModel {
+  role: string;
+  provider_id: string;
+  provider: ModelProviderConfig;
+  binding: AgentModelBinding;
+  model: string;
+  has_key: boolean;
+  key_source: "env" | "file" | "missing";
+}
+
+/** getApiKeyForProvider 的运行时解析结果（仅运行器内部使用，不写日志/不落盘）。 */
+export interface ApiKeyResolution {
+  ok: boolean;
+  /** 明文密钥：**仅供运行时调用，禁止写入日志/配置/审计**。 */
+  value?: string;
+  source: "env" | "file" | "missing";
+  env_name?: string;
+  file?: string;
+  error?: string;
+}
+
+export interface SyncApiKeyResult {
+  /** 同步后的密钥引用（引用本身不是密钥，可展示）。 */
+  api_key_ref: string;
+  /** 展示用掩码引用。 */
+  api_key_ref_masked: string;
+  sync_mode: ModelSyncMode;
+  affected_provider_ids: string[];
+  already_consistent: boolean;
+}
+
+export interface LocalApiKeyResult {
+  provider_id: string;
+  api_key_ref: string;
+  secrets_file: string;
+  created: boolean;
+}
+
+export interface ProviderKeyRefUpdate {
+  provider_id: string;
+  api_key_ref: string;
+  api_key_ref_masked: string;
+  affected_provider_ids: string[];
+}
+
+export interface OrchestratorUpdate {
+  auto_plan?: boolean;
+  max_steps_per_run?: number;
+  ask_before_commit?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// 6.8) 系统动作策略（v1.3 新增：受管程序/插件/危险动作二次确认）
+// ---------------------------------------------------------------------------
+
+/** 受管程序（系统总控 supervisor 只能启停/管理白名单内的程序）。 */
+export interface ManagedAppConfig {
+  id: string;
+  name: string;
+  /** 启动命令（如 node examples/demo-web/server.mjs / notepad.exe）。 */
+  command: string;
+  allow_start: boolean;
+  allow_stop: boolean;
+  allow_remove: boolean;
+}
+
+/**
+ * 系统动作策略：受管应用白名单、插件目录、危险动作开关与二次确认。
+ * 默认 allow_destructive=true 但 require_confirmation=true（危险动作必须二次确认）。
+ */
+export interface SystemPolicyConfig {
+  managed_apps: ManagedAppConfig[];
+  plugins_dir: string;
+  allow_destructive: boolean;
+  require_confirmation: boolean;
+  confirmation_ttl_seconds: number;
+}
+
+export interface SystemPolicyUpdate {
+  managed_apps?: ManagedAppConfig[];
+  plugins_dir?: string;
+  allow_destructive?: boolean;
+  require_confirmation?: boolean;
+  confirmation_ttl_seconds?: number;
+}
+
+export interface ModelProviderRemovalResult {
+  removed_provider_id: string;
+  /** 原本绑定该服务商、已自动改绑到默认服务商的代理角色。 */
+  rebound_roles: string[];
+}
+
+export interface ModelSyncModeResult {
+  sync_mode: ModelSyncMode;
+  /** 因切换为一键同步而被统一的 provider id。 */
+  synced_provider_ids: string[];
+}
+
+// ---------------------------------------------------------------------------
 // 7) 审批策略 / 数据保留 / 总配置
 // ---------------------------------------------------------------------------
 
@@ -279,6 +482,12 @@ export interface StewardConfig {
   agents: AgentConfig[];
   approval: ApprovalPolicy;
   data: DataConfig;
+  /** v1.2 新增：多模型路由 / API 密钥引用 / 各智能体模型分配（旧 config 自动补默认）。 */
+  models: ModelRoutingConfig;
+  /** v1.2 新增：总调度负责的核心设置与专业系统提示词（旧 config 自动补默认）。 */
+  orchestrator: OrchestratorSettings;
+  /** v1.3 新增：系统动作策略（受管程序/插件/危险动作二次确认；旧 config 自动补默认）。 */
+  system_policy: SystemPolicyConfig;
   updated_at: string;
 }
 
@@ -318,6 +527,10 @@ export interface SetModeOptions {
   preserve_token_budget?: boolean;
   /** 保留功能开关自定义状态（默认 false：功能开关按目标模式默认值重置）。 */
   preserve_features?: boolean;
+  /** v1.2：保留用户自配的模型/API 密钥引用（默认 true；关闭会重置为目标模式默认模型）。 */
+  preserve_models?: boolean;
+  /** v1.2：保留用户自定义的系统提示词（默认 true）。 */
+  preserve_orchestrator?: boolean;
 }
 
 export interface ResetDataResult {

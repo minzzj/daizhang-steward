@@ -1,0 +1,7 @@
+{
+  "id": "demo-plugin",
+  "name": "演示插件（受管范围内）",
+  "version": "1.0.0",
+  "enabled": true,
+  "description": "用于演示系统总控的插件启用/禁用/删除（删除会先备份到回收站）"
+}

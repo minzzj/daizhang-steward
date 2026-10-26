@@ -1,4 +1,4 @@
-/**
+﻿/**
  * packages/steward-console — 代掌 Steward 本地 Web 控制台（v1.1 专业版）
  *
  * 零第三方依赖（Node 内置 http + 原生 HTML/CSS/JS），只监听 127.0.0.1。
@@ -23,8 +23,14 @@
 
 export * from "./provider.js";
 export * from "./admin.js";
+export * from "./chat.js";
 export * from "./pages.js";
 export * from "./pages-admin.js";
+export * from "./pages-chat.js";
+export * from "./system.js";
+export * from "./pages-system.js";
 export * from "./server.js";
 export { BASE_CSS, CLIENT_JS } from "./assets.js";
 export { PRO_CSS, ADMIN_JS } from "./assets-admin.js";
+export { CHAT_CSS, CHAT_JS } from "./assets-chat.js";
+export { SYSTEM_CSS, SYSTEM_JS } from "./assets-system.js";

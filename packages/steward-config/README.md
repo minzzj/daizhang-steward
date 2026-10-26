@@ -1,11 +1,15 @@
-# `@daizhang/steward-config` — 配置中心（v1.1-A · 三模式）
+# `@daizhang/steward-config` — 配置中心（v1.1 三模式 + v1.2 多模型/密钥/提示词 + v1.3 supervisor/epay/系统策略）
 
-代掌 Steward v1.1 的配置中心核心：**全部参数可配置、三种运行模式、所有功能可逐项禁用、
-银行卡/支付配置明确、Token 预算可配置、0 元极限预算、数据可清空**。
+代掌 Steward 的配置中心核心：**全部参数可配置、三种运行模式、所有功能可逐项禁用、
+银行卡/支付配置明确（含易支付 epay）、Token 预算可配置、0 元极限预算、数据可清空**；
+v1.2 新增：**所有智能体使用可配置模型（各 agent 可不同模型/服务商）、用户自配 API 密钥引用
+（env/本地 secrets 文件，密钥绝不入库）、一键同步同一密钥、专业系统提示词（核心设置由总调度管理）**；
+v1.3 新增：**两层总调度（supervisor 系统总控 + conductor 总调度）、易支付（epay）、
+系统动作策略（受管程序/插件/危险动作二次确认）**。
 
 - 零第三方依赖；纯逻辑 + JSON 原子持久化（`<root>/config.json`）；无网络；
-- 敏感字段只存掩码/引用（银行卡只留后 4 位、微信/支付宝 id 打码、税号/执照号打码），**绝不存明文**；
-- 所有变更、预算拒绝、Token 超限都写审计（`<root>/config-audit.jsonl`，只追加）。
+- 敏感字段只存掩码/引用（银行卡只留后 4 位、微信/支付宝 id 打码、税号/执照号打码、API 密钥只存 env/file 引用），**绝不存明文**；
+- 所有变更、预算拒绝、Token 超限、模型/密钥引用/提示词/系统策略变更都写审计（`<root>/config-audit.jsonl`，只追加，**不记录明文密钥**）。
 
 ---
 
@@ -162,10 +166,20 @@ const result = engine.resetData(join(root, "runs"));   // 通常是仓库根/数
 | 代理 | `agents.listAgents()` / `listAgents()` / `setAgentEnabled(role, enabled)` / `setAgentConfig(role, update)` / `agentUsage(role)` / `defaultAgents(mode)` |
 | 其他参数 | `setProfile(partial)` / `setApprovalPolicy(partial)` / `setData(partial)` |
 | 数据/审计 | `resetData(dataRoot)` / `auditTrail(limit?)` / `tokenUsageHistory()` / `validate()` |
+| **模型路由**（v1.2） | `listModelProviders()` / `upsertModelProvider(provider)` / `removeModelProvider(id)` / `setDefaultProvider(id)` / `setModelSyncMode(mode)` / `syncApiKey(ref)` / `setProviderApiKeyRef(id, ref)` / `maskApiKeyRef(ref)` / `defaultModelRoutingFor(mode)` |
+| **各 agent 模型**（v1.2） | `setAgentModel(role, binding)` / `resolveAgentModel(role)` → `{provider, model, binding, has_key, key_source}`（**不返回明文**） |
+| **本地密钥**（v1.2） | `setLocalApiKey(providerId, plaintext)` / `clearLocalApiKey(providerId)` / `secretsFilePath()` / `getApiKeyForProvider(id)`（运行时解析，不落盘/不写日志） |
+| **系统提示词**（v1.2） | `listSystemPrompts()` / `setSystemPrompt(role, prompt, opts?)` / `resetSystemPrompts()` / `getConductorPrompt()` / `setConductorPrompt(prompt)` / `getOrchestratorSettings()` / `setOrchestratorSettings(patch)` / `validateSystemPrompt(prompt)` |
+| **易支付 epay**（v1.3） | `getEpayConfig()` / `setEpayConfig(patch)` / `maskEpayKeyRef()`（密钥只存引用；live 必须补齐商家信息） |
+| **系统动作策略**（v1.3） | `getSystemPolicy()` / `setSystemPolicy(patch)`（受管应用白名单/插件目录/危险动作二次确认 TTL） |
 
-纯函数/常量导出：`defaultsForMode`、`defaultAgents`、`validateConfig`、`maskAccount`、`maskBankCard`、
-`maskAccountId`、`maskTaxNo`、`maskLicenseNo`、`FEATURE_NAMES`、`AGENT_ROLES`、`CONFIG_VERSION`、
-`RESETTABLE_SUBDIRS`。
+纯函数/常量导出：`defaultsForMode`、`defaultAgents`、`defaultModelProviders`、`defaultModelRouting`、
+`defaultAgentModels`、`defaultEpayConfig`、`defaultSystemPolicy`、`SUPERVISOR_TOKEN_LIMIT`、
+`validateConfig`、`maskAccount`、`maskBankCard`、`maskAccountId`、`maskTaxNo`、`maskLicenseNo`、
+`maskApiKeyRef`、`isValidApiKeyRef`、`parseApiKeyRef`、`describeApiKeyRef`、`resolveApiKeyRef`、
+`SECRETS_FILE_NAME`、`DEFAULT_CONDUCTOR_PROMPT`、`SYSTEM_PROMPT_ROLES`、`PROMPT_SAFETY_KEYWORDS`、
+`buildDefaultSystemPrompts`、`buildDefaultOrchestratorSettings`、`validateSystemPromptText`、
+`hasSafetyKeyword`、`FEATURE_NAMES`、`AGENT_ROLES`、`CONFIG_VERSION`、`RESETTABLE_SUBDIRS`。
 
 ---
 
@@ -232,19 +246,216 @@ case "budget": {
 
 ```bash
 npm run build
-node --test tests/unit/config.test.mjs   # 34 条（三模式/开关/预算/Token/掩码/导入导出/清空/审计）
+node --test tests/unit/config.test.mjs   # 60 条（v1.1 三模式/开关/预算/Token/掩码/清空/审计 + v1.2 模型/密钥/提示词/迁移 + v1.3 supervisor/epay/系统策略）
 ```
 
 覆盖：三模式默认值差异、模式切换 diff、14 项功能禁用、0 元极限模式、预算三层拒绝、Token 累计/剩余/
 单步/总量/按 agent/持久化、银行卡与微信/支付宝掩码（不出现明文）、支付渠道过滤、保存/加载/导入导出/
-校验失败、reset、resetData（白名单 + 防穿越 + 统计）、审计追加、个人模式禁令、企业模式主体必填。
+校验失败、reset、resetData（白名单 + 防穿越 + 统计）、审计追加、个人模式禁令、企业模式主体必填；
+v1.2：默认模型路由/各 agent 不同模型、一键同步、per-provider 独立、密钥引用格式校验与掩码、
+本地 secrets 写入（config.json 无明文）、has_key 解析不泄露、系统提示词修改/重置/校验、总调度核心提示词、
+旧配置迁移、审计无明文；v1.3：supervisor 两层总调度（第 11 角色/权限/自治/Token）、epay 默认与
+demo/live 校验、系统动作策略默认值与非法配置拒绝、v1.2→v1.3 旧配置迁移。
 
 ---
 
-## 11. 非目标与限制
+## 11. 模型与 API 密钥配置（v1.2）
 
-- 不做真实支付/开票/银行对接（只做配置与掩码；真实资金动作由企业/财务模块人工执行）；
+```ts
+const engine = new ConfigEngine({ root: join(process.cwd(), ".steward-data") });
+
+// 1) 看/改模型服务商（4 个预置：DeepSeek 默认启用，OpenAI 兼容/Anthropic/本地默认关闭）
+engine.listModelProviders();
+engine.upsertModelProvider({
+  id: "my-openai", name: "我的 OpenAI 兼容", kind: "openai_compatible",
+  base_url: "https://api.example.com/v1",
+  api_key_ref: "env:MY_OPENAI_KEY",       // 只存引用，不存明文
+  enabled: true, default_model: "gpt-4o-mini", models: ["gpt-4o-mini", "gpt-4o"],
+});
+engine.setDefaultProvider("deepseek");
+
+// 2) 每个 agent 可绑定不同服务商/模型/温度/最大 token
+engine.setAgentModel("conductor", { provider_id: "deepseek", model: "deepseek-reasoner", temperature: 0.3, max_tokens: 8192 });
+engine.setAgentModel("operator",  { provider_id: "my-openai", model: "gpt-4o-mini" });
+const resolved = engine.resolveAgentModel("operator");
+// { provider, model, binding, has_key: true, key_source: "env" } ← 只给 has_key，不给明文
+
+// 3) 运行时解析密钥（仅运行器内部使用；不写日志/审计/配置）
+const key = engine.getApiKeyForProvider("my-openai");   // { ok, value, source: "env"|"file" }
+```
+
+`resolveAgentModel` 返回字段：`{role, provider_id, provider, binding, model, has_key, key_source}`；
+`has_key=false` 时 `key_source="missing"`，调用方应提示用户配置密钥（而不是拿空 key 调模型）。
+
+---
+
+## 12. 一键同步同一密钥 / 独立密钥（v1.2）
+
+- `sync_mode = "single_key_all"`：所有服务商/功能共用同一个密钥引用（个人/体验模式默认）；
+- `sync_mode = "per_provider"`：各服务商独立密钥（企业模式默认，适合多团队/多账号）。
+
+```ts
+engine.syncApiKey("env:MY_SHARED_KEY");                 // 一键同步到所有功能
+engine.setModelSyncMode("per_provider");                 // 切独立模式
+engine.setProviderApiKeyRef("openai", "env:OPENAI_KEY"); // per_provider 只改单个
+engine.setModelSyncMode("single_key_all");               // 切回一键：立即统一所有引用
+```
+
+`single_key_all` 模式下配置校验会拒绝引用不一致（`validate()` 报可读错误）；
+模式切换（`setMode`）默认保留用户自配模型与密钥引用（`preserve_models:false` 才重置）。
+
+---
+
+## 13. 系统提示词（专业版，核心设置由总调度管理）（v1.2）
+
+`orchestrator` 保存总调度负责的核心设置：
+
+| 字段 | 说明 |
+|---|---|
+| `conductor_prompt` | 总调度（业务层最上层）核心系统提示词（计划/调度/预算/审批/证据/失败升级/接管） |
+| `system_prompts[]` | 11 个 agent 角色的专业系统提示词（`{role, title, system_prompt, updated_at}`），默认均含安全关键词 |
+| `auto_plan` / `max_steps_per_run` / `ask_before_commit` | 自动规划 / 单次运行步数上限（demo 10 / personal 20 / enterprise 50）/ 提交前确认 |
+
+```ts
+engine.getConductorPrompt();
+engine.setConductorPrompt("你是总调度：先计划后执行，所有结论附证据；支付/合同必须审批；不越界；失败升级人工。");
+engine.listSystemPrompts();                          // 11 个 agent 提示词（含 supervisor）
+engine.setSystemPrompt("operator", "…>20 字，含证据/审批/不越界/失败升级…");
+engine.resetSystemPrompts();
+engine.setOrchestratorSettings({ auto_plan: false, max_steps_per_run: 8, ask_before_commit: true });
+engine.validateSystemPrompt(text);
+```
+
+提示词修改会写审计（`prompt.update` / `orchestrator.conductor.update` / `prompt.reset`），不记录密钥。
+
+---
+
+## 14. 两层总调度：supervisor 系统总控 + conductor 总调度（v1.3）
+
+`defaultAgents` 由 10 个角色扩展为 **11 个**：新增第 11 个角色 **`supervisor`（系统总控/超级总调度）**，
+三模式默认均存在，默认配置：
+
+```ts
+{
+  role: "supervisor", name: "系统总控", autonomy: "approval_required",
+  tools: ["system.*", "agents.*", "models.*", "prompts.*", "project.delegate", "logs.read"],
+  token_limit: 1_000_000, enabled: true,
+}
+```
+
+| 层级 | 角色 | 职责 |
+|---|---|---|
+| 最高层（系统级） | **supervisor 系统总控** | 管理程序与插件（受管应用白名单/plugins 目录）、管理**所有 agent 的模型与系统提示词**、读全部日志（只读不删）、危险动作**二次确认**；系统级/跨 agent 核心设置 |
+| 业务层 | **conductor 总调度** | 拆解目标、派发专项代理、预算/Token 管控、证据汇总、审批与接管（业务编排） |
+
+约束（`validate()` 强制）：supervisor 必须存在且 `autonomy="approval_required"`、必须含
+`system.* / agents.* / models.* / prompts.* / logs.read` 权限工具；默认 `token_limit=1,000,000`
+（`SUPERVISOR_TOKEN_LIMIT`）。supervisor 默认系统提示词含“系统总控/证据/审批/不越界/失败升级/日志/二次确认”。
+
+---
+
+## 15. 易支付（epay）配置（v1.3）
+
+`payments.epay`：
+
+```ts
+interface EpayConfig {
+  enabled: boolean;
+  gateway_url: string;   // 必须 https
+  pid: string;           // 商户 ID（demo 可空；live 必填）
+  key_ref: string;       // 商户密钥引用：env:EPAY_KEY / file:secrets.json#epay（绝不存明文）
+  pay_types: Array<"alipay" | "wxpay">;
+  notify_url: string;
+  return_url: string;
+  mode: "demo" | "live";
+  sign_type: "MD5";
+}
+```
+
+- 默认：`enabled=false`、`mode="demo"`、网关 `https://pay.example.com/submit.php`、
+  `pay_types=["alipay","wxpay"]`、`sign_type="MD5"`（未填商家信息时 disabled）；
+- 校验：`gateway_url` 必须 **https**；`key_ref` 只允许 `env:NAME` / `file:path#key`（拒绝明文）；
+  `key_ref` 可通过 `maskEpayKeyRef()` 掩码展示；`mode="live"` 时必须补齐 `pid + key_ref + notify_url + return_url`；
+- 配置方法：`getEpayConfig()` / `setEpayConfig(patch)`；变更写审计（`payment.epay.update`，reason 只含掩码引用）。
+- 本地密钥：`setLocalApiKey("epay", plaintext)` 写 `<root>/secrets.json`，并把 `key_ref` 设为 `file:secrets.json#epay`。
+
+---
+
+## 16. 系统动作策略（受管程序/插件/危险动作二次确认）（v1.3）
+
+`system_policy`（由 supervisor 使用）：
+
+```ts
+interface SystemPolicyConfig {
+  managed_apps: Array<{ id; name; command; allow_start; allow_stop; allow_remove }>;
+  plugins_dir: string;
+  allow_destructive: boolean;
+  require_confirmation: boolean;
+  confirmation_ttl_seconds: number;
+}
+```
+
+默认：受管应用=内置演示（`demo-node` Node 演示服务 / `notepad` 记事本）、`plugins_dir="plugins"`、
+`allow_destructive=true` 但 `require_confirmation=true`、`confirmation_ttl_seconds=120`。
+校验：受管应用 id/name/command 非空且 id 唯一；`plugins_dir` 必须是安全相对路径（不允许绝对路径/`..`）；
+TTL 1–3600；**安全约束：`allow_destructive=true` 时 `require_confirmation` 必须为 true（危险动作强制二次确认）**。
+方法：`getSystemPolicy()` / `setSystemPolicy(patch)`；变更写审计 `system.policy.update`。
+
+---
+
+## 17. 安全说明（密钥绝不入库）
+
+1. **config.json 只存引用**：`model.providers[].api_key_ref` / `payments.epay.key_ref` 只允许
+   `env:NAME` / `file:<相对路径>#<key>` / 空；任何像明文密钥的字符串都会被拒绝（`ConfigValidationError`）。
+2. **明文只可能在两处**：进程环境变量；`<root>/secrets.json`（`setLocalApiKey` 写入，尽力 0600，
+   `.gitignore` 已忽略 `secrets*`）。`setLocalApiKey` 后自动把引用设为 `file:secrets.json#<id>`。
+3. **不落日志/审计**：`resolveAgentModel` 只返回 `has_key`；`getApiKeyForProvider` 返回的明文
+   仅供运行时调用，引擎不写日志、不写审计、不落盘；审计 reason 只写掩码引用（`env:DE***EY`）。
+4. **展示用掩码**：`maskApiKeyRef` / `describeApiKeyRef` / `maskEpayKeyRef` 可安全用于控制台；
+   `setLocalApiKey` 在纯内存模式（无 root）会拒绝（没有安全落盘位置时不允许写明文）。
+5. **路径安全**：`file:` 引用与 `plugins_dir` 只允许相对路径且禁止 `..`；解析时校验路径不出 root；
+   受管应用/插件目录操作由系统动作执行器限定在受管目录内。
+
+---
+
+## 18. CLI / 控制台集成补充（v1.2 / v1.3）
+
+```ts
+// 模型与密钥
+engine.listModelProviders();                              // 展示 api_key_ref masked + has_key
+engine.syncApiKey("env:MY_SHARED_KEY");                   // 一键同步同一密钥到所有功能
+engine.setProviderApiKeyRef("my-openai", "env:MY_OPENAI_KEY");
+engine.setLocalApiKey("my-openai", readHiddenInput());    // 明文只写 secrets.json
+engine.setAgentModel("supervisor", { provider_id: "deepseek", model: "deepseek-reasoner" });
+engine.resolveAgentModel("conductor");                    // 校验并提示 has_key
+
+// 系统提示词 / 总调度
+engine.listSystemPrompts(); engine.setSystemPrompt("supervisor", promptText);
+engine.setConductorPrompt(conductorPromptText); engine.resetSystemPrompts();
+
+// 易支付
+engine.getEpayConfig(); engine.setEpayConfig({ enabled: true, mode: "demo", pid: "10001", key_ref: "env:EPAY_KEY" });
+engine.maskEpayKeyRef();
+
+// 系统动作策略
+engine.getSystemPolicy(); engine.setSystemPolicy({ plugins_dir: "plugins", confirmation_ttl_seconds: 120 });
+
+// 双层设置页建议：系统级（supervisor：程序/插件/所有 agent 模型与提示词/系统策略）
+// vs 业务级（conductor：预算/审批/业务提示词），两者数据都来自同一个 ConfigEngine。
+```
+
+控制台建议：设置页分「系统总控（supervisor）」与「业务总调度（conductor）」两栏；
+模型/密钥区展示 `has_key` 徽标与掩码引用、一键同步按钮；系统动作区展示受管应用白名单与
+“危险动作需二次确认”开关（关闭确认会被校验拒绝）；易支付区展示 demo/live 状态与掩码后的商户密钥引用。
+
+---
+
+## 19. 非目标与限制
+
+- 不做真实支付/开票/银行/易支付资金对接（只做配置、掩码与校验；真实资金动作由企业/财务模块人工执行）；
 - 不提供 HTTP 服务（控制台在 apps/packages 层由 Lead 集成）；
 - 配置为本地单机文件，不做多用户/权限（企业多席位后续版本）；
 - 掩码只保证 UI/配置文件不出现明文；真实密钥/卡号请放环境变量或密钥存储（只存引用）；
-- `checkBudget` 只做单层额度判断，不做跨层累计消耗（累计记账由经营域/企业引擎负责）。
+- `checkBudget` 只做单层额度判断，不做跨层累计消耗（累计记账由经营域/企业引擎负责）；
+- supervisor/system_policy 只做**配置与校验**；真实进程/插件操作由系统动作执行器按该策略执行（安全边界在配置层 + 执行器双层）；
+- epay 默认仅 demo 模式；`live` 需要用户填入真实商户信息并由人工确认（本包不发起任何真实支付请求）。

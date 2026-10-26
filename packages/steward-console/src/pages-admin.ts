@@ -1,4 +1,4 @@
-/**
+﻿/**
  * packages/steward-console/src/pages-admin.ts
  *
  * 专业版新增页面：项目列表 / 配置中心 / 智能体中心 / 后台 / 数据管理。
@@ -34,6 +34,10 @@ import {
   type TokenBudgetConfig,
 } from "./admin.js";
 import type { ConsoleProject } from "./provider.js";
+import { renderModelSettingsSection } from "./pages-chat.js";
+import { renderEpaySettingsSection } from "./pages-system.js";
+import type { EpayConfig } from "./system.js";
+import type { ModelSettings } from "./chat.js";
 
 function escapeAttr(value: unknown): string {
   return escapeHtml(value);
@@ -96,6 +100,10 @@ export interface SettingsPageInput {
   config: StewardConfig;
   status: AdminStatus;
   modeResult?: ModeApplyResult | null;
+  /** v1.2：模型 / API 密钥 / 系统提示词（chat provider 提供；缺省时不渲染该分组）。 */
+  chatSettings?: ModelSettings;
+  /** v1.3：易支付（epay）商家设置（system provider 提供；缺省时不渲染该分组）。 */
+  epayConfig?: EpayConfig;
   options: PageRenderOptions;
 }
 
@@ -255,6 +263,7 @@ ${renderModeDiff(input.modeResult)}
     </div>
     <p class="muted small">合同与用印一律由人类完成：AI 只生成草稿与核对清单，<b>不代签、不盖印</b>。</p>
   </div>
+  ${input.epayConfig === undefined ? "" : renderEpaySettingsSection({ epay: input.epayConfig, scope: "settings" })}
 </section>
 
 <section class="panel" id="agents-settings-section">
@@ -274,6 +283,16 @@ ${renderModeDiff(input.modeResult)}
     <label>接管快捷键<input class="input" type="text" id="approval-takeover" value="${escapeAttr(config.approval.takeover_shortcut)}" /></label>
   </div>
 </section>
+
+${
+  input.chatSettings === undefined
+    ? ""
+    : renderModelSettingsSection({
+        settings: input.chatSettings,
+        agentRoles: config.agents.map((agent) => ({ role: agent.role, title: agent.name })),
+        mode: config.profile.mode,
+      })
+}
 
 <div class="settings-actions" id="settings-actions">
   <button class="primary" type="button" id="settings-save">保存配置</button>
@@ -327,7 +346,10 @@ function renderAgentCard(agent: ConsoleAgentInfo): string {
       <span>自主等级 <b>${escapeHtml(AGENT_AUTONOMY_LABELS[agent.autonomy])}</b></span>
     </div>
     <ul class="agent-logs">${logs === "" ? "<li class=\"muted\">暂无日志</li>" : logs}</ul>
-    <button class="agent-expand" type="button" data-agent-expand="${escapeAttr(agent.role)}">展开详情</button>
+    <div class="agent-card-actions">
+      <button class="agent-expand" type="button" data-agent-expand="${escapeAttr(agent.role)}">展开详情</button>
+      <a class="run-link" href="/agents/${encodeURIComponent(agent.role)}" id="agent-link-${escapeAttr(agent.role)}">查看对话记录 →</a>
+    </div>
     <div class="agent-detail" id="agent-detail-${escapeAttr(agent.role)}" hidden>
       <div class="agent-detail-row"><span class="muted">Token 限额</span><b class="mono">${agent.token_limit.toLocaleString("zh-CN")}</b></div>
       <div class="agent-detail-row"><span class="muted">工具</span><span>${toolChips === "" ? "—" : toolChips}</span></div>
@@ -339,7 +361,7 @@ function renderAgentCard(agent: ConsoleAgentInfo): string {
 
 export function renderAgentsPage(input: AgentsPageInput): string {
   const content = `
-${pageHeading("智能体中心", `共 ${String(input.agents.length)} 个智能体 · 当前模式：${RUN_MODE_LABELS[input.mode]} · 点击卡片可展开详情`)}
+${pageHeading("智能体中心", `共 ${String(input.agents.length)} 个智能体 · 当前模式：${RUN_MODE_LABELS[input.mode]} · 点击卡片可展开详情，或查看每个智能体的对话记录（/agents/:role）`)}
 <div class="agent-grid" id="agents-grid">${input.agents.map(renderAgentCard).join("")}</div>`;
   return renderShell(input.options, "智能体中心", content);
 }

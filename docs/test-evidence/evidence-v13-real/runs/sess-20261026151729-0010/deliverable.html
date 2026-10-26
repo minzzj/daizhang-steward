@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>代掌交付物 · 单页 HTML 报价单页面制作与 10 元收款请求登记计划</title>
+<style>
+  :root { color-scheme: light; --bg:#f5f7fb; --card:#ffffff; --ink:#17223b; --muted:#5c6b8a; --line:#dfe5f2; --accent:#2f6bff; }
+  body { margin:0; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width: 880px; margin: 40px auto; padding: 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px 32px; box-shadow:0 10px 30px rgba(23,34,59,.06); }
+  h1 { font-size:26px; margin:0 0 8px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .badge { display:inline-block; background:#e8efff; color:var(--accent); border-radius:999px; padding:4px 12px; font-size:12px; margin-right:8px; }
+  table { width:100%; border-collapse:collapse; margin-top:18px; font-size:14px; }
+  th, td { text-align:left; border-bottom:1px solid var(--line); padding:9px 8px; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  footer { margin-top:20px; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <span class="badge">本地编排内核生成</span><span class="badge">未连接外部系统</span>
+    <h1>单页 HTML 报价单页面制作与 10 元收款请求登记计划</h1>
+    <p class="muted">目标：帮我做一份单页 HTML 报价单页面，并在完成后记录一笔10元收款请求（真实模型执行）</p>
+    <p class="muted">会话：sess-20261026151729-0010｜当前步骤：3. 按质检清单修复缺陷并重新输出最终版文件，附修改点说明｜生成于：2026-10-26T15:17:35.495Z</p>
+    <h2 style="font-size:18px;margin-top:26px;">计划与执行状态</h2>
+    <table>
+      <thead><tr><th>#</th><th>智能体</th><th>动作</th><th>说明</th><th>状态</th></tr></thead>
+      <tbody>
+| 1 | operator | operator.build_deliverable | 制作单页 HTML 报价单：包含公司/客户信息、报价明细表（项目、数量、单价、小计）、合计金额、有效期与备注，样式内联、响应式、可直接浏览器打开，输出文件路径与自检说明 | done |
+| 2 | harness | harness.code_review | 检查 HTML 结构合法性、金额计算与合计是否一致、无外链依赖、移动端可读性，返回问题清单 | done |
+| 3 | operator | operator.fix_defects | 按质检清单修复缺陷并重新输出最终版文件，附修改点说明 | running |
+| 4 | reviewer | reviewer.verify_deliverable | 对照验收标准核查最终 HTML：单页可打开、明细与合计正确、无占位符残留，产出通过/不通过结论与证据（文件路径、截图或关键片段） | pending |
+| 5 | finance | finance.create_receivable_request | 在报价单验收通过后登记一笔 10 元收款请求（金额 10 元、关联该报价单、状态待确认），仅生成草稿，不实际发起收款；对外收款动作必须由人工确认后方可执行 | pending |
+      </tbody>
+    </table>
+    <footer>本页面由代掌 Steward 编排内核在本地生成，仅用于演示与验收；不含真实客户数据。</footer>
+  </section>
+</main>
+</body>
+</html>

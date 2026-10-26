@@ -1,0 +1,73 @@
+{
+  "version": "2.0.0",
+  "updated": "2026-10-26",
+  "description": "v1.3 专业系统提示词（supervisor 系统总控 + conductor 项目总调度 + 9 专项智能体）",
+  "prompts": [
+    {
+      "id": "supervisor",
+      "file": "v2/supervisor.md",
+      "version": "supervisor@2.0.0",
+      "sha256": "738e6cf655642006458e1be01168d5cfaaa4f40f0af322c6d0ed43fe584a1538"
+    },
+    {
+      "id": "conductor",
+      "file": "v2/conductor.md",
+      "version": "conductor@2.0.0",
+      "sha256": "8ce542b2847253755191f78d9a06dc51c8b8e952bff122795996e2ba726541a5"
+    },
+    {
+      "id": "operator",
+      "file": "v2/operator.md",
+      "version": "operator@2.0.0",
+      "sha256": "2742c1a9b5d9a92cebb47b327e7dec9000217327abced5f0e2d041832e41b0de"
+    },
+    {
+      "id": "harness",
+      "file": "v2/harness.md",
+      "version": "harness@2.0.0",
+      "sha256": "5b867792e9a20325fb693507c0ff24dd14d8780db835903db90551f862218e9a"
+    },
+    {
+      "id": "customer",
+      "file": "v2/customer.md",
+      "version": "customer@2.0.0",
+      "sha256": "63e7a546639dd021a0ae184c4af17dc979eb01a125b325e06f3bc47a141f0ea1"
+    },
+    {
+      "id": "finance",
+      "file": "v2/finance.md",
+      "version": "finance@2.0.0",
+      "sha256": "38675c722233a39d920f204788d4309e9d510c8548e0eacf6aa6e872d607e4cb"
+    },
+    {
+      "id": "reviewer",
+      "file": "v2/reviewer.md",
+      "version": "reviewer@2.0.0",
+      "sha256": "23c2f75e586748846981cf3fac77bf37135d9777d287fd9cfbad7990f0f15688"
+    },
+    {
+      "id": "backend",
+      "file": "v2/backend.md",
+      "version": "backend@2.0.0",
+      "sha256": "d7e014f052580aadee536a285f1c454cd5c545142a54a057d1c5169ef830a090"
+    },
+    {
+      "id": "scout",
+      "file": "v2/scout.md",
+      "version": "scout@2.0.0",
+      "sha256": "d632ee91430caad0f591eb413fd81c5694215d0e2f2b0dee62a25229040bf509"
+    },
+    {
+      "id": "content",
+      "file": "v2/content.md",
+      "version": "content@2.0.0",
+      "sha256": "c35200e3dc5f4f5ab5025fe80567d01375ec83a3a96deb93c7b3455287ce1c61"
+    },
+    {
+      "id": "research",
+      "file": "v2/research.md",
+      "version": "research@2.0.0",
+      "sha256": "f00d5daa16a956036308eef0074087e7bd4b15201c06ccf10c404bb08c1e9cbc"
+    }
+  ]
+}

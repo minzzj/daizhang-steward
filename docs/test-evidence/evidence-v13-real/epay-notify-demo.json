@@ -1,0 +1,11 @@
+{
+  "pid": "10001",
+  "trade_no": "EP-DEMO-001",
+  "out_trade_no": "PAY-2026-10-26T15-20-30-538Z-4",
+  "type": "alipay",
+  "money": "10.00",
+  "trade_status": "TRADE_SUCCESS",
+  "name": "报价单交付",
+  "sign": "819470a4e71e0f847ee7f46fa1037079",
+  "sign_type": "MD5"
+}

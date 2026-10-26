@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "requests": [
+    {
+      "id": "pay-2026-10-26T14-43-45-309Z-001",
+      "amount_cny": 10,
+      "client": "示例个人客户（虚构）",
+      "purpose": "项目周报交付",
+      "method": "wechat_pay",
+      "status": "paid",
+      "created_at": "2026-10-26T14:43:45.309Z",
+      "payment_ref": "PAY-2026-10-26T14-43-45-309Z-1",
+      "qr_payload": "https://pay.example.com/p/PAY-2026-10-26T14-43-45-309Z-1",
+      "paid_at": "2026-10-26T14:44:14.585Z",
+      "ledger_entry_id": "led-PAY-2026-10-26T14-43-45-309Z-1",
+      "confirmed_by": "本人（人工确认到账）"
+    },
+    {
+      "id": "pay-2026-10-26T15-13-32-031Z-002",
+      "amount_cny": 10,
+      "client": "示例客户（虚构）",
+      "purpose": "sess-20261026151322-0003:pay-sess-20261026151322-0003",
+      "method": "manual",
+      "status": "pending",
+      "created_at": "2026-10-26T15:13:32.031Z",
+      "payment_ref": "PAY-2026-10-26T15-13-32-031Z-2",
+      "qr_payload": "https://pay.example.com/p/PAY-2026-10-26T15-13-32-031Z-2"
+    },
+    {
+      "id": "pay-2026-10-26T15-17-38-429Z-003",
+      "amount_cny": 10,
+      "client": "示例客户（虚构）",
+      "purpose": "sess-20261026151729-0010:pay-sess-20261026151729-0010",
+      "method": "manual",
+      "status": "pending",
+      "created_at": "2026-10-26T15:17:38.429Z",
+      "payment_ref": "PAY-2026-10-26T15-17-38-429Z-3",
+      "qr_payload": "https://pay.example.com/p/PAY-2026-10-26T15-17-38-429Z-3"
+    },
+    {
+      "id": "pay-2026-10-26T15-20-30-538Z-004",
+      "amount_cny": 10,
+      "client": "示例客户（虚构）",
+      "purpose": "报价单交付",
+      "method": "manual",
+      "status": "paid",
+      "created_at": "2026-10-26T15:20:30.538Z",
+      "payment_ref": "PAY-2026-10-26T15-20-30-538Z-4",
+      "qr_payload": "https://pay.example.com/p/PAY-2026-10-26T15-20-30-538Z-4",
+      "paid_at": "2026-10-26T15:20:30.820Z",
+      "ledger_entry_id": "led-PAY-2026-10-26T15-20-30-538Z-4",
+      "confirmed_by": "易支付回调（签名校验通过）"
+    }
+  ],
+  "ledger": [
+    {
+      "entry_id": "led-PAY-2026-10-26T14-43-45-309Z-1",
+      "project_id": "prj-pay-2026-10-26T14-43-45-309Z-001",
+      "type": "income",
+      "amount_cny": 10,
+      "payee_or_payer": "示例个人客户（虚构）",
+      "basis": "收款请求 PAY-2026-10-26T14-43-45-309Z-1（项目周报交付；渠道：wechat_pay）",
+      "approved_by": "本人（人工确认到账）",
+      "receipt_ref": "rcpt-PAY-2026-10-26T14-43-45-309Z-1",
+      "occurred_at": "2026-10-26T14:44:14.585Z"
+    },
+    {
+      "entry_id": "led-PAY-2026-10-26T15-20-30-538Z-4",
+      "project_id": "prj-pay-2026-10-26T15-20-30-538Z-004",
+      "type": "income",
+      "amount_cny": 10,
+      "payee_or_payer": "示例客户（虚构）",
+      "basis": "收款请求 PAY-2026-10-26T15-20-30-538Z-4（报价单交付；渠道：manual）",
+      "approved_by": "易支付回调（签名校验通过）",
+      "receipt_ref": "rcpt-PAY-2026-10-26T15-20-30-538Z-4",
+      "occurred_at": "2026-10-26T15:20:30.820Z"
+    }
+  ],
+  "audit": [
+    {
+      "at": "2026-10-26T14:43:45.309Z",
+      "action": "money.create",
+      "object": "pay-2026-10-26T14-43-45-309Z-001",
+      "result": "ok"
+    },
+    {
+      "at": "2026-10-26T14:44:14.585Z",
+      "action": "money.confirm",
+      "object": "pay-2026-10-26T14-43-45-309Z-001",
+      "result": "ok",
+      "reason": "amount=10"
+    },
+    {
+      "at": "2026-10-26T15:13:32.031Z",
+      "action": "money.create",
+      "object": "pay-2026-10-26T15-13-32-031Z-002",
+      "result": "ok"
+    },
+    {
+      "at": "2026-10-26T15:17:38.429Z",
+      "action": "money.create",
+      "object": "pay-2026-10-26T15-17-38-429Z-003",
+      "result": "ok"
+    },
+    {
+      "at": "2026-10-26T15:20:30.538Z",
+      "action": "money.create",
+      "object": "pay-2026-10-26T15-20-30-538Z-004",
+      "result": "ok"
+    },
+    {
+      "at": "2026-10-26T15:20:30.820Z",
+      "action": "money.confirm",
+      "object": "pay-2026-10-26T15-20-30-538Z-004",
+      "result": "ok",
+      "reason": "amount=10"
+    }
+  ]
+}

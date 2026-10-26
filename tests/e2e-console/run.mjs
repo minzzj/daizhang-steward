@@ -10,7 +10,7 @@
  * 验收流程（每步截图到 --evidence-dir/screenshots/）：
  *   原有 9 步（P1-C）：看板 → 项目时间线/证据 → 账本 6 要素 → 审批批准/驳回 → 接管（measured_stop_ms）
  *                      → resume → 月报 → 只监听本机；
- *   v1.1 新增 6 步：专业版导航/状态栏 → 配置中心（三模式 + 支付银行卡 + 切个人模式 + 禁用 scout 持久化）
+ *   v1.2/v1.3 新增 10 步：对话新建项目/打断恢复审批 → run 证据（缩略图大图/report/日志）→ 智能体记录\n *                      → 变现+易支付（配置/创建/确认到账/账本）→ 模型与提示词 → 系统总控（两层/程序/插件/日志）\n *                      → 危险动作二次确认（风险/备份/确认 token）→ 收尾（API/无外链/无 JS 错误）\n *   v1.1 新增 6 步：专业版导航/状态栏 → 配置中心（三模式 + 支付银行卡 + 切个人模式 + 禁用 scout 持久化）
  *                      → 智能体中心（≥8 个 + 企业专属不适用 + 展开详情）→ 后台全流程时间线（≥5 事件 + 过滤 + 证据）
  *                      → 数据管理（统计 + 二次确认清空 + 空档案 + 重置演示）→ 收尾 sanity（无 JS 错误/无外链/配置持久）。
  *
@@ -121,6 +121,21 @@ async function settleReload(page, timeoutMs = 8000) {
     // 忽略超时，由后续断言兜底
   }
   await page.waitForTimeout(300);
+}
+
+/** 安全 reload：客户端 JS 可能已触发刷新（例如保存后自动刷新），此处忽略导航竞态。 */
+async function safeReload(page, timeoutMs = 9000) {
+  try {
+    await page.reload({ waitUntil: "domcontentloaded", timeout: timeoutMs });
+  } catch {
+    // 客户端已自行刷新 / 导航被接管：继续等待页面就绪
+  }
+  await page.waitForTimeout(150);
+  try {
+    await page.waitForSelector("body", { timeout: 4000 });
+  } catch {
+    // ignore
+  }
 }
 
 async function countVisible(page, selector) {
@@ -440,7 +455,7 @@ async function stepApprovalsDecide(page, recorder) {
     checks.push(check(rejectBadge.includes("已驳回"), `驳回后状态即时更新（${secondId} → ${rejectBadge}）`));
 
     // 刷新后状态仍存在 → 证明是服务端状态而不是仅前端 DOM
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await safeReload(page);
     await page.waitForSelector("#approval-cards .approval-card", { timeout: STEP_TIMEOUT_MS });
     const approvedAfterReload = await page.locator(`.approval-card[data-approval-id="${approveId}"][data-approval-status="approved"]`).count();
     const rejectedAfterReload = await page.locator(`.approval-card[data-approval-id="${secondId}"][data-approval-status="rejected"]`).count();
@@ -648,7 +663,7 @@ async function stepSettings(page, recorder) {
     await page.locator("#mode-card-personal").click();
     await page.locator("#settings-save").click();
     await page.waitForTimeout(900);
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await safeReload(page);
     await settleReload(page);
     await page.waitForSelector("#mode-cards", { timeout: STEP_TIMEOUT_MS });
     const personalModeText = (await page.locator("#status-mode").innerText()).trim();
@@ -675,7 +690,7 @@ async function stepSettings(page, recorder) {
     await page.waitForTimeout(800);
     const feedback = (await page.locator("#settings-feedback").innerText()).trim();
     checks.push(check(feedback.includes("已保存"), `保存 scout 禁用成功（${feedback}）`));
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await safeReload(page);
     await settleReload(page);
     await page.waitForSelector("#feature-scout-enabled", { timeout: STEP_TIMEOUT_MS });
     checks.push(check(!(await page.locator("#feature-scout-enabled").isChecked()), "刷新后 scout 仍为禁用（配置持久化）"));
@@ -699,7 +714,7 @@ async function stepSettings(page, recorder) {
       const errorText = (await page.locator("#settings-errors").innerText()).trim();
       checks.push(check(errorText.includes("单步"), `校验错误文案可读（${errorText.slice(0, 80)}）`));
     }
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await safeReload(page);
     await settleReload(page);
     await page.waitForSelector("#token-per-action", { timeout: STEP_TIMEOUT_MS });
     return { checks };
@@ -807,7 +822,7 @@ async function stepDataManage(page, recorder) {
     await page.waitForSelector("#data-confirm-modal:not([hidden])", { timeout: STEP_TIMEOUT_MS });
     await page.locator("#data-confirm-yes").click();
     await page.waitForTimeout(900);
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await safeReload(page);
     await settleReload(page);
     await page.waitForSelector("#data-stats", { timeout: STEP_TIMEOUT_MS });
     const runsAfter = Number.parseInt((await page.locator("#data-runs").innerText()).trim(), 10);
@@ -820,7 +835,7 @@ async function stepDataManage(page, recorder) {
     // 重置为演示数据（恢复可测试状态）
     await page.locator("#data-reset-demo-empty").click();
     await page.waitForTimeout(900);
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await safeReload(page);
     await settleReload(page);
     await page.waitForSelector("#data-stats", { timeout: STEP_TIMEOUT_MS });
     const runsRestored = Number.parseInt((await page.locator("#data-runs").innerText()).trim(), 10);
@@ -842,7 +857,7 @@ async function stepProSanity(page, recorder, context) {
     const config = configPayload.data;
     checks.push(check(config.profile.mode === "personal", `配置持久化：运行模式=personal（实际 ${config.profile.mode}）`));
     checks.push(check(config.features.scout.enabled === false, "配置持久化：scout 功能=禁用"));
-    checks.push(check(config.features.scout.note.includes("E2E"), "配置持久化：禁用原因已保存"));
+    checks.push(check((config.features.scout.note ?? "").includes("E2E"), "配置持久化：禁用原因已保存"));
     checks.push(check(config.payments.payout_account.type === "personal", "配置持久化：收款账户=个人类型"));
     checks.push(check(config.payments.ai_may_sign === false, "支付配置：AI 不代签（固定 false）"));
 
@@ -888,6 +903,422 @@ async function stepProSanity(page, recorder, context) {
     checks.push(check(unauthStatus === 401, `无 X-Steward-Token 的管理写操作被拒（实际 ${unauthStatus}）`));
     const statsAfterUnauth = await fetch(`${baseUrl}/api/data/stats`, { signal: AbortSignal.timeout(2000) }).then((response) => response.json()).catch(() => null);
     checks.push(check(statsAfterUnauth !== null && statsAfterUnauth.data.cleared === false, "未授权请求未修改数据（仍为演示态）"));
+    return { checks };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// v1.2/v1.3 新增步骤：对话 / 打断恢复审批 / run 证据 / 智能体记录 / 变现+易支付 /
+// 模型与提示词 / 系统总控 / 危险动作二次确认 / 收尾
+// ---------------------------------------------------------------------------
+
+async function stepChatOpen(page, recorder) {
+  return recorder.step(page, "chat-open", async () => {
+    await page.locator("#nav-chat").click();
+    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    const checks = [];
+    checks.push(check(await page.locator("#nav-chat").isVisible(), "左侧导航出现「对话」入口"));
+    checks.push(check(await page.locator("#nav-money").isVisible(), "左侧导航出现「变现」入口"));
+    checks.push(check(await page.locator("#nav-system").isVisible(), "左侧导航出现「系统」入口"));
+    const sessionCount = await page.locator("#chat-sessions .chat-session").count();
+    checks.push(check(sessionCount >= 1, `会话记录列表可见（${sessionCount} 个）`));
+    checks.push(check(await page.locator("#chat-goal").isVisible() && await page.locator("#chat-budget").isVisible() && await page.locator("#chat-token").isVisible() && await page.locator("#chat-mode").isVisible(), "新建项目参数：目标/预算/Token 上限/模式 可见"));
+    checks.push(check((await page.locator("#chat-tip").innerText()).includes("计划"), "对话页说明总调度会先拆解计划"));
+    return { checks };
+  });
+}
+
+async function stepChatCreateProject(page, recorder) {
+  return recorder.step(page, "chat-create-project", async () => {
+    const checks = [];
+    await page.locator("#chat-goal").fill("帮我做一个报价单页面（含客户信息与金额明细）");
+    await page.locator("#chat-budget").fill("2600");
+    await page.locator("#chat-token").fill("180000");
+    await page.locator("#chat-mode").selectOption("personal");
+    await page.locator("#chat-create-submit").click();
+    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#chat-session-page", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(/\/chat\/[^/?#]+$/.test(page.url()), `创建后进入会话详情（${page.url()}）`));
+    checks.push(check((await page.locator("#chat-goal-text").innerText()).includes("报价单页面"), "会话显示我的目标"));
+    checks.push(check((await page.locator("#chat-budget-text").innerText()).includes("2,600.00"), "会话显示预算上限 2,600.00"));
+    checks.push(check((await page.locator("#chat-token-text").innerText()).includes("180,000"), "会话显示 Token 上限 180,000"));
+    const planCount = await page.locator("#chat-plan .plan-step").count();
+    checks.push(check(planCount >= 4, `总调度生成计划 ≥4 步（实际 ${planCount}）`));
+    const messages = await page.locator("#chat-messages .chat-message").count();
+    checks.push(check(messages >= 2, `对话含用户消息 + 总调度拆解回复（${messages} 条）`));
+    checks.push(check((await page.locator("#chat-messages").innerText()).includes("计划"), "总调度回复包含计划说明"));
+    const summaries = await page.locator("#chat-messages .chat-summary").count();
+    checks.push(check(summaries >= 2, `每轮含简略摘要（${summaries} 条摘要）`));
+    checks.push(check((await page.locator("#chat-status").innerText()).includes("计划中"), "初始状态=计划中"));
+    await page.locator("#chat-start").click();
+    await page.waitForTimeout(700);
+    await page.waitForSelector("#chat-run-link", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#chat-status").innerText()).includes("执行中"), "点「开始执行」后状态=执行中"));
+    checks.push(check((await page.locator("#chat-run-link").count()) === 1, "执行后出现 run 详情链接"));
+    return { checks };
+  });
+}
+
+async function stepChatInterruptResume(page, recorder) {
+  return recorder.step(page, "chat-interrupt-resume", async () => {
+    const checks = [];
+    await page.locator("#chat-interrupt").click();
+    await page.waitForTimeout(800);
+    await page.waitForSelector("#chat-resume", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#chat-status").innerText()).includes("已打断"), "打断后状态=已打断（暂停）"));
+    checks.push(check((await page.locator("#chat-resume").count()) === 1, "出现「恢复执行」按钮"));
+    await page.locator("#chat-resume").click();
+    await page.waitForTimeout(800);
+    await page.waitForSelector("#chat-approval", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#chat-status").innerText()).includes("执行中"), "恢复后状态=执行中"));
+    checks.push(check((await page.locator("#chat-approval").innerText()).includes("需人工审批"), "关键步骤出现审批卡"));
+    await page.locator("#chat-approve").click();
+    await page.waitForTimeout(900);
+    await page.waitForSelector("#chat-session-page", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#chat-status").innerText()).includes("已完成"), "批准后状态=已完成"));
+    checks.push(check((await page.locator("#chat-approval").count()) === 0, "批准后审批卡消失"));
+    const doneSteps = await page.locator('#chat-plan .plan-step[data-status="done"]').count();
+    checks.push(check(doneSteps >= 4, `批准后计划步骤已完成（${doneSteps} 步 done）`));
+    return { checks };
+  });
+}
+
+async function stepChatRunEvidence(page, recorder) {
+  return recorder.step(page, "chat-run-evidence", async () => {
+    const checks = [];
+    const runHref = await page.locator("#chat-run-link").getAttribute("href");
+    checks.push(check(runHref !== null && /\/runs\/[^/?#]+$/.test(runHref), `会话可跳转 run 详情（${runHref}）`));
+    await page.locator("#chat-run-link").click();
+    await page.waitForSelector("#run-page", { timeout: STEP_TIMEOUT_MS });
+    const events = await page.locator("#run-timeline .flow-item").count();
+    checks.push(check(events >= 5, `run 时间线 ≥5 条事件（实际 ${events}）`));
+    for (const phase of ["plan", "action", "observe", "verify", "evidence"]) {
+      const count = await page.locator(`#run-timeline .flow-item[data-phase="${phase}"]`).count();
+      checks.push(check(count >= 1, `时间线含阶段 ${phase}（${count} 条）`));
+    }
+    const thumbs = await page.locator("#run-evidence .evidence-thumb").count();
+    checks.push(check(thumbs >= 2, `证据截图缩略图 ≥2 张（实际 ${thumbs}）`));
+    checks.push(check((await page.locator("#run-report .md-body").innerText()).includes("运行报告"), "report.md 已渲染（含运行报告标题）"));
+    await page.locator("#payload-log summary").click();
+    await page.locator("#payload-json summary").click();
+    checks.push(check((await page.locator("#payload-log pre").innerText()).includes("[info]"), "日志 evidence 可展开查看（console.log 内容）"));
+    checks.push(check((await page.locator("#payload-json pre").innerText()).includes("seq"), "JSON evidence 可展开查看（events.jsonl）"));
+    const runAgents = await page.locator("#run-agents .run-agent").count();
+    checks.push(check(runAgents >= 2, `各 agent 对话摘要可见（${runAgents} 个 agent）`));
+    checks.push(check((await page.locator("#run-agents").innerText()).includes("写代码 Harness"), "run 内包含写代码 Harness 的对话摘要"));
+
+    // 缩略图点开大图
+    await page.locator("#evidence-thumb-1").click();
+    await page.waitForSelector("#evidence-lightbox:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#evidence-lightbox").isVisible(), "点击缩略图打开证据大图（灯箱）"));
+    await recorder.capture(page, "run-evidence-lightbox");
+    const src = await page.locator("#lightbox-img").getAttribute("src");
+    checks.push(check(src !== null && src.startsWith("data:image/svg+xml"), "大图为内联 SVG（无外链请求）"));
+    checks.push(check((await page.locator("#lightbox-title").innerText()).length > 0, "大图显示证据标题"));
+    await page.locator("#lightbox-close").click();
+    await page.waitForTimeout(200);
+    checks.push(check(await page.locator("#evidence-lightbox").isHidden(), "关闭大图后灯箱隐藏"));
+    return { checks };
+  });
+}
+
+async function stepAgentTranscript(page, recorder, baseUrl) {
+  return recorder.step(page, "agent-transcript", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/agents/harness`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#agent-role-page", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#agent-role-title").innerText()).includes("写代码 Harness"), "智能体详情页标题=写代码 Harness"));
+    const turns = await page.locator("#agent-role-turns .agent-turn").count();
+    checks.push(check(turns >= 1, `智能体对话轮次可见（${turns} 轮）`));
+    const turnText = await page.locator("#agent-role-turns .agent-turn").first().innerText();
+    checks.push(check(turnText.includes("输入摘要") && turnText.includes("输出摘要"), "每轮含输入/输出摘要"));
+    checks.push(check(/Token/.test(turnText), "每轮显示 Token 消耗"));
+    checks.push(check(await page.locator("#agent-role-info").isVisible(), "智能体详情显示状态/自主等级/模型"));
+    checks.push(check((await page.locator("#agent-role-summary").innerText()).includes("轮次"), "详情页显示轮次合计"));
+    const evidenceLinks = await page.locator("[data-evidence-ref]").count();
+    checks.push(check(evidenceLinks >= 1, `轮次可跳证据（${evidenceLinks} 条证据引用）`));
+    await page.locator("#nav-chat").click();
+    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    return { checks };
+  });
+}
+
+async function stepMoneyEpay(page, recorder, baseUrl) {
+  return recorder.step(page, "money-epay", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/money`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#money-page", { timeout: STEP_TIMEOUT_MS });
+    const disclaimer = await page.locator("#money-disclaimer").innerText();
+    checks.push(check(disclaimer.includes("未接真实支付"), "变现页说明：演示渠道未接真实支付"));
+    checks.push(check(disclaimer.includes("¥10 只是测试金额"), "变现页说明：此前 ¥10 只是测试金额"));
+    const channels = await page.locator("#money-channels .money-channel").count();
+    checks.push(check(channels >= 4, `收款账户/渠道摘要可见（${channels} 行，含易支付）`));
+    checks.push(check(await page.locator("#epay-section").isVisible(), "易支付设置分组可见（/money）"));
+    checks.push(check((await page.locator("#epay-mode").inputValue()) === "demo", "易支付默认 demo 模式（不真实扣款）"));
+
+    // 保存易支付商家设置
+    await page.locator("#epay-gateway").fill("https://epay.e2e.example.com/submit.php");
+    await page.locator("#epay-merchant").fill("1000-E2E-7788");
+    await page.locator("#epay-key-ref").fill("env:EPAY_E2E_KEY");
+    await page.locator("#epay-notify").fill(`${baseUrl}/api/money/epay/notify`);
+    await page.locator("#epay-save").click();
+    await page.waitForTimeout(700);
+    checks.push(check((await page.locator("#epay-feedback").innerText()).includes("已保存"), "易支付设置保存成功"));
+    await safeReload(page);
+    await page.waitForSelector("#epay-section", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#epay-gateway").inputValue()).includes("epay.e2e.example.com"), "刷新后易支付网关已持久化"));
+    checks.push(check((await page.locator("#epay-merchant").inputValue()) === "1000-E2E-7788", "刷新后商户 ID 已持久化（密钥只存引用）"));
+    await recorder.capture(page, "money-epay-config");
+
+    // 创建易支付收款请求
+    await page.locator("#money-amount").fill("1288");
+    await page.locator("#money-client").fill("易支付客户（E2E）");
+    await page.locator("#money-purpose").fill("报价单页面首期款（易支付）");
+    await page.locator("#money-method").selectOption("epay");
+    await page.locator("#money-create").click();
+    await page.waitForTimeout(1000);
+    await page.waitForSelector("#money-requests .money-request", { timeout: STEP_TIMEOUT_MS });
+    const first = page.locator("#money-requests .money-request").first();
+    checks.push(check((await first.getAttribute("data-status")) === "pending", "易支付收款请求已创建（待收款）"));
+    const amountText = await first.locator(".money-request-amount").innerText();
+    checks.push(check(amountText.includes("1,288.00"), `收款请求金额正确（${amountText.trim()}）`));
+    const epayLink = first.locator(".run-link").first();
+    const href = await epayLink.getAttribute("href");
+    checks.push(check(href !== null && href.includes("epay.e2e.example.com") && href.includes("money=1288.00"), "易支付跳转链接已生成（含网关/金额/out_trade_no）"));
+    const qrImg = first.locator(".money-qr");
+    checks.push(check(await qrImg.isVisible(), "易支付二维码占位可见"));
+    const qrSrc = await qrImg.getAttribute("src");
+    checks.push(check(qrSrc !== null && qrSrc.startsWith("data:image/svg+xml"), "二维码为内联占位（无外链请求）"));
+    checks.push(check((await first.innerText()).includes("易支付"), "请求标注易支付渠道"));
+    await recorder.capture(page, "money-epay-request");
+
+    // 人工确认到账 → 账本收入
+    await first.locator("[data-confirm-id]").click();
+    await page.waitForTimeout(1000);
+    await page.waitForSelector("#money-requests .money-request", { timeout: STEP_TIMEOUT_MS });
+    const paidFirst = page.locator("#money-requests .money-request").first();
+    checks.push(check((await paidFirst.getAttribute("data-status")) === "paid", "人工确认到账后状态=已到账"));
+    const ledgerLink = await paidFirst.locator("[id^=money-paid-ledger-]").count();
+    checks.push(check(ledgerLink >= 1, "确认到账后显示已记入账本（ledger_entry_id）"));
+
+    await page.goto(`${baseUrl}/ledger`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    const ledgerText = await page.locator("#ledger-table").innerText();
+    checks.push(check(ledgerText.includes("1,288.00"), "账本新增易支付收入 ¥1,288.00"));
+    checks.push(check(ledgerText.includes("易支付客户（E2E）"), "账本收入含客户名（6 要素）"));
+    return { checks };
+  });
+}
+
+async function stepSettingsModelsPrompts(page, recorder, baseUrl) {
+  return recorder.step(page, "settings-models-prompts", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#models-section", { timeout: STEP_TIMEOUT_MS });
+    const providerCount = await page.locator("#model-providers .model-provider").count();
+    checks.push(check(providerCount >= 3, `多模型 provider ≥3（实际 ${providerCount}：DeepSeek/OpenAI 兼容/本地）`));
+    checks.push(check((await page.locator("#model-providers").innerText()).includes("DeepSeek"), "模型分组含 DeepSeek provider"));
+    checks.push(check((await page.locator("#model-providers").innerText()).includes("OpenAI 兼容"), "模型分组含 OpenAI 兼容 provider"));
+    checks.push(check((await page.locator(".model-key-masked").first().innerText()).includes("****"), "API 密钥只显示掩码/引用"));
+    checks.push(check((await page.locator("#prompts-section").innerText()).includes("总调度提示词必须包含安全条款"), "系统提示词分组说明校验规则"));
+    checks.push(check((await page.locator("#prompt-conductor").count()) === 1, "总调度提示词可编辑"));
+    checks.push(check((await page.locator("#prompt-supervisor").count()) === 1, "超级总调度提示词可编辑（v1.3）"));
+    checks.push(check((await page.locator("#model-bind-supervisor").count()) === 1, "模型分组含 supervisor 的模型绑定"));
+    checks.push(check((await page.locator("#agent-setting-supervisor").count()) === 1, "智能体开关分组含 supervisor"));
+    checks.push(check(await page.locator("#epay-section").isVisible(), "支付分组含易支付字段（/settings）"));
+
+    // 提示词校验错误：总调度提示词太短 → 保存失败
+    await page.locator("#prompt-conductor").fill("太短");
+    await page.locator("#prompts-save").click();
+    await page.waitForTimeout(700);
+    checks.push(check(await page.locator("#prompts-error").isVisible(), "提示词非法时显示校验错误"));
+    checks.push(check((await page.locator("#prompts-error").innerText()).includes("30"), "校验错误说明长度要求"));
+    await safeReload(page);
+    await page.waitForSelector("#models-section", { timeout: STEP_TIMEOUT_MS });
+
+    // 保存模型配置（harness 切到 OpenAI 兼容 provider）
+    await page.locator("#model-bind-harness").selectOption("provider-openai-compatible");
+    await page.locator("#models-save").click();
+    await page.waitForTimeout(700);
+    checks.push(check((await page.locator("#models-feedback").innerText()).includes("已保存"), "模型配置保存成功"));
+    await page.locator("#models-sync").click();
+    await page.waitForTimeout(700);
+    checks.push(check((await page.locator("#models-feedback").innerText()).includes("已同步"), "一键同步密钥成功"));
+    checks.push(check((await page.locator("#models-sync-status").innerText()).includes("已同步"), "同步状态更新为已同步"));
+
+    // 保存系统提示词（编辑 harness 提示词）
+    await page.locator("#prompt-harness").fill((await page.locator("#prompt-harness").inputValue()) + "\n6. 【E2E】验收必须附真实浏览器截图。");
+    await page.locator("#prompts-save").click();
+    await page.waitForTimeout(700);
+    checks.push(check((await page.locator("#prompts-feedback").innerText()).includes("已保存"), "系统提示词保存成功"));
+    await safeReload(page);
+    await page.waitForSelector("#models-section", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#prompt-harness").inputValue()).includes("【E2E】"), "刷新后提示词修改已持久化"));
+    checks.push(check((await page.locator("#model-bind-harness").inputValue()) === "provider-openai-compatible", "刷新后模型绑定已持久化"));
+    return { checks };
+  });
+}
+
+async function stepSystemControl(page, recorder, baseUrl) {
+  return recorder.step(page, "system-control", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/system`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
+    const supMessages = await page.locator("#supervisor-messages .sup-message").count();
+    checks.push(check(supMessages >= 3, `与超级总调度对话记录可见（${supMessages} 条消息）`));
+    checks.push(check((await page.locator("#supervisor-messages").innerText()).includes("超级总调度"), "supervisor 自我介绍可见（两层结构/危险动作规则）"));
+    checks.push(check(await page.locator("#layer-supervisor").isVisible() && await page.locator("#layer-conductor").isVisible(), "两层结构：L1 超级总调度 + L2 项目总调度 可见"));
+    const layerAgents = await page.locator("#layer-agents .layer-agent").count();
+    checks.push(check(layerAgents >= 10, `第 3 层专项智能体 ≥10（实际 ${layerAgents}）`));
+    const programs = await page.locator("#system-programs .program-row").count();
+    checks.push(check(programs >= 5, `受管程序列表可见（${programs} 个）`));
+    const plugins = await page.locator("#system-plugins .plugin-row").count();
+    checks.push(check(plugins >= 4, `插件列表可见（${plugins} 个）`));
+    const agentRows = await page.locator("#system-agent-models .system-agent").count();
+    checks.push(check(agentRows >= 12, `各 agent 当前模型/Token 可见（${agentRows} 行，含 supervisor）`));
+    checks.push(check((await page.locator("#system-agent-models").innerText()).includes("超级总调度"), "模型列表含超级总调度"));
+    const logs = await page.locator("#system-logs .log-item").count();
+    checks.push(check(logs >= 3, `全部日志入口可见（${logs} 条日志）`));
+    const quick = await page.locator("#supervisor-quick .quick-cmd").count();
+    checks.push(check(quick >= 8, `快捷命令示例 ≥8（${quick} 个）`));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(200);
+    await recorder.capture(page, "system-overview-layers");
+
+    // supervisor 对话
+    await page.locator("#supervisor-input").fill("查看系统状态，并检查易支付配置");
+    await page.locator("#supervisor-send").click();
+    await page.waitForTimeout(900);
+    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
+    const supAfter = await page.locator("#supervisor-messages .sup-message").count();
+    checks.push(check(supAfter > supMessages, `发送命令后 supervisor 回复（${supMessages} → ${supAfter} 条）`));
+
+    // 快捷命令：重启模型网关（真实改状态 + 日志）
+    await page.locator("#quick-重启模型网关").click();
+    await page.waitForTimeout(1000);
+    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#system-logs").innerText()).includes("快捷命令"), "快捷命令执行后写入系统日志"));
+
+    // 插件启用/禁用
+    const scoutRow = page.locator("#plugin-plug-scout");
+    const beforeEnabled = await scoutRow.getAttribute("data-plugin-enabled");
+    await page.locator("#plugin-toggle-plug-scout").click();
+    await page.waitForTimeout(900);
+    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
+    const afterEnabled = await page.locator("#plugin-plug-scout").getAttribute("data-plugin-enabled");
+    checks.push(check(beforeEnabled !== afterEnabled, `插件启用/禁用生效（${beforeEnabled} → ${afterEnabled}）`));
+    return { checks };
+  });
+}
+
+async function stepSystemDangerConfirm(page, recorder, baseUrl) {
+  return recorder.step(page, "system-danger-confirm", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/system`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#system-programs", { timeout: STEP_TIMEOUT_MS });
+    const before = await page.locator("#system-programs .program-row").count();
+    // 点击删除（非危险自删：scout-worker）
+    await page.locator("#prog-delete-prog-scout-worker").click();
+    await page.waitForSelector("#system-danger-modal:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#system-danger-modal").isVisible(), "删除程序触发危险动作二次确认弹窗"));
+    const risk = await page.locator("#danger-risk").innerText();
+    checks.push(check(risk.length > 10, `弹窗展示风险说明（${risk.slice(0, 40)}…）`));
+    const backup = await page.locator("#danger-backup").innerText();
+    checks.push(check(backup.includes("backups/system"), `弹窗展示备份路径（${backup.trim()}）`));
+    const tokenText = (await page.locator("#danger-token-display").innerText()).trim();
+    checks.push(check(tokenText.startsWith("DEL-"), `弹窗展示确认 token（${tokenText}）`));
+    await recorder.capture(page, "system-danger-modal");
+    // 错误 token 被拒绝
+    await page.locator("#danger-token-input").fill("DEL-WRONG");
+    await page.locator("#danger-text-input").fill("确认删除");
+    await page.locator("#danger-confirm").click();
+    await page.waitForTimeout(700);
+    checks.push(check(await page.locator("#danger-error").isVisible(), "错误确认 token 被拒绝（显示错误）"));
+    checks.push(check(await page.locator("#system-danger-modal").isVisible(), "拒绝后弹窗保留（未执行删除）"));
+    // 正确 token + 确认文本 → 执行
+    await page.locator("#danger-token-input").fill(tokenText);
+    await page.locator("#danger-text-input").fill("确认删除");
+    await page.locator("#danger-confirm").click();
+    await page.waitForTimeout(1000);
+    await page.waitForSelector("#system-programs", { timeout: STEP_TIMEOUT_MS });
+    const after = await page.locator("#system-programs .program-row").count();
+    checks.push(check(after === before - 1, `二次确认后删除成功（程序 ${before} → ${after}）`));
+    checks.push(check((await page.locator("#system-programs").innerText()).includes("scout-worker") === false, "被删除程序已从列表移除"));
+    checks.push(check((await page.locator("#system-logs").innerText()).includes("危险动作已执行"), "危险动作写入系统日志（审计）"));
+    return { checks };
+  });
+}
+
+async function stepV12Sanity(page, recorder, context) {
+  const { baseUrl, port, requestLog, pageErrors } = context;
+  return recorder.step(page, "v12-sanity", async () => {
+    const checks = [];
+    checks.push(check(pageErrors.length === 0, `v1.2/v1.3 流程全程无页面 JS 错误（${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
+
+    const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(health !== null && health.version === "1.3.0", `health version=1.3.0（实际 ${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.chat_enabled === true && health.system_enabled === true, "health 标记 chat_enabled/system_enabled=true"));
+
+    const sessions = await fetch(`${baseUrl}/api/chat/sessions`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(sessions !== null && Array.isArray(sessions.data) && sessions.data.length >= 3, `GET /api/chat/sessions（${sessions?.data?.length ?? 0} 个会话）`));
+    const runs = await fetch(`${baseUrl}/api/chat/runs`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(runs !== null && Array.isArray(runs.data) && runs.data.length >= 3, `GET /api/chat/runs（${runs?.data?.length ?? 0} 个 run）`));
+    const transcripts = await fetch(`${baseUrl}/api/chat/agents/harness/transcripts`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(transcripts !== null && Array.isArray(transcripts.data) && transcripts.data.length >= 1, "GET /api/chat/agents/:role/transcripts 返回记录"));
+    const evidence = await fetch(`${baseUrl}/api/chat/evidence?run_id=${encodeURIComponent(runs?.data?.[0]?.run_id ?? "")}`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(evidence !== null && Array.isArray(evidence.data) && evidence.data.length >= 2, "GET /api/chat/evidence 返回证据列表"));
+
+    const status = await fetch(`${baseUrl}/api/system/status`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(status !== null && Array.isArray(status.data.programs) && status.data.programs.length >= 4, `GET /api/system/status（程序 ${status?.data?.programs?.length ?? 0} 个）`));
+    checks.push(check(status !== null && Array.isArray(status.data.agents) && status.data.agents.length >= 12, `系统状态含各 agent 模型（${status?.data?.agents?.length ?? 0} 个）`));
+    const epay = await fetch(`${baseUrl}/api/system/epay`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(epay !== null && epay.data.gateway_url.includes("epay.e2e.example.com") && epay.data.mode === "demo", "GET /api/system/epay：易支付配置持久化（demo）"));
+    checks.push(check(epay !== null && epay.data.api_key_ref === "env:EPAY_E2E_KEY" && !JSON.stringify(epay.data).includes("EPAY_E2E_KEY_SECRET"), "易支付只存密钥引用（无明文）"));
+    const models = await fetch(`${baseUrl}/api/model-settings`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(models !== null && models.data.sync_status === "synced", "GET /api/model-settings：密钥已同步"));
+    checks.push(check(models !== null && models.data.agent_bindings.some((binding) => binding.agent_role === "harness" && binding.provider_id === "provider-openai-compatible"), "模型绑定已持久化（harness → OpenAI 兼容）"));
+    checks.push(check(models !== null && models.data.prompts.some((prompt) => prompt.id === "prompt-harness" && prompt.content.includes("【E2E】")), "系统提示词已持久化（含 E2E 标记）"));
+    const money = await fetch(`${baseUrl}/api/money/requests`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    const epayRequest = money?.data?.find((request) => request.payment_method === "epay" && request.amount_cny === 1288);
+    checks.push(check(epayRequest !== undefined && epayRequest.status === "paid" && epayRequest.ledger_entry_id !== undefined, "GET /api/money/requests：易支付请求已到账并写入账本"));
+
+    // 新写 API 的 token 保护
+    let dangerUnauth = 0;
+    try {
+      const response = await fetch(`${baseUrl}/api/system/danger/prepare`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_program", target_id: "prog-scout-worker" }),
+        signal: AbortSignal.timeout(2000),
+      });
+      dangerUnauth = response.status;
+    } catch {
+      dangerUnauth = 0;
+    }
+    checks.push(check(dangerUnauth === 401, `无 token 的危险动作 API 被拒（实际 ${dangerUnauth}）`));
+    let chatUnauth = 0;
+    try {
+      const response = await fetch(`${baseUrl}/api/chat/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goal: "未授权请求" }),
+        signal: AbortSignal.timeout(2000),
+      });
+      chatUnauth = response.status;
+    } catch {
+      chatUnauth = 0;
+    }
+    checks.push(check(chatUnauth === 401, `无 token 的对话写 API 被拒（实际 ${chatUnauth}）`));
+
+    const external = requestLog.filter((url) => {
+      try {
+        const parsed = new URL(url);
+        return !(parsed.hostname === "127.0.0.1" && parsed.port === String(port));
+      } catch {
+        return false;
+      }
+    });
+    checks.push(check(external.length === 0, `v1.2/v1.3 全程无外链请求（${requestLog.length} 个请求全部同源）`, external.slice(0, 5).join(", ")));
+    checks.push(check(requestLog.some((url) => url.endsWith("/assets/chat.js")) && requestLog.some((url) => url.endsWith("/assets/system.js")), "聊天/系统脚本已同源加载"));
     return { checks };
   });
 }
@@ -1025,6 +1456,22 @@ async function main() {
       requestLog,
       pageErrors,
     });
+    // ---- v1.2/v1.3 新增：对话/打断恢复审批/run 证据/智能体记录/变现+易支付/模型提示词/系统总控/危险确认/收尾 ----
+    await stepChatOpen(page, recorder);
+    await stepChatCreateProject(page, recorder);
+    await stepChatInterruptResume(page, recorder);
+    await stepChatRunEvidence(page, recorder);
+    await stepAgentTranscript(page, recorder, consoleHandle.url);
+    await stepMoneyEpay(page, recorder, consoleHandle.url);
+    await stepSettingsModelsPrompts(page, recorder, consoleHandle.url);
+    await stepSystemControl(page, recorder, consoleHandle.url);
+    await stepSystemDangerConfirm(page, recorder, consoleHandle.url);
+    await stepV12Sanity(page, recorder, {
+      baseUrl,
+      port: consoleHandle.port,
+      requestLog,
+      pageErrors,
+    });
   } catch (error) {
     fatalError = errorText(error);
     console.error(`\n[e2e-console] 运行失败：${fatalError}`);
@@ -1059,7 +1506,7 @@ async function main() {
   const durationMs = Date.now() - suiteStartedAt;
   const result = {
     suite: "e2e-console",
-    version: "1.1.0",
+    version: "1.3.0",
     ok: fatalError === null && recorder.ok,
     as_of: new Date().toISOString(),
     headless: options.headless,
@@ -1072,6 +1519,8 @@ async function main() {
       port: consoleHandle === null ? null : consoleHandle.port,
       provider: "demo",
       admin_provider: "demo",
+      chat_provider: "demo",
+      system_provider: "demo",
       console_boot_ms: consoleBootMs,
       first_page_load_ms: firstPageLoadMs,
     },

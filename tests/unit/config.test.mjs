@@ -1,10 +1,13 @@
 /**
- * v1.1-A / 配置中心单元测试（≥20 条）。
+ * v1.1-A + v1.2-A + v1.3-A / 配置中心单元测试。
  *
- * 覆盖：三模式默认值差异、模式切换、14 个功能开关逐项禁用、0 元极限预算、预算三层、
- * Token 预算（累计/剩余/单步上限/总上限/按 agent 统计/持久化）、银行卡与微信/支付宝掩码、
- * 支付渠道过滤、保存/加载/导入导出/校验失败、reset 默认、resetData 数据清空（防穿越）、
- * 审计追加、个人模式禁止企业专票/对公账户、企业模式主体必填。
+ * v1.1：三模式默认值差异、模式切换、14 个功能开关逐项禁用、0 元极限预算、预算三层、
+ * Token 预算、银行卡/微信/支付宝掩码、支付渠道过滤、保存/加载/导入导出/校验、reset、
+ * resetData（白名单+防穿越）、审计、个人模式禁令、企业模式主体必填。
+ * v1.2：多模型路由/各 agent 不同模型、API 密钥引用（env/本地 secrets，绝不入库）、
+ * 一键同步同一密钥、密钥掩码、系统提示词（总调度管理）、旧配置迁移。
+ * v1.3：两层总调度（supervisor 系统总控第 11 角色）、易支付 epay、系统动作策略
+ * （受管程序/插件/危险动作二次确认）。
  *
  * 全部使用 mkdtemp 临时目录或纯内存模式；不写仓库 runs/。
  */
@@ -21,12 +24,17 @@ import {
   ConfigEngine,
   ConfigIOError,
   ConfigValidationError,
+  DEFAULT_CONDUCTOR_PROMPT,
   FeatureDisabledError,
   FEATURE_NAMES,
   RESETTABLE_SUBDIRS,
+  SYSTEM_PROMPT_ROLES,
   TokenLimitError,
   defaultsForMode,
+  hasSafetyKeyword,
+  isValidApiKeyRef,
   maskAccount,
+  maskApiKeyRef,
   validateConfig,
 } from "../../dist/packages/steward-config/src/index.js";
 
@@ -654,7 +662,7 @@ test("审计：配置变更 / 预算拒绝 / Token 超限都留痕（时间/操�
 // 10) 代理注册表
 // ---------------------------------------------------------------------------
 
-test("AgentRegistry：10 个角色齐全，可逐项禁用/配置，用量按 agent 统计", () => {
+test("AgentRegistry：11 个角色齐全，可逐项禁用/配置，用量按 agent 统计", () => {
   const engine = makeEngine({ mode: "personal" });
   const agents = engine.listAgents();
   assert.equal(agents.length, AGENT_ROLES.length);
@@ -745,4 +753,727 @@ test("模式切换后企业主体字段/个人模式禁令仍生效（setMode �
   assert.equal(toPersonal.config.payments.sign_contract, false);
   assert.equal(toPersonal.config.payments.require_dual_review, false);
   assert.equal(engine.validate().ok, true);
+});
+
+// ===========================================================================
+// v1.2-A：多模型 / API 密钥引用 / 一键同步 / 系统提示词
+// ===========================================================================
+
+test("v1.2 默认模型路由：4 个服务商、默认 DeepSeek、11 个 agent 绑定且可不同模型", () => {
+  const personal = makeEngine({ mode: "personal" });
+  const models = personal.config.models;
+  assert.equal(models.providers.length, 4);
+  assert.equal(models.default_provider_id, "deepseek");
+  const deepseek = models.providers.find((provider) => provider.id === "deepseek");
+  assert.ok(deepseek !== undefined);
+  assert.equal(deepseek.kind, "deepseek");
+  assert.equal(deepseek.enabled, true);
+  assert.equal(deepseek.api_key_ref, "env:DEEPSEEK_API_KEY");
+  assert.match(deepseek.base_url, /^https:\/\//u);
+  assert.equal(models.sync_mode, "single_key_all", "个人模式默认一键同步同一密钥");
+  const refs = new Set(models.providers.map((provider) => provider.api_key_ref));
+  assert.equal(refs.size, 1, "single_key_all 模式下默认所有服务商引用一致");
+  for (const role of AGENT_ROLES) assert.ok(models.agent_models[role] !== undefined, `缺少角色绑定 ${role}`);
+  assert.equal(models.agent_models.conductor.model, "deepseek-reasoner");
+  assert.equal(models.agent_models.operator.model, "deepseek-chat");
+  const modelNames = new Set(Object.values(models.agent_models).map((binding) => binding.model));
+  assert.ok(modelNames.size >= 2, "各 agent 默认可用不同模型");
+  assert.ok(models.agent_models.conductor.temperature !== undefined);
+
+  const enterprise = makeEngine({ mode: "enterprise" });
+  assert.equal(enterprise.config.models.sync_mode, "per_provider", "企业模式默认各服务商独立密钥");
+  assert.equal(enterprise.validate().ok, true);
+  assert.equal(personal.validate().ok, true);
+});
+
+test("v1.2 默认系统提示词：11 个 agent 专业提示词（含安全关键词）+ 总调度核心提示词，总调度设置默认", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const prompts = engine.listSystemPrompts();
+  // 11 个角色（supervisor 系统总控 + conductor + operator/harness/customer/finance/reviewer/backend/scout/content/research）
+  assert.equal(prompts.length, AGENT_ROLES.length);
+  assert.equal(prompts.length + 1, AGENT_ROLES.length + 1, "11 个 agent 提示词 + 1 个总调度核心提示词（conductor_prompt）");
+  for (const role of SYSTEM_PROMPT_ROLES) assert.ok(prompts.some((entry) => entry.role === role), `缺少 ${role} 提示词`);
+  for (const entry of prompts) {
+    assert.ok([...entry.system_prompt].length >= 20);
+    assert.equal(hasSafetyKeyword(entry.system_prompt), true, `${entry.role} 提示词应含安全关键词`);
+    assert.equal(typeof entry.updated_at, "string");
+  }
+  const conductor = engine.getConductorPrompt();
+  assert.equal(conductor, DEFAULT_CONDUCTOR_PROMPT);
+  for (const keyword of ["总调度", "证据", "审批", "不越界", "失败升级"]) {
+    assert.ok(conductor.includes(keyword), `总调度提示词应包含 ${keyword}`);
+  }
+  const settings = engine.getOrchestratorSettings();
+  assert.equal(settings.auto_plan, true);
+  assert.equal(settings.max_steps_per_run, 20);
+  assert.equal(settings.ask_before_commit, true);
+  assert.equal(makeEngine({ mode: "demo" }).getOrchestratorSettings().max_steps_per_run, 10);
+  assert.equal(makeEngine({ mode: "enterprise" }).getOrchestratorSettings().max_steps_per_run, 50);
+});
+
+test("v1.2 旧配置迁移：v1.1 config 缺 models/orchestrator 时自动补默认且保留已有字段", async () => {
+  const root = await makeTmp("steward-config-migrate-");
+  try {
+    const oldConfig = defaultsForMode("personal", { now: makeClock().now });
+    delete oldConfig.models;
+    delete oldConfig.orchestrator;
+    oldConfig.budgets.month_cny = 7_777;
+    oldConfig.budgets.project_cny = 3_000;
+    oldConfig.budgets.per_txn_cny = 600;
+    oldConfig.features.scout.enabled = false;
+    await writeFile(join(root, "config.json"), JSON.stringify(oldConfig, null, 2), "utf8");
+
+    const engine = new ConfigEngine({ root, now: makeClock().now });
+    assert.equal(engine.validate().ok, true);
+    assert.equal(engine.config.budgets.month_cny, 7_777, "旧字段必须保留");
+    assert.equal(engine.config.features.scout.enabled, false);
+    assert.equal(engine.config.models.providers.length, 4, "缺失 models 自动补默认");
+    assert.equal(engine.config.orchestrator.system_prompts.length, AGENT_ROLES.length, "缺失 orchestrator 自动补默认");
+    engine.save();
+    const persisted = readConfigFile(root);
+    assert.ok(persisted.models !== undefined);
+    assert.ok(persisted.orchestrator !== undefined);
+    const reloaded = new ConfigEngine({ root, now: makeClock().now });
+    assert.equal(reloaded.validate().ok, true);
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.2 upsertModelProvider：新增/更新服务商；非法 base_url/kind/空模型/id 抛错", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const created = engine.upsertModelProvider({
+    id: "my-openai",
+    name: "自定义 OpenAI 兼容",
+    kind: "openai_compatible",
+    base_url: "https://api.example.com/v1",
+    api_key_ref: "",
+    enabled: true,
+    default_model: "gpt-4o-mini",
+    models: ["gpt-4o-mini", "gpt-4o"],
+  });
+  assert.equal(created.id, "my-openai");
+  assert.equal(created.api_key_ref, "env:DEEPSEEK_API_KEY", "一键同步模式下新服务商引用自动对齐");
+  assert.equal(engine.listModelProviders().length, 5);
+  const updated = engine.upsertModelProvider({ ...created, name: "改名后的服务商" });
+  assert.equal(updated.name, "改名后的服务商");
+  assert.equal(engine.listModelProviders().length, 5, "同 id 为更新而非新增");
+
+  assert.throws(
+    () => engine.upsertModelProvider({ ...created, id: "bad-url", base_url: "ftp://example.com" }),
+    (error) => error instanceof ConfigValidationError,
+  );
+  assert.throws(
+    () => engine.upsertModelProvider({ ...created, id: "bad-kind", kind: "magic" }),
+    (error) => error instanceof ConfigValidationError,
+  );
+  assert.throws(
+    () => engine.upsertModelProvider({ ...created, id: "empty-models", models: [] }),
+    (error) => error instanceof ConfigValidationError,
+  );
+  assert.throws(
+    () => engine.upsertModelProvider({ ...created, id: "Bad ID" }),
+    (error) => error instanceof ConfigValidationError,
+  );
+  assert.throws(
+    () => engine.upsertModelProvider({ ...created, id: "plain-key", api_key_ref: "sk-plaintext-key-123" }),
+    (error) => error instanceof ConfigValidationError && /引用格式非法|明文/u.test(error.message),
+  );
+});
+
+test("v1.2 removeModelProvider：不能删默认，删除自定义后 agent 自动改绑默认服务商", () => {
+  const engine = makeEngine({ mode: "enterprise" });
+  engine.upsertModelProvider({
+    id: "custom-x",
+    name: "临时服务商",
+    kind: "openai_compatible",
+    base_url: "https://api.example.com/v1",
+    api_key_ref: "",
+    enabled: true,
+    default_model: "m1",
+    models: ["m1"],
+  });
+  engine.setAgentModel("content", { provider_id: "custom-x", model: "m1" });
+  assert.equal(engine.resolveAgentModel("content").provider_id, "custom-x");
+  const removal = engine.removeModelProvider("custom-x");
+  assert.equal(removal.removed_provider_id, "custom-x");
+  assert.ok(removal.rebound_roles.includes("content"));
+  assert.equal(engine.resolveAgentModel("content").provider_id, "deepseek");
+  assert.throws(
+    () => engine.removeModelProvider("deepseek"),
+    (error) => error instanceof ConfigValidationError && /默认服务商/u.test(error.message),
+  );
+});
+
+test("v1.2 setDefaultProvider：必须存在且启用；切换后校验通过", () => {
+  const engine = makeEngine({ mode: "enterprise" });
+  const custom = engine.upsertModelProvider({
+    id: "backup",
+    name: "备用服务商",
+    kind: "openai_compatible",
+    base_url: "https://api.example.com/v1",
+    api_key_ref: "env:BACKUP_KEY",
+    enabled: true,
+    default_model: "gpt-4o-mini",
+    models: ["gpt-4o-mini"],
+  });
+  assert.equal(custom.enabled, true);
+  const provider = engine.setDefaultProvider("backup");
+  assert.equal(provider.id, "backup");
+  assert.equal(engine.config.models.default_provider_id, "backup");
+  assert.equal(engine.validate().ok, true);
+  assert.throws(() => engine.setDefaultProvider("not-exist"), (error) => error instanceof ConfigValidationError);
+  engine.upsertModelProvider({ ...custom, id: "disabled-provider", enabled: false });
+  assert.throws(
+    () => engine.setDefaultProvider("disabled-provider"),
+    (error) => error instanceof ConfigValidationError && /未启用/u.test(error.message),
+  );
+});
+
+test("v1.2 setModelSyncMode：切到 single_key_all 立即统一所有引用；per_provider 可独立", () => {
+  const engine = makeEngine({ mode: "enterprise" });
+  assert.equal(engine.config.models.sync_mode, "per_provider");
+  engine.setProviderApiKeyRef("openai", "env:OPENAI_KEY_TEST");
+  const openai = engine.listModelProviders().find((provider) => provider.id === "openai");
+  assert.equal(openai.api_key_ref, "env:OPENAI_KEY_TEST", "per_provider 模式只改单个服务商");
+  const deepseekBefore = engine.listModelProviders().find((provider) => provider.id === "deepseek").api_key_ref;
+  const switched = engine.setModelSyncMode("single_key_all");
+  assert.equal(switched.sync_mode, "single_key_all");
+  assert.ok(switched.synced_provider_ids.includes("openai"));
+  const refs = new Set(engine.listModelProviders().map((provider) => provider.api_key_ref));
+  assert.equal(refs.size, 1, "single_key_all 下所有引用必须一致");
+  assert.equal(engine.listModelProviders().find((provider) => provider.id === "deepseek").api_key_ref, deepseekBefore);
+  assert.equal(engine.validate().ok, true);
+});
+
+test("v1.2 syncApiKey：一键同步同一引用到所有功能；拒绝明文/非法引用", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const synced = engine.syncApiKey("env:MY_SHARED_KEY");
+  assert.equal(synced.api_key_ref, "env:MY_SHARED_KEY");
+  assert.equal(synced.affected_provider_ids.length, 4);
+  assert.equal(synced.already_consistent, false);
+  assert.equal(synced.api_key_ref_masked.includes("MY_SHARED_KEY"), false, "掩码不得展示完整引用名");
+  for (const provider of engine.listModelProviders()) assert.equal(provider.api_key_ref, "env:MY_SHARED_KEY");
+  assert.equal(engine.validate().ok, true);
+  const again = engine.syncApiKey("env:MY_SHARED_KEY");
+  assert.equal(again.already_consistent, true);
+  assert.deepEqual(again.affected_provider_ids, []);
+  engine.syncApiKey("");
+  assert.ok(engine.listModelProviders().every((provider) => provider.api_key_ref === ""));
+  assert.throws(
+    () => engine.syncApiKey("sk-plaintext-key-abcdef"),
+    (error) => error instanceof ConfigValidationError && /引用格式非法|明文/u.test(error.message),
+  );
+});
+
+test("v1.2 setProviderApiKeyRef：env/file 格式合法、明文拒绝；single 模式传播到所有", () => {
+  const personal = makeEngine({ mode: "personal" });
+  const update = personal.setProviderApiKeyRef("deepseek", "file:secrets.json#deepseek");
+  assert.equal(update.api_key_ref, "file:secrets.json#deepseek");
+  assert.equal(update.api_key_ref_masked.includes("#deepseek"), false);
+  assert.equal(update.affected_provider_ids.length, 4, "single_key_all 模式传播到所有服务商");
+  assert.throws(
+    () => personal.setProviderApiKeyRef("deepseek", "plaintext-key"),
+    (error) => error instanceof ConfigValidationError,
+  );
+  assert.throws(() => personal.setProviderApiKeyRef("not-exist", "env:X"), (error) => error instanceof ConfigValidationError);
+
+  const enterprise = makeEngine({ mode: "enterprise" });
+  const single = enterprise.setProviderApiKeyRef("openai", "env:ONLY_OPENAI");
+  assert.deepEqual(single.affected_provider_ids, ["openai"], "per_provider 模式只影响单个服务商");
+  assert.equal(enterprise.listModelProviders().find((provider) => provider.id === "deepseek").api_key_ref, "env:DEEPSEEK_API_KEY");
+});
+
+test("v1.2 各 agent 不同模型：setAgentModel/resolveAgentModel 的 has_key 与不泄露密钥", () => {
+  const envName = "STEWARD_TEST_OPENAI_KEY";
+  delete process.env[envName];
+  const engine = makeEngine({ mode: "personal" });
+  engine.upsertModelProvider({
+    id: "openai",
+    name: "OpenAI 兼容",
+    kind: "openai_compatible",
+    base_url: "https://api.openai.com/v1",
+    api_key_ref: `env:${envName}`,
+    enabled: true,
+    default_model: "gpt-4o-mini",
+    models: ["gpt-4o-mini", "gpt-4o"],
+  });
+  engine.setAgentModel("operator", { provider_id: "openai", model: "gpt-4o-mini", temperature: 0.5, max_tokens: 2_048 });
+  const before = engine.resolveAgentModel("operator");
+  assert.equal(before.provider_id, "openai");
+  assert.equal(before.model, "gpt-4o-mini");
+  assert.equal(before.binding.temperature, 0.5);
+  assert.equal(before.binding.max_tokens, 2_048);
+  assert.equal(before.has_key, false, "未设置环境变量时 has_key=false");
+  assert.equal(before.key_source, "missing");
+
+  process.env[envName] = "sk-secret-value-should-not-leak";
+  try {
+    const after = engine.resolveAgentModel("operator");
+    assert.equal(after.has_key, true);
+    assert.equal(after.key_source, "env");
+    assert.equal(JSON.stringify(after).includes("sk-secret-value-should-not-leak"), false, "resolveAgentModel 不得返回明文密钥");
+    assert.equal(engine.getApiKeyForProvider("openai").ok, true);
+    assert.equal(engine.getApiKeyForProvider("openai").value, "sk-secret-value-should-not-leak", "运行时解析可用于调用");
+    const other = engine.resolveAgentModel("conductor");
+    assert.equal(other.provider_id, "deepseek", "不同 agent 可绑定不同服务商/模型");
+  } finally {
+    delete process.env[envName];
+  }
+});
+
+test("v1.2 本地密钥：只写 secrets.json（config.json 无明文），resolve has_key=true，清除后恢复", async () => {
+  const root = await makeTmp("steward-config-secrets-");
+  try {
+    const plaintext = "sk-local-test-key-123456";
+    const engine = makePersistEngine(root, { mode: "personal" });
+    const result = engine.setLocalApiKey("deepseek", plaintext);
+    assert.equal(result.api_key_ref, "file:secrets.json#deepseek");
+    assert.equal(engine.secretsFilePath(), join(root, "secrets.json"));
+    assert.ok(existsSync(join(root, "secrets.json")));
+    const secrets = JSON.parse(readFileSync(join(root, "secrets.json"), "utf8"));
+    assert.equal(secrets.deepseek.api_key, plaintext, "明文只允许存在本地 secrets 文件");
+    const configRaw = readFileSync(join(root, "config.json"), "utf8");
+    assert.equal(configRaw.includes(plaintext), false, "config.json 绝不能出现明文密钥");
+    assert.ok(configRaw.includes("file:secrets.json#deepseek"));
+
+    const resolved = engine.resolveAgentModel("conductor");
+    assert.equal(resolved.has_key, true);
+    assert.equal(resolved.key_source, "file");
+    assert.equal(JSON.stringify(resolved).includes(plaintext), false, "resolve 只返回 has_key，不返回明文");
+    assert.equal(engine.getApiKeyForProvider("deepseek").value, plaintext);
+
+    assert.equal(engine.clearLocalApiKey("deepseek"), true);
+    const secretsAfter = JSON.parse(readFileSync(join(root, "secrets.json"), "utf8"));
+    assert.equal("deepseek" in secretsAfter, false);
+    assert.equal(engine.resolveAgentModel("conductor").has_key, false);
+    assert.equal(engine.config.models.providers.find((provider) => provider.id === "deepseek").api_key_ref, "");
+
+    const memoryEngine = makeEngine({ mode: "personal" });
+    assert.throws(
+      () => memoryEngine.setLocalApiKey("deepseek", plaintext),
+      (error) => error instanceof ConfigValidationError && /纯内存模式/u.test(error.message),
+    );
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.2 引用工具：isValidApiKeyRef 格式校验 / maskApiKeyRef 掩码", () => {
+  for (const ref of ["env:DEEPSEEK_API_KEY", "file:secrets.json#deepseek", ""]) {
+    assert.equal(isValidApiKeyRef(ref), true, `${ref} 应合法`);
+  }
+  for (const ref of ["sk-plaintext", "env:", "file:#x", "file:../escape#k", "http://x", "file:/abs/path#k"]) {
+    assert.equal(isValidApiKeyRef(ref), false, `${ref} 应非法`);
+  }
+  const masked = maskApiKeyRef("env:DEEPSEEK_API_KEY");
+  assert.match(masked, /^env:/u);
+  assert.equal(masked.includes("DEEPSEEK_API_KEY"), false);
+  assert.match(masked, /\*/u);
+  const fileMasked = maskApiKeyRef("file:secrets.json#deepseek");
+  assert.equal(fileMasked.includes("deepseek"), false);
+  assert.equal(maskApiKeyRef(""), "（未配置）");
+});
+
+test("v1.2 系统提示词：修改/校验/重置（过短与未知角色抛错）", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const prompt = "你是核查代理：每次结论必须附证据，涉及支付/合同必须走审批，不越界；失败升级给人工。";
+  const updated = engine.setSystemPrompt("reviewer", prompt);
+  assert.equal(updated.system_prompt, prompt);
+  assert.match(updated.updated_at, /^\d{4}-\d{2}-\d{2}T/u);
+  assert.equal(engine.listSystemPrompts().find((entry) => entry.role === "reviewer").system_prompt, prompt);
+  assert.throws(
+    () => engine.setSystemPrompt("operator", "太短"),
+    (error) => error instanceof ConfigValidationError && /过短/u.test(error.message),
+  );
+  assert.throws(
+    () => engine.setSystemPrompt("not-a-role", prompt),
+    (error) => error instanceof ConfigValidationError && /未知系统提示词角色/u.test(error.message),
+  );
+  assert.equal(engine.validateSystemPrompt("证据 审批 不越界 失败升级 人工").ok, false);
+  assert.equal(engine.validateSystemPrompt(prompt).ok, true);
+  const reset = engine.resetSystemPrompts();
+  assert.equal(reset.length, AGENT_ROLES.length);
+  assert.ok(/办公执行|operator/.test(reset.find((entry) => entry.role === "operator").system_prompt));
+});
+
+test("v1.2 总调度：核心提示词默认专业/可修改/过短拒绝；总调度可管理其他 agent 提示词", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const original = engine.getConductorPrompt();
+  assert.ok(original.includes("总调度"));
+  const custom = "你是总调度：先计划再分配；每个结论必须有证据，支付/合同必须先审批，不越界；失败升级人工。";
+  assert.equal(engine.setConductorPrompt(custom), custom);
+  assert.equal(engine.getConductorPrompt(), custom);
+  assert.throws(
+    () => engine.setConductorPrompt("太短"),
+    (error) => error instanceof ConfigValidationError,
+  );
+  // 总调度负责管理其他智能体的系统提示词
+  engine.setSystemPrompt("finance", "你是财务：每笔账必须有 6 要素；超预算暂停并审批；不越界；失败升级人工处理。");
+  const audit = engine.auditTrail();
+  assert.ok(audit.some((entry) => entry.action === "orchestrator.conductor.update"));
+  assert.ok(audit.some((entry) => entry.action === "prompt.update" && entry.object === "finance"));
+});
+
+test("v1.2 setOrchestratorSettings：自动规划/步数上限/提交前确认可配，非法值拒绝", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const updated = engine.setOrchestratorSettings({ auto_plan: false, max_steps_per_run: 5, ask_before_commit: false });
+  assert.equal(updated.auto_plan, false);
+  assert.equal(updated.max_steps_per_run, 5);
+  assert.equal(updated.ask_before_commit, false);
+  assert.equal(engine.getOrchestratorSettings().max_steps_per_run, 5);
+  assert.throws(
+    () => engine.setOrchestratorSettings({ max_steps_per_run: 0 }),
+    (error) => error instanceof ConfigValidationError,
+  );
+  assert.throws(
+    () => engine.setOrchestratorSettings({ max_steps_per_run: 1_001 }),
+    (error) => error instanceof ConfigValidationError,
+  );
+});
+
+test("v1.2 validate：模型/提示词一致性校验（默认服务商、绑定服务商、base_url、同步一致性、提示词过短）", () => {
+  const base = defaultsForMode("personal", { now: makeClock().now });
+  const missingDefault = JSON.parse(JSON.stringify(base));
+  missingDefault.models.default_provider_id = "not-exist";
+  const missingDefaultResult = validateConfig(missingDefault);
+  assert.equal(missingDefaultResult.ok, false);
+  assert.ok(missingDefaultResult.errors.some((item) => /默认服务商/u.test(item.message)));
+
+  const badBinding = JSON.parse(JSON.stringify(base));
+  badBinding.models.agent_models.operator.provider_id = "ghost";
+  assert.ok(validateConfig(badBinding).errors.some((item) => /绑定的服务商不存在|ghost/u.test(item.message)));
+
+  const badUrl = JSON.parse(JSON.stringify(base));
+  badUrl.models.providers[0].base_url = "ftp://bad";
+  assert.ok(validateConfig(badUrl).errors.some((item) => /base_url/u.test(item.message)));
+
+  const inconsistent = JSON.parse(JSON.stringify(base));
+  inconsistent.models.providers[1].api_key_ref = "env:DIFFERENT_KEY";
+  assert.ok(validateConfig(inconsistent).errors.some((item) => /一键同步|一致/u.test(item.message)));
+
+  const shortPrompt = JSON.parse(JSON.stringify(base));
+  shortPrompt.orchestrator.system_prompts[0].system_prompt = "短";
+  assert.ok(validateConfig(shortPrompt).errors.some((item) => /过短/u.test(item.message)));
+
+  const plaintextRef = JSON.parse(JSON.stringify(base));
+  plaintextRef.models.providers[0].api_key_ref = "sk-plaintext-key-123456";
+  assert.ok(validateConfig(plaintextRef).errors.some((item) => /引用格式非法|明文/u.test(item.message)));
+});
+
+test("v1.2 export/import：模型/密钥引用/提示词往返保留；非法模型配置导入被拒绝", () => {
+  const engine = makeEngine({ mode: "personal" });
+  engine.syncApiKey("env:ROUNDTRIP_KEY");
+  engine.setAgentModel("scout", { provider_id: "deepseek", model: "deepseek-reasoner" });
+  engine.setConductorPrompt("你是总调度：先计划后执行，证据齐全才可报完成；支付必须审批，不越界，失败升级人工。");
+  const exported = engine.export();
+  const target = makeEngine({ mode: "demo" });
+  const imported = target.import(exported);
+  assert.equal(imported.models.providers.find((provider) => provider.id === "deepseek").api_key_ref, "env:ROUNDTRIP_KEY");
+  assert.equal(imported.models.agent_models.scout.model, "deepseek-reasoner");
+  assert.ok(imported.orchestrator.conductor_prompt.includes("先计划后执行"));
+  assert.equal(target.validate().ok, true);
+
+  const invalid = JSON.parse(exported);
+  invalid.models.providers[0].base_url = "ftp://bad";
+  assert.throws(() => target.import(JSON.stringify(invalid)), (error) => error instanceof ConfigValidationError);
+  const invalidPrompt = JSON.parse(exported);
+  invalidPrompt.orchestrator.system_prompts[0].system_prompt = "短";
+  assert.throws(() => target.import(JSON.stringify(invalidPrompt)), (error) => error instanceof ConfigValidationError);
+});
+
+test("v1.2 审计不含明文密钥：本地密钥/一键同步/提示词变更留痕（审计文件也无明文）", async () => {
+  const root = await makeTmp("steward-config-audit-secret-");
+  try {
+    const plaintext = "sk-audit-secret-889900";
+    const engine = makePersistEngine(root, { mode: "personal" });
+    engine.setLocalApiKey("deepseek", plaintext);
+    engine.syncApiKey("env:AUDIT_ENV_REF");
+    engine.setConductorPrompt("你是总调度：证据先行、审批优先、不越界、失败升级人工；输出四段式结论。");
+    engine.setSystemPrompt("finance", "你是财务：每笔账必须有金额/收付方/依据/审批人/回执/项目；超限暂停审批，失败升级人工。");
+    const audit = engine.auditTrail();
+    const actions = audit.map((entry) => entry.action);
+    for (const expected of ["model.api_key.local.set", "model.api_key.sync", "orchestrator.conductor.update", "prompt.update"]) {
+      assert.ok(actions.includes(expected), `审计缺少 ${expected}`);
+    }
+    const auditRaw = readFileSync(join(root, "config-audit.jsonl"), "utf8");
+    assert.equal(auditRaw.includes(plaintext), false, "审计不得包含明文密钥");
+    const configRaw = readFileSync(join(root, "config.json"), "utf8");
+    assert.equal(configRaw.includes(plaintext), false, "配置不得包含明文密钥");
+    const localSetEntry = audit.find((entry) => entry.action === "model.api_key.local.set");
+    assert.ok(localSetEntry.reason.includes("file:") || localSetEntry.reason.includes("***"));
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.2 模式切换保留用户模型/密钥引用与提示词（不会因切模式丢密钥）", () => {
+  const engine = makeEngine({ mode: "personal" });
+  engine.syncApiKey("env:MY_KEY_STAY");
+  const customPrompt = "你是总调度：先计划后执行；所有结论附证据；支付/合同必须审批；不越界；失败升级人工。";
+  engine.setConductorPrompt(customPrompt);
+  const enterprise = engine.setMode("enterprise");
+  assert.equal(enterprise.config.models.providers.find((provider) => provider.id === "deepseek").api_key_ref, "env:MY_KEY_STAY");
+  assert.equal(enterprise.config.orchestrator.conductor_prompt, customPrompt);
+  assert.equal(engine.validate().ok, true);
+  const demo = engine.setMode("demo", { preserve_models: false, preserve_orchestrator: false });
+  const demoRefs = new Set(demo.config.models.providers.map((provider) => provider.api_key_ref));
+  assert.equal(demoRefs.size, 1);
+  assert.equal(demo.config.models.providers.find((provider) => provider.id === "deepseek").api_key_ref, "env:DEEPSEEK_API_KEY");
+  assert.equal(demo.config.orchestrator.conductor_prompt, DEFAULT_CONDUCTOR_PROMPT);
+  assert.equal(engine.validate().ok, true);
+});
+
+// ===========================================================================
+// v1.3-A：两层总调度 supervisor / 易支付 epay / 系统动作策略
+// ===========================================================================
+
+test("v1.3 两层总调度：supervisor 系统总控（第 11 角色）默认存在且权限/自治/Token 正确", () => {
+  for (const mode of ["demo", "personal", "enterprise"]) {
+    const engine = makeEngine({ mode });
+    const agents = engine.listAgents();
+    assert.equal(agents.length, AGENT_ROLES.length);
+    assert.equal(agents.length, 11, "10 个 agent + supervisor 系统总控 = 11");
+    const supervisor = agents.find((agent) => agent.role === "supervisor");
+    assert.ok(supervisor !== undefined, `${mode} 模式必须包含 supervisor`);
+    assert.equal(supervisor.name, "系统总控");
+    assert.equal(supervisor.enabled, true);
+    assert.equal(supervisor.autonomy, "approval_required", "最高权限角色必须 approval_required");
+    assert.equal(supervisor.token_limit, 1_000_000);
+    for (const tool of ["system.*", "agents.*", "models.*", "prompts.*", "project.delegate", "logs.read"]) {
+      assert.ok(supervisor.tools.includes(tool), `supervisor 缺少权限工具 ${tool}`);
+    }
+    assert.equal(engine.validate().ok, true);
+    const binding = engine.config.models.agent_models.supervisor;
+    assert.ok(binding !== undefined, "supervisor 需要有默认模型绑定");
+    assert.equal(binding.provider_id, "deepseek");
+    const prompt = engine.listSystemPrompts().find((entry) => entry.role === "supervisor");
+    assert.ok(prompt !== undefined);
+    for (const keyword of ["系统总控", "日志", "二次确认", "不越界"]) {
+      assert.ok(prompt.system_prompt.includes(keyword), `supervisor 提示词应包含 ${keyword}`);
+    }
+  }
+  // supervisor 与 conductor 是两层：conductor 仍是业务总调度核心设置
+  const personal = makeEngine({ mode: "personal" });
+  assert.ok(personal.getConductorPrompt().includes("总调度"));
+  const supervisorAgent = personal.listAgents().find((agent) => agent.role === "supervisor");
+  assert.equal(supervisorAgent.enabled, true);
+});
+
+test("v1.3 默认易支付（epay）：demo 模式/默认 disabled、网关 https、密钥只存引用且可掩码", async () => {
+  const root = await makeTmp("steward-config-epay-");
+  try {
+    const engine = makePersistEngine(root, { mode: "personal" });
+    const epay = engine.getEpayConfig();
+    assert.equal(epay.enabled, false, "未填商家信息时默认 disabled");
+    assert.equal(epay.mode, "demo", "默认 demo 模式");
+    assert.equal(epay.gateway_url, "https://pay.example.com/submit.php");
+    assert.match(epay.gateway_url, /^https:\/\//u);
+    assert.equal(epay.pid, "");
+    assert.equal(epay.key_ref, "");
+    assert.deepEqual(epay.pay_types, ["alipay", "wxpay"]);
+    assert.equal(epay.sign_type, "MD5");
+    assert.equal(engine.maskEpayKeyRef(), "（未配置）");
+
+    const configured = engine.setEpayConfig({ enabled: true, pid: "10001", key_ref: "env:EPAY_KEY", mode: "demo" });
+    assert.equal(configured.enabled, true);
+    assert.equal(configured.pid, "10001");
+    assert.equal(configured.key_ref, "env:EPAY_KEY");
+    const masked = engine.maskEpayKeyRef();
+    assert.match(masked, /^env:/u);
+    assert.equal(masked.includes("EPAY_KEY"), false, "epay 密钥引用展示必须掩码");
+    const raw = readFileSync(join(root, "config.json"), "utf8");
+    assert.ok(raw.includes("env:EPAY_KEY"), "config 只存引用");
+    assert.equal(raw.includes("sk-epay-plaintext"), false);
+    // 本地密钥写入 secrets.json 后 config 仍无明文
+    engine.setLocalApiKey("deepseek", "sk-local-config-test-123");
+    engine.setEpayConfig({ key_ref: "file:secrets.json#epay" });
+    assert.ok(readFileSync(join(root, "config.json"), "utf8").includes("file:secrets.json#epay"));
+    assert.equal(engine.maskEpayKeyRef().includes("secrets.json#epay"), false);
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.3 易支付校验：gateway 必须 https；demo 可不填商家信息；live 必须补齐 pid/key_ref/回调", () => {
+  const engine = makeEngine({ mode: "personal" });
+  assert.throws(
+    () => engine.setEpayConfig({ gateway_url: "http://pay.example.com/submit.php" }),
+    (error) => error instanceof ConfigValidationError && /gateway_url|校验失败/u.test(error.message),
+  );
+  assert.throws(
+    () => engine.setEpayConfig({ key_ref: "sk-epay-plaintext" }),
+    (error) => error instanceof ConfigValidationError && /key_ref|引用格式/u.test(error.message),
+  );
+  assert.throws(
+    () => engine.setEpayConfig({ sign_type: "RSA" }),
+    (error) => error instanceof ConfigValidationError,
+  );
+  // demo 模式可以 enabled（不强制商家信息）
+  const demo = engine.setEpayConfig({ enabled: true, mode: "demo", pid: "", key_ref: "" });
+  assert.equal(demo.mode, "demo");
+  assert.equal(demo.enabled, true);
+  // live 模式缺商家信息 → 拒绝
+  assert.throws(
+    () => engine.setEpayConfig({ enabled: true, mode: "live", pid: "", key_ref: "" }),
+    (error) => error instanceof ConfigValidationError && /live 模式|商家|pid|key_ref/u.test(error.message),
+  );
+  // live 模式补齐后通过
+  const live = engine.setEpayConfig({
+    enabled: true,
+    mode: "live",
+    pid: "10001",
+    key_ref: "env:EPAY_KEY",
+    gateway_url: "https://pay.example.com/submit.php",
+    notify_url: "https://example.com/api/payments/epay/notify",
+    return_url: "https://example.com/api/payments/epay/return",
+  });
+  assert.equal(live.mode, "live");
+  assert.equal(live.pid, "10001");
+  assert.equal(live.key_ref, "env:EPAY_KEY");
+  assert.equal(engine.validate().ok, true);
+  const raw = engine.export();
+  assert.equal(raw.includes("sk-"), false);
+});
+
+test("v1.3 系统动作策略默认值：内置受管应用（Node/记事本）、plugins 目录、危险动作需二次确认", () => {
+  for (const mode of ["demo", "personal", "enterprise"]) {
+    const engine = makeEngine({ mode });
+    const policy = engine.getSystemPolicy();
+    assert.ok(Array.isArray(policy.managed_apps));
+    assert.ok(policy.managed_apps.length >= 2, "默认至少 2 个受管应用");
+    const names = policy.managed_apps.map((app) => app.name).join("|");
+    assert.match(names, /Node/u);
+    assert.match(names, /记事本/u);
+    for (const app of policy.managed_apps) {
+      assert.equal(typeof app.id, "string");
+      assert.equal(app.id.length > 0, true);
+      assert.equal(typeof app.command, "string");
+      assert.equal(app.command.length > 0, true);
+      assert.equal(app.allow_start, true);
+    }
+    assert.equal(policy.plugins_dir, "plugins");
+    assert.equal(policy.allow_destructive, true);
+    assert.equal(policy.require_confirmation, true, "危险动作默认必须二次确认");
+    assert.equal(policy.confirmation_ttl_seconds, 120);
+    assert.equal(engine.validate().ok, true);
+  }
+});
+
+test("v1.3 setSystemPolicy：受管应用/插件目录/TTL 可配；非法路径/关闭确认/坏应用被拒绝并留审计", async () => {
+  const root = await makeTmp("steward-config-system-policy-");
+  try {
+    const engine = makePersistEngine(root, { mode: "personal" });
+    const updated = engine.setSystemPolicy({ plugins_dir: "plugins-ext", confirmation_ttl_seconds: 60 });
+    assert.equal(updated.plugins_dir, "plugins-ext");
+    assert.equal(updated.confirmation_ttl_seconds, 60);
+    const withApp = engine.setSystemPolicy({
+      managed_apps: [
+        { id: "demo-node", name: "Node 演示服务", command: "node examples/demo-web/server.mjs", allow_start: true, allow_stop: true, allow_remove: false },
+        { id: "notepad", name: "记事本", command: "notepad.exe", allow_start: true, allow_stop: false, allow_remove: false },
+        { id: "calc", name: "计算器", command: "calc.exe", allow_start: true, allow_stop: true, allow_remove: false },
+      ],
+    });
+    assert.equal(withApp.managed_apps.length, 3);
+    assert.equal(withApp.managed_apps.find((app) => app.id === "calc").allow_stop, true);
+    assert.ok(engine.auditTrail().some((entry) => entry.action === "system.policy.update"));
+
+    assert.throws(
+      () => engine.setSystemPolicy({ plugins_dir: "../escape" }),
+      (error) => error instanceof ConfigValidationError && /plugins_dir/u.test(error.message),
+    );
+    assert.throws(() => engine.setSystemPolicy({ confirmation_ttl_seconds: 0 }), (error) => error instanceof ConfigValidationError);
+    assert.throws(
+      () => engine.setSystemPolicy({ allow_destructive: true, require_confirmation: false }),
+      (error) => error instanceof ConfigValidationError && /二次确认/u.test(error.message),
+    );
+    assert.throws(
+      () =>
+        engine.setSystemPolicy({
+          managed_apps: [{ id: "bad-app", name: "", command: "x.exe", allow_start: true, allow_stop: true, allow_remove: false }],
+        }),
+      (error) => error instanceof ConfigValidationError && /name/u.test(error.message),
+    );
+    assert.throws(
+      () =>
+        engine.setSystemPolicy({
+          managed_apps: [
+            { id: "dup", name: "A", command: "a.exe", allow_start: true, allow_stop: true, allow_remove: false },
+            { id: "dup", name: "B", command: "b.exe", allow_start: true, allow_stop: true, allow_remove: false },
+          ],
+        }),
+      (error) => error instanceof ConfigValidationError && /重复/u.test(error.message),
+    );
+    // 配置文件已持久化 system_policy
+    const raw = readConfigFile(root);
+    assert.equal(raw.system_policy.plugins_dir, "plugins-ext");
+    assert.equal(raw.system_policy.managed_apps.length, 3);
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.3 旧配置迁移：v1.2 config 缺 supervisor/epay/system_policy 时自动补默认且不丢已有字段", async () => {
+  const root = await makeTmp("steward-config-migrate-v13-");
+  try {
+    const oldConfig = defaultsForMode("personal", { now: makeClock().now });
+    delete oldConfig.system_policy;
+    delete oldConfig.payments.epay;
+    oldConfig.agents = oldConfig.agents.filter((agent) => agent.role !== "supervisor");
+    delete oldConfig.models.agent_models.supervisor;
+    const oldOrchestrator = oldConfig.orchestrator;
+    oldOrchestrator.system_prompts = oldOrchestrator.system_prompts.filter((entry) => entry.role !== "supervisor");
+    oldConfig.budgets.month_cny = 6_666;
+    oldConfig.budgets.project_cny = 3_000;
+    oldConfig.budgets.per_txn_cny = 600;
+    await writeFile(join(root, "config.json"), JSON.stringify(oldConfig, null, 2), "utf8");
+
+    const engine = new ConfigEngine({ root, now: makeClock().now });
+    assert.equal(engine.validate().ok, true);
+    assert.equal(engine.config.budgets.month_cny, 6_666, "旧字段保留");
+    const supervisor = engine.listAgents().find((agent) => agent.role === "supervisor");
+    assert.ok(supervisor !== undefined, "迁移后自动补 supervisor");
+    assert.equal(supervisor.token_limit, 1_000_000);
+    assert.ok(engine.listSystemPrompts().some((entry) => entry.role === "supervisor"), "迁移后补 supervisor 提示词");
+    assert.equal(engine.getEpayConfig().mode, "demo", "迁移后补 epay 默认值");
+    assert.equal(engine.getSystemPolicy().plugins_dir, "plugins", "迁移后补 system_policy");
+    assert.equal(engine.getSystemPolicy().require_confirmation, true);
+    engine.save();
+    const persisted = readConfigFile(root);
+    assert.ok(persisted.system_policy !== undefined);
+    assert.ok(persisted.payments.epay !== undefined);
+    assert.ok(persisted.agents.some((agent) => agent.role === "supervisor"));
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.3 validate：supervisor 权限/自治与 system_policy 一致性校验可发现缺失与危险配置", () => {
+  const base = defaultsForMode("personal", { now: makeClock().now });
+  const missingSupervisor = JSON.parse(JSON.stringify(base));
+  missingSupervisor.agents = missingSupervisor.agents.filter((agent) => agent.role !== "supervisor");
+  const missingResult = validateConfig(missingSupervisor);
+  assert.equal(missingResult.ok, false);
+  assert.ok(missingResult.errors.some((item) => /supervisor|系统总控/u.test(item.message)));
+
+  const wrongAutonomy = JSON.parse(JSON.stringify(base));
+  wrongAutonomy.agents.find((agent) => agent.role === "supervisor").autonomy = "autonomous_limited";
+  assert.ok(validateConfig(wrongAutonomy).errors.some((item) => /approval_required/u.test(item.message)));
+
+  const missingTool = JSON.parse(JSON.stringify(base));
+  const supervisor = missingTool.agents.find((agent) => agent.role === "supervisor");
+  supervisor.tools = supervisor.tools.filter((tool) => tool !== "logs.read");
+  assert.ok(validateConfig(missingTool).errors.some((item) => /logs.read/u.test(item.message)));
+
+  const dangerous = JSON.parse(JSON.stringify(base));
+  dangerous.system_policy.require_confirmation = false;
+  assert.ok(validateConfig(dangerous).errors.some((item) => /二次确认/u.test(item.message)));
+
+  const badPluginDir = JSON.parse(JSON.stringify(base));
+  badPluginDir.system_policy.plugins_dir = "../outside";
+  assert.ok(validateConfig(badPluginDir).errors.some((item) => /plugins_dir/u.test(item.message)));
+
+  const liveEpay = JSON.parse(JSON.stringify(base));
+  liveEpay.payments.epay = { ...liveEpay.payments.epay, mode: "live", enabled: true, pid: "", key_ref: "" };
+  assert.ok(validateConfig(liveEpay).errors.some((item) => /live 模式|商户|pid|key_ref/u.test(item.message)));
 });

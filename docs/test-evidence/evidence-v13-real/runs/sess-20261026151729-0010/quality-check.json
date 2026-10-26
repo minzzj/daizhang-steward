@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "checks": {
+    "file_exists": true,
+    "has_html_tag": true,
+    "has_title": true,
+    "has_body": true,
+    "has_plan_table": true,
+    "size_ok": true
+  },
+  "size_bytes": 3524,
+  "checked_at": "2026-10-26T15:17:34.588Z",
+  "action": "harness.code_review"
+}

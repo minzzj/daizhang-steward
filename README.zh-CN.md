@@ -35,6 +35,8 @@ Source-available · non-commercial · real browser & real desktop operations · 
 
 ---
 
+
+> **v1.3.0（2026-10-26）**：配置中心支持**多模型与 API 密钥**（一键同步、各智能体独立选模型、密钥只存引用）；新增**两层总调度**（系统总控 supervisor + 项目总调度 conductor）、**控制台对话/每轮摘要/证据灯箱/系统总控/变现&易支付**页面；CLI 新增 `chat` / `supervisor` / `project` / `system` / `money`；290/290 单测 + 真实浏览器 E2E 25 步全绿。详见 `docs/RELEASE_NOTES_v1.3.0.md` 与 `docs/zh-CN/{configuration,chat,system,money}.md`。
 ## 它是什么 / What it is
 
 代掌（Steward）是一个**可组合的操作型 AI**：

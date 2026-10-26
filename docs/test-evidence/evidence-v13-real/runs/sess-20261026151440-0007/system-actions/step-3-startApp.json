@@ -1,0 +1,19 @@
+{
+  "session_id": "sess-20261026151440-0007",
+  "step": 3,
+  "action": "startApp",
+  "target": "demo-app",
+  "args": {},
+  "risk": "medium",
+  "requires_confirmation": false,
+  "confirmed_by": null,
+  "result_ok": true,
+  "result_summary": "启动受管应用 demo-app（演示受管程序（examples/system-demo））",
+  "result_detail": "{\"app_id\":\"demo-app\",\"pid\":19464,\"started_at\":\"2026-10-26T15:14:43.384Z\",\"command\":\"node\"}",
+  "result_data": {
+    "audit_id": "771b6a7a-e2a5-48bf-9175-85a324751cb8",
+    "risk": "low"
+  },
+  "generated_at": "2026-10-26T15:14:43.385Z",
+  "note": "supervisor 受管系统动作：由人确认后执行；全部动作留痕，供审计/回放。"
+}

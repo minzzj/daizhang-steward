@@ -11,21 +11,30 @@
  * 注意：所有默认值都可被用户逐项覆盖（`setFeature` / `setBudgets` / `setTokenBudget` / ...）。
  */
 
+import { buildDefaultOrchestratorSettings } from "./prompts.js";
 import type {
   AgentConfig,
+  AgentModelBinding,
   Autonomy,
   Budgets,
   CompanyProfile,
+  EpayConfig,
   FeatureName,
   FeatureToggle,
   Features,
   InvoiceConfig,
+  ManagedAppConfig,
+  ModelProviderConfig,
+  ModelRoutingConfig,
+  ModelSyncMode,
+  OrchestratorSettings,
   PaymentProvider,
   PaymentsConfig,
   PayoutAccount,
   Profile,
   RunMode,
   StewardConfig,
+  SystemPolicyConfig,
   TokenBudgetConfig,
 } from "./types.js";
 
@@ -50,8 +59,9 @@ export const FEATURE_NAMES: readonly FeatureName[] = [
   "demo_data",
 ];
 
-/** 全部代理角色（10 个）。 */
+/** 全部代理角色（11 个：supervisor 系统总控 + conductor + 9 个专项）。 */
 export const AGENT_ROLES = [
+  "supervisor",
   "conductor",
   "operator",
   "harness",
@@ -145,6 +155,21 @@ function buildFeatures(mode: RunMode): Features {
   };
 }
 
+/** 默认易支付（epay）配置：demo 模式、未填商家信息时 disabled；密钥只存引用。 */
+export function defaultEpayConfig(): EpayConfig {
+  return {
+    enabled: false,
+    gateway_url: "https://pay.example.com/submit.php",
+    pid: "",
+    key_ref: "",
+    pay_types: ["alipay", "wxpay"],
+    notify_url: "http://127.0.0.1:4180/api/payments/epay/notify",
+    return_url: "http://127.0.0.1:4180/api/payments/epay/return",
+    mode: "demo",
+    sign_type: "MD5",
+  };
+}
+
 function demoPayments(): PaymentsConfig {
   const providers: PaymentProvider[] = [
     {
@@ -164,7 +189,15 @@ function demoPayments(): PaymentsConfig {
     type: "personal",
   };
   const invoice: InvoiceConfig = { default_type: "none", title: "", draft_only: true };
-  return { providers, payout_account: payout, invoice, require_dual_review: false, sign_contract: false, ai_may_sign: false };
+  return {
+    providers,
+    payout_account: payout,
+    invoice,
+    require_dual_review: false,
+    sign_contract: false,
+    ai_may_sign: false,
+    epay: defaultEpayConfig(),
+  };
 }
 
 function personalPayments(): PaymentsConfig {
@@ -206,7 +239,15 @@ function personalPayments(): PaymentsConfig {
     alipay_id_masked: "ali***90",
   };
   const invoice: InvoiceConfig = { default_type: "none", title: "", draft_only: true };
-  return { providers, payout_account: payout, invoice, require_dual_review: false, sign_contract: false, ai_may_sign: false };
+  return {
+    providers,
+    payout_account: payout,
+    invoice,
+    require_dual_review: false,
+    sign_contract: false,
+    ai_may_sign: false,
+    epay: defaultEpayConfig(),
+  };
 }
 
 function enterprisePayments(): PaymentsConfig {
@@ -242,7 +283,15 @@ function enterprisePayments(): PaymentsConfig {
     tax_no_masked: "9133******20",
     draft_only: true,
   };
-  return { providers, payout_account: payout, invoice, require_dual_review: true, sign_contract: true, ai_may_sign: false };
+  return {
+    providers,
+    payout_account: payout,
+    invoice,
+    require_dual_review: true,
+    sign_contract: true,
+    ai_may_sign: false,
+    epay: { ...defaultEpayConfig(), mode: "demo" },
+  };
 }
 
 function buildBudgets(mode: RunMode): Budgets {
@@ -292,6 +341,11 @@ interface AgentSeed {
 }
 
 const AGENT_SEEDS: readonly AgentSeed[] = [
+  {
+    role: "supervisor",
+    name: "系统总控",
+    tools: ["system.*", "agents.*", "models.*", "prompts.*", "project.delegate", "logs.read"],
+  },
   { role: "conductor", name: "总调度", tools: ["agent.dispatch", "budget.check", "task.plan", "approval.request"] },
   { role: "operator", name: "办公执行", tools: ["browser.flow", "desktop.flow", "artifact.write"] },
   { role: "harness", name: "编码代理", tools: ["harness.request", "patch.apply", "test.run"] },
@@ -306,6 +360,7 @@ const AGENT_SEEDS: readonly AgentSeed[] = [
 
 const AUTONOMY_BY_MODE: Record<RunMode, Record<string, Autonomy>> = {
   demo: {
+    supervisor: "approval_required",
     conductor: "autonomous_limited",
     operator: "draft",
     harness: "draft",
@@ -318,6 +373,7 @@ const AUTONOMY_BY_MODE: Record<RunMode, Record<string, Autonomy>> = {
     research: "readonly",
   },
   personal: {
+    supervisor: "approval_required",
     conductor: "autonomous_limited",
     operator: "approval_required",
     harness: "approval_required",
@@ -330,6 +386,7 @@ const AUTONOMY_BY_MODE: Record<RunMode, Record<string, Autonomy>> = {
     research: "readonly",
   },
   enterprise: {
+    supervisor: "approval_required",
     conductor: "approval_required",
     operator: "approval_required",
     harness: "approval_required",
@@ -344,8 +401,10 @@ const AUTONOMY_BY_MODE: Record<RunMode, Record<string, Autonomy>> = {
 };
 
 const AGENT_TOKEN_LIMIT: Record<RunMode, number> = { demo: 100_000, personal: 200_000, enterprise: 1_000_000 };
+/** 系统总控 supervisor 的 Token 上限固定 1,000,000（最高权限角色，所有模式一致）。 */
+export const SUPERVISOR_TOKEN_LIMIT = 1_000_000;
 
-/** 某模式的默认代理注册表（10 个角色；个人模式也保留全部角色，enabled 可配）。 */
+/** 某模式的默认代理注册表（11 个角色：supervisor + conductor + 9 专项）。 */
 export function defaultAgents(mode: RunMode): AgentConfig[] {
   const autonomyMap = AUTONOMY_BY_MODE[mode];
   return AGENT_SEEDS.map((seed) => ({
@@ -354,9 +413,131 @@ export function defaultAgents(mode: RunMode): AgentConfig[] {
     enabled: true,
     autonomy: autonomyMap[seed.role] ?? "readonly",
     tools: [...seed.tools],
-    token_limit: AGENT_TOKEN_LIMIT[mode],
+    token_limit: seed.role === "supervisor" ? SUPERVISOR_TOKEN_LIMIT : AGENT_TOKEN_LIMIT[mode],
     model_ref: mode === "enterprise" ? "deepseek-chat@v1" : "deepseek-chat@v1",
   }));
+}
+
+// ---------------------------------------------------------------------------
+// 多模型 / API 密钥引用 / 各智能体模型分配（v1.2 默认值）
+// ---------------------------------------------------------------------------
+
+/** 默认模型服务商：DeepSeek 默认启用（env 引用），其余预置但默认关闭，用户可自配密钥与模型名。 */
+export function defaultModelProviders(): ModelProviderConfig[] {
+  return [
+    {
+      id: "deepseek",
+      name: "DeepSeek",
+      kind: "deepseek",
+      base_url: "https://api.deepseek.com",
+      api_key_ref: "env:DEEPSEEK_API_KEY",
+      enabled: true,
+      default_model: "deepseek-chat",
+      models: ["deepseek-chat", "deepseek-reasoner"],
+      note: "默认服务商；密钥只存引用（环境变量），绝不写入 config.json",
+    },
+    {
+      id: "openai",
+      name: "OpenAI 兼容",
+      kind: "openai_compatible",
+      base_url: "https://api.openai.com/v1",
+      api_key_ref: "",
+      enabled: false,
+      default_model: "gpt-4o-mini",
+      models: ["gpt-4o-mini", "gpt-4o", "o3-mini"],
+      note: "任何 OpenAI 兼容端点（可改 base_url）；默认关闭",
+    },
+    {
+      id: "anthropic",
+      name: "Anthropic",
+      kind: "anthropic",
+      base_url: "https://api.anthropic.com",
+      api_key_ref: "",
+      enabled: false,
+      default_model: "claude-3-5-sonnet",
+      models: ["claude-3-5-sonnet", "claude-3-5-haiku"],
+      note: "默认关闭；需要时可一键同步同一密钥",
+    },
+    {
+      id: "local",
+      name: "本地模型（Ollama 兼容）",
+      kind: "local",
+      base_url: "http://127.0.0.1:11434/v1",
+      api_key_ref: "",
+      enabled: false,
+      default_model: "qwen2.5:7b",
+      models: ["qwen2.5:7b", "llama3.1:8b"],
+      note: "本地推理不产生云端费用；默认关闭",
+    },
+  ];
+}
+
+/** 默认各智能体模型绑定（可不同模型：conductor/reviewer/research 用 reasoner）。 */
+export function defaultAgentModels(defaultProviderId = "deepseek"): Record<string, AgentModelBinding> {
+  const binding = (model: string, extra: Partial<AgentModelBinding> = {}): AgentModelBinding => ({
+    provider_id: defaultProviderId,
+    model,
+    ...extra,
+  });
+  return {
+    supervisor: binding("deepseek-reasoner", { temperature: 0.2, max_tokens: 8_192 }),
+    conductor: binding("deepseek-reasoner", { temperature: 0.3, max_tokens: 8_192 }),
+    operator: binding("deepseek-chat"),
+    harness: binding("deepseek-chat"),
+    customer: binding("deepseek-chat"),
+    finance: binding("deepseek-chat"),
+    reviewer: binding("deepseek-reasoner", { temperature: 0.2, max_tokens: 8_192 }),
+    backend: binding("deepseek-chat"),
+    scout: binding("deepseek-chat"),
+    content: binding("deepseek-chat"),
+    research: binding("deepseek-reasoner"),
+  };
+}
+
+/** 默认模型路由：demo/personal 默认一键同步（single_key_all），enterprise 默认 per_provider。 */
+export function defaultModelRouting(mode: RunMode): ModelRoutingConfig {
+  const syncMode: ModelSyncMode = mode === "enterprise" ? "per_provider" : "single_key_all";
+  const providers = defaultModelProviders();
+  if (syncMode === "single_key_all") {
+    // 一键同步模式：默认所有服务商共用同一密钥引用（用户可一键改成自己的 env/file 引用）
+    const canonical = providers.find((provider) => provider.id === "deepseek")?.api_key_ref ?? "env:DEEPSEEK_API_KEY";
+    for (const provider of providers) provider.api_key_ref = canonical;
+  }
+  return {
+    sync_mode: syncMode,
+    default_provider_id: "deepseek",
+    providers,
+    agent_models: defaultAgentModels("deepseek"),
+  };
+}
+
+/** 默认系统动作策略（v1.3）：受管应用白名单 + 插件目录 + 危险动作二次确认。 */
+export function defaultSystemPolicy(): SystemPolicyConfig {
+  const managedApps: ManagedAppConfig[] = [
+    {
+      id: "demo-node",
+      name: "Node 演示服务（examples/demo-web）",
+      command: "node examples/demo-web/server.mjs",
+      allow_start: true,
+      allow_stop: true,
+      allow_remove: false,
+    },
+    {
+      id: "notepad",
+      name: "记事本（Notepad）",
+      command: "notepad.exe",
+      allow_start: true,
+      allow_stop: true,
+      allow_remove: false,
+    },
+  ];
+  return {
+    managed_apps: managedApps,
+    plugins_dir: "plugins",
+    allow_destructive: true,
+    require_confirmation: true,
+    confirmation_ttl_seconds: 120,
+  };
 }
 
 /** 三种模式的完整默认配置（每种都通过 validate 的基础校验）。 */
@@ -381,6 +562,9 @@ export function defaultsForMode(mode: RunMode, options: { now?: () => Date } = {
       retention_days: mode === "demo" ? 7 : mode === "personal" ? 30 : 90,
       telemetry: false,
     },
+    models: defaultModelRouting(mode),
+    orchestrator: buildDefaultOrchestratorSettings(mode, now),
+    system_policy: defaultSystemPolicy(),
     updated_at: now.toISOString(),
   };
 }

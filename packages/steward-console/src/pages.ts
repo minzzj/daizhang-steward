@@ -1,4 +1,4 @@
-/**
+﻿/**
  * packages/steward-console/src/pages.ts
  *
  * 服务端渲染的页面（原生 HTML，中文 UI，无第三方库、无外链资源）。
@@ -28,14 +28,19 @@ import type {
 
 export type ConsolePageName =
   | "dashboard"
+  | "chat"
   | "projects"
   | "project"
   | "ledger"
   | "approvals"
   | "report"
   | "takeover"
+  | "money"
   | "agents"
+  | "agent-role"
   | "backend"
+  | "run"
+  | "system"
   | "settings"
   | "data";
 
@@ -186,16 +191,19 @@ const NAV_GROUPS: readonly NavGroup[] = [
     title: "运营",
     items: [
       { page: "dashboard", href: "/", label: "总览", icon: "▦" },
+      { page: "chat", href: "/chat", label: "对话", icon: "✉" },
       { page: "projects", href: "/projects", label: "项目", icon: "▤" },
       { page: "ledger", href: "/ledger", label: "账本", icon: "≡" },
       { page: "approvals", href: "/approvals", label: "审批", icon: "✓" },
       { page: "report", href: "/report", label: "月报", icon: "▥" },
       { page: "takeover", href: "/takeover", label: "接管", icon: "■" },
+      { page: "money", href: "/money", label: "变现", icon: "￥" },
     ],
   },
   {
     title: "管理",
     items: [
+      { page: "system", href: "/system", label: "系统", icon: "◉" },
       { page: "agents", href: "/agents", label: "智能体", icon: "◈" },
       { page: "backend", href: "/backend", label: "后台", icon: "▣" },
       { page: "settings", href: "/settings", label: "配置", icon: "⚙" },
@@ -260,13 +268,15 @@ export function renderShell(options: PageRenderOptions, title: string, content: 
     <title>${escapeHtml(title)} · 代掌 Steward 本地控制台</title>
     <link rel="stylesheet" href="/assets/app.css" />
     <link rel="stylesheet" href="/assets/pro.css" />
+    <link rel="stylesheet" href="/assets/chat.css" />
+    <link rel="stylesheet" href="/assets/system.css" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <span class="brand-name">代掌 Steward</span>
-          <span class="brand-sub">LOCAL CONSOLE · v1.1</span>
+          <span class="brand-sub">LOCAL CONSOLE · v1.3</span>
         </div>
         <nav class="sidebar-nav" id="sidebar-nav" aria-label="主导航">${renderNav(options.active)}</nav>
         <div class="sidebar-footer">
@@ -292,13 +302,15 @@ ${content}
         </main>
         <footer class="site-footer">
           <p>安全边界：只监听 <code>127.0.0.1</code> · 本地单机 · 写操作需 <code>X-Steward-Token</code> · 无 CDN / 无外链 / 无第三方脚本。</p>
-          <p>数据来源：<code>ConsoleDataProvider</code> + <code>ConsoleAdminProvider</code>（内置演示实现；真实 ConfigEngine 接入后持久化到 config.json）。存活探测：<a href="/health">/health</a></p>
+          <p>数据来源：<code>ConsoleDataProvider</code> + <code>ConsoleAdminProvider</code> + <code>ConsoleChatProvider</code> + <code>ConsoleSystemProvider</code>（内置演示实现；真实 ConfigEngine/Orchestrator/MoneyEngine 接入后持久化）。存活探测：<a href="/health">/health</a></p>
         </footer>
       </div>
     </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="/assets/app.js" defer></script>
     <script src="/assets/admin.js" defer></script>
+    <script src="/assets/chat.js" defer></script>
+    <script src="/assets/system.js" defer></script>
   </body>
 </html>`;
 }

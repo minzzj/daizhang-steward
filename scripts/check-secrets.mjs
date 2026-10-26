@@ -7,7 +7,7 @@ import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SKIP_DIRS = new Set(["node_modules", ".git", "runs", "dist", "coverage", ".pnpm-store", "交付", "video-build"]);
+const SKIP_DIRS = new Set(["node_modules", ".git", "runs", "dist", "coverage", ".pnpm-store", "交付", "video-build", ".steward", "browser-screenshots"]);
 const SKIP_EXT = new Set([".png", ".jpg", ".jpeg", ".gif", ".mp4", ".webm", ".wav", ".zip", ".docx", ".pdf", ".ico"]);
 
 const PATTERNS = [

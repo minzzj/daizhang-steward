@@ -248,6 +248,7 @@ export interface ConsoleAgentInfo extends AgentConfig {
 }
 
 export type AgentRole =
+  | "supervisor"
   | "conductor"
   | "operator"
   | "harness"
@@ -459,7 +460,8 @@ const AGENT_SEEDS: ReadonlyArray<{
   tools: string[];
   enterpriseOnly?: boolean;
 }> = [
-  { role: "conductor", title: "总调度", autonomy: "approval_required", tools: ["plan", "dispatch", "report"] },
+  { role: "supervisor", title: "超级总调度", autonomy: "approval_required", tools: ["system.control", "program.manage", "plugin.manage", "model.route", "project.delegate"] },
+  { role: "conductor", title: "项目总调度", autonomy: "approval_required", tools: ["plan", "dispatch", "report"] },
   { role: "operator", title: "执行（浏览器/桌面）", autonomy: "approval_required", tools: ["browser.*", "desktop.*", "file.*"] },
   { role: "harness", title: "写代码 Harness", autonomy: "approval_required", tools: ["code.loop", "patch.apply", "test.run"] },
   { role: "customer", title: "客户对接", autonomy: "draft", tools: ["crm.read", "message.draft"] },
@@ -594,6 +596,7 @@ export function createDemoAdminProvider(options: DemoAdminProviderOptions = {}):
     string,
     { status: string; current_task: string; today_actions: number; tokens_used: number; logs: string[] }
   >([
+    ["supervisor", { status: "running", current_task: "系统总控：巡检 5 个受管程序与 12 个智能体，等待指令", today_actions: 9, tokens_used: 512_300, logs: ["08:30 巡检受管程序（4 运行 / 1 停止）", "09:12 同步模型密钥到所有功能", "10:20 委派 2 个项目给项目总调度"] }],
     ["conductor", { status: "running", current_task: "为 3 个项目排优先级并生成今日计划", today_actions: 18, tokens_used: 486_200, logs: ["08:32 生成今日计划（3 项目 / 7 任务）", "09:10 分派任务给 operator / scout", "10:05 复核 2 张审批卡"] }],
     ["operator", { status: "running", current_task: "真实浏览器：官网改版移动端回归中", today_actions: 42, tokens_used: 812_400, logs: ["09:21 打开代掌演示站（有头 Chrome）", "09:24 填表并提交项目成功", "09:30 截图 7 张 + DOM 快照留证"] }],
     ["harness", { status: "running", current_task: "CodeTask：修复登录超时 red test", today_actions: 6, tokens_used: 1_204_800, logs: ["10:02 读取失败测试与补丁任务", "10:18 生成统一补丁并应用隔离 worktree", "10:41 真实浏览器验收转绿（第 1 轮）"] }],
@@ -908,3 +911,6 @@ export function maskAccount(value: string): string {
 export function demoModeConfig(mode: RunMode): StewardConfig {
   return defaultConfig(mode);
 }
+
+// v1.2：对话 / 智能体记录 / 证据 / 变现 / 模型与提示词契约（在 chat.ts 实现，从 admin 模块统一可达）。
+export * from "./chat.js";
