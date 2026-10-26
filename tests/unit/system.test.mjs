@@ -351,10 +351,12 @@ test("受管范围：清单外插件 / 路径穿越 / file.list 绝对路径越�
   });
   assert.equal(absolute.allowed, false);
 
-  // 系统关键路径判定（不实际删除）
-  assert.equal(isSystemCriticalPath(join(process.env.SystemRoot ?? "C:\\WINDOWS", "System32")), true);
+  // 系统关键路径判定（不实际删除）；Windows 专属断言仅在 Windows 上执行（CI 同时跑 ubuntu）
+  if (process.platform === "win32") {
+    assert.equal(isSystemCriticalPath(join(process.env.SystemRoot ?? "C:\\WINDOWS", "System32")), true);
+    assert.equal(isSystemCriticalPath("C:\\"), true);
+  }
   assert.equal(isSystemCriticalPath(join(ws.appDir, "main.js")), false);
-  assert.equal(isSystemCriticalPath("C:\\"), true);
 
   await assert.rejects(
     () =>
