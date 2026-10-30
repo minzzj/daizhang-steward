@@ -7,16 +7,17 @@
  * - 拒绝 `..` 路径穿越、绝对路径越界、NUL/控制字符、通配符；
  * - 删除目标必须**严格位于**受管 root 内，且绝不允许系统关键路径（Windows 目录/Program Files/
  *   ProgramData、盘符根、POSIX 系统目录）。
+ * - v1.4-D：文件/目录动作只允许在**受管工作区**内，且禁止工作区内的软链接/联接点逃逸。
  */
 
-import { existsSync, realpathSync } from "node:fs";
-import { basename, isAbsolute, normalize, resolve, sep } from "node:path";
+import { existsSync, lstatSync, realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, normalize, relative, resolve, sep } from "node:path";
 import { SystemActionError } from "./errors.js";
 
 /** 受管 id 允许的字符（字母数字开头，只含字母数字/._-，≤64）。 */
 export const SAFE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
-/** 校验受管 id（app/plugin），非法抛 SystemActionError。 */
+/** 校验受管 id（app/plugin/source），非法抛 SystemActionError。 */
 export function assertSafeId(id: unknown, label: string): string {
   if (typeof id !== "string" || !SAFE_ID_PATTERN.test(id)) {
     throw new SystemActionError(
@@ -117,8 +118,8 @@ export function assertSafeRelativePath(raw: unknown, label: string): string {
  */
 export function resolveWithin(baseDir: string, rawRelative: unknown, label: string): string {
   const base = resolve(baseDir);
-  const relative = assertSafeRelativePath(rawRelative, label);
-  const target = relative === "" ? base : resolve(base, relative);
+  const relativePath = assertSafeRelativePath(rawRelative, label);
+  const target = relativePath === "" ? base : resolve(base, relativePath);
   if (!isPathInside(base, target)) {
     throw new SystemActionError("path-traversal", `${label} 越界：${String(rawRelative)} 不在 ${base} 内`);
   }
@@ -126,7 +127,7 @@ export function resolveWithin(baseDir: string, rawRelative: unknown, label: stri
 }
 
 /**
- * 校验「删除目标」的安全性（app.remove / plugin.remove 共用）：
+ * 校验「删除目标」的安全性（app.remove / plugin.remove / program.uninstall 共用）：
  * - 必须存在；
  * - 必须严格位于受管 root 内（不能等于 root 本身、不能是 root 的祖先）；
  * - 不能位于 state_dir（回收站/审计）内；
@@ -213,6 +214,140 @@ export function briefPath(input: string, maxLength = 120): string {
 /** 归一化路径展示（统一正斜杠，便于审计与跨平台报告）。 */
 export function displayPath(input: string): string {
   return resolve(input).replaceAll("\\", "/");
+}
+
+// ---------------------------------------------------------------------------
+// v1.4-D：受管工作区路径安全
+// ---------------------------------------------------------------------------
+
+/**
+ * 解析受管工作区内的条目路径。
+ *
+ * 安全规则（工作区是唯一允许文件/目录动作的地方）：
+ * - 相对路径必须通过 `assertSafeRelativePath`（拒绝 `..`、绝对路径、盘符、通配符、控制字符）；
+ * - 目标必须位于 `workspaceDir` 内（`allowRoot` 决定是否允许工作区根本身）；
+ * - **禁止路径上任何已存在的软链接/联接点**（防止工作区内软链接逃逸到系统目录）；
+ * - 目标已存在时按 realpath 复核，确保没有通过联接点逃逸。
+ *
+ * @returns 目标绝对路径（未做 realpath，写入时可安全使用）
+ */
+export function resolveWorkspaceEntry(
+  workspaceDir: string,
+  rawRelative: unknown,
+  label: string,
+  options: { allowRoot?: boolean; mustExist?: boolean } = {},
+): string {
+  const base = resolve(workspaceDir);
+  const relativePath = assertSafeRelativePath(rawRelative, label);
+  const target = relativePath === "" ? base : resolve(base, relativePath);
+  const allowRoot = options.allowRoot === true;
+  if (!isPathInside(base, target, { strict: !allowRoot })) {
+    throw new SystemActionError("path-traversal", `${label} 越界：不在受管工作区内（${base}）`);
+  }
+  if (relativePath === "" && !allowRoot) {
+    throw new SystemActionError("out-of-scope", `${label} 不允许指向受管工作区根目录本身`);
+  }
+  if (isSystemCriticalPath(base)) {
+    throw new SystemActionError("system-path", `受管工作区位于系统关键路径，禁止文件动作：${base}`);
+  }
+  // 工作区尚不存在：只需词法校验（写入时由控制器创建，不会经过软链接）
+  if (!existsSync(base)) return target;
+
+  // 逐级检查已存在的路径组件：禁止软链接 + 用 realpath 复核是否仍在工作区内
+  const relativeFromBase = relative(base, target);
+  if (relativeFromBase !== "" && !relativeFromBase.startsWith("..")) {
+    const segments = relativeFromBase.split(sep);
+    let current = base;
+    for (const segment of segments) {
+      current = resolve(current, segment);
+      let stats;
+      try {
+        stats = lstatSync(current);
+      } catch {
+        break; // 后续路径还不存在，停止（其父目录已检查）
+      }
+      if (stats.isSymbolicLink()) {
+        throw new SystemActionError(
+          "symlink-escape",
+          `${label} 的路径包含软链接/联接点，禁止文件动作（防逃逸）：${current}`,
+        );
+      }
+    }
+  }
+  const realBase = safeRealpath(base);
+  let probe = target;
+  while (!existsSync(probe)) {
+    const parent = dirname(probe);
+    if (parent === probe) break;
+    probe = parent;
+  }
+  if (existsSync(probe)) {
+    const realProbe = safeRealpath(probe);
+    if (!isPathInside(realBase, realProbe, { strict: false })) {
+      throw new SystemActionError("symlink-escape", `${label} 经 realpath 复核后逃逸出受管工作区：${realProbe}`);
+    }
+  }
+  if (options.mustExist === true && !existsSync(target)) {
+    throw new SystemActionError("not-found", `${label} 目标不存在：${target}`);
+  }
+  return target;
+}
+
+/**
+ * 校验工作区删除目标：必须存在、严格位于工作区内（不能是工作区根）、不是系统关键路径。
+ * 返回 realpath。
+ */
+export function assertWorkspaceRemovable(workspaceDir: string, targetPath: string, label: string): string {
+  const base = resolve(workspaceDir);
+  const target = resolve(targetPath);
+  if (!isPathInside(base, target, { strict: true })) {
+    throw new SystemActionError("path-traversal", `${label} 只能删除受管工作区内（不含根目录）的条目：${target}`);
+  }
+  if (!existsSync(target)) {
+    throw new SystemActionError("not-found", `${label} 目标不存在：${target}`);
+  }
+  const realBase = existsSync(base) ? safeRealpath(base) : base;
+  const realTarget = safeRealpath(target);
+  if (!isPathInside(realBase, realTarget, { strict: true })) {
+    throw new SystemActionError("symlink-escape", `${label} 删除目标经 realpath 复核后不在受管工作区内：${realTarget}`);
+  }
+  if (isSystemCriticalPath(realTarget)) {
+    throw new SystemActionError("system-path", `${label} 删除目标属于系统关键路径：${realTarget}`);
+  }
+  return realTarget;
+}
+
+/** 解析受管安装源目录（`<install_sources_dir>/<sourceId>`），必须存在且 realpath 不逃逸。 */
+export function resolveInstallSource(installSourcesDir: string, sourceId: unknown): string {
+  const id = assertSafeId(sourceId, "安装源 id（source_id）");
+  const base = resolve(installSourcesDir);
+  const target = resolve(base, id);
+  if (!isPathInside(base, target, { strict: true })) {
+    throw new SystemActionError("path-traversal", `安装源目录越界：${String(sourceId)}`);
+  }
+  if (!existsSync(target)) {
+    throw new SystemActionError("not-found", `安装源不存在：${target}（install_sources_dir=${base}）`);
+  }
+  const realBase = safeRealpath(base);
+  const realTarget = safeRealpath(target);
+  if (!isPathInside(realBase, realTarget, { strict: true })) {
+    throw new SystemActionError("symlink-escape", `安装源经 realpath 复核后逃逸出受管目录：${realTarget}`);
+  }
+  if (!lstatSync(realTarget).isDirectory()) {
+    throw new SystemActionError("invalid-source", `安装源必须是目录：${realTarget}`);
+  }
+  return realTarget;
+}
+
+/** 解析受管已安装程序目录（`<root>/programs/<id>`）。 */
+export function resolveProgramDir(programsDir: string, appId: unknown): string {
+  const id = assertSafeId(appId, "受管程序 id");
+  const base = resolve(programsDir);
+  const target = resolve(base, id);
+  if (!isPathInside(base, target, { strict: true })) {
+    throw new SystemActionError("path-traversal", `受管程序目录越界：${String(appId)}`);
+  }
+  return target;
 }
 
 /** 是否 Windows（供上层判断真实执行能力）。 */

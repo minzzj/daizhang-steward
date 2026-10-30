@@ -489,3 +489,13 @@ GitHub 认证、非商用许可预期、法律边界需人工复核、额度控�
 - 测试：290/290 单测；控制台真实浏览器 E2E 25/25 步、303/303 检查、30 张截图。
 - 文档：docs/{zh-CN,en}/{configuration,chat,system,money}.md、docs/RELEASE_NOTES_v1.3.0.md；证据：docs/test-evidence/evidence-console-v13-*、evidence-v13-real、evidence-limit-*。
 - 复跑：`npm run build && node --test "tests/unit/*.test.mjs" && node tests/e2e-console/run.mjs`；控制台 `node dist/apps/cli/src/index.js console --port 4180`。
+
+
+## v1.4.0 交付（2026-10-30）
+
+- **发送即执行 + SSE 实时流**：/chat 发送即自动执行，实时事件（思考/计划/每步/每轮摘要/Token/审批/完成）；CLI `steward runtime`；断线 since 回放与刷新恢复。
+- **steward-runtime**（RunManager）：自动执行循环、审批策略（auto_low_risk/auto_all/manual/full_auto）、并发 3、暂停恢复打断、自动返工、持久化；配置中心 runtime 设置 + `/settings` UI。
+- **稳健性**：本地动作未实现/失败时模型输出兜底并保存证据（含 HTML 提取为 deliverable.html），真实 DeepSeek 实测「简单方案」5 步自动完成并产出 HTML。
+- **系统总控扩展**：受管工作区文件/目录、打开应用/URL、服务状态、定时任务、受管程序安装/卸载（备份+确认+审计）。
+- 验证：339/339 单测；真实浏览器 E2E 31 步/338 检查/35 截图；CI Windows+Ubuntu 全绿；Release v1.4.0（含证据资产）。
+- 文档：docs/{zh-CN,en}/runtime.md、docs/RELEASE_NOTES_v1.4.0.md；证据：docs/test-evidence/evidence-console-v14-*、evidence-v14-real。

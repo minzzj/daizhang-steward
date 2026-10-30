@@ -13,6 +13,22 @@
 - 企业专属 UI（企业看板/工作流页面）
 - 真实银行/税务/CA/电子签章系统对接
 
+## [1.4.0] — 2026-10-30
+
+### Added
+- **发送即执行**：`/chat` 发送目标后自动创建 Run 并执行（无需手动点开始）；CLI `steward runtime --goal` 一条命令自动跑完。
+- **steward-runtime 包**：Run 队列/自动执行循环/实时事件（17 类）/审批策略（auto_low_risk/auto_all/manual、full_auto）/并发（默认 3）/暂停恢复打断/自动返工/持久化/断线 since 回放。
+- **SSE 实时流**：`GET /api/chat/runs/:id/stream?since=`（心跳、Last-Event-ID 续传）；控制台实时显示思考/计划/每步/每轮摘要+Token/审批卡/完成，刷新可恢复。
+- **配置中心 runtime 设置**：auto_run、approval_mode、full_auto、max_auto_steps、rework_limit、event_retention；`/settings` 可视化并校验（full_auto 与 manual 互斥）。
+- **模型输出兜底**：本地动作未实现/失败时保存模型输出为证据，含 HTML 提取为 deliverable.html（不再因单个动作阻断整条 Run）。
+- **系统总控扩展**：受管工作区文件/目录、打开应用/白名单 URL、服务状态、定时任务 scheduler.json、受管程序安装/卸载（备份+确认+审计）。
+- 文档：`docs/zh-CN/runtime.md`、`docs/en/runtime.md`、`docs/RELEASE_NOTES_v1.4.0.md`；测试 339 条。
+
+### Fixed
+- 配置中心 `getApiKeyForProvider` 返回 `{ok, value}` 与编排 resolver 期望字符串不匹配导致真实模型被误判为无 key、全部走本地回退的问题。
+- 控制台真实 `startProject` 未调用引擎执行、导致需手动点开始的问题（v1.4 统一为发送即执行 + RunManager 驱动）。
+- 模型计划中的未实现动作（如 harness.build_deliverable）导致整条 Run 阻塞的问题。
+
 ## [1.3.0] — 2026-10-26
 
 ### Added

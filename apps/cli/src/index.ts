@@ -51,8 +51,9 @@ import { cmdConfig, cmdAgents, cmdData } from "./config-cli.js";
 import { cmdLimitRun } from "./limit-run.js";
 import { cmdMoney } from "./money-cli.js";
 import { cmdAgent, cmdSystem } from "./agent-cli.js";
+import { cmdRuntime } from "./run-cli.js";
 
-const VERSION = "1.3.0";
+const VERSION = "1.4.0";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {
@@ -109,6 +110,9 @@ function printHelp(): void {
   steward data [--action stats|reset] [--yes] 数据统计 / 清空运行时数据（清空需 --yes）
   steward limit-run [--budget 0] [--token-limit 10000000] [--revenue 10] [--json]
                                               0 元预算极限测试：真实交付 + 真实浏览器验收 + 变现记账（个人模式）
+  steward runtime --goal "<目标>" [--json] [--manual]                      发送即执行（自动跑完/需人工确认才暂停）+ 实时事件
+  steward runtime --action list|status|stream|approve|reject|interrupt|resume --run <id> [--step N] [--json]
+                                              实时执行：查看/审批/打断/恢复 Run（无需手动点开始）
   steward chat --goal "<目标>" [--kind system|project] [--auto] [--json]     总调度对话：拆计划/派发/每轮摘要/打断恢复/审批
   steward supervisor --goal "<目标>" [--json]  系统总控（最高层）：程序/插件/模型/提示词/委派项目/危险动作二次确认
   steward project --goal "<目标>" [--json]     项目总调度（conductor）：拆解→派发→交付→证据
@@ -885,6 +889,10 @@ async function main(): Promise<number> {
     case "money":
     case "pay":
       return cmdMoney(parsed);
+    case "runtime":
+    case "auto":
+    case "runs":
+      return cmdRuntime(parsed);
     case "chat":
     case "ask":
       return cmdAgent(parsed);

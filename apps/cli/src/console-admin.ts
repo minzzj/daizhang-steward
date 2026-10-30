@@ -85,6 +85,7 @@ export function createConfigAdminProvider(engine: ConfigEngine, options: ConfigA
       if (partial.token_budget && typeof partial.token_budget === "object") engine.setTokenBudget(partial.token_budget as never);
       if (partial.approval && typeof partial.approval === "object") engine.setApprovalPolicy(partial.approval as never);
       if (partial.data && typeof partial.data === "object") engine.setData(partial.data as never);
+      if (partial.runtime && typeof partial.runtime === "object") engine.setRuntimeSettings(partial.runtime as never);
       if (partial.features && typeof partial.features === "object") {
         for (const [name, value] of Object.entries(partial.features as Record<string, unknown>)) {
           if (!isFeatureName(name)) continue;

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * `steward-config`：配置中心（v1.1 三模式 + v1.2 多模型/API 密钥/系统提示词 + v1.3 supervisor/epay/系统策略）。
  *
  * 零第三方依赖；纯逻辑 + JSON 原子持久化（`<root>/config.json`）。
@@ -14,6 +14,7 @@ export type {
   AgentModelBinding,
   AgentUpdate,
   ApiKeyResolution,
+  ApprovalMode,
   ApprovalPolicy,
   AuditEntry,
   AuditResult,
@@ -62,6 +63,8 @@ export type {
   ResetDataResult,
   ResolvedAgentModel,
   RunMode,
+  RuntimeSettings,
+  RuntimeSettingsUpdate,
   SetModeOptions,
   StewardConfig,
   SyncApiKeyResult,
@@ -90,6 +93,7 @@ export {
   defaultEpayConfig,
   defaultModelProviders,
   defaultModelRouting,
+  defaultRuntimeSettings,
   defaultSystemPolicy,
   defaultsForMode,
   featureToggle,

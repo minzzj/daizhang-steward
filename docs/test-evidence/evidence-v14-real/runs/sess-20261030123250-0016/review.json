@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "issues": [],
+  "evidence_checked": [
+    "sess-20261030123250-0016/content-draft.md",
+    "sess-20261030123250-0016/deliverable.html",
+    "sess-20261030123250-0016/deliverable.md",
+    "sess-20261030123250-0016/quality-check.json"
+  ],
+  "reviewed_at": "2026-10-30T12:33:00.643Z",
+  "review_method": "evidence_chain",
+  "reviewer_note": "证据链完整：交付物 + 质检记录可核对"
+}

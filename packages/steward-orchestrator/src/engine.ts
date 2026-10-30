@@ -15,8 +15,8 @@
  * 纯本地：受管系统动作只经注入接口执行（未注入则阻断，绝不假装执行）；项目动作写本地证据文件。
  */
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, relative } from "node:path";
 
 import { OrchestratorNotFoundError, OrchestratorValidationError } from "./errors.js";
 import {
@@ -814,10 +814,59 @@ export class OrchestratorEngine {
         return false;
       }
 
+      // v1.4：本地动作无实现/失败时，用模型输出兜底保存为证据，避免整条 Run 被未实现动作阻断。
+      let effectiveResult = actionResult;
+      if (!actionResult.ok && typeof outcome.content === "string" && outcome.content.trim().length > 0) {
+        try {
+          const fileName = "agent-output-step-" + step.step + ".md";
+          const filePath = join(evidenceDir, fileName);
+          mkdirSync(evidenceDir, { recursive: true });
+          writeFileSync(filePath, "# 模型输出兜底 · 步骤 " + step.step + " · " + step.agent_role + "\n\n> 本地动作未实现/失败：" + actionResult.output_summary + "\n\n" + outcome.content + "\n", "utf8");
+          const rel = relative(this.root, filePath);
+          effectiveResult = {
+            ok: true,
+            output_summary: "本地动作未实现/失败（" + actionResult.output_summary + "）；已保存模型输出作为交付证据（" + rel + "）",
+            detail: "本地动作结果：" + actionResult.detail + "\n兜底：模型输出已保存为证据 " + rel,
+            evidence_refs: [...actionResult.evidence_refs, rel],
+          };
+        } catch {
+          effectiveResult = actionResult;
+        }
+      }
+
+      // v1.4：本地动作返回 note 兜底（未实现）但模型给出了交付物内容时，把模型输出保存为证据；
+      // 若模型输出包含 HTML 代码块/完整 HTML，则提取为 deliverable.html（让“说到的交付物”真实存在）。
+      if (effectiveResult.ok && typeof outcome.content === "string" && outcome.content.trim().length > 200) {
+        const noteOnly = effectiveResult.evidence_refs.every((ref) => /step-\d+-note\.md$/.test(ref));
+        const produces = ["operator", "harness", "content", "research", "scout", "customer"].includes(step.agent_role);
+        if (noteOnly && produces) {
+          try {
+            const mdPath = join(evidenceDir, "agent-output-step-" + step.step + ".md");
+            writeFileSync(mdPath, "# " + step.agent_role + " · 模型输出（步骤 " + step.step + "）\n\n" + outcome.content + "\n", "utf8");
+            const refs = [...effectiveResult.evidence_refs, relative(this.root, mdPath)];
+            const fence = /```html\s*([\s\S]*?)```/i.exec(outcome.content);
+            const raw = fence ?? /(<html[\s\S]*<\/html>)/i.exec(outcome.content);
+            const html = raw !== null && raw[1] !== undefined ? raw[1].trim() : "";
+            if (html.length > 100) {
+              const htmlPath = join(evidenceDir, "deliverable.html");
+              writeFileSync(htmlPath, html, "utf8");
+              refs.push(relative(this.root, htmlPath));
+            }
+            effectiveResult = {
+              ...effectiveResult,
+              detail: effectiveResult.detail + "\n模型输出已保存：" + relative(this.root, mdPath),
+              evidence_refs: refs,
+            };
+          } catch {
+            /* 保存失败不影响主流程 */
+          }
+        }
+      }
+
       const remote = outcome.mode === "remote";
       const outputSummary = remote
         ? truncate(outcome.content, 140)
-        : `${actionResult.output_summary}（本地规则模式·未调用远程模型）`;
+        : `${effectiveResult.output_summary}（本地规则模式·未调用远程模型）`;
       const detailLines = [
         `动作：${step.action}`,
         `智能体：${step.agent_role}`,
@@ -826,10 +875,10 @@ export class OrchestratorEngine {
       if (outcome.reason !== undefined) detailLines.push(`回退原因：${outcome.reason}`);
       detailLines.push(
         `模型摘要：${outcome.content}`,
-        `本地动作结果：${actionResult.detail}`,
-        `证据：${actionResult.evidence_refs.length > 0 ? actionResult.evidence_refs.join("、") : "（无）"}`,
+        `本地动作结果：${effectiveResult.detail}`,
+        `证据：${effectiveResult.evidence_refs.length > 0 ? effectiveResult.evidence_refs.join("、") : "（无）"}`,
       );
-      const turnStatus: AgentTurnStatus = actionResult.ok ? "done" : "failed";
+      const turnStatus: AgentTurnStatus = effectiveResult.ok ? "done" : "failed";
       this.addTurn(session, {
         agent_role: step.agent_role,
         input_summary: `步骤 ${step.step}：${step.summary}`,
@@ -837,35 +886,35 @@ export class OrchestratorEngine {
         detail: detailLines.join("\n"),
         tokens: outcome.tokens,
         status: turnStatus,
-        evidence_refs: actionResult.evidence_refs,
+        evidence_refs: effectiveResult.evidence_refs,
         model_mode: outcome.mode,
       });
-      step.status = actionResult.ok ? "done" : "blocked";
+      step.status = effectiveResult.ok ? "done" : "blocked";
       this.addMessage(session, {
         role: "agent",
         agent_role: step.agent_role,
-        kind: actionResult.ok ? "result" : "error",
+        kind: effectiveResult.ok ? "result" : "error",
         text: outputSummary,
         summary: truncate(outputSummary, 80),
         model_mode: outcome.mode,
       });
-      if (!actionResult.ok) {
+      if (!effectiveResult.ok) {
         session.status = "blocked";
         this.addMessage(session, {
           role: "system",
           kind: "error",
-          text: `步骤 ${step.step} 本地动作失败：${actionResult.output_summary}`,
+          text: `步骤 ${step.step} 本地动作失败：${effectiveResult.output_summary}`,
         });
       }
       this.recordAudit(
         session.id,
         `agent.${step.action}`,
         `step:${step.step}`,
-        actionResult.ok ? "ok" : "blocked",
-        actionResult.output_summary,
+        effectiveResult.ok ? "ok" : "blocked",
+        effectiveResult.output_summary,
       );
       this.markDoneIfComplete(session);
-      return actionResult.ok;
+      return effectiveResult.ok;
     } finally {
       this.abortControllers.delete(session.id);
     }

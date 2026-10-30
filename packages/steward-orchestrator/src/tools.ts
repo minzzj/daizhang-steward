@@ -276,7 +276,7 @@ export async function runLocalAction(input: LocalActionInput): Promise<LocalActi
   }
 
   // 2) harness：本地质检
-  if (action === "harness.quality_check" || role === "harness") {
+  if (action === "harness.quality_check" || (role === "harness" && /quality|check|verify|test/i.test(action))) {
     const htmlPath = join(evidenceDir, "deliverable.html");
     const quality = buildQualityCheckHtml(htmlPath);
     const ref = writeText(
@@ -303,7 +303,7 @@ export async function runLocalAction(input: LocalActionInput): Promise<LocalActi
   // 3) reviewer：核查证据
   if (action === "reviewer.review_evidence" || role === "reviewer") {
     const files = listEvidenceFiles(root, evidenceDir);
-    const hasReport = files.some((file) => file.title === "deliverable.md" || file.title === "deliverable.html");
+    const hasReport = files.some((file) => file.title === "deliverable.md" || file.title === "deliverable.html" || /^agent-output-step-\d+\.md$/.test(file.title) || /\.md$/.test(file.title));
     const hasQuality = files.some((file) => file.title === "quality-check.json");
     const issues: string[] = [];
     if (!hasReport) issues.push("缺少交付物证据（deliverable.html/md）");

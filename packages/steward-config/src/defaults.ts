@@ -33,6 +33,7 @@ import type {
   PayoutAccount,
   Profile,
   RunMode,
+  RuntimeSettings,
   StewardConfig,
   SystemPolicyConfig,
   TokenBudgetConfig,
@@ -540,6 +541,18 @@ export function defaultSystemPolicy(): SystemPolicyConfig {
   };
 }
 
+/** 默认运行时设置（v1.4）：发消息自动执行；审批默认 auto_low_risk；步骤上限按模式。 */
+export function defaultRuntimeSettings(mode: RunMode): RuntimeSettings {
+  return {
+    auto_run: true,
+    approval_mode: "auto_low_risk",
+    full_auto: false,
+    max_auto_steps: mode === "demo" ? 10 : mode === "enterprise" ? 50 : 20,
+    rework_limit: 1,
+    event_retention: 1_000,
+  };
+}
+
 /** 三种模式的完整默认配置（每种都通过 validate 的基础校验）。 */
 export function defaultsForMode(mode: RunMode, options: { now?: () => Date } = {}): StewardConfig {
   if (!isRunMode(mode)) throw new Error(`未知运行模式：${String(mode)}（允许 demo/personal/enterprise）`);
@@ -565,6 +578,7 @@ export function defaultsForMode(mode: RunMode, options: { now?: () => Date } = {
     models: defaultModelRouting(mode),
     orchestrator: buildDefaultOrchestratorSettings(mode, now),
     system_policy: defaultSystemPolicy(),
+    runtime: defaultRuntimeSettings(mode),
     updated_at: now.toISOString(),
   };
 }

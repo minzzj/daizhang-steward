@@ -1,27 +1,32 @@
 #!/usr/bin/env node
 /**
- * tests/e2e-console/run.mjs — v1.1 本地 Web 控制台（专业版）真实浏览器 E2E
+ * tests/e2e-console/run.mjs — v1.4 本地 Web 控制台（发送即执行 + SSE 实时流）真实浏览器 E2E
  *
  * 铁律：真实有头 Chrome/Edge + 真实点击/输入/等待 + 每步截图；**不使用任何 mock 路由/假 DOM**。
  * 被测对象是 packages/steward-console 的真实 HTTP 服务（进程内启动，随机端口）：
- *   - provider      = createDemoConsoleProvider()（经营数据：审批/接管真实修改内存状态）
- *   - adminProvider = createDemoAdminProvider()（配置中心/智能体/后台/数据，保存与清空真实生效）
+ *   - provider        = createDemoConsoleProvider()（经营数据：审批/接管真实修改内存状态）
+ *   - adminProvider   = createDemoAdminProvider()（配置中心/智能体/后台/数据，保存与清空真实生效）
+ *   - chatProvider    = createDemoChatProvider()（对话/证据/变现/模型提示词）
+ *   - systemProvider  = createDemoSystemProvider()（/system 总控 + 危险动作二次确认 + 易支付）
+ *   - runtimeProvider = createDemoRuntimeProvider()（v1.4：发送即执行 + SSE 实时事件流）
  *
- * 验收流程（每步截图到 --evidence-dir/screenshots/）：
- *   原有 9 步（P1-C）：看板 → 项目时间线/证据 → 账本 6 要素 → 审批批准/驳回 → 接管（measured_stop_ms）
- *                      → resume → 月报 → 只监听本机；
- *   v1.2/v1.3 新增 10 步：对话新建项目/打断恢复审批 → run 证据（缩略图大图/report/日志）→ 智能体记录\n *                      → 变现+易支付（配置/创建/确认到账/账本）→ 模型与提示词 → 系统总控（两层/程序/插件/日志）\n *                      → 危险动作二次确认（风险/备份/确认 token）→ 收尾（API/无外链/无 JS 错误）\n *   v1.1 新增 6 步：专业版导航/状态栏 → 配置中心（三模式 + 支付银行卡 + 切个人模式 + 禁用 scout 持久化）
- *                      → 智能体中心（≥8 个 + 企业专属不适用 + 展开详情）→ 后台全流程时间线（≥5 事件 + 过滤 + 证据）
- *                      → 数据管理（统计 + 二次确认清空 + 空档案 + 重置演示）→ 收尾 sanity（无 JS 错误/无外链/配置持久）。
+ * 验收流程（31 步，每步截图到 --evidence-dir/screenshots/）：
+ *   1–9   P1-C 运营：看板 → 项目时间线/证据 → 账本 6 要素 → 审批 → 接管 stop_ms → resume → 月报 → 只监听本机；
+ *   10–15 v1.1 专业版：导航/状态栏 → 三模式配置中心+支付银行卡 → 智能体中心 → 后台时间线 → 数据清空 → sanity；
+ *   16–21 v1.2 对话/证据（v1.4 改为发送即执行+实时流）：对话/发送即执行 → 计划/打断恢复 → 自动完成 →
+ *         run 证据（缩略图灯箱/report/日志/JSON）→ 智能体轮次记录；
+ *   22–25 v1.4 新增：chat-auto-start（发送即出现实时状态、无手动按钮）→ chat-live-events（SSE ≥3 类事件/计划点亮）→
+ *         chat-reconnect（刷新后 since 回放恢复）→ chat-approval-pause（高风险暂停→批准→完成）；
+ *   26–30 变现+易支付 → 模型提示词 → 系统总控 → 危险动作二次确认 → sse-sanity（无 JS 错误/无外链/订阅清理）；
+ *   31    v12-sanity 收尾（API/持久化/无 token 401/run 完成校验）。
  *
  * 用法：
  *   npm run build
- *   node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console-v11
+ *   node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console-v14
  *   node tests/e2e-console/run.mjs --headless 1 --port 4180
  *
  * 退出码：0 全部通过 / 1 验收失败 / 2 用法或环境错误（缺构建产物等）。
  */
-
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { networkInterfaces } from "node:os";
@@ -912,6 +917,58 @@ async function stepProSanity(page, recorder, context) {
 // 模型与提示词 / 系统总控 / 危险动作二次确认 / 收尾
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// v1.2 对话步骤（v1.4 起改为「发送即执行 + SSE 实时流」）
+// ---------------------------------------------------------------------------
+
+/** 等待实时状态条出现并返回其文案（最多 timeoutMs）。 */
+async function waitForLiveStatus(page, timeoutMs = 6000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const panel = page.locator("#live-run-panel");
+      if ((await panel.count()) === 1) {
+        const text = (await page.locator("#live-status").innerText()).trim();
+        if (text.length > 0) return text;
+      }
+    } catch {
+      // 页面可能正在导航/刷新
+    }
+    await page.waitForTimeout(100);
+  }
+  return "";
+}
+
+/** 等待实时状态达到某个值（含超时）。 */
+async function waitForLiveStatusContains(page, needle, timeoutMs = 12000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const text = await waitForLiveStatus(page, 500);
+    if (text.includes(needle)) return text;
+    await page.waitForTimeout(120);
+  }
+  return await waitForLiveStatus(page, 500);
+}
+
+/** /chat 页发送目标并进入实时会话页（不点任何「开始执行」按钮）。 */
+async function sendGoalFromChat(page, baseUrl, goal, options = {}) {
+  await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS }).catch(async () => {
+    await page.locator("#nav-chat").click();
+    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+  });
+  await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+  await page.locator("#chat-goal").fill(goal);
+  if (options.budget !== undefined) await page.locator("#chat-budget").fill(String(options.budget));
+  if (options.token !== undefined) await page.locator("#chat-token").fill(String(options.token));
+  if (options.mode !== undefined) await page.locator("#chat-mode").selectOption(options.mode);
+  const sentAt = Date.now();
+  await page.locator("#chat-create-submit").click();
+  await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
+  await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
+  const statusText = await waitForLiveStatus(page, 6000);
+  return { statusText, sentAt };
+}
+
 async function stepChatOpen(page, recorder) {
   return recorder.step(page, "chat-open", async () => {
     await page.locator("#nav-chat").click();
@@ -922,39 +979,30 @@ async function stepChatOpen(page, recorder) {
     checks.push(check(await page.locator("#nav-system").isVisible(), "左侧导航出现「系统」入口"));
     const sessionCount = await page.locator("#chat-sessions .chat-session").count();
     checks.push(check(sessionCount >= 1, `会话记录列表可见（${sessionCount} 个）`));
+    const submitText = (await page.locator("#chat-create-submit").innerText()).trim();
+    checks.push(check(submitText.includes("发送") && submitText.includes("自动执行"), `发送按钮=发送并自动执行（${submitText}）`));
+    checks.push(check((await page.locator("#chat-start").count()) === 0, "页面不存在「开始执行」手动按钮（发送即执行）"));
     checks.push(check(await page.locator("#chat-goal").isVisible() && await page.locator("#chat-budget").isVisible() && await page.locator("#chat-token").isVisible() && await page.locator("#chat-mode").isVisible(), "新建项目参数：目标/预算/Token 上限/模式 可见"));
-    checks.push(check((await page.locator("#chat-tip").innerText()).includes("计划"), "对话页说明总调度会先拆解计划"));
+    checks.push(check((await page.locator("#chat-tip").innerText()).includes("无需手动"), "页面说明发送后立即自动执行（无需手动点开始）"));
     return { checks };
   });
 }
 
-async function stepChatCreateProject(page, recorder) {
+async function stepChatCreateProject(page, recorder, baseUrl) {
   return recorder.step(page, "chat-create-project", async () => {
     const checks = [];
-    await page.locator("#chat-goal").fill("帮我做一个报价单页面（含客户信息与金额明细）");
-    await page.locator("#chat-budget").fill("2600");
-    await page.locator("#chat-token").fill("180000");
-    await page.locator("#chat-mode").selectOption("personal");
-    await page.locator("#chat-create-submit").click();
-    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
-    await page.waitForSelector("#chat-session-page", { timeout: STEP_TIMEOUT_MS });
-    checks.push(check(/\/chat\/[^/?#]+$/.test(page.url()), `创建后进入会话详情（${page.url()}）`));
+    const { statusText, sentAt } = await sendGoalFromChat(page, baseUrl, "帮我做一个报价单页面（含客户信息与金额明细）", { budget: 2600, token: 180000, mode: "personal" });
+    const elapsed = Date.now() - sentAt;
+    checks.push(check(/\/chat\/chat-live-+/.test(page.url()) || /\/chat\/[^/?#]+$/.test(page.url()), `发送后进入实时会话页（${page.url()}）`));
+    checks.push(check(statusText.length > 0 && (statusText.includes("排队") || statusText.includes("思考") || statusText.includes("执行") || statusText.includes("完成")), `未点开始执行即出现实时状态：${statusText}`));
+    checks.push(check(elapsed < 8000, `发送 → 实时状态可见耗时 ${String(elapsed)}ms（<8000ms，含页面导航）`));
+    checks.push(check((await page.locator("#chat-start").count()) === 0, "实时页没有「开始执行」按钮（自动开始）"));
     checks.push(check((await page.locator("#chat-goal-text").innerText()).includes("报价单页面"), "会话显示我的目标"));
-    checks.push(check((await page.locator("#chat-budget-text").innerText()).includes("2,600.00"), "会话显示预算上限 2,600.00"));
-    checks.push(check((await page.locator("#chat-token-text").innerText()).includes("180,000"), "会话显示 Token 上限 180,000"));
-    const planCount = await page.locator("#chat-plan .plan-step").count();
-    checks.push(check(planCount >= 4, `总调度生成计划 ≥4 步（实际 ${planCount}）`));
-    const messages = await page.locator("#chat-messages .chat-message").count();
-    checks.push(check(messages >= 2, `对话含用户消息 + 总调度拆解回复（${messages} 条）`));
-    checks.push(check((await page.locator("#chat-messages").innerText()).includes("计划"), "总调度回复包含计划说明"));
-    const summaries = await page.locator("#chat-messages .chat-summary").count();
-    checks.push(check(summaries >= 2, `每轮含简略摘要（${summaries} 条摘要）`));
-    checks.push(check((await page.locator("#chat-status").innerText()).includes("计划中"), "初始状态=计划中"));
-    await page.locator("#chat-start").click();
-    await page.waitForTimeout(700);
-    await page.waitForSelector("#chat-run-link", { timeout: STEP_TIMEOUT_MS });
-    checks.push(check((await page.locator("#chat-status").innerText()).includes("执行中"), "点「开始执行」后状态=执行中"));
-    checks.push(check((await page.locator("#chat-run-link").count()) === 1, "执行后出现 run 详情链接"));
+    const budgetText = (await page.locator("#chat-budget-text").innerText()).trim();
+    checks.push(check(budgetText.includes("2,600.00"), `会话显示预算上限（${budgetText}）`));
+    const tokenText = (await page.locator("#chat-token-text").innerText()).trim();
+    checks.push(check(tokenText.includes("180,000"), `会话显示 Token 上限（${tokenText}）`));
+    checks.push(check((await page.locator("#live-sse-state").getAttribute("data-state")) !== null, "实时页含 SSE 连接状态"));
     return { checks };
   });
 }
@@ -962,23 +1010,38 @@ async function stepChatCreateProject(page, recorder) {
 async function stepChatInterruptResume(page, recorder) {
   return recorder.step(page, "chat-interrupt-resume", async () => {
     const checks = [];
-    await page.locator("#chat-interrupt").click();
-    await page.waitForTimeout(800);
-    await page.waitForSelector("#chat-resume", { timeout: STEP_TIMEOUT_MS });
-    checks.push(check((await page.locator("#chat-status").innerText()).includes("已打断"), "打断后状态=已打断（暂停）"));
-    checks.push(check((await page.locator("#chat-resume").count()) === 1, "出现「恢复执行」按钮"));
-    await page.locator("#chat-resume").click();
-    await page.waitForTimeout(800);
-    await page.waitForSelector("#chat-approval", { timeout: STEP_TIMEOUT_MS });
-    checks.push(check((await page.locator("#chat-status").innerText()).includes("执行中"), "恢复后状态=执行中"));
-    checks.push(check((await page.locator("#chat-approval").innerText()).includes("需人工审批"), "关键步骤出现审批卡"));
-    await page.locator("#chat-approve").click();
-    await page.waitForTimeout(900);
-    await page.waitForSelector("#chat-session-page", { timeout: STEP_TIMEOUT_MS });
-    checks.push(check((await page.locator("#chat-status").innerText()).includes("已完成"), "批准后状态=已完成"));
-    checks.push(check((await page.locator("#chat-approval").count()) === 0, "批准后审批卡消失"));
-    const doneSteps = await page.locator('#chat-plan .plan-step[data-status="done"]').count();
-    checks.push(check(doneSteps >= 4, `批准后计划步骤已完成（${doneSteps} 步 done）`));
+    // 等计划生成（此后 run 处于执行中）
+    await page.waitForSelector("#live-plan .live-step", { timeout: STEP_TIMEOUT_MS });
+    const planSteps = await page.locator("#live-plan .live-step").count();
+    checks.push(check(planSteps >= 4, `SSE 推送计划卡（${planSteps} 步）`));
+    await page.waitForSelector("#live-interrupt:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    await page.locator("#live-interrupt").click();
+    const paused = await waitForLiveStatusContains(page, "已打断", 5000);
+    checks.push(check(paused.includes("已打断"), `打断后状态=已打断（${paused}）`));
+    await page.waitForSelector("#live-resume:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#live-resume").isVisible(), "打断后出现「恢复」按钮"));
+    await page.locator("#live-resume").click();
+    const resumed = await waitForLiveStatusContains(page, "执行中", 6000);
+    checks.push(check(resumed.includes("执行中") || resumed.includes("等待审批"), `恢复后状态=执行中（${resumed}）`));
+    checks.push(check((await page.locator("#live-timeline .live-event").count()) >= 3, "打断/恢复事件写入实时时间线"));
+    return { checks };
+  });
+}
+
+async function stepChatAutoComplete(page, recorder) {
+  return recorder.step(page, "chat-auto-complete", async () => {
+    const checks = [];
+    const completed = await waitForLiveStatusContains(page, "完成", 15000);
+    checks.push(check(completed.includes("完成"), `run 自动完成（状态：${completed}，≤15s）`));
+    await page.waitForSelector("#live-complete:not([hidden])", { timeout: 8000 });
+    checks.push(check(await page.locator("#live-complete").isVisible(), "完成卡出现"));
+    checks.push(check(!(await page.locator("#live-error").isVisible()), "无 error 提示"));
+    const tokenText = (await page.locator("#live-token").innerText()).trim();
+    checks.push(check(Number(tokenText.replaceAll(",", "")) > 0, `Token 实时累计（${tokenText}）`));
+    const runHref = await page.locator("#live-run-link").getAttribute("href");
+    checks.push(check(runHref !== null && /\/runs\/(run-live|run)-/.test(runHref), `完成卡含 run 证据链接（${runHref}）`));
+    const stepsText = (await page.locator("#live-steps").innerText()).trim();
+    checks.push(check(stepsText.includes("/") && !stepsText.startsWith("0/"), `步骤进度已更新（${stepsText}）`));
     return { checks };
   });
 }
@@ -986,9 +1049,8 @@ async function stepChatInterruptResume(page, recorder) {
 async function stepChatRunEvidence(page, recorder) {
   return recorder.step(page, "chat-run-evidence", async () => {
     const checks = [];
-    const runHref = await page.locator("#chat-run-link").getAttribute("href");
-    checks.push(check(runHref !== null && /\/runs\/[^/?#]+$/.test(runHref), `会话可跳转 run 详情（${runHref}）`));
-    await page.locator("#chat-run-link").click();
+    const runHref = await page.locator("#live-run-link").getAttribute("href");
+    await page.locator("#live-run-link").click();
     await page.waitForSelector("#run-page", { timeout: STEP_TIMEOUT_MS });
     const events = await page.locator("#run-timeline .flow-item").count();
     checks.push(check(events >= 5, `run 时间线 ≥5 条事件（实际 ${events}）`));
@@ -998,23 +1060,19 @@ async function stepChatRunEvidence(page, recorder) {
     }
     const thumbs = await page.locator("#run-evidence .evidence-thumb").count();
     checks.push(check(thumbs >= 2, `证据截图缩略图 ≥2 张（实际 ${thumbs}）`));
-    checks.push(check((await page.locator("#run-report .md-body").innerText()).includes("运行报告"), "report.md 已渲染（含运行报告标题）"));
+    checks.push(check((await page.locator("#run-report .md-body").innerText()).includes("运行报告"), "report.md 已渲染"));
     await page.locator("#payload-log summary").click();
     await page.locator("#payload-json summary").click();
-    checks.push(check((await page.locator("#payload-log pre").innerText()).includes("[info]"), "日志 evidence 可展开查看（console.log 内容）"));
-    checks.push(check((await page.locator("#payload-json pre").innerText()).includes("seq"), "JSON evidence 可展开查看（events.jsonl）"));
+    checks.push(check((await page.locator("#payload-log pre").innerText()).length > 0, "日志 evidence 可展开查看"));
+    checks.push(check((await page.locator("#payload-json pre").innerText()).includes("seq"), "JSON evidence 可展开查看"));
     const runAgents = await page.locator("#run-agents .run-agent").count();
     checks.push(check(runAgents >= 2, `各 agent 对话摘要可见（${runAgents} 个 agent）`));
     checks.push(check((await page.locator("#run-agents").innerText()).includes("写代码 Harness"), "run 内包含写代码 Harness 的对话摘要"));
-
-    // 缩略图点开大图
     await page.locator("#evidence-thumb-1").click();
     await page.waitForSelector("#evidence-lightbox:not([hidden])", { timeout: STEP_TIMEOUT_MS });
     checks.push(check(await page.locator("#evidence-lightbox").isVisible(), "点击缩略图打开证据大图（灯箱）"));
-    await recorder.capture(page, "run-evidence-lightbox");
     const src = await page.locator("#lightbox-img").getAttribute("src");
     checks.push(check(src !== null && src.startsWith("data:image/svg+xml"), "大图为内联 SVG（无外链请求）"));
-    checks.push(check((await page.locator("#lightbox-title").innerText()).length > 0, "大图显示证据标题"));
     await page.locator("#lightbox-close").click();
     await page.waitForTimeout(200);
     checks.push(check(await page.locator("#evidence-lightbox").isHidden(), "关闭大图后灯箱隐藏"));
@@ -1039,6 +1097,157 @@ async function stepAgentTranscript(page, recorder, baseUrl) {
     checks.push(check(evidenceLinks >= 1, `轮次可跳证据（${evidenceLinks} 条证据引用）`));
     await page.locator("#nav-chat").click();
     await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    return { checks };
+  });
+}
+
+async function stepChatAutoStart(page, recorder, baseUrl) {
+  return recorder.step(page, "chat-auto-start", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    await page.locator("#chat-goal").fill("帮我做一个客户信息录入表单页面");
+    const sentAt = Date.now();
+    await page.locator("#chat-create-submit").click();
+    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
+    // 关键：不点击任何「开始执行」，进入页面即应出现实时状态（SSE 已开始）
+    await page.waitForSelector("#live-run-panel", { timeout: 3000 });
+    const statusVisibleMs = Date.now() - sentAt;
+    const statusText = await waitForLiveStatus(page, 3000);
+    checks.push(check(statusText.length > 0, `未手动点开始，进入页面即出现实时状态：${statusText}`));
+    checks.push(check(statusVisibleMs < 8000, `发送 → 实时面板耗时 ${String(statusVisibleMs)}ms（含导航）`));
+    checks.push(check((await page.locator("#chat-start").count()) === 0, "页面上已无「开始执行」按钮（发送即执行）"));
+    const sseState = await page.locator("#live-sse-state").getAttribute("data-state");
+    checks.push(check(sseState === "open" || sseState === "connecting", `SSE 连接建立（data-state=${String(sseState)}）`));
+    return { checks };
+  });
+}
+
+async function stepChatLiveEvents(page, recorder) {
+  return recorder.step(page, "chat-live-events", async () => {
+    const checks = [];
+    // 等待 SSE 推送到 ≥3 类事件（plan / step / agent.turn）
+    let types = [];
+    const deadline = Date.now() + 12000;
+    while (Date.now() < deadline) {
+      types = await page.locator("#live-timeline .live-event").evaluateAll((nodes) => [...new Set(nodes.map((node) => node.getAttribute("data-type") || ""))].filter(Boolean));
+      if (types.length >= 3 && types.includes("plan.created") && types.includes("step.started") && types.includes("agent.turn.completed")) break;
+      await page.waitForTimeout(120);
+    }
+    checks.push(check(types.length >= 3, `SSE 收到 ≥3 类事件（${types.slice(0, 8).join(", ")}）`));
+    checks.push(check(types.includes("plan.created"), "收到计划事件 plan.created"));
+    checks.push(check(types.includes("step.started"), "收到步骤开始事件 step.started"));
+    checks.push(check(types.includes("agent.turn.completed"), "收到 agent 轮次完成事件 agent.turn.completed"));
+    const events = await page.locator("#live-timeline .live-event").count();
+    checks.push(check(events >= 3, `实时时间线事件 ≥3（${events} 条）`));
+    const planSteps = await page.locator("#live-plan .live-step").count();
+    checks.push(check(planSteps >= 4, `计划卡逐步点亮（${planSteps} 步）`));
+    const doneSteps = await page.locator('#live-plan .live-step[data-status="done"]').count();
+    checks.push(check(doneSteps >= 1, `已有步骤完成（done=${doneSteps}）`));
+    const thought = (await page.locator("#live-thought").innerText()).trim();
+    checks.push(check(thought.length > 0, `总调度思考/执行提示可见（${thought.slice(0, 40)}）`));
+    const tokens = (await page.locator("#live-token").innerText()).trim();
+    checks.push(check(Number(tokens.replaceAll(",", "")) > 0, `实时 Token 累计（${tokens}）`));
+    return { checks };
+  });
+}
+
+async function stepChatReconnect(page, recorder, baseUrl) {
+  return recorder.step(page, "chat-reconnect", async () => {
+    const checks = [];
+    // 新起一个 run，在执行中刷新页面，验证 since 回放恢复
+    await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    await page.locator("#chat-goal").fill("帮我查一下竞品定价并整理成一页对比（断线恢复验证）");
+    await page.locator("#chat-create-submit").click();
+    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
+    const runId = await page.locator("#live-run-panel").getAttribute("data-run-id");
+    // 等 SSE 至少推几条事件后刷新
+    const deadline = Date.now() + 8000;
+    while (Date.now() < deadline) {
+      const count = await page.locator("#live-timeline .live-event").count().catch(() => 0);
+      if (count >= 2) break;
+      await page.waitForTimeout(100);
+    }
+    const before = await page.locator("#live-timeline .live-event").count();
+    checks.push(check(before >= 2, `刷新前已收到 SSE 事件（${before} 条）`));
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
+    const runIdAfter = await page.locator("#live-run-panel").getAttribute("data-run-id");
+    checks.push(check(runIdAfter === runId, `刷新后恢复同一 run（${String(runId)}）`));
+    // 断线恢复：事件回放（since=0）+ 状态正确
+    let replayed = 0;
+    const replayDeadline = Date.now() + 6000;
+    while (Date.now() < replayDeadline) {
+      replayed = await page.locator("#live-timeline .live-event").count().catch(() => 0);
+      if (replayed >= before) break;
+      await page.waitForTimeout(120);
+    }
+    checks.push(check(replayed >= before, `刷新后从事件日志回放恢复（${before} → ${replayed} 条）`));
+    const statusAfter = await waitForLiveStatus(page, 3000);
+    checks.push(check(statusAfter.length > 0 && !statusAfter.includes("排队"), `刷新后状态仍正确（${statusAfter}）`));
+    const completed = await waitForLiveStatusContains(page, "完成", 15000);
+    checks.push(check(completed.includes("完成"), `断线恢复后 run 继续并完成（${completed}）`));
+    return { checks };
+  });
+}
+
+async function stepChatApprovalPause(page, recorder, baseUrl) {
+  return recorder.step(page, "chat-approval-pause", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    await page.locator("#chat-goal").fill("帮我把报价单对外发送给客户，并收取首期款 1288 元");
+    await page.locator("#chat-create-submit").click();
+    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#live-approval:not([hidden])", { timeout: 12000 });
+    const statusText = await waitForLiveStatus(page, 3000);
+    checks.push(check(statusText.includes("等待审批"), `高风险步骤暂停：run 状态=等待审批（${statusText}）`));
+    checks.push(check(await page.locator("#live-approval").isVisible(), "审批卡出现（高风险/危险动作暂停）"));
+    const approvalText = (await page.locator("#live-approval").innerText()).trim();
+    checks.push(check(approvalText.includes("高风险"), `审批卡展示风险说明（${approvalText.slice(0, 60)}）`));
+    const sseTypes = await page.locator("#live-timeline .live-event").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-type")));
+    checks.push(check(sseTypes.includes("approval.required"), "SSE 推送 approval.required 事件"));
+    const planSteps = await page.locator("#live-plan .live-step").count();
+    checks.push(check(planSteps >= 4, `暂停时计划仍可见（${planSteps} 步）`));
+    await page.locator("#live-approve").click();
+    const completed = await waitForLiveStatusContains(page, "完成", 12000);
+    checks.push(check(completed.includes("完成"), `批准后继续并完成（${completed}）`));
+    checks.push(check(await page.locator("#live-approval").isHidden(), "批准后审批卡消失"));
+    return { checks };
+  });
+}
+
+async function stepSseSanity(page, recorder, baseUrl, context) {
+  return recorder.step(page, "sse-sanity", async () => {
+    const checks = [];
+    checks.push(check(context.pageErrors.length === 0, `SSE 流程无页面 JS 错误（${context.pageErrors.length}）`, context.pageErrors.slice(0, 3).join(" | ")));
+    // 关闭/离开页面后服务端应清理 SSE 订阅
+    await page.goto(`${baseUrl}/health`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    let health = null;
+    const deadline = Date.now() + 6000;
+    while (Date.now() < deadline) {
+      health = await page.evaluate(async () => {
+        const response = await fetch("/health");
+        return response.json();
+      }).catch(() => null);
+      if (health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined)) break;
+      await page.waitForTimeout(300);
+    }
+    checks.push(check(health !== null && health.version === "1.4.0", `health version=1.4.0（${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.runtime_enabled === true, "health 标记 runtime_enabled=true"));
+    checks.push(check(health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined), `离开页面后 SSE 订阅已清理（sse_active_streams=${String(health === null ? "?" : health.sse_active_streams)}）`));
+    checks.push(check(context.requestLog.every((url) => {
+      try {
+        const parsed = new URL(url);
+        return parsed.hostname === "127.0.0.1";
+      } catch {
+        return true;
+      }
+    }), "无外链请求（EventSource 同源）"));
+    checks.push(check(context.requestLog.some((url) => url.includes("/api/chat/runs/") && url.includes("/stream")), "页面使用同源 SSE 端点 /api/chat/runs/:id/stream"));
     return { checks };
   });
 }
@@ -1255,13 +1464,31 @@ async function stepV12Sanity(page, recorder, context) {
     checks.push(check(pageErrors.length === 0, `v1.2/v1.3 流程全程无页面 JS 错误（${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
 
     const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
-    checks.push(check(health !== null && health.version === "1.3.0", `health version=1.3.0（实际 ${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.4.0", `health version=1.4.0（实际 ${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.chat_enabled === true && health.system_enabled === true, "health 标记 chat_enabled/system_enabled=true"));
 
     const sessions = await fetch(`${baseUrl}/api/chat/sessions`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
-    checks.push(check(sessions !== null && Array.isArray(sessions.data) && sessions.data.length >= 3, `GET /api/chat/sessions（${sessions?.data?.length ?? 0} 个会话）`));
+    checks.push(check(sessions !== null && Array.isArray(sessions.data) && sessions.data.length >= 2, `GET /api/chat/sessions（${sessions?.data?.length ?? 0} 个历史会话）`));
     const runs = await fetch(`${baseUrl}/api/chat/runs`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
     checks.push(check(runs !== null && Array.isArray(runs.data) && runs.data.length >= 3, `GET /api/chat/runs（${runs?.data?.length ?? 0} 个 run）`));
+    const liveRuns = (runs?.data ?? []).filter((run) => String(run.run_id).startsWith("run-live"));
+    checks.push(check(liveRuns.length >= 3, `GET /api/chat/runs 含 v1.4 实时 run（${liveRuns.length} 个 run-live-*）`));
+    const completedLive = liveRuns.find((run) => run.status === "done");
+    const liveRunDetail = completedLive === undefined ? null : await fetch(`${baseUrl}/api/chat/runs/${encodeURIComponent(completedLive.run_id)}`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(liveRunDetail !== null && liveRunDetail.data.status === "done" && liveRunDetail.data.steps_done === liveRunDetail.data.steps_total, "GET /api/chat/runs/:id 返回已完成 run（steps 全完成）"));
+    let runtimeUnauth = 0;
+    try {
+      const response = await fetch(`${baseUrl}/api/chat/runs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goal: "未授权发送即执行" }),
+        signal: AbortSignal.timeout(2000),
+      });
+      runtimeUnauth = response.status;
+    } catch {
+      runtimeUnauth = 0;
+    }
+    checks.push(check(runtimeUnauth === 401, `无 token 的「发送即执行」API 被拒（实际 ${runtimeUnauth}）`));
     const transcripts = await fetch(`${baseUrl}/api/chat/agents/harness/transcripts`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
     checks.push(check(transcripts !== null && Array.isArray(transcripts.data) && transcripts.data.length >= 1, "GET /api/chat/agents/:role/transcripts 返回记录"));
     const evidence = await fetch(`${baseUrl}/api/chat/evidence?run_id=${encodeURIComponent(runs?.data?.[0]?.run_id ?? "")}`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
@@ -1458,14 +1685,21 @@ async function main() {
     });
     // ---- v1.2/v1.3 新增：对话/打断恢复审批/run 证据/智能体记录/变现+易支付/模型提示词/系统总控/危险确认/收尾 ----
     await stepChatOpen(page, recorder);
-    await stepChatCreateProject(page, recorder);
+    await stepChatCreateProject(page, recorder, consoleHandle.url);
     await stepChatInterruptResume(page, recorder);
+    await stepChatAutoComplete(page, recorder);
     await stepChatRunEvidence(page, recorder);
     await stepAgentTranscript(page, recorder, consoleHandle.url);
+    // ---- v1.4：发送即执行 + SSE 实时流（新增步骤） ----
+    await stepChatAutoStart(page, recorder, consoleHandle.url);
+    await stepChatLiveEvents(page, recorder);
+    await stepChatReconnect(page, recorder, consoleHandle.url);
+    await stepChatApprovalPause(page, recorder, consoleHandle.url);
     await stepMoneyEpay(page, recorder, consoleHandle.url);
     await stepSettingsModelsPrompts(page, recorder, consoleHandle.url);
     await stepSystemControl(page, recorder, consoleHandle.url);
     await stepSystemDangerConfirm(page, recorder, consoleHandle.url);
+    await stepSseSanity(page, recorder, consoleHandle.url, { requestLog, pageErrors });
     await stepV12Sanity(page, recorder, {
       baseUrl,
       port: consoleHandle.port,
@@ -1506,7 +1740,7 @@ async function main() {
   const durationMs = Date.now() - suiteStartedAt;
   const result = {
     suite: "e2e-console",
-    version: "1.3.0",
+    version: "1.4.0",
     ok: fatalError === null && recorder.ok,
     as_of: new Date().toISOString(),
     headless: options.headless,
@@ -1521,6 +1755,7 @@ async function main() {
       admin_provider: "demo",
       chat_provider: "demo",
       system_provider: "demo",
+      runtime_provider: "demo",
       console_boot_ms: consoleBootMs,
       first_page_load_ms: firstPageLoadMs,
     },

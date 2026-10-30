@@ -284,6 +284,26 @@ ${renderModeDiff(input.modeResult)}
   </div>
 </section>
 
+<h2>自动执行与审批策略 <span class="hint">v1.4 发送即执行；危险动作仍需人工确认</span></h2>
+<div class="form-grid">
+  <label>发消息后自动执行<select class="input" id="runtime-auto-run">
+    <option value="true"${config.runtime.auto_run ? " selected" : ""}>开启（发送即执行）</option>
+    <option value="false"${config.runtime.auto_run ? "" : " selected"}>关闭（仅生成计划）</option>
+  </select></label>
+  <label>审批策略<select class="input" id="runtime-approval-mode">
+    <option value="auto_low_risk"${config.runtime.approval_mode === "auto_low_risk" ? " selected" : ""}>仅高风险/危险动作暂停（推荐）</option>
+    <option value="auto_all"${config.runtime.approval_mode === "auto_all" ? " selected" : ""}>全自动</option>
+    <option value="manual"${config.runtime.approval_mode === "manual" ? " selected" : ""}>逐步人工确认</option>
+  </select></label>
+  <label>完全自动开关<select class="input" id="runtime-full-auto">
+    <option value="true"${config.runtime.full_auto ? " selected" : ""}>开启（除破坏性动作外全自动）</option>
+    <option value="false"${config.runtime.full_auto ? "" : " selected"}>关闭</option>
+  </select></label>
+  <label>单 Run 步骤上限<input class="input input-num" type="number" min="10" max="200" step="1" id="runtime-max-steps" value="${String(config.runtime.max_auto_steps)}" /></label>
+  <label>失败自动返工次数<input class="input input-num" type="number" min="0" max="3" step="1" id="runtime-rework" value="${String(config.runtime.rework_limit)}" /></label>
+  <label>事件保留条数<input class="input input-num" type="number" min="100" max="5000" step="100" id="runtime-event-retention" value="${String(config.runtime.event_retention)}" /></label>
+</div>
+
 ${
   input.chatSettings === undefined
     ? ""

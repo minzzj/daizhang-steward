@@ -441,6 +441,43 @@ export interface SystemPolicyUpdate {
   confirmation_ttl_seconds?: number;
 }
 
+// ---------------------------------------------------------------------------
+// 6.9) 运行时设置（v1.4 新增：自动执行 / 审批策略 / 步骤上限 / 返工 / 事件保留）
+// ---------------------------------------------------------------------------
+
+/**
+ * 审批模式：
+ * - `auto_low_risk`（默认）：仅 high/critical/requires_confirmation 的动作暂停等审批；
+ * - `auto_all`：全部自动执行（仍受 full_auto/危险动作策略的硬约束）；
+ * - `manual`：所有动作都要人工确认。
+ */
+export type ApprovalMode = "auto_low_risk" | "auto_all" | "manual";
+
+/** 运行时设置：发消息即自动执行相关参数（控制台 /settings 展示与修改）。 */
+export interface RuntimeSettings {
+  /** 发消息后自动执行（默认 true）。 */
+  auto_run: boolean;
+  /** 审批策略（默认 auto_low_risk）。 */
+  approval_mode: ApprovalMode;
+  /** 默认 false；true 时除 destructive 外全自动，但不能与 approval_mode="manual" 同时使用。 */
+  full_auto: boolean;
+  /** 单 run 自动步骤上限（10–200；按模式默认 demo 10 / personal 20 / enterprise 50）。 */
+  max_auto_steps: number;
+  /** 自动返工次数上限（0–3，默认 1）。 */
+  rework_limit: number;
+  /** 每个 run 保留的事件数（100–5000，默认 1000）。 */
+  event_retention: number;
+}
+
+export interface RuntimeSettingsUpdate {
+  auto_run?: boolean;
+  approval_mode?: ApprovalMode;
+  full_auto?: boolean;
+  max_auto_steps?: number;
+  rework_limit?: number;
+  event_retention?: number;
+}
+
 export interface ModelProviderRemovalResult {
   removed_provider_id: string;
   /** 原本绑定该服务商、已自动改绑到默认服务商的代理角色。 */
@@ -488,6 +525,8 @@ export interface StewardConfig {
   orchestrator: OrchestratorSettings;
   /** v1.3 新增：系统动作策略（受管程序/插件/危险动作二次确认；旧 config 自动补默认）。 */
   system_policy: SystemPolicyConfig;
+  /** v1.4 新增：自动执行/审批策略等运行时设置（旧 config 自动补默认）。 */
+  runtime: RuntimeSettings;
   updated_at: string;
 }
 
@@ -531,6 +570,8 @@ export interface SetModeOptions {
   preserve_models?: boolean;
   /** v1.2：保留用户自定义的系统提示词（默认 true）。 */
   preserve_orchestrator?: boolean;
+  /** v1.4：保留用户自定义的运行时设置（默认 true；关闭会重置为目标模式默认值）。 */
+  preserve_runtime?: boolean;
 }
 
 export interface ResetDataResult {

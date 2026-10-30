@@ -33,6 +33,7 @@ import {
 import type { ConsoleLedgerEntry } from "./provider.js";
 import { renderEpaySettingsSection } from "./pages-system.js";
 import type { EpayConfig } from "./system.js";
+import type { ConsoleRunRecord } from "./runtime.js";
 
 function escapeAttr(value: unknown): string {
   return escapeHtml(value);
@@ -214,8 +215,8 @@ ${pageHeading("对话", "告诉总调度你要做什么：它会拆解计划并�
         <label>Token 上限<input class="input input-num" type="number" min="1000" step="10000" id="chat-token" value="200000" /></label>
         <label>运行模式<select class="input" id="chat-mode"><option value="demo">体验模式</option><option value="personal" selected>个人模式</option><option value="enterprise">企业模式</option></select></label>
       </div>
-      <button class="primary" type="submit" id="chat-create-submit">创建项目并让总调度拆解计划</button>
-      <p class="chat-tip muted small" id="chat-tip">总调度会先生成计划（步骤/负责智能体/验收标准），再开始执行；付款/外发等关键步骤会出审批卡。</p>
+      <button class="primary" type="submit" id="chat-create-submit">发送并自动执行</button>
+      <p class="chat-tip muted small" id="chat-tip">发送后总调度立即开始：先思考、生成计划，再自动逐步执行，过程通过 SSE 实时显示；付款/外发等高风险步骤会暂停并出审批卡（<b>无需手动点「开始执行」</b>）。</p>
       <p class="alert alert-error" id="chat-create-error" hidden></p>
     </form>
   </section>
@@ -229,7 +230,75 @@ ${pageHeading("对话", "告诉总调度你要做什么：它会拆解计划并�
 
 export interface ChatSessionPageInput {
   session: ChatSession;
+  /** v1.4：该会话对应的实时 run（存在时渲染 SSE 实时面板；null=历史会话，只读）。 */
+  liveRun?: ConsoleRunRecord | null;
   options: PageRenderOptions;
+}
+
+const LIVE_STATUS_LABELS: Record<string, string> = {
+  queued: "排队中",
+  running: "执行中",
+  paused: "已暂停",
+  awaiting_approval: "等待审批",
+  interrupted: "已打断",
+  done: "已完成",
+  blocked: "已阻塞",
+  failed: "失败",
+};
+
+/** v1.4 实时 run 面板：状态条 + 总调度思考 + 计划进度 + 事件时间线 + 审批卡 + 完成卡 + 打断/恢复。 */
+export function renderLiveRunPanel(run: ConsoleRunRecord): string {
+  const status = run.status;
+  const plan = run.plan ?? [];
+  const planRows = plan
+    .map(
+      (step) => `<li class="live-step" data-step="${String(step.step)}" data-status="${escapeAttr(step.status)}" id="live-step-${String(step.step)}">
+        <span class="plan-seq mono">${String(step.step)}</span>
+        <span class="plan-agent">${escapeHtml(chatAgentTitle(step.agent_role))}</span>
+        <span class="plan-action">${escapeHtml(step.action)}${step.requires_approval === true ? ' <span class="badge status-pending">需审批</span>' : ""}</span>
+        <span class="plan-status" data-live-plan-status>${escapeHtml(PLAN_STATUS_LABELS[step.status] ?? step.status)}</span>
+      </li>`,
+    )
+    .join("");
+  const approval = run.pending_approval;
+  // 审批卡按钮始终渲染（默认 hidden），SSE 推送 approval.required 时由前端显示
+  const approvalPanel = `<div class="approval-panel" id="live-approval" data-step="${approval === undefined ? "0" : String(approval.step)}" ${approval === undefined ? "hidden" : ""}>
+          <div class="approval-panel-title">⚠ 高风险步骤暂停，等待人工审批：步骤 ${approval === undefined ? "—" : String(approval.step)}「${escapeHtml(approval?.summary ?? "等待中…")}」</div>
+          <p class="muted small" id="live-approval-risk">风险：${escapeHtml(approval?.risk ?? "高风险动作必须人工批准，AI 不绕过")}</p>
+          <div class="approval-panel-actions">
+            <button class="primary" type="button" id="live-approve">批准并继续</button>
+            <button class="danger" type="button" id="live-reject">驳回（阻塞）</button>
+          </div>
+        </div>`;
+  const completeCard = `<div class="live-complete" id="live-complete" ${status === "done" ? "" : "hidden"}>
+          <div class="live-complete-title">✅ 执行完成</div>
+          <p class="muted small" id="live-complete-summary">计划 ${String(run.steps_total)} 步全部完成；Token ${run.token_used.toLocaleString("zh-CN")}；证据已留档。</p>
+          <a class="run-link" id="live-run-link" href="/runs/${encodeURIComponent(run.run_id)}">查看 run 详情与证据 →</a>
+        </div>`;
+  return `<div class="live-run-panel" id="live-run-panel" data-run-id="${escapeAttr(run.run_id)}" data-session-id="${escapeAttr(run.session_id)}" data-status="${escapeAttr(status)}">
+  <div class="live-run-head">
+    <span class="live-status" id="live-status" data-status="${escapeAttr(status)}">${escapeHtml(LIVE_STATUS_LABELS[status] ?? status)}</span>
+    <span class="muted small">run <span class="mono">${escapeHtml(run.run_id)}</span> · SSE 实时流</span>
+    <span class="live-sse" id="live-sse-state" data-state="connecting">连接中…</span>
+    <span class="live-metrics muted small">步骤 <b id="live-steps">${String(run.steps_done)}/${String(run.steps_total)}</b> · Token <b class="mono" id="live-token">${run.token_used.toLocaleString("zh-CN")}</b></span>
+    <span class="live-controls" id="live-controls">
+      <button type="button" id="live-interrupt" ${status === "running" || status === "queued" || status === "awaiting_approval" ? "" : "hidden"}>打断</button>
+      <button class="primary" type="button" id="live-resume" ${status === "interrupted" ? "" : "hidden"}>恢复</button>
+    </span>
+  </div>
+  <p class="live-thought" id="live-thought">总调度思考中…（发送后立即自动执行，无需点开始）</p>
+  <div class="live-plan-wrap">
+    <h3>计划（实时点亮）<span class="hint">${String(plan.length)} 步</span></h3>
+    <ol class="chat-plan live-plan" id="live-plan">${planRows}</ol>
+  </div>
+  ${approvalPanel}
+  ${completeCard}
+  <div class="live-timeline-wrap">
+    <h3>实时事件（SSE）<span class="hint">思考 → 计划 → 每步 → 每 agent 轮次（输入/输出摘要+Token）→ 审批 → 完成</span></h3>
+    <ol class="live-timeline" id="live-timeline"></ol>
+  </div>
+  <p class="alert alert-error" id="live-error" hidden></p>
+</div>`;
 }
 
 function renderMessage(item: ChatMessage): string {
@@ -282,8 +351,8 @@ export function renderChatSessionPage(input: ChatSessionPageInput): string {
       ? '<span class="muted small" id="chat-run-link-empty">开始执行后生成 run 与证据</span>'
       : `<a class="run-link" id="chat-run-link" href="/runs/${encodeURIComponent(session.run_id)}">查看 run 详情与证据 →</a>`;
   const actions: string[] = [];
-  if (session.status === "planning" || session.status === "active") actions.push('<button class="primary" type="button" id="chat-start">开始执行</button>');
-  if (session.status === "running" || session.status === "planning") actions.push('<button class="danger" type="button" id="chat-interrupt">打断（暂停）</button>');
+  const isLive = input.liveRun !== undefined && input.liveRun !== null;
+  if (!isLive && (session.status === "running" || session.status === "planning")) actions.push('<span class="muted small" id="chat-legacy-hint">该会话为历史记录（v1.2 手动模式）；v1.4 起 /chat 发送即自动执行</span>');
   if (session.status === "paused") actions.push('<button class="primary" type="button" id="chat-resume">恢复执行</button>');
   const transcriptsLink = `<a class="run-link" href="/agents/conductor" id="chat-conductor-link">查看总调度对话记录 →</a>`;
   const content = `
@@ -303,7 +372,8 @@ ${pageHeading("会话", session.title)}
     <div><span class="muted small">Token 上限</span><b id="chat-token-text">${escapeHtml(session.token_limit.toLocaleString("zh-CN"))}</b></div>
     <div><span class="muted small">项目 / Run</span><b class="mono small">${escapeHtml(session.project_id ?? "（未创建）")}</b> ${runLink}</div>
   </div>
-  <div class="chat-main-grid">
+  ${input.liveRun === undefined || input.liveRun === null ? "" : renderLiveRunPanel(input.liveRun)}
+  ${isLive ? "" : `<div class="chat-main-grid">
     <section class="panel chat-flow-panel">
       <h2>与总调度的对话 <span class="hint">每轮含简略摘要；${String(session.messages.length)} 条消息</span></h2>
       <div class="chat-messages" id="chat-messages">${session.messages.map(renderMessage).join("")}</div>
@@ -330,7 +400,7 @@ ${pageHeading("会话", session.title)}
         </ul>
       </section>
     </aside>
-  </div>
+  </div>`}
 </div>`;
   return renderShell(input.options, "会话", content);
 }

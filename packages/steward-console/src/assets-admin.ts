@@ -412,6 +412,14 @@ export const ADMIN_JS = `(function () {
         auto_approve: false,
         dual_review_threshold_cny: Number((byId('approval-dual-threshold') || {}).value || 0),
         takeover_shortcut: (byId('approval-takeover') || {}).value || ''
+      },
+      runtime: {
+        auto_run: ((byId('runtime-auto-run') || {}).value || 'true') === 'true',
+        approval_mode: (byId('runtime-approval-mode') || {}).value || 'auto_low_risk',
+        full_auto: ((byId('runtime-full-auto') || {}).value || 'false') === 'true',
+        max_auto_steps: Number((byId('runtime-max-steps') || {}).value || 20),
+        rework_limit: Number((byId('runtime-rework') || {}).value || 1),
+        event_retention: Number((byId('runtime-event-retention') || {}).value || 1000)
       }
     };
     if (mode !== null) { patch.profile = { mode: mode }; }

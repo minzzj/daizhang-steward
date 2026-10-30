@@ -1,15 +1,17 @@
-# `@daizhang/steward-config` — 配置中心（v1.1 三模式 + v1.2 多模型/密钥/提示词 + v1.3 supervisor/epay/系统策略）
+# `@daizhang/steward-config` — 配置中心（v1.1 三模式 + v1.2 多模型/密钥/提示词 + v1.3 supervisor/epay/系统策略 + v1.4 自动执行/审批策略）
 
 代掌 Steward 的配置中心核心：**全部参数可配置、三种运行模式、所有功能可逐项禁用、
 银行卡/支付配置明确（含易支付 epay）、Token 预算可配置、0 元极限预算、数据可清空**；
 v1.2 新增：**所有智能体使用可配置模型（各 agent 可不同模型/服务商）、用户自配 API 密钥引用
 （env/本地 secrets 文件，密钥绝不入库）、一键同步同一密钥、专业系统提示词（核心设置由总调度管理）**；
 v1.3 新增：**两层总调度（supervisor 系统总控 + conductor 总调度）、易支付（epay）、
-系统动作策略（受管程序/插件/危险动作二次确认）**。
+系统动作策略（受管程序/插件/危险动作二次确认）**；
+v1.4 新增：**运行时设置（发消息即自动执行、审批策略 auto_low_risk|auto_all|manual、
+full_auto、单 run 步骤上限、自动返工次数、事件保留）**。
 
 - 零第三方依赖；纯逻辑 + JSON 原子持久化（`<root>/config.json`）；无网络；
 - 敏感字段只存掩码/引用（银行卡只留后 4 位、微信/支付宝 id 打码、税号/执照号打码、API 密钥只存 env/file 引用），**绝不存明文**；
-- 所有变更、预算拒绝、Token 超限、模型/密钥引用/提示词/系统策略变更都写审计（`<root>/config-audit.jsonl`，只追加，**不记录明文密钥**）。
+- 所有变更、预算拒绝、Token 超限、模型/密钥引用/提示词/系统策略/运行时设置变更都写审计（`<root>/config-audit.jsonl`，只追加，**不记录明文密钥**）。
 
 ---
 
@@ -53,7 +55,11 @@ v1.3 新增：**两层总调度（supervisor 系统总控 + conductor 总调度�
 | `payments.payout_account` | **银行卡/微信/支付宝配置位置**：holder/bank_name/card_no_masked/type/wechat_id_masked?/alipay_id_masked? |
 | `payments.invoice` | 发票默认类型（none/personal_receipt/vat_general/vat_special）、抬头、税号掩码、draft_only |
 | `payments.require_dual_review` / `sign_contract` / `ai_may_sign:false` | 企业复核/签署/不代签硬约束 |
-| `agents[]` | 10 个代理：conductor / operator / harness（写代码）/ customer / finance / reviewer（核查）/ backend（后台）/ scout / content / research；每项 enabled/autonomy/tools/token_limit/model_ref |
+| `models`（v1.2） | 多模型路由：`sync_mode` / `default_provider_id` / `providers[]` / `agent_models`（各 agent 可不同模型；密钥只存引用） |
+| `orchestrator`（v1.2） | 总调度核心设置：`conductor_prompt` / `system_prompts[]` / `auto_plan` / `max_steps_per_run` / `ask_before_commit` |
+| `system_policy`（v1.3） | 系统动作策略：`managed_apps[]` / `plugins_dir` / `allow_destructive` / `require_confirmation` / `confirmation_ttl_seconds` |
+| `runtime`（v1.4） | 运行时设置：`auto_run` / `approval_mode`（auto_low_risk/auto_all/manual）/ `full_auto` / `max_auto_steps`(10–200) / `rework_limit`(0–3) / `event_retention`(100–5000) |
+| `agents[]` | **11 个代理**：supervisor（系统总控）/ conductor / operator / harness（写代码）/ customer / finance / reviewer（核查）/ backend（后台）/ scout / content / research；每项 enabled/autonomy/tools/token_limit/model_ref |
 | `approval` | 审批超时分钟、auto_approve 恒 false（超时挂起不自动放行）、双人复核金额阈值、接管快捷键 |
 | `data` | retention_days、telemetry 恒 false（无遥测） |
 | `updated_at` | 最后更新时间（ISO 8601） |
@@ -172,14 +178,16 @@ const result = engine.resetData(join(root, "runs"));   // 通常是仓库根/数
 | **系统提示词**（v1.2） | `listSystemPrompts()` / `setSystemPrompt(role, prompt, opts?)` / `resetSystemPrompts()` / `getConductorPrompt()` / `setConductorPrompt(prompt)` / `getOrchestratorSettings()` / `setOrchestratorSettings(patch)` / `validateSystemPrompt(prompt)` |
 | **易支付 epay**（v1.3） | `getEpayConfig()` / `setEpayConfig(patch)` / `maskEpayKeyRef()`（密钥只存引用；live 必须补齐商家信息） |
 | **系统动作策略**（v1.3） | `getSystemPolicy()` / `setSystemPolicy(patch)`（受管应用白名单/插件目录/危险动作二次确认 TTL） |
+| **运行时设置**（v1.4） | `getRuntimeSettings()` / `setRuntimeSettings(partial)`（auto_run/approval_mode/full_auto/max_auto_steps/rework_limit/event_retention；校验+审计 `runtime.update`） |
 
 纯函数/常量导出：`defaultsForMode`、`defaultAgents`、`defaultModelProviders`、`defaultModelRouting`、
-`defaultAgentModels`、`defaultEpayConfig`、`defaultSystemPolicy`、`SUPERVISOR_TOKEN_LIMIT`、
+`defaultAgentModels`、`defaultEpayConfig`、`defaultSystemPolicy`、`defaultRuntimeSettings`、`SUPERVISOR_TOKEN_LIMIT`、
 `validateConfig`、`maskAccount`、`maskBankCard`、`maskAccountId`、`maskTaxNo`、`maskLicenseNo`、
 `maskApiKeyRef`、`isValidApiKeyRef`、`parseApiKeyRef`、`describeApiKeyRef`、`resolveApiKeyRef`、
 `SECRETS_FILE_NAME`、`DEFAULT_CONDUCTOR_PROMPT`、`SYSTEM_PROMPT_ROLES`、`PROMPT_SAFETY_KEYWORDS`、
 `buildDefaultSystemPrompts`、`buildDefaultOrchestratorSettings`、`validateSystemPromptText`、
 `hasSafetyKeyword`、`FEATURE_NAMES`、`AGENT_ROLES`、`CONFIG_VERSION`、`RESETTABLE_SUBDIRS`。
+（类型 `RuntimeSettings` / `ApprovalMode` / `RuntimeSettingsUpdate` 也可从包入口导入。）
 
 ---
 
@@ -246,7 +254,7 @@ case "budget": {
 
 ```bash
 npm run build
-node --test tests/unit/config.test.mjs   # 60 条（v1.1 三模式/开关/预算/Token/掩码/清空/审计 + v1.2 模型/密钥/提示词/迁移 + v1.3 supervisor/epay/系统策略）
+node --test tests/unit/config.test.mjs   # 69 条（v1.1 三模式/开关/预算/Token/掩码/清空/审计 + v1.2 模型/密钥/提示词/迁移 + v1.3 supervisor/epay/系统策略 + v1.4 运行时设置/审批策略）
 ```
 
 覆盖：三模式默认值差异、模式切换 diff、14 项功能禁用、0 元极限模式、预算三层拒绝、Token 累计/剩余/
@@ -255,7 +263,9 @@ node --test tests/unit/config.test.mjs   # 60 条（v1.1 三模式/开关/预算
 v1.2：默认模型路由/各 agent 不同模型、一键同步、per-provider 独立、密钥引用格式校验与掩码、
 本地 secrets 写入（config.json 无明文）、has_key 解析不泄露、系统提示词修改/重置/校验、总调度核心提示词、
 旧配置迁移、审计无明文；v1.3：supervisor 两层总调度（第 11 角色/权限/自治/Token）、epay 默认与
-demo/live 校验、系统动作策略默认值与非法配置拒绝、v1.2→v1.3 旧配置迁移。
+demo/live 校验、系统动作策略默认值与非法配置拒绝、v1.2→v1.3 旧配置迁移；v1.4：运行时设置默认值
+（三模式步骤上限 10/20/50）、get/set、非法枚举与范围拒绝、full_auto×manual 冲突、旧配置迁移、
+`runtime.update` 审计、validate、与 Token/预算并存、setMode 保留/重置。
 
 ---
 
@@ -450,7 +460,50 @@ engine.getSystemPolicy(); engine.setSystemPolicy({ plugins_dir: "plugins", confi
 
 ---
 
-## 19. 非目标与限制
+## 19. 自动执行与审批策略（v1.4）
+
+`runtime`（配置中心「自动执行/审批策略」；控制台 `/settings` 展示与修改；发消息即自动执行的基础）：
+
+```ts
+export type ApprovalMode = "auto_low_risk" | "auto_all" | "manual";
+export interface RuntimeSettings {
+  auto_run: boolean;          // 发消息后自动执行（默认 true）
+  approval_mode: ApprovalMode;// 默认 auto_low_risk：仅 high/critical/requires_confirmation 暂停
+  full_auto: boolean;         // 默认 false；true 时除 destructive 外全自动
+  max_auto_steps: number;     // 单 run 自动步骤上限 10–200（默认 demo 10 / personal 20 / enterprise 50）
+  rework_limit: number;       // 自动返工次数 0–3（默认 1）
+  event_retention: number;    // 每 run 事件保留 100–5000（默认 1000）
+}
+```
+
+三模式默认值（`defaultsForMode(mode).runtime` / `defaultRuntimeSettings(mode)`）：
+
+| 字段 | demo | personal | enterprise |
+|---|---|---|---|
+| auto_run | true | true | true |
+| approval_mode | auto_low_risk | auto_low_risk | auto_low_risk |
+| full_auto | false | false | false |
+| max_auto_steps | **10** | **20** | **50** |
+| rework_limit | 1 | 1 | 1 |
+| event_retention | 1000 | 1000 | 1000 |
+
+```ts
+const runtime = engine.getRuntimeSettings();
+engine.setRuntimeSettings({ auto_run: true, approval_mode: "auto_low_risk", full_auto: false });
+engine.setRuntimeSettings({ max_auto_steps: 60, rework_limit: 2, event_retention: 2000 });
+// 校验：auto_run/full_auto 布尔；approval_mode 枚举；max_auto_steps 10–200；
+//       rework_limit 0–3；event_retention 100–5000；full_auto=true 不能与 approval_mode=manual 同时使用。
+```
+
+- `setRuntimeSettings` 失败（枚举/范围/冲突）会回滚且不改变已有设置；成功写审计 `runtime.update`
+  （reason 含 auto_run/approval_mode/full_auto/max_auto_steps/rework_limit/event_retention，**不含敏感信息**）。
+- 旧 config 缺 `runtime` → 加载时自动补该模式默认值（迁移不丢已有字段）；`validate()` 覆盖类型/枚举/范围与
+  full_auto×manual 一致性；`setMode` 默认保留用户 runtime 设置（`preserve_runtime:false` 才重置为目标模式默认值）。
+- 与预算/Token 并存互不影响（修改 runtime 不会改 budgets/token_budget/used_tokens）。
+
+---
+
+## 20. 非目标与限制
 
 - 不做真实支付/开票/银行/易支付资金对接（只做配置、掩码与校验；真实资金动作由企业/财务模块人工执行）；
 - 不提供 HTTP 服务（控制台在 apps/packages 层由 Lead 集成）；

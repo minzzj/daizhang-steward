@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/steward-console/src/assets-chat.ts
  *
  * v1.2 静态资源（同源内联字符串，无 CDN/外链）：
@@ -169,6 +169,36 @@ export const CHAT_CSS = `/* ===== v1.2：对话 ===== */
 .prompt-editor-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; font-size: 13px; }
 .prompt-textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.65; width: 100%; resize: vertical; }
 
+/* ===== v1.4：发送即执行 + SSE 实时流 ===== */
+.live-run-panel { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 2px solid #cfd9ff; border-radius: 12px; background: #fbfcff; }
+.live-run-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.live-status { padding: 3px 11px; border-radius: 999px; font-size: 12px; font-weight: 800; background: #eef1f8; color: #47536b; }
+.live-status[data-status="running"], .live-status[data-status="queued"] { background: #e8f7ee; color: #0f7a45; }
+.live-status[data-status="running"]::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: currentColor; animation: livePulse 1s infinite; }
+.live-status[data-status="awaiting_approval"], .live-status[data-status="interrupted"] { background: var(--warn-soft); color: #7a4a00; }
+.live-status[data-status="done"] { background: var(--ok-soft); color: var(--ok); }
+.live-status[data-status="blocked"], .live-status[data-status="failed"] { background: var(--danger-soft); color: var(--danger); }
+@keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.live-sse { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #eef1f8; color: #47536b; }
+.live-sse[data-state="open"] { background: #e8f7ee; color: #0f7a45; }
+.live-sse[data-state="reconnecting"] { background: var(--warn-soft); color: #7a4a00; }
+.live-controls { display: flex; gap: 6px; }
+.live-controls button { font-size: 11px; padding: 4px 10px; }
+.live-thought { margin: 0; padding: 8px 11px; border-radius: 9px; background: #fff; border: 1px dashed #cfd9ff; font-size: 13px; color: #1d2738; }
+.live-plan-wrap h3, .live-timeline-wrap h3 { margin: 4px 0 6px; font-size: 12px; color: #47536b; }
+.live-plan { display: flex; flex-direction: column; gap: 5px; }
+.live-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+.live-event { display: flex; align-items: baseline; gap: 8px; padding: 5px 9px; border-radius: 8px; background: #fff; border: 1px solid #eef1f7; font-size: 12px; }
+.live-event-type { flex: 0 0 auto; font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: #eef1ff; color: #3b5bfd; }
+.live-event[data-type="agent.turn.completed"] .live-event-type { background: #e8f7ee; color: #0f7a45; }
+.live-event[data-type="agent.turn.started"] .live-event-type { background: #eef7ff; color: #1c6aa8; }
+.live-event[data-type="approval.required"] .live-event-type { background: var(--warn-soft); color: #7a4a00; }
+.live-event[data-type="run.completed"] .live-event-type { background: var(--ok-soft); color: var(--ok); }
+.live-event[data-type="run.failed"] .live-event-type { background: var(--danger-soft); color: var(--danger); }
+.live-event-text { flex: 1; line-height: 1.5; }
+.live-complete { padding: 10px 14px; border: 1px solid #bfe6d0; border-radius: 10px; background: #f2fbf6; }
+.live-complete[hidden] { display: none; }
+.live-complete-title { font-size: 14px; font-weight: 800; color: #0b6b3a; margin-bottom: 4px; }
 @media (max-width: 1100px) {
   .chat-layout { grid-template-columns: 1fr; }
   .chat-main-grid { grid-template-columns: 1fr; }
@@ -257,13 +287,14 @@ export const CHAT_JS = `(function () {
       if (String(goal).trim().length < 4) { showError('chat-create-error', '请先告诉总调度你要做什么（至少 4 个字）'); return; }
       button.disabled = true;
       showError('chat-create-error', '');
-      api('POST', '/api/chat/sessions', {
+      api('POST', '/api/chat/runs', {
         goal: String(goal).trim(),
         budget_cny: Number((byId('chat-budget') || {}).value || 0),
         token_limit: Number((byId('chat-token') || {}).value || 0),
         mode: (byId('chat-mode') || {}).value || 'demo'
       }).then(function (payload) {
-        var session = payload.data;
+        var session = payload.data.session;
+        // 发送即执行：服务端已自动开始 run；跳转到会话页并自动打开 SSE 实时流
         window.location.href = '/chat/' + encodeURIComponent(session.id);
       }).catch(function (error) {
         button.disabled = false;
@@ -290,7 +321,7 @@ export const CHAT_JS = `(function () {
   function initChatSession() {
     var page = byId('chat-session-page');
     if (page === null) { return; }
-    postSessionAction('/api/chat/sessions/' + encodeURIComponent(sessionId()) + '/start', 'chat-start');
+
     postSessionAction('/api/chat/sessions/' + encodeURIComponent(sessionId()) + '/interrupt', 'chat-interrupt');
     postSessionAction('/api/chat/sessions/' + encodeURIComponent(sessionId()) + '/resume', 'chat-resume');
 
@@ -521,9 +552,252 @@ export const CHAT_JS = `(function () {
     });
   }
 
+  // ---- v1.4：发送即执行 + SSE 实时流（/chat/:id） -------------------------
+  var LIVE_STATUS_LABELS = {
+    queued: '排队中', running: '执行中', paused: '已暂停', awaiting_approval: '等待审批',
+    interrupted: '已打断', done: '已完成', blocked: '已阻塞', failed: '失败'
+  };
+  var LIVE_EVENT_LABELS = {
+    'run.created': '已排队', 'run.started': '开始执行', 'conductor.thinking': '总调度思考中',
+    'plan.created': '计划生成', 'step.started': '步骤开始', 'agent.turn.started': '智能体开始',
+    'agent.turn.completed': '智能体完成', 'step.completed': '步骤完成', 'approval.required': '等待审批',
+    'approval.approved': '审批通过', 'approval.rejected': '审批驳回', 'run.interrupted': '已打断',
+    'run.resumed': '已恢复', 'run.completed': '执行完成', 'run.failed': '执行失败'
+  };
+  var live = { runId: '', source: null, lastSeq: 0, tokens: 0, stepsDone: 0, stepsTotal: 0, status: '', planSteps: [] };
+
+  function livePanel() { return byId('live-run-panel'); }
+
+  var SESSION_STATUS_TEXT = {
+    queued: '计划中', running: '执行中', awaiting_approval: '等待审批', interrupted: '已打断',
+    paused: '已暂停', done: '已完成', blocked: '已阻塞', failed: '失败'
+  };
+
+  function liveStatus(status) {
+    if (status === undefined || status === null) { return; }
+    live.status = status;
+    // 同步会话页顶部状态徽章（SSR 快照可能早于执行，实时状态以 SSE 为准）
+    var sessionBadge = byId('chat-status');
+    if (sessionBadge !== null) {
+      sessionBadge.setAttribute('data-status', status === 'running' || status === 'queued' ? 'running' : status === 'done' ? 'done' : status === 'awaiting_approval' ? 'paused' : status);
+      sessionBadge.textContent = SESSION_STATUS_TEXT[status] || status;
+    }
+    var badge = byId('live-status');
+    if (badge !== null) {
+      badge.setAttribute('data-status', status);
+      badge.textContent = LIVE_STATUS_LABELS[status] || status;
+    }
+    var panel = livePanel();
+    if (panel !== null) { panel.setAttribute('data-status', status); }
+    var interrupt = byId('live-interrupt');
+    if (interrupt !== null) { interrupt.hidden = !(status === 'running' || status === 'queued' || status === 'awaiting_approval'); }
+    var resume = byId('live-resume');
+    if (resume !== null) { resume.hidden = status !== 'interrupted'; }
+  }
+
+  function liveStep(step, status) {
+    var item = document.querySelector('#live-plan [data-step="' + String(step) + '"]');
+    if (item === null) { return; }
+    item.setAttribute('data-status', status);
+    var label = item.querySelector('[data-live-plan-status]');
+    if (label !== null) {
+      label.textContent = status === 'done' ? '已完成' : status === 'running' ? '执行中' : status === 'blocked' ? '已暂停' : '待执行';
+    }
+  }
+
+  function liveSse(state, text) {
+    var element = byId('live-sse-state');
+    if (element === null) { return; }
+    element.setAttribute('data-state', state);
+    element.textContent = text;
+  }
+
+  function liveAppendEvent(event) {
+    var list = byId('live-timeline');
+    if (list === null) { return; }
+    var data = event.data || {};
+    var item = document.createElement('li');
+    item.className = 'live-event';
+    item.setAttribute('data-type', event.type);
+    item.setAttribute('data-seq', String(event.seq));
+    var label = document.createElement('span');
+    label.className = 'live-event-type';
+    label.textContent = LIVE_EVENT_LABELS[event.type] || event.type;
+    var text = document.createElement('span');
+    text.className = 'live-event-text';
+    if (event.type === 'agent.turn.completed') {
+      text.textContent = (data.agent_title || data.agent_role || 'agent') + '：' + (data.output_summary || '') + '（Token ' + String(data.tokens || 0) + '，model_mode=' + String(data.model_mode || '—') + '）';
+    } else if (event.type === 'agent.turn.started') {
+      text.textContent = (data.agent_title || data.agent_role || 'agent') + ' 输入：' + (data.input_summary || '');
+    } else if (event.type === 'step.started') {
+      text.textContent = '步骤 ' + String(data.step) + '：' + String(data.agent_title || data.agent_role || '') + ' / ' + String(data.action || '');
+    } else if (event.type === 'plan.created') {
+      text.textContent = '计划已生成：' + String((data.steps || []).length) + ' 步';
+    } else {
+      text.textContent = String(data.summary || data.output_summary || data.error || JSON.stringify(data)).slice(0, 160);
+    }
+    item.appendChild(label);
+    item.appendChild(text);
+    list.appendChild(item);
+    list.scrollTop = list.scrollHeight;
+    live.lastSeq = Math.max(live.lastSeq, Number(event.seq || 0));
+  }
+
+  function liveHandle(event) {
+    var data = event.data || {};
+    liveAppendEvent(event);
+    if (event.type === 'run.created' || event.type === 'run.started') { liveStatus('running'); }
+    if (event.type === 'conductor.thinking') { setText('live-thought', String(data.summary || '总调度思考中…')); }
+    if (event.type === 'plan.created') {
+      setText('live-thought', '计划已生成，开始自动执行（无需手动点开始）');
+      live.planSteps = data.steps || [];
+      live.stepsTotal = live.planSteps.length;
+      var steps = byId('live-steps');
+      if (steps !== null) { steps.textContent = String(live.stepsDone) + '/' + String(live.stepsTotal); }
+    }
+    if (event.type === 'step.started') {
+      liveStep(Number(data.step), 'running');
+      setText('live-thought', '执行中：' + String(data.agent_title || data.agent_role || '') + ' / ' + String(data.action || ''));
+    }
+    if (event.type === 'step.completed') {
+      liveStep(Number(data.step), 'done');
+      live.stepsDone += 1;
+      var stepsEl = byId('live-steps');
+      if (stepsEl !== null) { stepsEl.textContent = String(live.stepsDone) + '/' + String(live.stepsTotal); }
+    }
+    if (event.type === 'agent.turn.completed') {
+      live.tokens += Number(data.tokens || 0);
+      var tokenEl = byId('live-token');
+      if (tokenEl !== null) { tokenEl.textContent = String(live.tokens); }
+    }
+    if (event.type === 'approval.required') {
+      liveStatus('awaiting_approval');
+      var panel = byId('live-approval');
+      if (panel !== null) {
+        panel.hidden = false;
+        panel.setAttribute('data-step', String(data.step));
+        var title = panel.querySelector('.approval-panel-title');
+        if (title !== null) { title.textContent = '⚠ 高风险步骤暂停，等待人工审批：步骤 ' + String(data.step) + '「' + String(data.summary || '') + '」'; }
+        var risk = byId('live-approval-risk');
+        if (risk !== null) { risk.textContent = '风险：' + String(data.risk || '高风险动作必须人工批准，AI 不绕过'); }
+      }
+      setText('live-thought', '等待人工审批（高风险步骤）…');
+    }
+    if (event.type === 'approval.approved') {
+      var panel2 = byId('live-approval');
+      if (panel2 !== null) { panel2.hidden = true; }
+      liveStatus('running');
+    }
+    if (event.type === 'approval.rejected') { liveStatus('blocked'); }
+    if (event.type === 'run.interrupted') { liveStatus('interrupted'); setText('live-thought', '已打断（事件已记录，点恢复从断点继续）'); }
+    if (event.type === 'run.resumed') { liveStatus('running'); setText('live-thought', '已恢复执行…'); }
+    if (event.type === 'run.completed') {
+      liveStatus('done');
+      setText('live-thought', '执行完成');
+      var complete = byId('live-complete');
+      if (complete !== null) {
+        complete.hidden = false;
+        var summary = byId('live-complete-summary');
+        if (summary !== null) {
+          summary.textContent = '计划 ' + String(data.steps_total || live.stepsTotal) + ' 步全部完成；Token ' + String(data.token_used || live.tokens) + '；证据已留档。';
+        }
+        var link = byId('live-run-link');
+        if (link !== null) { link.href = '/runs/' + encodeURIComponent(live.runId); }
+      }
+    }
+    if (event.type === 'run.failed') {
+      liveStatus('failed');
+      showError('live-error', '执行失败/阻塞：' + String(data.error || '未知错误'));
+    }
+  }
+
+  function liveConnect() {
+    var source = new EventSource('/api/chat/runs/' + encodeURIComponent(live.runId) + '/stream?since=0');
+    live.source = source;
+    source.onopen = function () { liveSse('open', 'SSE 已连接'); };
+    source.onerror = function () {
+      liveSse('reconnecting', 'SSE 重连中…（断线恢复）');
+      // EventSource 自动重连；服务端按 Last-Event-ID/seq 继续推送，前端按 seq 去重不重复渲染
+    };
+    source.onmessage = function (message) {
+      liveSse('open', 'SSE 已连接');
+      var event = null;
+      try { event = JSON.parse(message.data); } catch (error) { event = null; }
+      if (event === null) { return; }
+      if (Number(event.seq || 0) <= live.lastSeq) { return; }
+      liveHandle(event);
+    };
+  }
+
+  function initLiveRun() {
+    var panel = livePanel();
+    if (panel === null) { return; }
+    live.runId = panel.getAttribute('data-run-id') || '';
+    var stepNodes = document.querySelectorAll('#live-plan [data-step]');
+    live.stepsTotal = stepNodes.length;
+    var doneNodes = document.querySelectorAll('#live-plan [data-status="done"]');
+    live.stepsDone = doneNodes.length;
+    // 先取快照（刷新恢复：状态/进度/计划立即正确），再打开 SSE 回放 + 实时
+    api('GET', '/api/chat/runs/' + encodeURIComponent(live.runId)).then(function (payload) {
+      var run = payload.data;
+      if (run === null || run === undefined) { return; }
+      liveStatus(run.status);
+      live.stepsDone = Number(run.steps_done || 0);
+      live.stepsTotal = Number(run.steps_total || live.stepsTotal);
+      live.tokens = Number(run.token_used || 0);
+      var stepsEl = byId('live-steps');
+      if (stepsEl !== null) { stepsEl.textContent = String(live.stepsDone) + '/' + String(live.stepsTotal); }
+      var tokenEl = byId('live-token');
+      if (tokenEl !== null) { tokenEl.textContent = String(live.tokens); }
+      if (run.pending_approval !== undefined && run.pending_approval !== null) { liveStatus('awaiting_approval'); }
+    }).catch(function () {});
+    liveConnect();
+    var approve = byId('live-approve');
+    if (approve !== null) {
+      approve.addEventListener('click', function () {
+        var approvalPanel = byId('live-approval');
+        var step = approvalPanel === null ? 0 : Number(approvalPanel.getAttribute('data-step') || '0');
+        approve.disabled = true;
+        api('POST', '/api/chat/runs/' + encodeURIComponent(live.runId) + '/approvals', { step: step, decision: 'approve' })
+          .then(function () { toast('已批准，继续执行', 'ok'); })
+          .catch(function (error) { approve.disabled = false; showError('live-error', '批准失败：' + error.message); });
+      });
+    }
+    var reject = byId('live-reject');
+    if (reject !== null) {
+      reject.addEventListener('click', function () {
+        var approvalPanel = byId('live-approval');
+        var step = approvalPanel === null ? 0 : Number(approvalPanel.getAttribute('data-step') || '0');
+        reject.disabled = true;
+        api('POST', '/api/chat/runs/' + encodeURIComponent(live.runId) + '/approvals', { step: step, decision: 'reject' })
+          .then(function () { toast('已驳回，run 阻塞', 'warn'); })
+          .catch(function (error) { reject.disabled = false; showError('live-error', '驳回失败：' + error.message); });
+      });
+    }
+    var interrupt = byId('live-interrupt');
+    if (interrupt !== null) {
+      interrupt.addEventListener('click', function () {
+        interrupt.disabled = true;
+        api('POST', '/api/chat/runs/' + encodeURIComponent(live.runId) + '/interrupt', {}).then(function () {
+          toast('已打断（可恢复）', 'warn');
+        }).catch(function (error) { interrupt.disabled = false; showError('live-error', '打断失败：' + error.message); });
+      });
+    }
+    var resume = byId('live-resume');
+    if (resume !== null) {
+      resume.addEventListener('click', function () {
+        resume.disabled = true;
+        api('POST', '/api/chat/runs/' + encodeURIComponent(live.runId) + '/resume', {}).then(function () {
+          toast('已恢复执行', 'ok');
+        }).catch(function (error) { resume.disabled = false; showError('live-error', '恢复失败：' + error.message); });
+      });
+    }
+  }
+
   function init() {
     initChatCreate();
     initChatSession();
+    initLiveRun();
     initLightbox();
     initMoney();
     initModels();

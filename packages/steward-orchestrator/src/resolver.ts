@@ -35,8 +35,8 @@ export interface ConfigResolverSource {
     key_source?: KeySource;
     binding?: unknown;
   };
-  getApiKeyForProvider?(providerId: string): string | null;
-  getApiKey?(providerId: string): string | null;
+  getApiKeyForProvider?(providerId: string): string | { ok?: boolean; key?: string | null } | null;
+  getApiKey?(providerId: string): string | { ok?: boolean; key?: string | null } | null;
   getConductorPrompt(): string;
   getSystemPrompt(role: string): string;
   consumeTokens(amount: number, meta: TokenConsumeMeta): {
@@ -65,21 +65,32 @@ export function createModelResolverFromConfig(source: ConfigResolverSource): Mod
   if (!isRecord(source)) {
     throw new OrchestratorValidationError("createModelResolverFromConfig 需要配置中心对象", "INVALID_INPUT", "source");
   }
+  /** 兼容 ConfigEngine.getApiKeyForProvider 的 { ok, key } 返回结构与纯字符串。 */
+  const coerceKey = (value: unknown): string | null => {
+    if (typeof value === "string" && value.trim().length > 0) return value.trim();
+    if (value !== null && typeof value === "object") {
+      const record = value as { ok?: unknown; key?: unknown; value?: unknown };
+      const raw = typeof record.key === "string" ? record.key : typeof record.value === "string" ? record.value : null;
+      if (record.ok !== false && raw !== null && raw.trim().length > 0) return raw.trim();
+    }
+    return null;
+  };
   const readKey = (providerId: string): string | null => {
     try {
       if (typeof source.getApiKeyForProvider === "function") {
-        const value = source.getApiKeyForProvider(providerId);
-        if (typeof value === "string" && value.trim().length > 0) return value.trim();
+        const value = coerceKey(source.getApiKeyForProvider(providerId));
+        if (value !== null) return value;
       }
       if (typeof source.getApiKey === "function") {
-        const value = source.getApiKey(providerId);
-        if (typeof value === "string" && value.trim().length > 0) return value.trim();
+        const value = coerceKey(source.getApiKey(providerId));
+        if (value !== null) return value;
       }
     } catch {
       return null;
     }
     return null;
   };
+
   let lastRemaining: number | null = null;
 
   const resolver: ModelResolver = {

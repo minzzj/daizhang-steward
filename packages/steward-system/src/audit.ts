@@ -18,7 +18,8 @@ export const SYSTEM_AUDIT_FILE = "system-audit.jsonl";
 /** 脱敏 + 截断任意文本，可安全写入审计/日志。 */
 export function redactAuditText(input: unknown, maxLength = AUDIT_SUMMARY_MAX): string {
   let text = typeof input === "string" ? input : String(input ?? "");
-  text = text.replace(/sk-[A-Za-z0-9_-]{8,}/g, "[REDACTED_API_KEY]");
+  // 注意：必须有左侧边界，避免把普通 id（如 `task-abc12345` 里的 `sk-…`）误脱敏
+  text = text.replace(/(?<![A-Za-z0-9])sk-[A-Za-z0-9_-]{8,}/g, "[REDACTED_API_KEY]");
   text = text.replace(/Bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, "Bearer [REDACTED]");
   text = text.replace(
     /((?:password|passwd|pwd|secret|token|api[_-]?key|authorization)\s*[:=]\s*)([^\s,;{}"]{4,})/gi,

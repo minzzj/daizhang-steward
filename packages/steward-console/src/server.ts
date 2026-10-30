@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/steward-console/src/server.ts
  *
  * 本地 Web 控制台 HTTP 服务（零第三方依赖，只用 node:http）：
@@ -60,11 +60,13 @@ import {
   chatAgentTitle,
   createDemoChatProvider,
   type AgentModelBinding,
+  type ChatSessionStatus,
   type ConsoleChatProvider,
   type ModelProviderConfig,
   type MoneyMethod,
 } from "./chat.js";
 import { createDemoSystemProvider, type ConsoleSystemProvider, type EpayConfig, type EpayMethod } from "./system.js";
+import { createDemoRuntimeProvider, type ConsoleRuntimeEvent, type ConsoleRuntimeProvider } from "./runtime.js";
 import { renderSystemPage } from "./pages-system.js";
 import type { MoneyPageInput } from "./pages-chat.js";
 
@@ -102,6 +104,11 @@ export interface ConsoleServerOptions {
    * 缺省：自动启用内置演示实现；传 `null` 关闭 /system 与易支付 API。
    */
   systemProvider?: ConsoleSystemProvider | null;
+  /**
+   * 运行时 provider（v1.4：发送即执行 + SSE 实时流）。
+   * 缺省：自动启用内置 `createDemoRuntimeProvider()`；传 `null` 关闭 /api/chat/runs 与 SSE（页面 503）。
+   */
+  runtimeProvider?: ConsoleRuntimeProvider | null;
   /** 默认 127.0.0.1；只允许回环地址（localhost/::1 等价放行）。 */
   host?: string;
   /** 默认 4180；传 0 表示随机端口（E2E/CI 推荐）。 */
@@ -124,6 +131,8 @@ export interface ConsoleServerHandle {
   chatProvider?: ConsoleChatProvider;
   /** v1.3：系统总控（/system、易支付配置）。 */
   systemProvider?: ConsoleSystemProvider;
+  /** v1.4：运行时（发送即执行 + SSE 实时流）。 */
+  runtimeProvider?: ConsoleRuntimeProvider;
   close(): Promise<void>;
 }
 
@@ -202,6 +211,10 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
                   systemProvider.buildEpayPayLink(input),
               }),
         });
+  // v1.4：运行时 provider（发送即执行 + SSE；默认启用内置演示实现；显式传 null 关闭）
+  const runtimeProvider: ConsoleRuntimeProvider | undefined =
+    options.runtimeProvider === null ? undefined : options.runtimeProvider ?? createDemoRuntimeProvider();
+  let activeSseStreams = 0;
   const host = options.host ?? CONSOLE_DEFAULT_HOST;
   assertLoopbackHost(host);
   const port = options.port ?? CONSOLE_DEFAULT_PORT;
@@ -527,8 +540,11 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     }
     // ---- v1.2：对话 / 智能体对话记录 / run 证据 / 变现 ----
     if (pathname === "/chat") {
-      if (chatProvider === undefined) return chatUnavailablePage(res, "对话");
-      const sessions = await chatProvider.listSessions();
+      if (chatProvider === undefined && runtimeProvider === undefined) return chatUnavailablePage(res, "对话");
+      const chatSessions = chatProvider === undefined ? [] : await chatProvider.listSessions();
+      const liveSessions = runtimeProvider === undefined ? [] : runtimeProvider.listSessions();
+      const seen = new Set(chatSessions.map((session) => session.id));
+      const sessions = [...liveSessions.filter((session) => !seen.has(session.id)), ...chatSessions];
       const options = await pageOptions("chat");
       return sendHtml(res, 200, renderChatPage({ sessions, options }));
     }
@@ -567,20 +583,60 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     }
     const chatSessionMatch = /^\/chat\/([^/]+)$/.exec(pathname);
     if (chatSessionMatch !== null) {
-      if (chatProvider === undefined) return chatUnavailablePage(res, "对话");
       const sessionId = decodeURIComponent(chatSessionMatch[1] ?? "");
-      const session = await chatProvider.getSession(sessionId);
       const options = await pageOptions("chat");
+      if (runtimeProvider !== undefined) {
+        const liveSession = runtimeProvider.getSession(sessionId);
+        if (liveSession !== null) {
+          const liveRuns = await runtimeProvider.listRuns();
+          const liveRun = liveRuns.find((item) => item.session_id === sessionId) ?? null;
+          if (liveRun !== null) {
+            const mapped: Record<string, ChatSessionStatus> = {
+              queued: "planning",
+              running: "running",
+              paused: "paused",
+              awaiting_approval: "running",
+              interrupted: "paused",
+              done: "done",
+              blocked: "blocked",
+              failed: "blocked",
+            };
+            const mappedStatus = mapped[liveRun.status];
+            if (mappedStatus !== undefined) liveSession.status = mappedStatus;
+          }
+          return sendHtml(res, 200, renderChatSessionPage({ session: liveSession, liveRun, options }));
+        }
+      }
+      if (chatProvider === undefined) return chatUnavailablePage(res, "对话");
+      const session = await chatProvider.getSession(sessionId);
       if (session === null) {
         return sendHtml(res, 404, renderErrorPage(options, 404, "会话不存在", `未找到会话：${sessionId}`));
       }
-      return sendHtml(res, 200, renderChatSessionPage({ session, options }));
+      return sendHtml(res, 200, renderChatSessionPage({ session, liveRun: null, options }));
     }
     const agentRoleMatch = /^\/agents\/([^/]+)$/.exec(pathname);
     if (agentRoleMatch !== null) {
-      if (chatProvider === undefined) return chatUnavailablePage(res, "智能体对话记录");
+      if (chatProvider === undefined && runtimeProvider === undefined) return chatUnavailablePage(res, "智能体对话记录");
       const role = decodeURIComponent(agentRoleMatch[1] ?? "");
-      const [transcripts, runs] = await Promise.all([chatProvider.getAgentTranscripts(role), chatProvider.listRuns()]);
+      const transcriptMap = new Map<string, { agent_role: string; title: string; turns: Array<{ seq: number; at: string; input_summary: string; output_summary: string; tokens: number; status: string; evidence_ref?: string }> }>();
+      if (chatProvider !== undefined) {
+        for (const item of await chatProvider.getAgentTranscripts(role)) {
+          transcriptMap.set(item.agent_role, { ...item, turns: [...item.turns] });
+        }
+      }
+      if (runtimeProvider !== undefined) {
+        for (const item of runtimeProvider.getAgentTranscripts(role)) {
+          const existing = transcriptMap.get(item.agent_role);
+          if (existing === undefined) transcriptMap.set(item.agent_role, { ...item, turns: [...item.turns] });
+          else existing.turns.push(...item.turns);
+        }
+      }
+      const transcripts = [...transcriptMap.values()];
+      const chatRuns = chatProvider === undefined ? [] : await chatProvider.listRuns();
+      const liveRuns = runtimeProvider === undefined
+        ? []
+        : (await runtimeProvider.listRuns()).map((item) => ({ run_id: item.run_id, goal: item.goal, status: item.status, started_at: item.created_at, agent_count: 0, evidence_count: 0, session_id: item.session_id }));
+      const runs = [...chatRuns, ...liveRuns];
       let agentInfo = null;
       if (adminProvider !== undefined) {
         try {
@@ -594,10 +650,14 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     }
     const runDetailMatch = /^\/runs\/([^/]+)$/.exec(pathname);
     if (runDetailMatch !== null) {
-      if (chatProvider === undefined) return chatUnavailablePage(res, "run 证据");
       const runId = decodeURIComponent(runDetailMatch[1] ?? "");
-      const run = await chatProvider.getRunDetail(runId);
       const options = await pageOptions("run");
+      const liveRun = runtimeProvider === undefined ? null : runtimeProvider.getRunDetail(runId);
+      if (liveRun !== null) {
+        return sendHtml(res, 200, renderRunDetailPage({ run: liveRun, options }));
+      }
+      if (chatProvider === undefined) return chatUnavailablePage(res, "run 证据");
+      const run = await chatProvider.getRunDetail(runId);
       if (run === null) {
         return sendHtml(res, 404, renderErrorPage(options, 404, "run 不存在", `未找到 run：${runId}`));
       }
@@ -866,7 +926,80 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     });
   };
 
+  const requireRuntime = (res: ServerResponse): number | null => {
+    if (runtimeProvider !== undefined) return null;
+    return sendJson(res, 503, {
+      ok: false,
+      error: "runtime_unavailable",
+      message:
+        "运行时 API 未启用：createConsoleServer 默认启用内置 createDemoRuntimeProvider()；若显式传了 runtimeProvider: null，请改为传入 createDemoRuntimeProvider() 或真实 RunManager 适配器",
+    });
+  };
+
+  /** v1.4 SSE：`GET /api/chat/runs/:id/stream?since=<seq>`（只读、无需 token；Last-Event-ID 续传）。 */
+  const handleRunSse = (req: IncomingMessage, res: ServerResponse, runId: string, requestUrl: URL): number => {
+    const unavailable = requireRuntime(res);
+    if (unavailable !== null) return unavailable;
+    const runtime = runtimeProvider;
+    if (runtime === undefined) return 503;
+    let since = 0;
+    const rawSince = Number.parseInt(requestUrl.searchParams.get("since") ?? "0", 10);
+    if (Number.isFinite(rawSince) && rawSince > 0) since = rawSince;
+    const headerValue = req.headers["last-event-id"];
+    const headerSince = typeof headerValue === "string" ? Number.parseInt(headerValue, 10) : Number.NaN;
+    if (Number.isFinite(headerSince) && headerSince > since) since = headerSince;
+    res.writeHead(
+      200,
+      baseHeaders({
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      }),
+    );
+    res.flushHeaders?.();
+    res.write(": connected\n\n");
+    activeSseStreams += 1;
+    let closed = false;
+    let unsubscribe: () => void = () => {};
+    const heartbeat = setInterval(() => {
+      if (closed) return;
+      try {
+        res.write(": heartbeat\n\n");
+      } catch {
+        cleanup();
+      }
+    }, 15000);
+    const cleanup = (): void => {
+      if (closed) return;
+      closed = true;
+      clearInterval(heartbeat);
+      try {
+        unsubscribe();
+      } catch {
+        /* ignore */
+      }
+      activeSseStreams = Math.max(0, activeSseStreams - 1);
+      log(`[sse] 订阅结束 ${runId}（活跃 ${String(activeSseStreams)}）`);
+    };
+    const writeEvent = (event: ConsoleRuntimeEvent): void => {
+      if (closed) return;
+      try {
+        res.write(`id: ${String(event.seq)}\ndata: ${JSON.stringify(event)}\n\n`);
+      } catch {
+        cleanup();
+      }
+    };
+    unsubscribe = runtime.subscribeRun(runId, since, writeEvent);
+    req.on("close", cleanup);
+    req.on("aborted", cleanup);
+    res.on("error", cleanup);
+    log(`[sse] 订阅开始 ${runId} since=${String(since)}（活跃 ${String(activeSseStreams)}）`);
+    return 200;
+  };
+
   const handleChatApi = async (
+
     req: IncomingMessage,
     res: ServerResponse,
     method: string,
@@ -874,10 +1007,17 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     requestUrl: URL,
   ): Promise<number | null> => {
     if (!isChatApiPath(pathname)) return null;
+    // v1.4 SSE：只读、无需 token，不依赖 chatProvider（独立 runtime）
+    const streamMatch = /^\/api\/chat\/runs\/([^/]+)\/stream$/.exec(pathname);
+    if (streamMatch !== null) {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return handleRunSse(req, res, decodeURIComponent(streamMatch[1] ?? ""), requestUrl);
+    }
     const unavailable = requireChat(res);
     if (unavailable !== null) return unavailable;
     const chat = chatProvider;
     if (chat === undefined) return null;
+    const runtime = runtimeProvider;
     const isRead = method === "GET" || method === "HEAD";
 
     const sessionMatch = /^\/api\/chat\/sessions\/([^/]+)(?:\/(messages|start|interrupt|resume|approvals))?$/.exec(pathname);
@@ -951,18 +1091,91 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       }
     }
 
+    // ---- v1.4：发送即执行 + SSE 实时流（runtime provider） ----
     if (pathname === "/api/chat/runs") {
-      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
-      return sendJson(res, 200, { ok: true, data: await chat.listRuns() });
+      if (isRead) {
+        const base = chat === undefined ? [] : await chat.listRuns();
+        const live = runtime === undefined ? [] : await runtime.listRuns();
+        const seen = new Set(base.map((item) => item.run_id));
+        const liveRuns = live
+          .filter((item) => !seen.has(item.run_id))
+          .map((item) => ({
+            run_id: item.run_id,
+            goal: item.goal,
+            status: item.status,
+            started_at: item.created_at,
+            agent_count: 0,
+            evidence_count: 0,
+            session_id: item.session_id,
+            steps_total: item.steps_total,
+            steps_done: item.steps_done,
+            token_used: item.token_used,
+          }));
+        return sendJson(res, 200, { ok: true, data: [...base, ...liveRuns] });
+      }
+      if (method !== "POST") return methodNotAllowed(res, ["GET", "HEAD", "POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const unavailable = requireRuntime(res);
+      if (unavailable !== null) return unavailable;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      try {
+        const result = await runtimeProvider!.createAndStart({
+          goal: readString(body.value.goal, ""),
+          budget_cny: Number(body.value.budget_cny ?? 0),
+          token_limit: Number(body.value.token_limit ?? 200_000),
+          mode: readString(body.value.mode, "demo"),
+        });
+        return sendJson(res, 200, { ok: true, data: result });
+      } catch (error) {
+        return sendJson(res, 400, { ok: false, error: "invalid_run", message: errorMessage(error) });
+      }
     }
+
     const runDetailMatch = /^\/api\/chat\/runs\/([^/]+)$/.exec(pathname);
     if (runDetailMatch !== null) {
       if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
       const runId = decodeURIComponent(runDetailMatch[1] ?? "");
-      const run = await chat.getRunDetail(runId);
-      if (run === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到 run：${runId}` });
-      return sendJson(res, 200, { ok: true, data: run });
+      if (runtime !== undefined) {
+        const record = await runtime.getRun(runId);
+        if (record !== null) return sendJson(res, 200, { ok: true, data: record });
+      }
+      if (chat !== undefined) {
+        const run = await chat.getRunDetail(runId);
+        if (run !== null) return sendJson(res, 200, { ok: true, data: run });
+      }
+      return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到 run：${runId}` });
     }
+
+    const runtimeActionMatch = /^\/api\/chat\/runs\/([^/]+)\/(approvals|interrupt|resume)$/.exec(pathname);
+    if (runtimeActionMatch !== null) {
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const unavailable = requireRuntime(res);
+      if (unavailable !== null) return unavailable;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const runId = decodeURIComponent(runtimeActionMatch[1] ?? "");
+      const actionName = runtimeActionMatch[2];
+      try {
+        const runtimeApi = runtimeProvider!;
+        if (actionName === "interrupt") return sendJson(res, 200, { ok: true, data: await runtimeApi.interrupt(runId) });
+        if (actionName === "resume") return sendJson(res, 200, { ok: true, data: await runtimeApi.resume(runId) });
+        const decision = body.value.decision;
+        if (decision !== "approve" && decision !== "reject") {
+          return sendJson(res, 400, { ok: false, error: "invalid_decision", message: 'decision 只支持 "approve" / "reject"' });
+        }
+        const run = await runtimeApi.approve(runId, Number(body.value.step ?? 0), decision);
+        return sendJson(res, 200, { ok: true, data: run });
+      } catch (error) {
+        const message = errorMessage(error);
+        const status = message.includes("不存在") ? 404 : 400;
+        return sendJson(res, status, { ok: false, error: "runtime_action_failed", message });
+      }
+    }
+
     const transcriptMatch = /^\/api\/chat\/agents\/([^/]+)\/transcripts$/.exec(pathname);
     if (transcriptMatch !== null) {
       if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
@@ -1480,13 +1693,15 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       return sendJson(res, 200, {
         ok: true,
         service: "steward-console",
-        version: "1.3.0",
+        version: "1.4.0",
         host,
         port,
         local_only: true,
         admin_enabled: adminProvider !== undefined,
         chat_enabled: chatProvider !== undefined,
         system_enabled: systemProvider !== undefined,
+        runtime_enabled: runtimeProvider !== undefined,
+        sse_active_streams: activeSseStreams,
         mode,
         halted: status !== null && status.halted === true,
         started_at: startedAt,
@@ -1561,6 +1776,7 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     ...(adminProvider === undefined ? {} : { adminProvider }),
     ...(chatProvider === undefined ? {} : { chatProvider }),
     ...(systemProvider === undefined ? {} : { systemProvider }),
+    ...(runtimeProvider === undefined ? {} : { runtimeProvider }),
     close,
   };
 }

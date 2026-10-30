@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>代掌交付物 · 单页 HTML 项目方案书 + 验收说明（最小可交付计划）</title>
+<style>
+  :root { color-scheme: light; --bg:#f5f7fb; --card:#ffffff; --ink:#17223b; --muted:#5c6b8a; --line:#dfe5f2; --accent:#2f6bff; }
+  body { margin:0; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width: 880px; margin: 40px auto; padding: 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px 32px; box-shadow:0 10px 30px rgba(23,34,59,.06); }
+  h1 { font-size:26px; margin:0 0 8px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .badge { display:inline-block; background:#e8efff; color:var(--accent); border-radius:999px; padding:4px 12px; font-size:12px; margin-right:8px; }
+  table { width:100%; border-collapse:collapse; margin-top:18px; font-size:14px; }
+  th, td { text-align:left; border-bottom:1px solid var(--line); padding:9px 8px; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  footer { margin-top:20px; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <span class="badge">本地编排内核生成</span><span class="badge">未连接外部系统</span>
+    <h1>单页 HTML 项目方案书 + 验收说明（最小可交付计划）</h1>
+    <p class="muted">目标：帮我写一个简单的项目方案（单页 HTML 方案书），并给出验收说明</p>
+    <p class="muted">会话：sess-20261030123250-0016｜当前步骤：5. 交付 HTML 方案书 + 验收说明；若 reviewer 有未通过项，先修复再交付，不得声称未经核查的完成｜生成于：2026-10-30T12:33:01.666Z</p>
+    <h2 style="font-size:18px;margin-top:26px;">计划与执行状态</h2>
+    <table>
+      <thead><tr><th>#</th><th>智能体</th><th>动作</th><th>说明</th><th>状态</th></tr></thead>
+      <tbody>
+| 1 | content | content.draft_outline | 确定方案书单页结构：项目背景与目标、范围与不做的事、里程碑与时间线、交付物清单、风险与假设、验收标准要点；控制在 1 页可读体量 | done |
+| 2 | operator | operator.build_deliverable | 基于大纲产出单个自包含 HTML 文件（内嵌 CSS/无外链资源、语义化标签、移动端可读、段落式排版），内容为方案书正文 | done |
+| 3 | harness | harness.write_checks | 编写可执行自检清单：文件存在且为单文件、HTML 标签闭合与结构合法、无外链 CDN/图片依赖、关键小节标题齐全、文本非占位符 | done |
+| 4 | reviewer | reviewer.verify | 按自检清单逐项核查并给出证据（文件路径、小节标题清单、检查结果），输出验收说明：验收范围、通过/未通过项、已知限制与后续可选项 | done |
+| 5 | operator | operator.deliver | 交付 HTML 方案书 + 验收说明；若 reviewer 有未通过项，先修复再交付，不得声称未经核查的完成 | running |
+      </tbody>
+    </table>
+    <footer>本页面由代掌 Steward 编排内核在本地生成，仅用于演示与验收；不含真实客户数据。</footer>
+  </section>
+</main>
+</body>
+</html>

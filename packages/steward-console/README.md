@@ -1,9 +1,9 @@
-# packages/steward-console · 本地 Web 控制台（v1.3 专业版）
+# packages/steward-console · 本地 Web 控制台（v1.4 专业版）
 
-> 状态：**v1.2/v1.3 已实现**（总调度对话 / 智能体对话记录 / run 证据 / 变现收款 + 易支付 / 模型与提示词 / 系统总控 + 危险动作二次确认）。
+> 状态：**v1.4 已实现**（发送即执行 + SSE 实时流；含 v1.2/v1.3 的对话/证据/变现+易支付/模型提示词/系统总控）。
 > 零第三方依赖：Node 内置 `node:http` + 原生 HTML/CSS/JS；**只监听 127.0.0.1**；写操作需
 > `X-Steward-Token`；无 CDN / 外链 / 外网字体。真实浏览器 E2E：`tests/e2e-console/run.mjs`
-> （有头 Chrome，**25 步 / 303 检查 / 30 张证据截图**，输出 `measured_stop_ms` 与 `console_boot_ms`）。
+> （有头 Chrome，**31 步 / 338 检查 / 35 张证据截图**，输出 `measured_stop_ms` 与 `console_boot_ms`）。
 
 ## 1. 目录 / 文件
 
@@ -14,6 +14,7 @@
 | `src/admin.ts` | 管理契约 `ConsoleAdminProvider` + `createDemoAdminProvider()`（配置/智能体/后台/数据）；v1.3 增加 `supervisor` 角色与「超级总调度 / 项目总调度」标题 |
 | `src/chat.ts` | **v1.2 契约 `ConsoleChatProvider`** + `createDemoChatProvider()`：对话/计划/新建项目/打断恢复/审批、run 与证据、agent 轮次、变现请求、模型与提示词设置；`MoneyMethod` 含 **epay** |
 | `src/system.ts` | **v1.3 契约 `ConsoleSystemProvider`** + `createDemoSystemProvider()`：超级总调度对话、两层结构、受管程序/插件、日志、快捷命令、**危险动作二次确认**（风险+备份路径+确认 token）、**易支付**配置与跳转链接 |
+| `src/runtime.ts` | **v1.4 契约 `ConsoleRuntimeProvider`** + `createDemoRuntimeProvider()`：发送即执行、确定性自动推进（150ms/事件）、SSE 事件日志（回放+订阅）、审批暂停/打断/恢复、run 详情与 agent 轮次 |
 | `src/pages.ts` | 页面骨架（左侧固定导航 + 顶部状态栏）+ 总览/项目/账本/审批/月报/接管 |
 | `src/pages-admin.ts` | 项目列表 / 配置中心 / 智能体中心 / 后台 / 数据管理（配置中心内嵌模型、提示词、易支付分组） |
 | `src/pages-chat.ts` | 对话列表/会话详情、智能体对话记录、run 详情与证据、变现/易支付、模型与提示词分组 |
@@ -26,7 +27,7 @@
 CLI 由 Lead 在 `apps/cli/src/phase2.ts` 的 `cmdConsole()` 接入；**v1.2/v1.3 默认零配置可用**：
 
 ```ts
-// 仅传 provider + adminProvider 时，chatProvider/systemProvider 自动启用内置演示实现（本地可交互）
+// 仅传 provider + adminProvider 时，chatProvider/systemProvider/runtimeProvider 自动启用内置演示实现（本地可交互）
 const handle = await createConsoleServer({ provider, adminProvider, port: 4180 });
 
 // 接真实引擎时显式传入适配器（推荐；见 §11）
@@ -35,14 +36,15 @@ const handle = await createConsoleServer({
   adminProvider,                       // apps/cli/src/console-admin.ts 的 createConfigAdminProvider
   chatProvider,                        // OrchestratorEngine 适配器（见 §11.2）
   systemProvider,                      // SystemController + ConfigEngine 适配器（见 §11.3）
+  runtimeProvider,                     // RunManager/Orchestrator runtime 适配器（见 §14.5，发送即执行+SSE）
   port: 4180,
 });
 ```
 
 - `host` 默认 `127.0.0.1`，只允许回环地址；`port` 默认 `4180`（0=随机，E2E 推荐）。
 - 写操作 token 随机 32hex，页面通过 `<meta name="steward-token">` 同源注入。
-- `chatProvider: null` / `systemProvider: null` 可显式关闭（对应页面/API 返回 503）。
-- `/health` 返回 `version:"1.3.0"`、`chat_enabled`、`system_enabled`、`mode`、`halted`。
+- `chatProvider: null` / `systemProvider: null` / `runtimeProvider: null` 可显式关闭（对应页面/API 返回 503）。
+- `/health` 返回 `version:"1.4.0"`、`chat_enabled`、`system_enabled`、`runtime_enabled`、`sse_active_streams`、`mode`、`halted`。
 
 ## 3. 布局与导航
 
@@ -231,18 +233,84 @@ const handle = await createConsoleServer({
 - **AI 不代签**：支付配置 `ai_may_sign` 固定 false；
 - **资金**：演示渠道不真实扣款；live 需商户配置与真实回调，确认到账仍人工。
 
-## 14. 真实浏览器验收
+## 14. 发送即执行 + SSE 实时流（v1.4）
+
+**用户痛点**：发消息后不实时处理、还要手动点执行、看不到过程。v1.4 起 `/chat` **发送即执行**，页面通过 SSE 实时显示全程。
+
+### 14.1 流程（无手动按钮）
+
+1. `/chat` 输入目标（可设预算/Token 上限/模式）→ 点「发送并自动执行」/回车；
+2. 服务端 `POST /api/chat/runs` **立即创建 session + run 并自动开始执行**（返回 `{session, run}`）；
+3. 浏览器跳转 `/chat/:sessionId` 并打开 `EventSource('/api/chat/runs/:runId/stream?since=0')`；
+4. 实时显示：**总调度思考中 → 计划生成（逐步点亮）→ 每步开始/完成 → 每个 agent 每轮输入/输出摘要+Token → 审批卡（高风险/危险动作立即暂停）→ 完成/失败**；
+5. 完成卡给出 `/runs/:id` 证据链接；中断/恢复按钮与审批按钮都在实时面板内；
+6. **刷新页面恢复**：页面加载时先取 `GET /api/chat/runs/:id` 快照，再以 `since=0` 回放事件并继续实时；`EventSource` 重连带 `Last-Event-ID` 续传（按 `seq` 去重），不会重复渲染；
+7. 「开始执行」按钮已移除（`#chat-start` 不存在；历史 v1.2 会话标注为只读记录）。
+
+### 14.2 SSE 事件表（`ConsoleRuntimeEvent`）
+
+| 事件 `type` | 含义 | 关键 data |
+|---|---|---|
+| `run.created` | 发送即执行：run 已创建排队 | goal/mode/steps_total/budget_cny/token_limit |
+| `conductor.thinking` | 总调度思考中 | summary |
+| `plan.created` | 计划生成 | steps[]（step/agent_role/agent_title/action/summary/requires_approval） |
+| `run.started` | 开始执行 | mode |
+| `step.started` / `step.completed` | 步骤开始/完成 | step/agent_role/agent_title/action/status |
+| `agent.turn.started` / `agent.turn.completed` | 每 agent 每轮输入/输出摘要 | step/agent_role/input_summary/output_summary/tokens/model_mode |
+| `approval.required` | 高风险步骤暂停，等待人工审批 | step/summary/risk/action |
+| `approval.approved` / `approval.rejected` | 审批通过/驳回 | step/summary |
+| `run.interrupted` / `run.resumed` | 打断 / 恢复 | reason/current_step |
+| `run.completed` | 完成 | steps_total/steps_done/token_used/evidence_count |
+| `run.failed` | 失败/阻塞 | error/step |
+
+### 14.3 API（v1.4 新增；写操作需 `X-Steward-Token`）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/chat/runs` | **发送即执行**：`{goal,budget_cny?,token_limit?,mode?}` → `{session, run}` |
+| GET | `/api/chat/runs` | run 列表（历史 chatProvider run + 实时 run 合并；含 status/steps/token） |
+| GET | `/api/chat/runs/:id` | run 记录（实时 run；旧 chat run 详情兼容） |
+| POST | `/api/chat/runs/:id/approvals` | `{step, decision:"approve"|"reject"}` |
+| POST | `/api/chat/runs/:id/interrupt` · `/resume` | 打断 / 恢复 |
+| GET | `/api/chat/runs/:id/stream?since=<seq>` | **SSE**：`text/event-stream`；`id: <seq>` + `data: <json>`；15s 心跳注释；只读、**无需 token**；支持 `Last-Event-ID` 续传；客户端断开即清理订阅（`/health.sse_active_streams` 可观测） |
+
+### 14.4 `ConsoleRuntimeProvider` 契约（`src/runtime.ts`）
+
+| 方法 | 说明 |
+|---|---|
+| `createAndStart({goal,budget_cny?,token_limit?,mode?})` | 创建 session+run 并自动开始（发送即执行） |
+| `listRuns / getRun` | run 列表 / 记录（status/steps/token/current_step/pending_approval） |
+| `approve(runId, step, decision)` / `interrupt` / `resume` | 审批 / 打断 / 恢复（均返回最新 `ConsoleRunRecord`） |
+| `subscribeRun(runId, sinceSeq, onEvent)` | 先回放 since 之后事件再实时订阅；返回取消函数（SSE 断开时调用） |
+| `eventLog(runId, sinceSeq?)` | 事件日志回放（断线恢复/审计） |
+| （页面扩展）`getSession / listSessions / getRunDetail / getAgentTranscripts` | 实时会话页、run 证据页、智能体记录合并展示 |
+
+演示实现 `createDemoRuntimeProvider()`：内存、**确定性**（每 150ms 一个事件，5 步计划约 2.5s 完成）、高风险目标（付款/对外/发布/删除/签约等关键词）自动在最后一步暂停等待审批；不依赖模型/网络，E2E 稳定。
+
+### 14.5 接真实 RunManager / Orchestrator 映射
+
+| ConsoleRuntimeProvider | 真实引擎（`packages/steward-orchestrator` 等） |
+|---|---|
+| `createAndStart` | `OrchestratorEngine.createSession()` + `startProject()`（或 RunManager.createRun+start），随后返回 session/run |
+| `subscribeRun(runId, sinceSeq, onEvent)` | 订阅 runtime 的步骤事件流/事件文件（EventLog/run 目录），先回放 since 之后的事件再 live；无推送能力时适配器内用轮询事件日志+定时回调模拟（对 SSE handler 透明） |
+| `eventLog` | `OrchestratorEngine.readLogs()` / run 目录 `events.jsonl` |
+| `approve / interrupt / resume` | `OrchestratorEngine.decideApproval / interrupt / resume` 一一对应 |
+| `getRun / listRuns` | `OrchestratorEngine.getRunDetail(sessionId)` / `listSessions()` 映射 `ConsoleRunRecord` |
+| `getSession/getRunDetail/getAgentTranscripts` | `OrchestratorEngine.getSession/getRunDetail/getAgentTranscripts`（真实证据路径替换演示 SVG） |
+
+适配器放 `apps/cli/src/`（如 `console-runtime.ts`：`createOrchestratorRuntimeProvider(engine): ConsoleRuntimeProvider`），`cmdConsole()` 传入 `runtimeProvider` 即可；SSE/页面/E2E 全部复用。
+## 15. 真实浏览器验收
 
 ```bash
 npm run build
 node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console-v13
 ```
 
-实测（有头 Chrome 155，2026-10-26）：**25/25 步、303/303 检查、30 张证据截图**、
-`measured_stop_ms=81`、`console_boot_ms=22`、`first_page_load_ms=362`、耗时 **30.9s**、退出码 0。
+实测（有头 Chrome 156，2026-10-30）：**31/31 步、338/338 检查、35 张证据截图**、
+`measured_stop_ms=79`、`console_boot_ms=20`、`first_page_load_ms=410`、耗时 **31.9s**、退出码 0。
 详见 [`tests/e2e-console/README.md`](../../tests/e2e-console/README.md)。
 
-## 15. 已知限制
+## 16. 已知限制
 
 - 演示 `chatProvider`/`systemProvider` 为**内存状态**（会话、程序/插件、epay 配置、危险动作只在本进程有效，
   重启回到默认）；真实 Orchestrator/SystemController/ConfigEngine/MoneyEngine 接入后持久化到 `.steward/`。
@@ -250,3 +318,6 @@ node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-cons
 - 演示 epay **不发起真实支付请求**（不发外网请求）；live 模式仅为配置校验 + 链接拼接，真实扣款需商户回调。
 - 功能开关/预算/Token 的**执行侧拒绝**由真实引擎提供（`checkFeature/checkBudget/TokenBudget.consume`）；控制台只保存与展示。
 - 单用户、无登录鉴权、无 HTTPS（本地单机假设）；深色内容区未做，目标分辨率 1280×800 起。
+- **v1.4 演示 runtime 为内存状态机**：run/事件在进程内，重启丢失；真实 RunManager 接入后事件应持久化（`events.jsonl`）并支持跨进程回放。
+- **SSE 为单进程内存广播**：多实例部署需换成 Redis/消息队列/反向代理广播（当前本地单机不涉及）；`/runs/:id` 页面为快照视图，实时流在 `/chat/:id`（可选用 SSE 增强）。
+- 演示 runtime 的高风险判定基于目标关键词（付款/对外/发布/删除/签约等），真实引擎应由风险策略/ActionPolicy 决定并强制审批。

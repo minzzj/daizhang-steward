@@ -1,5 +1,5 @@
 /**
- * v1.1-A + v1.2-A + v1.3-A / 配置中心单元测试。
+ * v1.1-A + v1.2-A + v1.3-A + v1.4-C / 配置中心单元测试。
  *
  * v1.1：三模式默认值差异、模式切换、14 个功能开关逐项禁用、0 元极限预算、预算三层、
  * Token 预算、银行卡/微信/支付宝掩码、支付渠道过滤、保存/加载/导入导出/校验、reset、
@@ -8,6 +8,8 @@
  * 一键同步同一密钥、密钥掩码、系统提示词（总调度管理）、旧配置迁移。
  * v1.3：两层总调度（supervisor 系统总控第 11 角色）、易支付 epay、系统动作策略
  * （受管程序/插件/危险动作二次确认）。
+ * v1.4：运行时设置（发消息自动执行/审批策略 auto_low_risk|auto_all|manual/
+ * full_auto/步骤上限/返工/事件保留）+ 迁移、校验与审计。
  *
  * 全部使用 mkdtemp 临时目录或纯内存模式；不写仓库 runs/。
  */
@@ -1476,4 +1478,220 @@ test("v1.3 validate：supervisor 权限/自治与 system_policy 一致性校验�
   const liveEpay = JSON.parse(JSON.stringify(base));
   liveEpay.payments.epay = { ...liveEpay.payments.epay, mode: "live", enabled: true, pid: "", key_ref: "" };
   assert.ok(validateConfig(liveEpay).errors.some((item) => /live 模式|商户|pid|key_ref/u.test(item.message)));
+});
+
+// ===========================================================================
+// v1.4-C：运行时设置（自动执行 / 审批策略 / 步骤上限 / 返工 / 事件保留）
+// ===========================================================================
+
+test("v1.4 运行时默认值：三模式 auto_run/审批模式/步骤上限/返工/事件保留", () => {
+  const expectedSteps = { demo: 10, personal: 20, enterprise: 50 };
+  for (const mode of ["demo", "personal", "enterprise"]) {
+    const engine = makeEngine({ mode });
+    const runtime = engine.getRuntimeSettings();
+    const fromDefaults = defaultsForMode(mode, { now: makeClock().now }).runtime;
+    assert.deepEqual(runtime, fromDefaults, `${mode} 模式 defaultsForMode 与引擎一致`);
+    assert.equal(runtime.auto_run, true, "默认发消息即自动执行");
+    assert.equal(runtime.approval_mode, "auto_low_risk", "默认仅高风险动作暂停");
+    assert.equal(runtime.full_auto, false);
+    assert.equal(runtime.max_auto_steps, expectedSteps[mode]);
+    assert.equal(runtime.rework_limit, 1);
+    assert.equal(runtime.event_retention, 1_000);
+    assert.equal(engine.validate().ok, true);
+  }
+});
+
+test("v1.4 get/setRuntimeSettings：修改生效并持久化（内存模式/磁盘模式一致）", async () => {
+  const memory = makeEngine({ mode: "personal" });
+  const updated = memory.setRuntimeSettings({
+    auto_run: false,
+    approval_mode: "auto_all",
+    full_auto: true,
+    max_auto_steps: 50,
+    rework_limit: 2,
+    event_retention: 2_000,
+  });
+  assert.equal(updated.auto_run, false);
+  assert.equal(updated.approval_mode, "auto_all");
+  assert.equal(updated.full_auto, true);
+  assert.equal(updated.max_auto_steps, 50);
+  assert.equal(updated.rework_limit, 2);
+  assert.equal(updated.event_retention, 2_000);
+  assert.deepEqual(memory.getRuntimeSettings(), updated);
+  assert.equal(memory.validate().ok, true);
+
+  const root = await makeTmp("steward-config-runtime-");
+  try {
+    const engine = makePersistEngine(root, { mode: "personal" });
+    engine.setRuntimeSettings({ approval_mode: "manual", auto_run: false, max_auto_steps: 100 });
+    const raw = readConfigFile(root);
+    assert.equal(raw.runtime.approval_mode, "manual");
+    assert.equal(raw.runtime.auto_run, false);
+    assert.equal(raw.runtime.max_auto_steps, 100);
+    const reloaded = makePersistEngine(root, { mode: "personal" });
+    assert.deepEqual(reloaded.getRuntimeSettings(), engine.getRuntimeSettings());
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.4 非法枚举/范围拒绝且不改变已有设置（auto_run/approval_mode/步骤/返工/保留）", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const before = engine.getRuntimeSettings();
+  const badValues = [
+    { auto_run: "yes" },
+    { full_auto: 1 },
+    { approval_mode: "auto" },
+    { max_auto_steps: 9 },
+    { max_auto_steps: 201 },
+    { max_auto_steps: 20.5 },
+    { rework_limit: -1 },
+    { rework_limit: 4 },
+    { event_retention: 99 },
+    { event_retention: 5_001 },
+  ];
+  for (const patch of badValues) {
+    assert.throws(() => engine.setRuntimeSettings(patch), (error) => error instanceof ConfigValidationError, JSON.stringify(patch));
+    assert.deepEqual(engine.getRuntimeSettings(), before, `非法更新不得改变状态：${JSON.stringify(patch)}`);
+  }
+});
+
+test("v1.4 full_auto 与 approval_mode=manual 冲突拒绝；可单独使用 manual 或 auto_all", () => {
+  const engine = makeEngine({ mode: "personal" });
+  assert.throws(
+    () => engine.setRuntimeSettings({ full_auto: true, approval_mode: "manual" }),
+    (error) => error instanceof ConfigValidationError && /full_auto|manual|冲突/u.test(error.message),
+  );
+  // 先设为 manual，再打开 full_auto 也必须拒绝（并回滚）
+  const manual = engine.setRuntimeSettings({ approval_mode: "manual" });
+  assert.equal(manual.approval_mode, "manual");
+  assert.throws(
+    () => engine.setRuntimeSettings({ full_auto: true }),
+    (error) => error instanceof ConfigValidationError && /全自动|manual|冲突/u.test(error.message),
+  );
+  assert.equal(engine.getRuntimeSettings().full_auto, false, "冲突更新必须回滚");
+  assert.equal(engine.getRuntimeSettings().approval_mode, "manual");
+  // manual 单独合法；auto_all + full_auto 合法
+  const autoAll = engine.setRuntimeSettings({ approval_mode: "auto_all", full_auto: true });
+  assert.equal(autoAll.approval_mode, "auto_all");
+  assert.equal(autoAll.full_auto, true);
+  assert.equal(engine.validate().ok, true);
+});
+
+test("v1.4 旧配置迁移：缺 runtime 自动补该模式默认值且不丢已有字段（写入后二次加载稳定）", async () => {
+  const root = await makeTmp("steward-config-runtime-migrate-");
+  try {
+    const legacy = defaultsForMode("personal", { now: makeClock().now });
+    delete legacy.runtime;
+    legacy.budgets.month_cny = 8_888;
+    legacy.budgets.project_cny = 3_000;
+    legacy.budgets.per_txn_cny = 600;
+    legacy.features.scout.enabled = false;
+    legacy.runtime = undefined;
+    await writeFile(join(root, "config.json"), JSON.stringify(legacy, null, 2), "utf8");
+
+    const engine = makePersistEngine(root, { mode: "personal" });
+    assert.equal(engine.validate().ok, true);
+    assert.equal(engine.config.budgets.month_cny, 8_888, "旧字段必须保留");
+    assert.equal(engine.config.features.scout.enabled, false);
+    const runtime = engine.getRuntimeSettings();
+    assert.equal(runtime.auto_run, true);
+    assert.equal(runtime.approval_mode, "auto_low_risk");
+    assert.equal(runtime.max_auto_steps, 20, "迁移补 personal 默认步骤上限");
+    assert.equal(runtime.event_retention, 1_000);
+    engine.save();
+    assert.ok(readConfigFile(root).runtime !== undefined, "save 后 runtime 落盘");
+    const reloaded = makePersistEngine(root, { mode: "personal" });
+    assert.deepEqual(reloaded.getRuntimeSettings(), runtime);
+    assert.equal(reloaded.validate().ok, true);
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.4 审计：runtime.update 留痕（含新值、不含敏感信息），导出可见 runtime", async () => {
+  const root = await makeTmp("steward-config-runtime-audit-");
+  try {
+    const engine = makePersistEngine(root, { mode: "personal" });
+    engine.setRuntimeSettings({ auto_run: false, approval_mode: "manual", max_auto_steps: 60 });
+    const audit = engine.auditTrail();
+    const entry = audit.find((item) => item.action === "runtime.update");
+    assert.ok(entry !== undefined, "审计缺少 runtime.update");
+    assert.equal(entry.result, "ok");
+    assert.match(entry.reason, /auto_run=false/u);
+    assert.match(entry.reason, /approval_mode=manual/u);
+    assert.match(entry.reason, /max_auto_steps=60/u);
+    const rawAudit = readAuditFile(root).filter((item) => item.action === "runtime.update");
+    assert.ok(rawAudit.length >= 1, "runtime.update 必须写入 config-audit.jsonl");
+    const exported = JSON.parse(engine.export());
+    assert.equal(exported.runtime.approval_mode, "manual");
+    assert.equal(exported.runtime.max_auto_steps, 60);
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.4 validate：runtime 范围/枚举/冲突/缺失均可被发现", () => {
+  const base = defaultsForMode("personal", { now: makeClock().now });
+  const missing = JSON.parse(JSON.stringify(base));
+  delete missing.runtime;
+  assert.ok(validateConfig(missing).errors.some((item) => /runtime/u.test(item.message)));
+
+  const badMode = JSON.parse(JSON.stringify(base));
+  badMode.runtime.approval_mode = "auto";
+  assert.ok(validateConfig(badMode).errors.some((item) => /approval_mode/u.test(item.message)));
+
+  const badSteps = JSON.parse(JSON.stringify(base));
+  badSteps.runtime.max_auto_steps = 5;
+  assert.ok(validateConfig(badSteps).errors.some((item) => /max_auto_steps/u.test(item.message)));
+
+  const badRework = JSON.parse(JSON.stringify(base));
+  badRework.runtime.rework_limit = 9;
+  assert.ok(validateConfig(badRework).errors.some((item) => /rework_limit/u.test(item.message)));
+
+  const badRetention = JSON.parse(JSON.stringify(base));
+  badRetention.runtime.event_retention = 99;
+  assert.ok(validateConfig(badRetention).errors.some((item) => /event_retention/u.test(item.message)));
+
+  const conflict = JSON.parse(JSON.stringify(base));
+  conflict.runtime.full_auto = true;
+  conflict.runtime.approval_mode = "manual";
+  assert.ok(validateConfig(conflict).errors.some((item) => /full_auto|manual|冲突/u.test(item.message)));
+});
+
+test("v1.4 与 Token/预算并存：修改 runtime 不影响 token/budget，导出导入往返保留", () => {
+  const engine = makeEngine({ mode: "personal" });
+  engine.setTokenBudget({ limit_tokens: 5_000_000 });
+  engine.setBudgets({ month_cny: 12_345, project_cny: 4_000, per_txn_cny: 800 });
+  const consumed = engine.consumeTokens(100, { agentRole: "operator", action: "runtime-test" });
+  assert.equal(consumed.ok, true);
+  engine.setRuntimeSettings({ max_auto_steps: 80, event_retention: 2_500 });
+  const tokenBudget = engine.config.token_budget;
+  const budgets = engine.config.budgets;
+  assert.equal(tokenBudget.limit_tokens, 5_000_000);
+  assert.ok(tokenBudget.used_tokens >= 100);
+  assert.equal(budgets.month_cny, 12_345);
+  assert.equal(budgets.project_cny, 4_000);
+  assert.equal(budgets.per_txn_cny, 800);
+  assert.equal(engine.checkBudget("per_txn", 500).allowed, true);
+  assert.equal(engine.checkBudget("per_txn", 900).allowed, false);
+  const exported = engine.export();
+  const target = makeEngine({ mode: "demo" });
+  const imported = target.import(exported);
+  assert.equal(imported.runtime.max_auto_steps, 80);
+  assert.equal(imported.runtime.event_retention, 2_500);
+  assert.equal(target.validate().ok, true);
+});
+
+test("v1.4 setMode：默认保留用户 runtime；preserve_runtime:false 重置为目标模式默认值", () => {
+  const engine = makeEngine({ mode: "personal" });
+  engine.setRuntimeSettings({ auto_run: false, max_auto_steps: 60, approval_mode: "auto_all" });
+  const enterprise = engine.setMode("enterprise");
+  assert.equal(enterprise.config.runtime.max_auto_steps, 60, "切模式默认保留用户设置");
+  assert.equal(enterprise.config.runtime.auto_run, false);
+  const demo = engine.setMode("demo", { preserve_runtime: false });
+  assert.equal(demo.config.runtime.max_auto_steps, 10, "显式重置为 demo 默认");
+  assert.equal(demo.config.runtime.auto_run, true);
+  assert.equal(demo.config.runtime.approval_mode, "auto_low_risk");
+  assert.equal(engine.validate().ok, true);
 });

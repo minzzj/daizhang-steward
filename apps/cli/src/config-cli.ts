@@ -35,6 +35,7 @@ function applyPatch(engine: ConfigEngine, patch: Record<string, unknown>): void 
   if (patch.token_budget && typeof patch.token_budget === "object") engine.setTokenBudget(patch.token_budget as never);
   if (patch.approval && typeof patch.approval === "object") engine.setApprovalPolicy(patch.approval as never);
   if (patch.data && typeof patch.data === "object") engine.setData(patch.data as never);
+  if (patch.runtime && typeof patch.runtime === "object") engine.setRuntimeSettings(patch.runtime as never);
   if (patch.features && typeof patch.features === "object") {
     for (const [name, value] of Object.entries(patch.features as Record<string, unknown>)) {
       if (!isFeatureName(name)) throw new Error(`非法功能名：${name}`);

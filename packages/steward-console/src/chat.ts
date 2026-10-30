@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/steward-console/src/chat.ts
  *
  * v1.2 控制台扩展契约：**总调度对话 / 项目会话 / 智能体对话记录 / 证据 / 变现收款 / 模型与提示词配置**。
@@ -347,6 +347,9 @@ function qrPlaceholder(requestId: string, amount: number): string {
       `</svg>`,
   );
 }
+
+// v1.4：发送即执行 + SSE 实时流运行时契约（在 runtime.ts 实现，从 chat 模块统一可达）。
+export * from "./runtime.js";
 
 // ---------------------------------------------------------------------------
 // 演示数据

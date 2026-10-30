@@ -25,6 +25,7 @@ import { createConsoleServer, createDemoConsoleProvider } from "../../../package
 import { ConfigEngine } from "../../../packages/steward-config/src/index.js";
 import { createConfigAdminProvider } from "./console-admin.js";
 import { createRealConsoleProviders } from "./console-real.js";
+import { createRealConsoleRuntimeProvider } from "./console-runtime.js";
 
 type Flags = Record<string, string | boolean>;
 export interface Phase2Args {
@@ -342,7 +343,9 @@ export async function cmdConsole(parsed: Phase2Args): Promise<number> {
   const adminProvider = createConfigAdminProvider(configEngine, { repo_root: root, data_root: join(root, "runs") });
   // 对话/证据/变现/系统总控/模型提示词：接真实 OrchestratorEngine + MoneyEngine + SystemController
   const { chat: chatProvider, system: systemProvider } = createRealConsoleProviders(root);
-  const handle = await createConsoleServer({ provider, adminProvider, chatProvider, systemProvider, port });
+  // v1.4：发送即执行 + SSE 实时事件（真实 RunManager 驱动 /chat 与 /runs 页面）
+  const runtimeProvider = createRealConsoleRuntimeProvider(root);
+  const handle = await createConsoleServer({ provider, adminProvider, chatProvider, systemProvider, runtimeProvider, port });
   console.log(`代掌控制台已启动：${handle.url}（只监听 ${handle.host}）`);
   console.log(`  - 运营：看板 / 项目时间线 / 账本（6 要素）/ 审批卡 / 接管键 / 月报（演示数据）`);
   console.log(`  - 管理：/settings 配置中心（三模式+支付银行卡+Token）/agents 智能体 /backend 后台 /data 数据管理（真实配置）`);

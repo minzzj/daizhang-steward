@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/steward-console/src/pages.ts
  *
  * 服务端渲染的页面（原生 HTML，中文 UI，无第三方库、无外链资源）。
@@ -276,7 +276,7 @@ export function renderShell(options: PageRenderOptions, title: string, content: 
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <span class="brand-name">代掌 Steward</span>
-          <span class="brand-sub">LOCAL CONSOLE · v1.3</span>
+          <span class="brand-sub">LOCAL CONSOLE · v1.4</span>
         </div>
         <nav class="sidebar-nav" id="sidebar-nav" aria-label="主导航">${renderNav(options.active)}</nav>
         <div class="sidebar-footer">

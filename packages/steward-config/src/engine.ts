@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ConfigEngine：v1.1 配置中心核心。
  *
  * 能力总览（回应用户 7 项核心诉求）：
@@ -44,6 +44,7 @@ import type {
   AgentModelBinding,
   AgentUpdate,
   ApiKeyResolution,
+  ApprovalMode,
   ApprovalPolicy,
   AuditEntry,
   AuditResult,
@@ -87,6 +88,8 @@ import type {
   ResetDataResult,
   ResolvedAgentModel,
   RunMode,
+  RuntimeSettings,
+  RuntimeSettingsUpdate,
   SetModeOptions,
   StewardConfig,
   SyncApiKeyResult,
@@ -146,6 +149,11 @@ const HTTP_URL_PATTERN = /^https?:\/\/[^\s]+$/u;
 const HTTPS_URL_PATTERN = /^https:\/\/[^\s]+$/u;
 const EPAY_MODES: readonly EpayMode[] = ["demo", "live"];
 const EPAY_PAY_TYPES: readonly EpayPayType[] = ["alipay", "wxpay"];
+const APPROVAL_MODES: readonly ApprovalMode[] = ["auto_low_risk", "auto_all", "manual"];
+/** v1.4 运行时设置的范围（必须与契约一致）。 */
+const RUNTIME_MAX_AUTO_STEPS_RANGE = { min: 10, max: 200 } as const;
+const RUNTIME_REWORK_LIMIT_RANGE = { min: 0, max: 3 } as const;
+const RUNTIME_EVENT_RETENTION_RANGE = { min: 100, max: 5_000 } as const;
 /** 安全相对路径（插件目录/密钥文件片段）：非空、非绝对、不含 ..。 */
 const SAFE_RELATIVE_PATH_PATTERN = /^(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._\-/\\]+$/u;
 
@@ -186,6 +194,13 @@ function requireNumber(value: unknown, field: string, options: { min?: number } 
 function requireNonNegativeInt(value: unknown, field: string): number {
   const number = requireNumber(value, field, { min: 0 });
   if (!Number.isInteger(number)) throw new ConfigValidationError(`${field} 必须是整数`, "INVALID_INPUT", field);
+  return number;
+}
+
+/** v1.4：整数范围校验（运行时设置用；越界直接拒绝，避免写入非法配置）。 */
+function requireIntInRange(value: unknown, field: string, min: number, max: number): number {
+  const number = requireNonNegativeInt(value, field);
+  if (number < min || number > max) throw new ConfigValidationError(`${field} 必须在 ${min}-${max} 之间`, "INVALID_INPUT", field);
   return number;
 }
 
@@ -542,6 +557,30 @@ function normalizeSystemPolicy(raw: unknown, base: SystemPolicyConfig): SystemPo
   };
 }
 
+/** v1.4：运行时设置归一化（旧 config 缺 runtime 时补该模式默认值；范围/枚举非法直接拒绝）。 */
+function normalizeRuntimeSettings(raw: unknown, base: RuntimeSettings): RuntimeSettings {
+  const source = raw === undefined ? {} : raw;
+  if (!isRecord(source)) throw new ConfigValidationError("runtime 必须是对象", "INVALID_INPUT", "runtime");
+  return {
+    auto_run: source.auto_run === undefined ? base.auto_run : requireBoolean(source.auto_run, "runtime.auto_run"),
+    approval_mode:
+      source.approval_mode === undefined ? base.approval_mode : requireEnum(source.approval_mode, APPROVAL_MODES, "runtime.approval_mode"),
+    full_auto: source.full_auto === undefined ? base.full_auto : requireBoolean(source.full_auto, "runtime.full_auto"),
+    max_auto_steps:
+      source.max_auto_steps === undefined
+        ? base.max_auto_steps
+        : requireIntInRange(source.max_auto_steps, "runtime.max_auto_steps", RUNTIME_MAX_AUTO_STEPS_RANGE.min, RUNTIME_MAX_AUTO_STEPS_RANGE.max),
+    rework_limit:
+      source.rework_limit === undefined
+        ? base.rework_limit
+        : requireIntInRange(source.rework_limit, "runtime.rework_limit", RUNTIME_REWORK_LIMIT_RANGE.min, RUNTIME_REWORK_LIMIT_RANGE.max),
+    event_retention:
+      source.event_retention === undefined
+        ? base.event_retention
+        : requireIntInRange(source.event_retention, "runtime.event_retention", RUNTIME_EVENT_RETENTION_RANGE.min, RUNTIME_EVENT_RETENTION_RANGE.max),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // v1.2：模型路由 / API 密钥引用 / 系统提示词 归一化（旧 config 缺字段时用模式默认值迁移）
 // ---------------------------------------------------------------------------
@@ -755,6 +794,8 @@ function buildConfigFromUnknown(raw: unknown, fallbackMode: RunMode, now: () => 
     orchestrator: normalizeOrchestrator(raw.orchestrator, base.orchestrator, now),
     // v1.3 新增字段：旧 config 缺 system_policy / payments.epay 时自动补默认（迁移，不丢已有字段）
     system_policy: normalizeSystemPolicy(raw.system_policy, base.system_policy),
+    // v1.4 新增字段：旧 config 缺 runtime 时自动补该模式默认值（迁移，不丢已有字段）
+    runtime: normalizeRuntimeSettings(raw.runtime, base.runtime),
     updated_at: raw.updated_at === undefined ? now().toISOString() : requireString(raw.updated_at, "updated_at"),
   };
   return config;
@@ -1131,6 +1172,45 @@ export function validateConfig(config: StewardConfig): ValidationResult {
     }
   }
 
+  // v1.4：运行时设置（自动执行/审批策略/步骤上限/返工/事件保留）
+  const runtime = config.runtime;
+  if (!isRecord(runtime)) {
+    issue(errors, "runtime", "runtime 配置缺失（旧 config 应在加载时自动补默认值）");
+  } else {
+    if (typeof runtime.auto_run !== "boolean") issue(errors, "runtime.auto_run", "auto_run 必须是布尔值");
+    if (!APPROVAL_MODES.includes(runtime.approval_mode)) {
+      issue(errors, "runtime.approval_mode", `approval_mode 取值非法：${String(runtime.approval_mode)}（允许 auto_low_risk/auto_all/manual）`);
+    }
+    if (typeof runtime.full_auto !== "boolean") issue(errors, "runtime.full_auto", "full_auto 必须是布尔值");
+    if (
+      typeof runtime.max_auto_steps !== "number" ||
+      !Number.isInteger(runtime.max_auto_steps) ||
+      runtime.max_auto_steps < RUNTIME_MAX_AUTO_STEPS_RANGE.min ||
+      runtime.max_auto_steps > RUNTIME_MAX_AUTO_STEPS_RANGE.max
+    ) {
+      issue(errors, "runtime.max_auto_steps", "max_auto_steps 必须是 10-200 的整数");
+    }
+    if (
+      typeof runtime.rework_limit !== "number" ||
+      !Number.isInteger(runtime.rework_limit) ||
+      runtime.rework_limit < RUNTIME_REWORK_LIMIT_RANGE.min ||
+      runtime.rework_limit > RUNTIME_REWORK_LIMIT_RANGE.max
+    ) {
+      issue(errors, "runtime.rework_limit", "rework_limit 必须是 0-3 的整数");
+    }
+    if (
+      typeof runtime.event_retention !== "number" ||
+      !Number.isInteger(runtime.event_retention) ||
+      runtime.event_retention < RUNTIME_EVENT_RETENTION_RANGE.min ||
+      runtime.event_retention > RUNTIME_EVENT_RETENTION_RANGE.max
+    ) {
+      issue(errors, "runtime.event_retention", "event_retention 必须是 100-5000 的整数");
+    }
+    if (runtime.full_auto === true && runtime.approval_mode === "manual") {
+      issue(errors, "runtime.full_auto", "full_auto=true 时不能同时使用 approval_mode=manual（全自动与全人工审批冲突）");
+    }
+  }
+
   // 功能开关完整性
   for (const name of FEATURE_NAMES) {
     const toggle = config.features?.[name];
@@ -1379,6 +1459,8 @@ export class ConfigEngine {
     // 显式 preserve_models:false / preserve_orchestrator:false 时重置为目标模式默认值。
     if (options.preserve_models === false) next.models = cloneJson(defaults.models);
     if (options.preserve_orchestrator === false) next.orchestrator = cloneJson(defaults.orchestrator);
+    // v1.4：运行时设置默认也保留用户自定义值（显式 preserve_runtime:false 才重置）
+    if (options.preserve_runtime === false) next.runtime = cloneJson(defaults.runtime);
     if (next.models.sync_mode === "single_key_all") {
       const canonical = next.models.providers.find((provider) => provider.id === next.models.default_provider_id)?.api_key_ref
         ?? next.models.providers[0]?.api_key_ref
@@ -2198,6 +2280,51 @@ export class ConfigEngine {
       "system_policy",
       "ok",
       `apps=${next.managed_apps.length}; plugins_dir=${next.plugins_dir}; destructive=${next.allow_destructive}; confirmation=${next.require_confirmation}; ttl=${next.confirmation_ttl_seconds}`,
+    );
+    return cloneJson(next);
+  }
+
+  // -------------------------------------------------------------------------
+  // v1.4：运行时设置（发消息即自动执行 / 审批策略 / 步骤上限 / 返工 / 事件保留）
+  // -------------------------------------------------------------------------
+
+  /** 运行时设置（只读副本）。 */
+  getRuntimeSettings(): RuntimeSettings {
+    return cloneJson(this.state.runtime);
+  }
+
+  /**
+   * 更新运行时设置。
+   * 校验：auto_run/full_auto 为布尔；approval_mode ∈ {auto_low_risk,auto_all,manual}；
+   * max_auto_steps 10–200；rework_limit 0–3；event_retention 100–5000；
+   * 安全约束：full_auto=true 时不能使用 approval_mode=manual（全自动 vs 全人工审批冲突）。
+   */
+  setRuntimeSettings(patch: RuntimeSettingsUpdate): RuntimeSettings {
+    if (!isRecord(patch)) throw new ConfigValidationError("setRuntimeSettings 需要对象", "INVALID_INPUT", "patch");
+    const previous = cloneJson(this.state.runtime);
+    const merged = { ...this.state.runtime, ...patch };
+    let next: RuntimeSettings;
+    try {
+      next = normalizeRuntimeSettings(merged, this.state.runtime);
+    } catch (error) {
+      throw error instanceof ConfigValidationError ? error : new ConfigValidationError(String(error), "INVALID_INPUT", "runtime");
+    }
+    this.state.runtime = next;
+    const validation = validateConfig(this.state);
+    if (!validation.ok) {
+      this.state.runtime = previous;
+      throw new ConfigValidationError(
+        `运行时设置更新后校验失败：${validation.errors.map((item) => item.message).join("; ")}`,
+        "INVALID_INPUT",
+        "runtime",
+      );
+    }
+    this.persistState();
+    this.recordAudit(
+      "runtime.update",
+      "runtime",
+      "ok",
+      `auto_run=${next.auto_run}; approval_mode=${next.approval_mode}; full_auto=${next.full_auto}; max_auto_steps=${next.max_auto_steps}; rework_limit=${next.rework_limit}; event_retention=${next.event_retention}`,
     );
     return cloneJson(next);
   }

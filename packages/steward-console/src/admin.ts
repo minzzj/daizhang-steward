@@ -217,6 +217,26 @@ export interface DataPolicyConfig {
 }
 
 /** 与 task-27 `StewardConfig` 对齐（仅字段子集/同名字段，便于后续直接替换）。 */
+/** v1.4 自动执行与审批策略（与配置中心 runtime 字段对齐）。 */
+export interface RuntimeSettingsConfig {
+  auto_run: boolean;
+  approval_mode: "auto_low_risk" | "auto_all" | "manual";
+  full_auto: boolean;
+  max_auto_steps: number;
+  rework_limit: number;
+  event_retention: number;
+}
+
+function runtimeForMode(mode: RunMode): RuntimeSettingsConfig {
+  return {
+    auto_run: true,
+    approval_mode: "auto_low_risk",
+    full_auto: false,
+    max_auto_steps: mode === "demo" ? 10 : mode === "enterprise" ? 50 : 20,
+    rework_limit: 1,
+    event_retention: 1000,
+  };
+}
 export interface StewardConfig {
   version: number;
   profile: Profile;
@@ -227,6 +247,7 @@ export interface StewardConfig {
   agents: AgentConfig[];
   approval: ApprovalPolicy;
   data: DataPolicyConfig;
+  runtime: RuntimeSettingsConfig;
   updated_at: string;
 }
 
@@ -564,6 +585,7 @@ function defaultConfig(mode: RunMode): StewardConfig {
     agents: agentsForMode(mode),
     approval: approvalForMode(mode),
     data: { retention_days: 90, telemetry: false },
+    runtime: runtimeForMode(mode),
     updated_at: new Date().toISOString(),
   };
 }
