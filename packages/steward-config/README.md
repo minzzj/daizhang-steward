@@ -1,4 +1,4 @@
-# `@daizhang/steward-config` — 配置中心（v1.1 三模式 + v1.2 多模型/密钥/提示词 + v1.3 supervisor/epay/系统策略 + v1.4 自动执行/审批策略）
+# `@daizhang/steward-config` — 配置中心（v1.1 三模式 + v1.2 多模型/密钥/提示词 + v1.3 supervisor/epay/系统策略 + v1.4 自动执行/审批策略 + v1.5 Harness 真实执行）
 
 代掌 Steward 的配置中心核心：**全部参数可配置、三种运行模式、所有功能可逐项禁用、
 银行卡/支付配置明确（含易支付 epay）、Token 预算可配置、0 元极限预算、数据可清空**；
@@ -7,11 +7,13 @@ v1.2 新增：**所有智能体使用可配置模型（各 agent 可不同模型
 v1.3 新增：**两层总调度（supervisor 系统总控 + conductor 总调度）、易支付（epay）、
 系统动作策略（受管程序/插件/危险动作二次确认）**；
 v1.4 新增：**运行时设置（发消息即自动执行、审批策略 auto_low_risk|auto_all|manual、
-full_auto、单 run 步骤上限、自动返工次数、事件保留）**。
+full_auto、单 run 步骤上限、自动返工次数、事件保留）**；
+v1.5 新增：**Harness 真实执行设置（11 agent 走真实 DeepSeek Harness，supervisor 仅系统动作）、
+每个 agent 的 harness 元数据（profile/workspace/tools）、HARNESS_AGENT_DIRECTIVE 与 composeHarnessPrompt**。
 
 - 零第三方依赖；纯逻辑 + JSON 原子持久化（`<root>/config.json`）；无网络；
 - 敏感字段只存掩码/引用（银行卡只留后 4 位、微信/支付宝 id 打码、税号/执照号打码、API 密钥只存 env/file 引用），**绝不存明文**；
-- 所有变更、预算拒绝、Token 超限、模型/密钥引用/提示词/系统策略/运行时设置变更都写审计（`<root>/config-audit.jsonl`，只追加，**不记录明文密钥**）。
+- 所有变更、预算拒绝、Token 超限、模型/密钥引用/提示词/系统策略/运行时设置/Harness 设置变更都写审计（`<root>/config-audit.jsonl`，只追加，**不记录明文密钥**）。
 
 ---
 
@@ -59,7 +61,8 @@ full_auto、单 run 步骤上限、自动返工次数、事件保留）**。
 | `orchestrator`（v1.2） | 总调度核心设置：`conductor_prompt` / `system_prompts[]` / `auto_plan` / `max_steps_per_run` / `ask_before_commit` |
 | `system_policy`（v1.3） | 系统动作策略：`managed_apps[]` / `plugins_dir` / `allow_destructive` / `require_confirmation` / `confirmation_ttl_seconds` |
 | `runtime`（v1.4） | 运行时设置：`auto_run` / `approval_mode`（auto_low_risk/auto_all/manual）/ `full_auto` / `max_auto_steps`(10–200) / `rework_limit`(0–3) / `event_retention`(100–5000) |
-| `agents[]` | **11 个代理**：supervisor（系统总控）/ conductor / operator / harness（写代码）/ customer / finance / reviewer（核查）/ backend（后台）/ scout / content / research；每项 enabled/autonomy/tools/token_limit/model_ref |
+| `harness`（v1.5） | Harness 真实执行设置：`enabled` / `profile` / `dsh_bin` / `timeout_ms`(10–1800000) / `max_concurrency`(1–4) / `artifact_retention_days`(1–365) / `report_required` / `roles[]`（11 角色；supervisor 强制 enabled=false） |
+| `agents[]` | **11 个代理**：supervisor（系统总控）/ conductor / operator / harness（写代码）/ customer / finance / reviewer（核查）/ backend（后台）/ scout / content / research；每项 enabled/autonomy/tools/token_limit/model_ref + v1.5 `harness?{profile,workspace,tools}`（supervisor 可空） |
 | `approval` | 审批超时分钟、auto_approve 恒 false（超时挂起不自动放行）、双人复核金额阈值、接管快捷键 |
 | `data` | retention_days、telemetry 恒 false（无遥测） |
 | `updated_at` | 最后更新时间（ISO 8601） |
@@ -179,15 +182,20 @@ const result = engine.resetData(join(root, "runs"));   // 通常是仓库根/数
 | **易支付 epay**（v1.3） | `getEpayConfig()` / `setEpayConfig(patch)` / `maskEpayKeyRef()`（密钥只存引用；live 必须补齐商家信息） |
 | **系统动作策略**（v1.3） | `getSystemPolicy()` / `setSystemPolicy(patch)`（受管应用白名单/插件目录/危险动作二次确认 TTL） |
 | **运行时设置**（v1.4） | `getRuntimeSettings()` / `setRuntimeSettings(partial)`（auto_run/approval_mode/full_auto/max_auto_steps/rework_limit/event_retention；校验+审计 `runtime.update`） |
+| **Harness 设置**（v1.5） | `getHarnessSettings()` / `setHarnessSettings(partial)`（roles 按角色合并、缺省补全；校验+回滚+审计 `harness.update`）/ `getHarnessRole(role)` |
 
 纯函数/常量导出：`defaultsForMode`、`defaultAgents`、`defaultModelProviders`、`defaultModelRouting`、
-`defaultAgentModels`、`defaultEpayConfig`、`defaultSystemPolicy`、`defaultRuntimeSettings`、`SUPERVISOR_TOKEN_LIMIT`、
+`defaultAgentModels`、`defaultEpayConfig`、`defaultSystemPolicy`、`defaultRuntimeSettings`、`defaultHarnessSettings`、
+`SUPERVISOR_TOKEN_LIMIT`、`HARNESS_DEFAULT_PROFILE`、`HARNESS_DEFAULT_TIMEOUT_MS`、`HARNESS_DEFAULT_MAX_TOKENS_PER_RUN`、
 `validateConfig`、`maskAccount`、`maskBankCard`、`maskAccountId`、`maskTaxNo`、`maskLicenseNo`、
 `maskApiKeyRef`、`isValidApiKeyRef`、`parseApiKeyRef`、`describeApiKeyRef`、`resolveApiKeyRef`、
-`SECRETS_FILE_NAME`、`DEFAULT_CONDUCTOR_PROMPT`、`SYSTEM_PROMPT_ROLES`、`PROMPT_SAFETY_KEYWORDS`、
+`SECRETS_FILE_NAME`、`DEFAULT_CONDUCTOR_PROMPT`、`HARNESS_AGENT_DIRECTIVE`、`composeHarnessPrompt`、
+`harnessArtifactRequirement`、`SYSTEM_PROMPT_ROLES`、`PROMPT_SAFETY_KEYWORDS`、
+`PROMPT_V3_VERSION`、`PROMPT_V3_UPDATED_AT`、
 `buildDefaultSystemPrompts`、`buildDefaultOrchestratorSettings`、`validateSystemPromptText`、
 `hasSafetyKeyword`、`FEATURE_NAMES`、`AGENT_ROLES`、`CONFIG_VERSION`、`RESETTABLE_SUBDIRS`。
-（类型 `RuntimeSettings` / `ApprovalMode` / `RuntimeSettingsUpdate` 也可从包入口导入。）
+（类型 `RuntimeSettings` / `ApprovalMode` / `RuntimeSettingsUpdate` / `HarnessSettings` / `HarnessRoleSettings` /
+`HarnessSettingsUpdate` / `AgentHarnessMeta` / `PromptV3Entry` 也可从包入口导入。）
 
 ---
 
@@ -254,7 +262,8 @@ case "budget": {
 
 ```bash
 npm run build
-node --test tests/unit/config.test.mjs   # 69 条（v1.1 三模式/开关/预算/Token/掩码/清空/审计 + v1.2 模型/密钥/提示词/迁移 + v1.3 supervisor/epay/系统策略 + v1.4 运行时设置/审批策略）
+node --test tests/unit/config.test.mjs   # 85 条（v1.1 三模式/开关/预算/Token/掩码/清空/审计 + v1.2 模型/密钥/提示词/迁移 + v1.3 supervisor/epay/系统策略 + v1.4 运行时设置/审批策略 + v1.5 Harness 设置/元数据/v3 提示词）
+node --test tests/unit/prompts.test.mjs  # 9 条（v1 4 篇 + v2 11 篇 + v3 11 篇 manifest/v3 默认值/compose）
 ```
 
 覆盖：三模式默认值差异、模式切换 diff、14 项功能禁用、0 元极限模式、预算三层拒绝、Token 累计/剩余/
@@ -265,7 +274,12 @@ v1.2：默认模型路由/各 agent 不同模型、一键同步、per-provider �
 旧配置迁移、审计无明文；v1.3：supervisor 两层总调度（第 11 角色/权限/自治/Token）、epay 默认与
 demo/live 校验、系统动作策略默认值与非法配置拒绝、v1.2→v1.3 旧配置迁移；v1.4：运行时设置默认值
 （三模式步骤上限 10/20/50）、get/set、非法枚举与范围拒绝、full_auto×manual 冲突、旧配置迁移、
-`runtime.update` 审计、validate、与 Token/预算并存、setMode 保留/重置。
+`runtime.update` 审计、validate、与 Token/预算并存、setMode 保留/重置；
+v1.5：Harness 默认值（三模式一致/11 角色/supervisor 强制 false）、get/set 与持久化、roles 合并、
+越界/重复/未知角色拒绝、旧配置迁移（含 roles 残缺补全）、`harness.update` 审计与回滚、validate、
+composeHarnessPrompt 11 角色关键词、HARNESS_AGENT_DIRECTIVE、agent harness 元数据、导入导出往返、setMode 保留；
+**v1.5 补充：默认 prompts = `prompts/v3/*.md`（11 篇 3.0.0 原文内嵌，`PROMPT_V3_VERSION`/`PROMPT_V3_UPDATED_AT`；
+manifest-v3 sha256 由 `tests/unit/prompts.test.mjs` 校验；compose = v3 原文 + 简短统一指令 + 角色产物要求）**。
 
 ---
 
@@ -316,25 +330,30 @@ engine.setModelSyncMode("single_key_all");               // 切回一键：立�
 
 ---
 
-## 13. 系统提示词（专业版，核心设置由总调度管理）（v1.2）
+## 13. 系统提示词（专业版，核心设置由总调度管理）（v1.2 / v1.5 接入 v3）
 
-`orchestrator` 保存总调度负责的核心设置：
+`orchestrator` 保存总调度负责的核心设置；**默认文本 = `prompts/v3/*.md`（version 3.0.0，真实 Harness 代理提示词，已内嵌于 `src/prompts-v3.ts`）**：
 
 | 字段 | 说明 |
 |---|---|
-| `conductor_prompt` | 总调度（业务层最上层）核心系统提示词（计划/调度/预算/审批/证据/失败升级/接管） |
-| `system_prompts[]` | 11 个 agent 角色的专业系统提示词（`{role, title, system_prompt, updated_at}`），默认均含安全关键词 |
+| `conductor_prompt` | 总调度核心系统提示词（v3/conductor.md：计划/调度/预算/审批/证据/失败升级/接管） |
+| `system_prompts[]` | 11 个 agent 角色的 v3 专业提示词（`{role, title, system_prompt, updated_at}`；updated_at=`2026-10-30T00:00:00.000Z`） |
 | `auto_plan` / `max_steps_per_run` / `ask_before_commit` | 自动规划 / 单次运行步数上限（demo 10 / personal 20 / enterprise 50）/ 提交前确认 |
 
 ```ts
-engine.getConductorPrompt();
+engine.getConductorPrompt();                          // = prompts/v3/conductor.md
 engine.setConductorPrompt("你是总调度：先计划后执行，所有结论附证据；支付/合同必须审批；不越界；失败升级人工。");
-engine.listSystemPrompts();                          // 11 个 agent 提示词（含 supervisor）
+engine.listSystemPrompts();                          // 11 个 agent v3 提示词（含 supervisor）
 engine.setSystemPrompt("operator", "…>20 字，含证据/审批/不越界/失败升级…");
-engine.resetSystemPrompts();
+engine.resetSystemPrompts();                         // 恢复 v3 默认（conductor_prompt 一并恢复）
 engine.setOrchestratorSettings({ auto_plan: false, max_steps_per_run: 8, ask_before_commit: true });
 engine.validateSystemPrompt(text);
+// 版本常量：PROMPT_V3_VERSION="3.0.0"、PROMPT_V3_UPDATED_AT="2026-10-30T00:00:00.000Z"
 ```
+
+- `prompts/v3/` 11 篇为默认来源（`prompts/manifest-v3.json` 记录 sha256）；`prompts/v2/`、`prompts/`（v1）与
+  各自 manifest 保留为历史版本（旧测试仍校验哈希）。
+- 修改默认提示词：改 `prompts/v3/*.md` → 重新生成 `src/prompts-v3.ts` + `manifest-v3.json`（`gen-v3-prompts.mjs` 不在仓库，由维护者本地执行）。
 
 提示词修改会写审计（`prompt.update` / `orchestrator.conductor.update` / `prompt.reset`），不记录密钥。
 
@@ -503,7 +522,92 @@ engine.setRuntimeSettings({ max_auto_steps: 60, rework_limit: 2, event_retention
 
 ---
 
-## 20. 非目标与限制
+## 20. Harness 真实执行设置（v1.5）
+
+把各个 agent 换成**真实 DeepSeek Harness 代理**（v1.5-C 配置中心侧）：`harness` 保存总设置与 11 角色设置，
+真实执行由运行时按该配置拉起 DSH；本包只做配置、校验、迁移（**不注入密钥、不发起模型调用**）。
+
+### 20.1 HarnessSettings（`config.harness`）
+
+```ts
+export interface HarnessRoleSettings {
+  role: string;               // 11 个 agent 角色之一（含 supervisor）
+  enabled: boolean;           // 是否走真实 Harness（默认 true；supervisor 强制 false）
+  workspace: string;          // 相对 runDir 的工作区子目录模板（默认 "workspace/<role>"）
+  timeout_ms: number;         // 默认 300000（10–1800000）
+  max_tokens_per_run: number; // 默认 200000（1000–2000000）
+}
+export interface HarnessSettings {
+  enabled: boolean;                 // 总开关（默认 true；无 dsh 时运行时自动回退本地执行）
+  profile: string;                  // 默认 "headless"
+  dsh_bin: string;                  // 空 = 自动探测（STEWARD_DSH_BIN / node + APPDATA npm 全局路径）
+  timeout_ms: number;               // 默认 300000（10–1800000）
+  max_concurrency: number;          // 1–4，默认 2
+  artifact_retention_days: number;  // 1–365，默认 30
+  report_required: boolean;         // 默认 true：每个 agent 必须产出 report.md
+  roles: HarnessRoleSettings[];     // 11 个角色各一条
+}
+```
+
+默认值（三模式一致）：`enabled=true`、`profile="headless"`、`dsh_bin=""`、`timeout_ms=300000`、
+`max_concurrency=2`、`artifact_retention_days=30`、`report_required=true`；
+roles = 11 角色，`workspace="workspace/<role>"`、`timeout_ms=300000`、`max_tokens_per_run=200000`；
+**supervisor.enabled 恒为 false（系统总控走系统动作层，不走 Harness 业务执行），其余 10 角色 enabled=true**。
+
+```ts
+const harness = engine.getHarnessSettings();
+engine.setHarnessSettings({ enabled: true, profile: "headless", max_concurrency: 3 });
+engine.setHarnessSettings({ roles: [{ role: "operator", enabled: true, workspace: "workspace/operator", timeout_ms: 600000 }] });
+engine.getHarnessRole("operator");   // 单角色（只读副本）
+// 校验：profile 非空；timeout 10–1800000；max_concurrency 1–4；artifact_retention_days 1–365；
+//       roles 必须覆盖 11 角色且不重复；supervisor.enabled 必须 false；workspace 必须是相对 runDir 的安全相对路径；
+//       失败回滚；成功写审计 harness.update（不含敏感信息）。
+```
+
+### 20.2 每个 agent 的 harness 元数据（`AgentConfig.harness`）
+
+`defaultAgents` 为 10 个业务角色补 `{profile, workspace, tools}`（supervisor 不直接跑 Harness，保持为空）：
+
+| 角色 | 默认 workspace | 默认 tools |
+|---|---|---|
+| conductor | workspace/conductor | read, glob, grep |
+| operator | workspace/operator | read, write, edit, bash, browser |
+| harness | workspace/harness | read, write, edit, bash, test |
+| customer | workspace/customer | read, write |
+| finance | workspace/finance | read, write |
+| reviewer | workspace/reviewer | read, glob, grep |
+| backend | workspace/backend | read, write, bash |
+| scout | workspace/scout | web_search, web_fetch, write |
+| content | workspace/content | read, write |
+| research | workspace/research | web_search, web_fetch, write |
+
+### 20.3 提示词接入：`HARNESS_AGENT_DIRECTIVE` + `composeHarnessPrompt(role)`（v3）
+
+- 默认 `system_prompts` 11 篇 = `prompts/v3/*.md`（version 3.0.0，真实 Harness 代理版；内嵌于 `src/prompts-v3.ts`）；
+- `HARNESS_AGENT_DIRECTIVE`：**简短**统一执行指令（真实使用工具、产物落盘到工作区、写 `report.md`、
+  给出证据、不得声称未执行的操作、危险动作交人、不越界、失败升级）——v3 原文已含详细条款，此处只做叠加避免重复过重；
+- `composeHarnessPrompt(role)` = **v3 角色原文** + 简短统一指令 + 角色专属产物要求 + 完成判定
+  （operator 交付 HTML/截图，harness 交付 `patch.diff`/`test.log`，reviewer 交付 review 报告，
+  finance 交付账本/开票草稿，scout 交付线索报告，content 交付内容草稿，research 交付调研报告，
+  backend 交付数据报告，customer 交付客户草稿，conductor 交付项目计划/验收，supervisor 交付系统动作/审计记录）。
+  运行时创建真实 Harness agent 时使用；`buildDefaultSystemPrompts` 仍输出 11 篇 v2 原文不受影响。
+
+### 20.4 如何关闭 / 回退
+
+- 全局关闭：`engine.setHarnessSettings({ enabled: false })` → 运行时回退到本地/模型输出执行（不再拉起 DSH）；
+- 单角色关闭：`engine.setHarnessSettings({ roles: [{ role: "scout", enabled: false }] })`；
+- **supervisor 不能开启**（只做系统动作，避免系统权限被 Harness 业务代理越界使用）；
+- 配置损坏/缺 dsh 时运行时自动回退；配置中心始终可读、可改、可回退（`harness.update` 审计留痕）。
+
+### 20.5 密钥安全
+
+- Harness 设置**不存任何 API 密钥**：`harness` 只有 profile/dsh_bin/超时/并发等参数；
+- 真实 Harness 使用**本机 DSH 凭据**（用户本机已登录/已配置），配置中心不注入、不转发、不记录密钥；
+- 模型密钥仍走 v1.2 的 `models.providers[].api_key_ref`（env/file 引用，绝不入库）。
+
+---
+
+## 21. 非目标与限制
 
 - 不做真实支付/开票/银行/易支付资金对接（只做配置、掩码与校验；真实资金动作由企业/财务模块人工执行）；
 - 不提供 HTTP 服务（控制台在 apps/packages 层由 Lead 集成）；
@@ -511,4 +615,6 @@ engine.setRuntimeSettings({ max_auto_steps: 60, rework_limit: 2, event_retention
 - 掩码只保证 UI/配置文件不出现明文；真实密钥/卡号请放环境变量或密钥存储（只存引用）；
 - `checkBudget` 只做单层额度判断，不做跨层累计消耗（累计记账由经营域/企业引擎负责）；
 - supervisor/system_policy 只做**配置与校验**；真实进程/插件操作由系统动作执行器按该策略执行（安全边界在配置层 + 执行器双层）；
-- epay 默认仅 demo 模式；`live` 需要用户填入真实商户信息并由人工确认（本包不发起任何真实支付请求）。
+- epay 默认仅 demo 模式；`live` 需要用户填入真实商户信息并由人工确认（本包不发起任何真实支付请求）；
+- v1.5 `harness` 只做**配置/校验/迁移与提示词组合**；真实 DSH 拉起、执行、产物回收由运行时（steward-runtime）按该配置实现，
+  `dsh_bin` 不检查存在性（空=自动探测），无 dsh 时运行时自动回退；本包不注入也不读取任何 API 密钥。

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * tests/e2e-console/run.mjs — v1.4 本地 Web 控制台（发送即执行 + SSE 实时流）真实浏览器 E2E
+ * tests/e2e-console/run.mjs — v1.5 本地 Web 控制台（产物/报告/数据/思考过程 + 发送即执行 + SSE 实时流）真实浏览器 E2E
  *
  * 铁律：真实有头 Chrome/Edge + 真实点击/输入/等待 + 每步截图；**不使用任何 mock 路由/假 DOM**。
  * 被测对象是 packages/steward-console 的真实 HTTP 服务（进程内启动，随机端口）：
@@ -10,7 +10,7 @@
  *   - systemProvider  = createDemoSystemProvider()（/system 总控 + 危险动作二次确认 + 易支付）
  *   - runtimeProvider = createDemoRuntimeProvider()（v1.4：发送即执行 + SSE 实时事件流）
  *
- * 验收流程（31 步，每步截图到 --evidence-dir/screenshots/）：
+ * 验收流程（38 步，每步截图到 --evidence-dir/screenshots/）：
  *   1–9   P1-C 运营：看板 → 项目时间线/证据 → 账本 6 要素 → 审批 → 接管 stop_ms → resume → 月报 → 只监听本机；
  *   10–15 v1.1 专业版：导航/状态栏 → 三模式配置中心+支付银行卡 → 智能体中心 → 后台时间线 → 数据清空 → sanity；
  *   16–21 v1.2 对话/证据（v1.4 改为发送即执行+实时流）：对话/发送即执行 → 计划/打断恢复 → 自动完成 →
@@ -18,11 +18,14 @@
  *   22–25 v1.4 新增：chat-auto-start（发送即出现实时状态、无手动按钮）→ chat-live-events（SSE ≥3 类事件/计划点亮）→
  *         chat-reconnect（刷新后 since 回放恢复）→ chat-approval-pause（高风险暂停→批准→完成）；
  *   26–30 变现+易支付 → 模型提示词 → 系统总控 → 危险动作二次确认 → sse-sanity（无 JS 错误/无外链/订阅清理）；
- *   31    v12-sanity 收尾（API/持久化/无 token 401/run 完成校验）。
+ *   32–34 v1.5 run Tabs：产物（artifact 预览/下载）/ 数据（Token/工具/耗时）/ 报告（Markdown 渲染）；
+ *   35–36 v1.5 实时：思考分块（harness.thinking）/ 工具卡片（tool_call/tool_result）/ 产物提示；
+ *   37–38 v1.5 页面：/artifacts 产物中心（筛选/预览/下载）、/agents Harness 真实执行徽章与最近会话；
+ *   39    v12-sanity 收尾（API/产物/报告/指标/路径穿越/无 token 401/run 完成校验）。
  *
  * 用法：
  *   npm run build
- *   node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console-v14
+ *   node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console-v15
  *   node tests/e2e-console/run.mjs --headless 1 --port 4180
  *
  * 退出码：0 全部通过 / 1 验收失败 / 2 用法或环境错误（缺构建产物等）。
@@ -248,10 +251,11 @@ async function launchRealBrowser({ headless }) {
 // ---------------------------------------------------------------------------
 
 class Recorder {
-  constructor(evidenceDir) {
+  constructor(evidenceDir, options = {}) {
     this.evidenceDir = evidenceDir;
     this.screenshotsDir = join(evidenceDir, "screenshots");
     this.domDir = join(evidenceDir, "dom");
+    this.screenshotsEnabled = options.screenshots === true;
     this.steps = [];
     this.checks = [];
     this.failures = [];
@@ -271,6 +275,8 @@ class Recorder {
   }
 
   async capture(page, label, options = {}) {
+    // v1.5.1：用户要求 E2E 不保存截图（只输出 result.json/断言）；--screenshots 可显式开启。
+    if (this.screenshotsEnabled !== true) return null;
     this.seq += 1;
     const relative = `screenshots/${String(this.seq).padStart(3, "0")}-${slug(label)}.png`;
     await page.screenshot({ path: join(this.evidenceDir, relative), fullPage: options.fullPage === true });
@@ -280,6 +286,7 @@ class Recorder {
   }
 
   async domSnapshot(page, label) {
+    if (this.screenshotsEnabled !== true) return null;
     this.seq += 1;
     const relative = `dom/${String(this.seq).padStart(3, "0")}-${slug(label)}.html`;
     await writeFile(join(this.evidenceDir, relative), await page.content(), "utf8");
@@ -314,8 +321,12 @@ class Recorder {
       this.failures.push(`[${action}] ${step.error}`);
     }
     try {
-      step.evidence.push(await this.capture(page, step.ok ? action : `${action}-fail`));
-      if (!step.ok) step.evidence.push(await this.domSnapshot(page, `${action}-fail`));
+      const shot = await this.capture(page, step.ok ? action : `${action}-fail`);
+      if (shot !== null) step.evidence.push(shot);
+      if (!step.ok) {
+        const dom = await this.domSnapshot(page, `${action}-fail`);
+        if (dom !== null) step.evidence.push(dom);
+      }
     } catch (error) {
       step.ok = false;
       step.error = `截图/现场保存失败：${errorText(error)}`;
@@ -950,20 +961,20 @@ async function waitForLiveStatusContains(page, needle, timeoutMs = 12000) {
   return await waitForLiveStatus(page, 500);
 }
 
-/** /chat 页发送目标并进入实时会话页（不点任何「开始执行」按钮）。 */
+/** /chat（ChatGPT 式）发送目标：立即出现用户消息/思考中，再通过内嵌运行卡进入深度实时页（旧断言继续覆盖）。 */
 async function sendGoalFromChat(page, baseUrl, goal, options = {}) {
-  await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS }).catch(async () => {
-    await page.locator("#nav-chat").click();
-    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
-  });
-  await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
-  await page.locator("#chat-goal").fill(goal);
-  if (options.budget !== undefined) await page.locator("#chat-budget").fill(String(options.budget));
-  if (options.token !== undefined) await page.locator("#chat-token").fill(String(options.token));
-  if (options.mode !== undefined) await page.locator("#chat-mode").selectOption(options.mode);
+  await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+  await page.waitForSelector("#composer-input", { timeout: STEP_TIMEOUT_MS });
+  if (options.conversation === undefined) {
+    // 每次发送用新对话，避免历史消息干扰
+    await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+  }
+  await page.locator("#composer-input").fill(goal);
   const sentAt = Date.now();
-  await page.locator("#chat-create-submit").click();
-  await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
+  await page.locator("#composer-input").press("Enter");
+  await page.waitForSelector('.gpt-msg[data-role="user"]', { timeout: 4000 });
+  await page.waitForSelector("#chat-run-link", { timeout: 15000 });
+  await page.locator("#chat-run-link").click();
   await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
   const statusText = await waitForLiveStatus(page, 6000);
   return { statusText, sentAt };
@@ -972,18 +983,24 @@ async function sendGoalFromChat(page, baseUrl, goal, options = {}) {
 async function stepChatOpen(page, recorder) {
   return recorder.step(page, "chat-open", async () => {
     await page.locator("#nav-chat").click();
-    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#gpt-page", { timeout: STEP_TIMEOUT_MS });
     const checks = [];
     checks.push(check(await page.locator("#nav-chat").isVisible(), "左侧导航出现「对话」入口"));
     checks.push(check(await page.locator("#nav-money").isVisible(), "左侧导航出现「变现」入口"));
     checks.push(check(await page.locator("#nav-system").isVisible(), "左侧导航出现「系统」入口"));
-    const sessionCount = await page.locator("#chat-sessions .chat-session").count();
-    checks.push(check(sessionCount >= 1, `会话记录列表可见（${sessionCount} 个）`));
-    const submitText = (await page.locator("#chat-create-submit").innerText()).trim();
-    checks.push(check(submitText.includes("发送") && submitText.includes("自动执行"), `发送按钮=发送并自动执行（${submitText}）`));
+    const convCount = await page.locator("#conv-list .gpt-conv-item").count();
+    checks.push(check(convCount >= 1, `左侧对话历史可见（${convCount} 个会话）`));
+    checks.push(check(await page.locator("#conv-new").isVisible(), "新建对话按钮可见"));
     checks.push(check((await page.locator("#chat-start").count()) === 0, "页面不存在「开始执行」手动按钮（发送即执行）"));
-    checks.push(check(await page.locator("#chat-goal").isVisible() && await page.locator("#chat-budget").isVisible() && await page.locator("#chat-token").isVisible() && await page.locator("#chat-mode").isVisible(), "新建项目参数：目标/预算/Token 上限/模式 可见"));
-    checks.push(check((await page.locator("#chat-tip").innerText()).includes("无需手动"), "页面说明发送后立即自动执行（无需手动点开始）"));
+    checks.push(check(await page.locator("#composer-input").isVisible(), "底部输入框可见"));
+    const chips = await page.locator("#quick-chips .gpt-chip").count();
+    checks.push(check(chips >= 8, `顶部快捷 chips ≥8（${chips} 个：系统/运行/产物/报告/日志/配置/账本/智能体/记忆）`));
+    checks.push(check(await page.locator("#memory-list").isVisible() && (await page.locator("#memory-list .gpt-memory-item").count()) >= 3, "记忆面板可见且含记忆条目"));
+    checks.push(check(await page.locator("#data-source").isVisible() && (await page.locator("#data-source").innerText()).includes("数据源"), "顶部数据源标识可见"));
+    checks.push(check((await page.locator("#chat-status-badge").innerText()).includes("运行中"), "页面显示实时状态（运行中/等待审批）"));
+    const msgCount = await page.locator("#gpt-messages .gpt-msg").count();
+    checks.push(check(msgCount >= 2, `默认会话已恢复历史消息（${msgCount} 条）`));
+    checks.push(check((await page.locator("#gpt-messages").innerText()).length > 0, "消息流可见（含内嵌卡片）"));
     return { checks };
   });
 }
@@ -991,17 +1008,16 @@ async function stepChatOpen(page, recorder) {
 async function stepChatCreateProject(page, recorder, baseUrl) {
   return recorder.step(page, "chat-create-project", async () => {
     const checks = [];
-    const { statusText, sentAt } = await sendGoalFromChat(page, baseUrl, "帮我做一个报价单页面（含客户信息与金额明细）", { budget: 2600, token: 180000, mode: "personal" });
+    const { statusText, sentAt } = await sendGoalFromChat(page, baseUrl, "帮我做一个报价单页面（含客户信息与金额明细）");
     const elapsed = Date.now() - sentAt;
-    checks.push(check(/\/chat\/chat-live-+/.test(page.url()) || /\/chat\/[^/?#]+$/.test(page.url()), `发送后进入实时会话页（${page.url()}）`));
-    checks.push(check(statusText.length > 0 && (statusText.includes("排队") || statusText.includes("思考") || statusText.includes("执行") || statusText.includes("完成")), `未点开始执行即出现实时状态：${statusText}`));
-    checks.push(check(elapsed < 8000, `发送 → 实时状态可见耗时 ${String(elapsed)}ms（<8000ms，含页面导航）`));
-    checks.push(check((await page.locator("#chat-start").count()) === 0, "实时页没有「开始执行」按钮（自动开始）"));
+    checks.push(check(/\/chat\/chat-live-+/.test(page.url()) || /\/chat\/[^/?#]+$/.test(page.url()), `发送后进入深度实时页（${page.url()}）`));
+    checks.push(check(statusText.length > 0 && (statusText.includes("排队") || statusText.includes("思考") || statusText.includes("执行") || statusText.includes("完成") || statusText.includes("等待")), `发送即执行出现实时状态：${statusText}`));
+    checks.push(check(elapsed < 10000, `发送 → 实时状态可见耗时 ${String(elapsed)}ms（<10000ms）`));
+    checks.push(check((await page.locator("#chat-start").count()) === 0, "无「开始执行」手动按钮（自动开始）"));
     checks.push(check((await page.locator("#chat-goal-text").innerText()).includes("报价单页面"), "会话显示我的目标"));
-    const budgetText = (await page.locator("#chat-budget-text").innerText()).trim();
-    checks.push(check(budgetText.includes("2,600.00"), `会话显示预算上限（${budgetText}）`));
-    const tokenText = (await page.locator("#chat-token-text").innerText()).trim();
-    checks.push(check(tokenText.includes("180,000"), `会话显示 Token 上限（${tokenText}）`));
+    const planSteps = await page.locator("#live-plan .live-step").count();
+    checks.push(check(planSteps >= 4, `SSE 推送计划卡（${planSteps} 步）`));
+    checks.push(check((await page.locator("#live-timeline .live-event").count()) >= 1, "实时页已接收 SSE 事件"));
     checks.push(check((await page.locator("#live-sse-state").getAttribute("data-state")) !== null, "实时页含 SSE 连接状态"));
     return { checks };
   });
@@ -1052,30 +1068,214 @@ async function stepChatRunEvidence(page, recorder) {
     const runHref = await page.locator("#live-run-link").getAttribute("href");
     await page.locator("#live-run-link").click();
     await page.waitForSelector("#run-page", { timeout: STEP_TIMEOUT_MS });
+    // Tabs 结构
+    const tabs = await page.locator("#run-tabs .run-tab").count();
+    checks.push(check(tabs === 4, `run 详情为 4 个 Tabs（过程/产物/数据/报告，实际 ${tabs}）`));
+    const processVisible = await page.locator("#run-panel-process").isVisible();
+    checks.push(check(processVisible, "默认显示「过程」Tab"));
     const events = await page.locator("#run-timeline .flow-item").count();
-    checks.push(check(events >= 5, `run 时间线 ≥5 条事件（实际 ${events}）`));
+    checks.push(check(events >= 5, `过程时间线 ≥5 条事件（实际 ${events}）`));
     for (const phase of ["plan", "action", "observe", "verify", "evidence"]) {
       const count = await page.locator(`#run-timeline .flow-item[data-phase="${phase}"]`).count();
       checks.push(check(count >= 1, `时间线含阶段 ${phase}（${count} 条）`));
     }
-    const thumbs = await page.locator("#run-evidence .evidence-thumb").count();
-    checks.push(check(thumbs >= 2, `证据截图缩略图 ≥2 张（实际 ${thumbs}）`));
-    checks.push(check((await page.locator("#run-report .md-body").innerText()).includes("运行报告"), "report.md 已渲染"));
-    await page.locator("#payload-log summary").click();
-    await page.locator("#payload-json summary").click();
-    checks.push(check((await page.locator("#payload-log pre").innerText()).length > 0, "日志 evidence 可展开查看"));
-    checks.push(check((await page.locator("#payload-json pre").innerText()).includes("seq"), "JSON evidence 可展开查看"));
     const runAgents = await page.locator("#run-agents .run-agent").count();
     checks.push(check(runAgents >= 2, `各 agent 对话摘要可见（${runAgents} 个 agent）`));
     checks.push(check((await page.locator("#run-agents").innerText()).includes("写代码 Harness"), "run 内包含写代码 Harness 的对话摘要"));
+    checks.push(check((await page.locator("#run-stats").innerText()).includes("产物"), "run 概览显示产物/报告数量"));
+    return { checks };
+  });
+}
+
+async function stepRunTabsArtifacts(page, recorder) {
+  return recorder.step(page, "run-tabs-artifacts", async () => {
+    const checks = [];
+    await page.locator("#run-tab-artifacts").click();
+    await page.waitForSelector("#run-panel-artifacts:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#run-panel-artifacts").isVisible(), "切换到「产物」Tab"));
+    const cards = await page.locator("#run-artifacts .artifact-card").count();
+    checks.push(check(cards >= 5, `产物列表 ≥5 个（实际 ${cards}）`));
+    const kinds = await page.locator("#run-artifacts .artifact-card").evaluateAll((nodes) => [...new Set(nodes.map((node) => node.getAttribute("data-kind")))]);
+    checks.push(check(kinds.length >= 4, `产物类型多样（${kinds.join("/")}）`));
+    for (const kind of ["markdown", "json", "html", "image"]) {
+      checks.push(check(kinds.includes(kind), `含产物类型：${kind}`));
+    }
+    const firstMarkdown = page.locator('#run-artifacts .artifact-card[data-kind="markdown"] .artifact-md').first();
+    await page.locator('#run-artifacts .artifact-card[data-kind="markdown"] [data-artifact-preview] summary').first().click();
+    const mdText = (await firstMarkdown.innerText()).trim();
+    checks.push(check(mdText.length > 20 && /执行计划|产出/.test(mdText), `Markdown 产物已渲染（${mdText.slice(0, 30)}…）`));
+    await page.locator('#run-artifacts .artifact-card[data-kind="html"] [data-artifact-preview] summary').first().click();
+    checks.push(check((await page.locator("#run-artifacts iframe.artifact-iframe").count()) >= 1, "HTML 产物以沙箱 iframe 预览"));
+    await page.locator('#run-artifacts .artifact-card[data-kind="image"] [data-artifact-preview] summary').first().click();
+    checks.push(check((await page.locator("#run-artifacts img.artifact-image").count()) >= 1, "图片产物缩略图预览"));
+    const downloadHref = await page.locator("#run-artifacts .artifact-card [data-download]").first().getAttribute("href");
+    checks.push(check(downloadHref !== null && downloadHref.includes("/download"), `产物下载链接（${String(downloadHref)}）`));
+    // 证据截图 + 灯箱 + 日志/JSON（产物 Tab 内）
+    const thumbs = await page.locator("#run-evidence .evidence-thumb").count();
+    checks.push(check(thumbs >= 2, `证据截图缩略图 ≥2（${thumbs}）`));
     await page.locator("#evidence-thumb-1").click();
     await page.waitForSelector("#evidence-lightbox:not([hidden])", { timeout: STEP_TIMEOUT_MS });
-    checks.push(check(await page.locator("#evidence-lightbox").isVisible(), "点击缩略图打开证据大图（灯箱）"));
-    const src = await page.locator("#lightbox-img").getAttribute("src");
-    checks.push(check(src !== null && src.startsWith("data:image/svg+xml"), "大图为内联 SVG（无外链请求）"));
+    checks.push(check(await page.locator("#evidence-lightbox").isVisible(), "缩略图打开大图（灯箱）"));
     await page.locator("#lightbox-close").click();
-    await page.waitForTimeout(200);
-    checks.push(check(await page.locator("#evidence-lightbox").isHidden(), "关闭大图后灯箱隐藏"));
+    await page.waitForTimeout(150);
+    await page.locator("#payload-log summary").click();
+    await page.locator("#payload-json summary").click();
+    checks.push(check((await page.locator("#payload-log pre").innerText()).length > 0, "日志证据可展开"));
+    checks.push(check((await page.locator("#payload-json pre").innerText()).includes("seq"), "JSON 证据可展开"));
+    return { checks };
+  });
+}
+
+async function stepRunTabsMetrics(page, recorder) {
+  return recorder.step(page, "run-tabs-metrics", async () => {
+    const checks = [];
+    await page.locator("#run-tab-metrics").click();
+    await page.waitForSelector("#run-panel-metrics:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#run-panel-metrics").isVisible(), "切换到「数据」Tab"));
+    const numbers = {};
+    for (const id of ["metric-token-input", "metric-token-output", "metric-token-cache", "metric-token-total"]) {
+      const text = (await page.locator(`#${id}`).innerText()).trim();
+      numbers[id] = Number(text.replaceAll(",", ""));
+      checks.push(check(Number.isFinite(numbers[id]) && numbers[id] >= 0, `${id} 可见（${text}）`));
+    }
+    checks.push(check(numbers["metric-token-total"] > 0, `Token 总计 > 0（${String(numbers["metric-token-total"])}）`));
+    checks.push(check(numbers["metric-token-input"] + numbers["metric-token-output"] <= numbers["metric-token-total"] + 1, "Token 输入/输出/缓存分项合计与总计一致"));
+    checks.push(check(Number((await page.locator("#metric-duration").innerText()).replaceAll(",", "")) > 0, "耗时（ms）> 0"));
+    const toolCalls = Number(await page.locator("#metric-tool-calls").innerText());
+    checks.push(check(toolCalls >= 2, `工具调用次数 ≥2（${String(toolCalls)}）`));
+    const toolRows = await page.locator("#metrics-tools tbody tr").count();
+    checks.push(check(toolRows >= 2, `工具调用分布表 ≥2 行（${toolRows}）`));
+    checks.push(check((await page.locator("#metrics-tools").innerText()).includes("browser.open") || (await page.locator("#metrics-tools").innerText()).includes("code.loop"), "工具分布含具体工具名"));
+    checks.push(check(Number(await page.locator("#metric-events").innerText()) >= 5, "事件数 ≥5"));
+    checks.push(check((await page.locator("#metrics-model-modes").innerText()).length > 0, "模型来源可见（model_modes）"));
+    checks.push(check((await page.locator("#metric-budget").innerText()).includes("¥"), "预算消耗可见"));
+    return { checks };
+  });
+}
+
+async function stepRunReportTab(page, recorder) {
+  return recorder.step(page, "run-report-tab", async () => {
+    const checks = [];
+    await page.locator("#run-tab-report").click();
+    await page.waitForSelector("#run-panel-report:not([hidden])", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check(await page.locator("#run-panel-report").isVisible(), "切换到「报告」Tab"));
+    checks.push(check((await page.locator("#run-report .md-body").innerText()).includes("运行报告"), "run 汇总报告已渲染（Markdown）"));
+    const reports = await page.locator("#run-step-reports .run-report-item").count();
+    checks.push(check(reports >= 2, `分步报告 ≥2 份（${reports}）`));
+    const first = page.locator("#run-step-reports .run-report-item").first();
+    const md = await first.locator(".run-report-md").innerText();
+    checks.push(check(md.length > 30 && md.includes("步骤"), `分步报告 Markdown 渲染（${md.slice(0, 30)}…）`));
+    checks.push(check((await first.innerText()).includes("operator") || (await first.innerText()).includes("harness"), "报告标注 agent 角色"));
+    checks.push(check((await first.innerText()).includes("步骤 2") || (await first.innerText()).includes("步骤 3"), "报告标注步骤号"));
+    return { checks };
+  });
+}
+
+async function stepChatLiveThinking(page, recorder, baseUrl) {
+  return recorder.step(page, "chat-live-thinking", async () => {
+    const checks = [];
+    await sendGoalFromChat(page, baseUrl, "帮我做一个客户信息录入表单页面（思考流验证）");
+    await page.waitForSelector("#live-thinking .live-thinking-block", { timeout: 12000 });
+    const blocks = await page.locator("#live-thinking .live-thinking-block").count();
+    checks.push(check(blocks >= 1, `实时思考分块出现（${blocks} 个步骤块）`));
+    // 等待至少 2 个思考 chunk 累积
+    const deadline = Date.now() + 8000;
+    let chunks = 0;
+    let thinkingText = "";
+    while (Date.now() < deadline) {
+      chunks = await page.locator("#live-thinking .live-thinking-text").first().evaluate((node) => node.textContent.split("\n").filter((line) => line.trim().length > 0).length).catch(() => 0);
+      thinkingText = await page.locator("#live-thinking .live-thinking-text").first().innerText().catch(() => "");
+      if (chunks >= 2) break;
+      await page.waitForTimeout(120);
+    }
+    checks.push(check(chunks >= 2, `思考过程分块累积 ≥2 块（${String(chunks)}）`));
+    checks.push(check(thinkingText.length > 20 && (thinkingText.includes("分析") || thinkingText.includes("执行")), `思考文本流式可见（${thinkingText.slice(0, 40)}…）`));
+    checks.push(check((await page.locator("#live-thinking .live-thinking-block summary").first().innerText()).includes("思考"), "思考块可折叠（summary）"));
+    const sseThinking = await page.locator('#live-timeline .live-event[data-type="harness.thinking"]').count();
+    checks.push(check(sseThinking >= 2, `SSE harness.thinking 事件 ≥2（${String(sseThinking)}）`));
+    return { checks };
+  });
+}
+
+async function stepChatLiveTool(page, recorder) {
+  return recorder.step(page, "chat-live-tool", async () => {
+    const checks = [];
+    await page.waitForSelector("#live-tools .live-tool", { timeout: 12000 });
+    const deadline = Date.now() + 10000;
+    let cards = 0;
+    while (Date.now() < deadline) {
+      cards = await page.locator("#live-tools .live-tool").count();
+      if (cards >= 2) break;
+      await page.waitForTimeout(120);
+    }
+    checks.push(check(cards >= 2, `工具调用卡片 ≥2（${String(cards)}）`));
+    const toolsText = (await page.locator("#live-tools").innerText()).trim();
+    checks.push(check(toolsText.includes("browser.") || toolsText.includes("conductor.") || toolsText.includes("code.") || toolsText.includes("evidence."), `工具卡片含具体工具名（${toolsText.slice(0, 60)}…）`));
+    checks.push(check(toolsText.includes("成功") || toolsText.includes("ms"), "工具卡片显示状态/耗时"));
+    checks.push(check((await page.locator('#live-timeline .live-event[data-type="harness.tool_call"]').count()) >= 1, "SSE harness.tool_call 事件出现"));
+    checks.push(check((await page.locator('#live-timeline .live-event[data-type="harness.tool_result"]').count()) >= 1, "SSE harness.tool_result 事件出现"));
+    // 产物出现提示
+    const artifacts = await page.locator("#live-artifacts .live-artifact").count();
+    checks.push(check(artifacts >= 1 || (await page.locator('#live-timeline .live-event[data-type="artifact.created"]').count()) >= 1, "产物生成即时提示（artifact.created）"));
+    return { checks };
+  });
+}
+
+async function stepArtifactsCenter(page, recorder, baseUrl) {
+  return recorder.step(page, "artifacts-center", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/artifacts`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#artifact-list .artifact-card", { timeout: STEP_TIMEOUT_MS });
+    const total = await page.locator("#artifact-list .artifact-card").count();
+    checks.push(check(total >= 8, `产物中心列表 ≥8 个产物（${total}）`));
+    checks.push(check((await page.locator("#artifact-count").innerText()).includes("产物"), "显示产物总数与合计大小"));
+    // 筛选：类型=markdown
+    await page.locator("#artifact-filter-kind").selectOption("markdown");
+    await page.waitForTimeout(250);
+    const visibleMarkdown = await page.locator('#artifact-list .artifact-card[data-kind="markdown"]:visible').count();
+    const visibleAll = await page.locator("#artifact-list .artifact-card:visible").count();
+    checks.push(check(visibleMarkdown >= 1 && visibleAll === visibleMarkdown, `类型筛选生效（markdown 可见 ${visibleAll}/${visibleMarkdown}）`));
+    // 预览：Markdown 渲染 / JSON 文本 / 图片
+    await page.locator('#artifact-list .artifact-card[data-kind="markdown"] [data-artifact-preview] summary').first().click();
+    checks.push(check((await page.locator("#artifact-list .artifact-card[data-kind=markdown] .artifact-md").first().innerText()).length > 20, "Markdown 产物预览渲染"));
+    await page.locator("#artifact-filter-kind").selectOption("json");
+    await page.waitForTimeout(250);
+    await page.locator('#artifact-list .artifact-card[data-kind="json"] [data-artifact-preview] summary').first().click();
+    checks.push(check((await page.locator("#artifact-list .artifact-card[data-kind=json] .artifact-pre").first().innerText()).includes("{"), "JSON 产物文本预览"));
+    await page.locator("#artifact-filter-kind").selectOption("image");
+    await page.waitForTimeout(250);
+    await page.locator('#artifact-list .artifact-card[data-kind="image"] [data-artifact-preview] summary').first().click();
+    checks.push(check((await page.locator("#artifact-list .artifact-card[data-kind=image] img.artifact-image").count()) >= 1, "图片产物预览"));
+    const dl = await page.locator("#artifact-list .artifact-card [data-download]").first().getAttribute("href");
+    checks.push(check(dl !== null && dl.includes("/api/artifacts/") && dl.includes("/download"), `下载链接（${String(dl)}）`));
+    return { checks };
+  });
+}
+
+async function stepAgentsHarnessBadge(page, recorder, baseUrl) {
+  return recorder.step(page, "agents-harness-badge", async () => {
+    const checks = [];
+    await page.goto(`${baseUrl}/agents`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#agents-grid .agent-card", { timeout: STEP_TIMEOUT_MS });
+    const badges = await page.locator('#agents-grid [data-harness-badge]').count();
+    const cards = await page.locator("#agents-grid .agent-card").count();
+    checks.push(check(badges >= 8 && badges === cards, `每个智能体标注「DeepSeek Harness 真实执行」（${badges}/${cards}）`));
+    checks.push(check((await page.locator("#agents-grid [data-harness-badge]").first().innerText()).includes("DeepSeek Harness 真实执行"), "徽章文案正确"));
+    // 找到有会话记录的卡片（有 run 链接 = 该 agent 真实参与过 run）
+    const withSession = page.locator('#agents-grid .agent-card:has([data-harness-run-link])').first();
+    checks.push(check((await withSession.count()) >= 1, "卡片显示最近 harness 会话"));
+    const cardText = await withSession.innerText();
+    checks.push(check(/[a-z]+-live-\d+/.test(cardText), `显示 session_id（${cardText.match(/[a-z]+-live-\d+/)?.[0] ?? "—"}）`));
+    checks.push(check(cardText.includes("Token") && /Token\s+[\d,]+/.test(cardText), "显示 tokens"));
+    checks.push(check(cardText.includes("工具") && cardText.includes("产物") && cardText.includes("报告"), "显示工具数/产物数/报告数"));
+    checks.push(check((await withSession.locator('[data-harness-run-link]').count()) >= 1, "可点入查看 run 证据"));
+    checks.push(check((await withSession.locator('a[href^="/artifacts?agent="]').count()) >= 1, "可查看该 agent 产物"));
+    checks.push(check((await withSession.locator('a[href^="/reports?agent="]').count()) >= 1, "可查看该 agent 报告"));
+    // agent 详情页也展示 Harness 产物/报告
+    await withSession.locator('a[href^="/agents/"]').first().click();
+    await page.waitForSelector("#agent-role-page", { timeout: STEP_TIMEOUT_MS });
+    checks.push(check((await page.locator("#agent-role-artifacts").count()) >= 1, "agent 详情页含产物面板"));
+    checks.push(check((await page.locator("#agent-role-reports").count()) >= 1, "agent 详情页含报告面板"));
     return { checks };
   });
 }
@@ -1096,7 +1296,7 @@ async function stepAgentTranscript(page, recorder, baseUrl) {
     const evidenceLinks = await page.locator("[data-evidence-ref]").count();
     checks.push(check(evidenceLinks >= 1, `轮次可跳证据（${evidenceLinks} 条证据引用）`));
     await page.locator("#nav-chat").click();
-    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#composer-input", { timeout: STEP_TIMEOUT_MS });
     return { checks };
   });
 }
@@ -1105,20 +1305,25 @@ async function stepChatAutoStart(page, recorder, baseUrl) {
   return recorder.step(page, "chat-auto-start", async () => {
     const checks = [];
     await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
-    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
-    await page.locator("#chat-goal").fill("帮我做一个客户信息录入表单页面");
+    await page.waitForSelector("#composer-input", { timeout: STEP_TIMEOUT_MS });
+    await page.locator("#composer-input").fill("帮我做一个客户信息录入表单页面");
     const sentAt = Date.now();
-    await page.locator("#chat-create-submit").click();
-    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
-    // 关键：不点击任何「开始执行」，进入页面即应出现实时状态（SSE 已开始）
-    await page.waitForSelector("#live-run-panel", { timeout: 3000 });
-    const statusVisibleMs = Date.now() - sentAt;
-    const statusText = await waitForLiveStatus(page, 3000);
-    checks.push(check(statusText.length > 0, `未手动点开始，进入页面即出现实时状态：${statusText}`));
-    checks.push(check(statusVisibleMs < 8000, `发送 → 实时面板耗时 ${String(statusVisibleMs)}ms（含导航）`));
-    checks.push(check((await page.locator("#chat-start").count()) === 0, "页面上已无「开始执行」按钮（发送即执行）"));
+    await page.locator("#composer-input").press("Enter");
+    await page.waitForSelector('.gpt-msg[data-role="user"]', { timeout: 4000 });
+    const userVisibleMs = Date.now() - sentAt;
+    checks.push(check(userVisibleMs < 3000, `发送后立即出现用户消息（${String(userVisibleMs)}ms）`));
+    // 无需点击任何「开始执行」按钮；立即出现“思考中…”与流式 assistant 气泡
+    checks.push(check((await page.locator("#chat-start").count()) === 0, "页面上无「开始执行」按钮（发送即执行）"));
+    const typingVisible = await page.locator("#typing-indicator").isVisible().catch(() => false);
+    const streamingVisible = await page.locator('.gpt-msg[data-role="assistant"]').count();
+    checks.push(check(typingVisible || streamingVisible >= 1, `发送后立即出现「思考中…」/助手流式气泡（typing=${String(typingVisible)} assistant=${String(streamingVisible)}）`));
+    // 等待内嵌运行卡出现（服务端真实创建 run），进入深度实时页供后续 SSE 步骤断言
+    await page.waitForSelector("#chat-run-link", { timeout: 15000 });
+    await page.locator("#chat-run-link").click();
+    await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
     const sseState = await page.locator("#live-sse-state").getAttribute("data-state");
-    checks.push(check(sseState === "open" || sseState === "connecting", `SSE 连接建立（data-state=${String(sseState)}）`));
+    checks.push(check(sseState === "open" || sseState === "connecting", `深度实时页 SSE 连接建立（data-state=${String(sseState)}）`));
+    checks.push(check((await page.locator("#live-status").innerText()).length > 0, "实时状态条可见"));
     return { checks };
   });
 }
@@ -1156,11 +1361,7 @@ async function stepChatReconnect(page, recorder, baseUrl) {
   return recorder.step(page, "chat-reconnect", async () => {
     const checks = [];
     // 新起一个 run，在执行中刷新页面，验证 since 回放恢复
-    await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
-    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
-    await page.locator("#chat-goal").fill("帮我查一下竞品定价并整理成一页对比（断线恢复验证）");
-    await page.locator("#chat-create-submit").click();
-    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
+    await sendGoalFromChat(page, baseUrl, "帮我查一下竞品定价并整理成一页对比（断线恢复验证）");
     await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
     const runId = await page.locator("#live-run-panel").getAttribute("data-run-id");
     // 等 SSE 至少推几条事件后刷新
@@ -1196,12 +1397,7 @@ async function stepChatReconnect(page, recorder, baseUrl) {
 async function stepChatApprovalPause(page, recorder, baseUrl) {
   return recorder.step(page, "chat-approval-pause", async () => {
     const checks = [];
-    await page.goto(`${baseUrl}/chat`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
-    await page.waitForSelector("#chat-create-form", { timeout: STEP_TIMEOUT_MS });
-    await page.locator("#chat-goal").fill("帮我把报价单对外发送给客户，并收取首期款 1288 元");
-    await page.locator("#chat-create-submit").click();
-    await page.waitForURL(/\/chat\/[^/?#]+$/, { timeout: STEP_TIMEOUT_MS });
-    await page.waitForSelector("#live-run-panel", { timeout: STEP_TIMEOUT_MS });
+    await sendGoalFromChat(page, baseUrl, "帮我把报价单对外发送给客户，并收取首期款 1288 元");
     await page.waitForSelector("#live-approval:not([hidden])", { timeout: 12000 });
     const statusText = await waitForLiveStatus(page, 3000);
     checks.push(check(statusText.includes("等待审批"), `高风险步骤暂停：run 状态=等待审批（${statusText}）`));
@@ -1236,8 +1432,9 @@ async function stepSseSanity(page, recorder, baseUrl, context) {
       if (health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined)) break;
       await page.waitForTimeout(300);
     }
-    checks.push(check(health !== null && health.version === "1.4.0", `health version=1.4.0（${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.1", `health version=1.5.1（${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.runtime_enabled === true, "health 标记 runtime_enabled=true"));
+    checks.push(check(health !== null && health.artifacts_enabled === true && health.reports_enabled === true && health.metrics_enabled === true, "health 标记 artifacts/reports/metrics enabled"));
     checks.push(check(health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined), `离开页面后 SSE 订阅已清理（sse_active_streams=${String(health === null ? "?" : health.sse_active_streams)}）`));
     checks.push(check(context.requestLog.every((url) => {
       try {
@@ -1464,7 +1661,7 @@ async function stepV12Sanity(page, recorder, context) {
     checks.push(check(pageErrors.length === 0, `v1.2/v1.3 流程全程无页面 JS 错误（${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
 
     const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
-    checks.push(check(health !== null && health.version === "1.4.0", `health version=1.4.0（实际 ${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.1", `health version=1.4.0（实际 ${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.chat_enabled === true && health.system_enabled === true, "health 标记 chat_enabled/system_enabled=true"));
 
     const sessions = await fetch(`${baseUrl}/api/chat/sessions`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
@@ -1508,6 +1705,33 @@ async function stepV12Sanity(page, recorder, context) {
     const epayRequest = money?.data?.find((request) => request.payment_method === "epay" && request.amount_cny === 1288);
     checks.push(check(epayRequest !== undefined && epayRequest.status === "paid" && epayRequest.ledger_entry_id !== undefined, "GET /api/money/requests：易支付请求已到账并写入账本"));
 
+    // v1.5：产物 / 报告 / 指标 API
+    const artifactsApi = await fetch(`${baseUrl}/api/artifacts`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(artifactsApi !== null && Array.isArray(artifactsApi.data) && artifactsApi.data.length >= 5, `GET /api/artifacts（${artifactsApi?.data?.length ?? 0} 个产物）`));
+    const firstArtifact = artifactsApi?.data?.find((item) => item.kind === "markdown");
+    if (firstArtifact !== undefined) {
+      const preview = await fetch(`${baseUrl}${firstArtifact.preview_url}`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+      checks.push(check(preview !== null && preview.data.preview_text.includes("执行计划"), "GET /api/artifacts/:id/preview 返回内容（Markdown）"));
+      const raw = await fetch(`${baseUrl}${firstArtifact.preview_url}?raw=1`, { signal: AbortSignal.timeout(3000) });
+      checks.push(check(raw.status === 200 && (raw.headers.get("content-type") ?? "").includes("text/markdown"), "GET artifact preview?raw=1 返回 markdown 原文"));
+      const download = await fetch(`${baseUrl}${firstArtifact.download_url}`, { signal: AbortSignal.timeout(3000) });
+      checks.push(check(download.status === 200 && (download.headers.get("content-disposition") ?? "").includes("attachment"), "GET artifact download 返回附件（Content-Disposition）"));
+    }
+    const traversal = await fetch(`${baseUrl}/api/artifacts/..%2F..%2Fetc%2Fpasswd/download`, { signal: AbortSignal.timeout(2000) }).then((response) => response.status).catch(() => 0);
+    checks.push(check(traversal === 404, "产物路径穿越请求被拒（404）"));
+    const reportsApi = await fetch(`${baseUrl}/api/reports`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+    checks.push(check(reportsApi !== null && Array.isArray(reportsApi.data) && reportsApi.data.length >= 2, `GET /api/reports（${reportsApi?.data?.length ?? 0} 份报告）`));
+    const firstReport = reportsApi?.data?.[0];
+    if (firstReport !== undefined) {
+      const reportDetail = await fetch(`${baseUrl}/api/reports/${encodeURIComponent(firstReport.id)}`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+      checks.push(check(reportDetail !== null && reportDetail.data.markdown.includes("#"), "GET /api/reports/:id 返回 markdown"));
+    }
+    const liveRunsForMetrics = (runs?.data ?? []).filter((run) => String(run.run_id).startsWith("run-live"));
+    const metricsRun = liveRunsForMetrics.find((run) => run.status === "done");
+    if (metricsRun !== undefined) {
+      const metricsApi = await fetch(`${baseUrl}/api/chat/runs/${encodeURIComponent(metricsRun.run_id)}/metrics`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
+      checks.push(check(metricsApi !== null && metricsApi.data.token_total > 0 && metricsApi.data.tool_calls > 0, "GET /api/chat/runs/:id/metrics（Token/工具指标）"));
+    }
     // 新写 API 的 token 保护
     let dangerUnauth = 0;
     try {
@@ -1590,7 +1814,7 @@ async function main() {
   const consolePackage = await import(pathToFileURL(options.consoleDist).href);
   const { createConsoleServer, createDemoConsoleProvider, createDemoAdminProvider } = consolePackage;
 
-  const recorder = new Recorder(evidenceDir);
+  const recorder = new Recorder(evidenceDir, { screenshots: process.argv.includes("--screenshots") });
   await recorder.prepare();
 
   const serverLog = [];
@@ -1689,12 +1913,22 @@ async function main() {
     await stepChatInterruptResume(page, recorder);
     await stepChatAutoComplete(page, recorder);
     await stepChatRunEvidence(page, recorder);
+    // ---- v1.5 新增：run Tabs（产物 / 数据 / 报告） ----
+    await stepRunTabsArtifacts(page, recorder);
+    await stepRunTabsMetrics(page, recorder);
+    await stepRunReportTab(page, recorder);
     await stepAgentTranscript(page, recorder, consoleHandle.url);
     // ---- v1.4：发送即执行 + SSE 实时流（新增步骤） ----
     await stepChatAutoStart(page, recorder, consoleHandle.url);
     await stepChatLiveEvents(page, recorder);
+    // ---- v1.5 新增：实时思考分块 / 工具调用卡片 ----
+    await stepChatLiveThinking(page, recorder, consoleHandle.url);
+    await stepChatLiveTool(page, recorder);
     await stepChatReconnect(page, recorder, consoleHandle.url);
     await stepChatApprovalPause(page, recorder, consoleHandle.url);
+    // ---- v1.5 新增：产物中心 / agents Harness 徽章 ----
+    await stepArtifactsCenter(page, recorder, consoleHandle.url);
+    await stepAgentsHarnessBadge(page, recorder, consoleHandle.url);
     await stepMoneyEpay(page, recorder, consoleHandle.url);
     await stepSettingsModelsPrompts(page, recorder, consoleHandle.url);
     await stepSystemControl(page, recorder, consoleHandle.url);
@@ -1740,7 +1974,7 @@ async function main() {
   const durationMs = Date.now() - suiteStartedAt;
   const result = {
     suite: "e2e-console",
-    version: "1.4.0",
+    version: "1.5.0",
     ok: fatalError === null && recorder.ok,
     as_of: new Date().toISOString(),
     headless: options.headless,

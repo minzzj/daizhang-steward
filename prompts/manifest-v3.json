@@ -1,0 +1,84 @@
+{
+  "version": "3.0.0",
+  "updated": "2026-10-30",
+  "description": "v1.5 真实 DeepSeek Harness 代理提示词（11 角色：supervisor + conductor + 9 专项）",
+  "prompts": [
+    {
+      "id": "supervisor",
+      "file": "v3/supervisor.md",
+      "version": "supervisor@3.0.0",
+      "sha256": "5c14c1ffe8cef0c43edbbbf63a764235c4ea09418e0467a81a7f7fa0b81454f5",
+      "bytes": 6823
+    },
+    {
+      "id": "conductor",
+      "file": "v3/conductor.md",
+      "version": "conductor@3.0.0",
+      "sha256": "b98f633f5b912097af030f5083a79b51afecd5a73911ddda24c0203517c6b2b5",
+      "bytes": 6728
+    },
+    {
+      "id": "operator",
+      "file": "v3/operator.md",
+      "version": "operator@3.0.0",
+      "sha256": "225598e18e6e7160272d47086f9db0805e3294bd6667f2bd36b810f41b1b3390",
+      "bytes": 6585
+    },
+    {
+      "id": "harness",
+      "file": "v3/harness.md",
+      "version": "harness@3.0.0",
+      "sha256": "681cce94bddeb59bd5dcbc0b43da4d5859335257228556cef4b9ad69cb9a7170",
+      "bytes": 6445
+    },
+    {
+      "id": "customer",
+      "file": "v3/customer.md",
+      "version": "customer@3.0.0",
+      "sha256": "22beca327b6591072ba033cfaf14eb14c6b4c3d1e16cd0e08801b88ba7a62ebd",
+      "bytes": 6136
+    },
+    {
+      "id": "finance",
+      "file": "v3/finance.md",
+      "version": "finance@3.0.0",
+      "sha256": "957e77bc4dff50a0545f1ee245e253e9acf49ea12254eb2b5d9655d1b7faf98d",
+      "bytes": 6485
+    },
+    {
+      "id": "reviewer",
+      "file": "v3/reviewer.md",
+      "version": "reviewer@3.0.0",
+      "sha256": "aa58b6eac5606e925892075791ddaa28f7d48d070fdb570479959f0f57adbd57",
+      "bytes": 6481
+    },
+    {
+      "id": "backend",
+      "file": "v3/backend.md",
+      "version": "backend@3.0.0",
+      "sha256": "cc7dbb171522804392748424eef0fe594902c12017c906c10f8501055f11e084",
+      "bytes": 6343
+    },
+    {
+      "id": "scout",
+      "file": "v3/scout.md",
+      "version": "scout@3.0.0",
+      "sha256": "5e4b4ebe91f02d5934e543d3152c8fb590f0be82ef3fb44396f664d64d56bc63",
+      "bytes": 6467
+    },
+    {
+      "id": "content",
+      "file": "v3/content.md",
+      "version": "content@3.0.0",
+      "sha256": "2b88727035da681cf9bbe9d7c0dd17a1d3110b91253e164ba8978c6cf12bf800",
+      "bytes": 6236
+    },
+    {
+      "id": "research",
+      "file": "v3/research.md",
+      "version": "research@3.0.0",
+      "sha256": "3f4add1ec76b8b95f7a5843001b70786bf498ef7a2251cf0425ce8dc66711130",
+      "bytes": 6299
+    }
+  ]
+}

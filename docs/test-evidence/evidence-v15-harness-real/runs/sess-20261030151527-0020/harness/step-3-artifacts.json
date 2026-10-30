@@ -1,0 +1,28 @@
+{
+  "session_id": "sess-20261030151527-0020",
+  "step": 3,
+  "role": "operator",
+  "artifacts": [
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-3-operator\\note.md",
+      "source_rel": "note.md",
+      "kind": "markdown",
+      "size": 8,
+      "sha256": "9e8b62f81ea5c66fa06ee53da032751386b37702153070c0e14dd1d316282fa7"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-3-operator\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 2861,
+      "sha256": "82431f0d9409095d2277ba1fd97b8143de432e062cb04a576cb6a1e58dc3c04f"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-3-operator\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 22003,
+      "sha256": "592bc1296ce442a8b10f82af0bed4d839f4491f3de90bb3a0cac3b9f62736070"
+    }
+  ]
+}

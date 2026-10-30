@@ -499,3 +499,12 @@ GitHub 认证、非商用许可预期、法律边界需人工复核、额度控�
 - **系统总控扩展**：受管工作区文件/目录、打开应用/URL、服务状态、定时任务、受管程序安装/卸载（备份+确认+审计）。
 - 验证：339/339 单测；真实浏览器 E2E 31 步/338 检查/35 截图；CI Windows+Ubuntu 全绿；Release v1.4.0（含证据资产）。
 - 文档：docs/{zh-CN,en}/runtime.md、docs/RELEASE_NOTES_v1.4.0.md；证据：docs/test-evidence/evidence-console-v14-*、evidence-v14-real。
+
+
+## v1.5.1（2026-10-30）— DeepSeek Harness Agents + ChatGPT 式对话总控
+
+- 10 个业务智能体换成真实 DeepSeek Harness 代理（thinking/工具/产物/report.md/证据，实时可见）。
+- `/chat` 重做为对话式总控：一个入口控制全部，AI 自己查系统/执行任务，危险动作只给审批卡；内嵌思考/工具/产物/报告/数据/审批卡片。
+- 长期记忆 + 多会话；`steward ai` CLI。
+- 404/404 单元测试；有头 Chrome E2E（对话 8 步、回归 38 步，0 截图）全绿。
+- 证据：`docs/test-evidence/evidence-v15-harness-real/`、`docs/test-evidence/evidence-v15.1/`。

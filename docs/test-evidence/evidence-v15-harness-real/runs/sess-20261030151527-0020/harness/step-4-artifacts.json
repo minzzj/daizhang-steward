@@ -1,0 +1,21 @@
+{
+  "session_id": "sess-20261030151527-0020",
+  "step": 4,
+  "role": "reviewer",
+  "artifacts": [
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-4-reviewer\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 7807,
+      "sha256": "78eaa8d525bada28fa376b7ba101c0ce78705371f6faedb40fa272982e76cb92"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-4-reviewer\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 24901,
+      "sha256": "75f4f952b66f1318c442583535917f28d323f21ea30a47a100e8e8302322cc17"
+    }
+  ]
+}

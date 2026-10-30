@@ -13,6 +13,30 @@
 - 企业专属 UI（企业看板/工作流页面）
 - 真实银行/税务/CA/电子签章系统对接
 
+## [1.5.1] — 2026-10-30
+
+### Added
+- **DeepSeek Harness 真实智能体**：新包 `steward-harness-runtime`（headless NDJSON 事件解析、思考/工具/产物/报告、并发池、超时/取消/回退、自动 report.md）；编排层注入 `agentExecutor`，10 个业务智能体优先真实 Harness 执行，证据写入 `runs/<sid>/harness/` 并实时推送。
+- **Harness 配置中心**：`harness` 设置（总开关/profile/dsh_bin/timeout/并发/产物保留/report_required/11 角色；supervisor 固定关闭）+ 11 agent harness 元数据（profile/workspace/tools）。
+- **专业提示词 v3**：`prompts/v3/` 11 篇真实代理提示词（工具使用/产物落盘/report.md/证据/角色专属产物/安全）；配置默认提示词、`HARNESS_AGENT_DIRECTIVE`、`composeHarnessPrompt`。
+- **对话式 AI 总控**：新包 `steward-chat`（18 类意图、查询 0 token、任务流式、危险动作只给审批卡、长期记忆、多会话）。
+- **控制台 `/chat` ChatGPT 式重做**：会话历史/记忆抽屉/内嵌 thinking·工具·产物·报告·数据·审批卡片、SSE 逐段渲染、9 个快捷查询；真实 Provider 接入。
+- **`steward ai` CLI**：`steward ai "..."` / `--history` / `--memory` / `--conversation` / `--delete-memory`，实时显示思考/工具/产物/报告/数据。
+- **真实数据读取层**：`harness-data`（产物/报告/metrics/内容/下载、去重、脱敏、路径穿越防护）；真实 Provider 接入 artifacts/reports/metrics API 与 harness 事件 SSE。
+- **测试**：新增 Harness 19 条、config 16 条、chat 19 条、harness-data 9 条（真实 run 证据 + 假数据混合）；总计 **404/404**。
+- 文档：`docs/zh-CN/harness.md`、`docs/en/harness.md`、`docs/zh-CN/conversation.md`、`docs/en/conversation.md`、`docs/RELEASE_NOTES_v1.5.1.md`。
+
+### Fixed
+- 真实密钥解析 bug：配置中心 `getApiKeyForProvider` 返回 `{ok,value}`，编排层按字符串判断导致误判无 key → 全部 `local_fallback`；已修复。
+- Harness 单步 Token 上限过低导致大任务阻断（20 万 → 可配，默认 200 万），且超限仍保留产物/报告/证据。
+- H: exFAT 上 Harness `write` 工具 EISDIR/rename 失败：工作区移至系统临时盘、ChatStore 原子写增加 rename 失败回退。
+- `steward runtime` 执行结束后进程偶发挂起：显式退出。
+- 产物列表重复、报告含本机绝对路径：去重 + 脱敏。
+
+### Changed
+- 版本 1.5.1；控制台 health 返回 `1.5.1`、`chat_engine_enabled`。
+- 控制台 E2E 默认不保存截图（按要求，仅 result.json/断言）。
+
 ## [1.4.0] — 2026-10-30
 
 ### Added

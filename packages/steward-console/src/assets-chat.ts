@@ -199,6 +199,79 @@ export const CHAT_CSS = `/* ===== v1.2：对话 ===== */
 .live-complete { padding: 10px 14px; border: 1px solid #bfe6d0; border-radius: 10px; background: #f2fbf6; }
 .live-complete[hidden] { display: none; }
 .live-complete-title { font-size: 14px; font-weight: 800; color: #0b6b3a; margin-bottom: 4px; }
+/* ===== v1.5：run Tabs / 产物 / 数据 / 报告 ===== */
+.run-tabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.run-tab { font: inherit; font-size: 13px; font-weight: 700; padding: 7px 14px; border-radius: 9px 9px 0 0; border: 1px solid transparent; border-bottom: none; background: transparent; color: #47536b; cursor: pointer; }
+.run-tab:hover { background: #f1f4fa; }
+.run-tab.active { background: #fff; border-color: var(--line); color: var(--brand); box-shadow: 0 2px 0 #fff; }
+.run-tab .tab-count { display: inline-block; min-width: 16px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: #eef1f8; color: #47536b; font-size: 10px; }
+.run-tab-panel { display: flex; flex-direction: column; gap: 14px; }
+.run-tab-panel .run-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.artifact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.artifact-card { border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 11px 13px; display: flex; flex-direction: column; gap: 7px; }
+.artifact-card[hidden] { display: none !important; }
+.artifact-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.artifact-kind { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: #eef1ff; color: #3b5bfd; }
+.artifact-kind.kind-html { background: #fff4e2; color: #8a5a00; }
+.artifact-kind.kind-markdown { background: #eef1ff; color: #3b5bfd; }
+.artifact-kind.kind-json, .artifact-kind.kind-data { background: #e8f7ee; color: #0f7a45; }
+.artifact-kind.kind-image { background: #f3edff; color: #6b3fd0; }
+.artifact-kind.kind-code { background: #eef7ff; color: #1c6aa8; }
+.artifact-title { font-size: 13px; }
+.artifact-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; }
+.artifact-preview summary { font-size: 11px; font-weight: 700; color: var(--brand); cursor: pointer; padding: 3px 0; }
+.artifact-md { max-height: 320px; overflow: auto; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcff; }
+.artifact-iframe { width: 100%; height: 300px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.artifact-image { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.artifact-pre { max-height: 280px; overflow: auto; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #0c1322; color: #dce6f5; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+.artifact-download { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--brand); }
+.artifact-run { margin: 0; font-size: 10px; }
+/* 数据指标 */
+.metrics-grid { display: flex; flex-direction: column; gap: 12px; }
+.metrics-cards, .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.metric-card { padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.metric-label { font-size: 11px; color: var(--muted); }
+.metric-value { font-size: 22px; font-weight: 800; margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
+.metric-bar { height: 6px; border-radius: 999px; background: #eef1f8; overflow: hidden; }
+.metric-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #3b5bfd, #66e3d2); }
+.metric-bar-cell { width: 40%; }
+.metric-bar-inline { display: block; height: 8px; border-radius: 999px; background: #c9d4ff; min-width: 4px; }
+.metrics-tables { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr); gap: 14px; align-items: start; }
+.metrics-side { font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+.metrics-side p { margin: 0; }
+/* 报告列表 */
+.run-report-item, .report-item { border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 11px 13px; margin-bottom: 10px; }
+.run-report-head, .report-item-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; margin-bottom: 6px; }
+.run-report-details summary, .report-details summary { font-size: 11px; font-weight: 700; color: var(--brand); cursor: pointer; padding: 3px 0; }
+.run-report-md, .report-md { margin-top: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcff; }
+/* 实时思考 / 工具 / 产物提示 */
+.live-streams { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 12px; }
+.live-thinking, .live-tools, .live-artifacts { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.live-thinking-block { border: 1px solid #eef1f7; border-radius: 8px; background: #fbfcff; padding: 6px 9px; }
+.live-thinking-block summary { font-size: 11px; font-weight: 800; color: #47536b; cursor: pointer; }
+.live-thinking-text { margin-top: 5px; white-space: pre-wrap; font-size: 12px; line-height: 1.6; color: #1d2738; max-height: 140px; overflow-y: auto; }
+.live-tool { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 6px 9px; border: 1px solid #eef1f7; border-radius: 8px; background: #fff; font-size: 12px; }
+.live-tool[data-status="running"] { border-color: #c9d4ff; background: #f4f6ff; }
+.live-tool[data-status="ok"] { border-color: #bfe6d0; background: #f2fbf6; }
+.live-tool[data-status="error"] { border-color: #f5c2bf; background: #fff5f4; }
+.live-tool-name { font-family: ui-monospace, monospace; font-weight: 700; font-size: 11px; }
+.live-tool-args { flex: 1; min-width: 120px; word-break: break-all; }
+.live-tool-status { font-size: 10px; font-weight: 700; color: #47536b; }
+.live-artifact, .live-report { display: block; padding: 6px 9px; border: 1px solid #eef1f7; border-radius: 8px; background: #fff; font-size: 12px; }
+.live-streams h3 { margin: 0 0 4px; font-size: 12px; color: #47536b; }
+.live-streams h3 .hint { font-weight: 400; color: var(--muted); margin-left: 6px; }
+/* 产物/报告中心 */
+.center-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
+.center-toolbar label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.center-toolbar .input { padding: 5px 8px; font-size: 12px; }
+/* agents harness */
+.agent-harness { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; padding: 9px 11px; border: 1px dashed #cfd9ff; border-radius: 9px; background: #fbfcff; }
+.agent-harness-badge { align-self: flex-start; font-size: 10px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: linear-gradient(90deg, #3b5bfd, #66e3d2); color: #fff; }
+.agent-harness-stats { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+.agent-harness-stats b { color: var(--ink); }
+.agent-harness-links { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; }
+.agent-harness-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 10px; }
+.agent-harness-meta b { color: var(--ink); }
 @media (max-width: 1100px) {
   .chat-layout { grid-template-columns: 1fr; }
   .chat-main-grid { grid-template-columns: 1fr; }
@@ -633,6 +706,16 @@ export const CHAT_JS = `(function () {
       text.textContent = '步骤 ' + String(data.step) + '：' + String(data.agent_title || data.agent_role || '') + ' / ' + String(data.action || '');
     } else if (event.type === 'plan.created') {
       text.textContent = '计划已生成：' + String((data.steps || []).length) + ' 步';
+    } else if (event.type === 'harness.thinking') {
+      text.textContent = String(data.agent_title || data.agent_role || 'agent') + ' 思考：' + String(data.text || data.chunk || '');
+    } else if (event.type === 'harness.tool_call') {
+      text.textContent = '工具调用 ' + String(data.tool || '') + ' ' + String(data.input || data.args_summary || '');
+    } else if (event.type === 'harness.tool_result') {
+      text.textContent = '工具结果 ' + String(data.tool || '') + '：' + String(data.status || '') + (data.duration_ms === undefined ? '' : ' · ' + String(data.duration_ms || 0) + 'ms') + ' ' + String(data.result_preview || '');
+    } else if (event.type === 'artifact.created') {
+      var artifactData = data.artifact || data; text.textContent = '产物生成：' + String(artifactData.title || artifactData.rel_path || '') + '（' + String(artifactData.kind || '') + '）';
+    } else if (event.type === 'report.created') {
+      var reportData = data.report || data; text.textContent = '报告生成：' + String(reportData.title || '');
     } else {
       text.textContent = String(data.summary || data.output_summary || data.error || JSON.stringify(data)).slice(0, 160);
     }
@@ -705,6 +788,11 @@ export const CHAT_JS = `(function () {
         if (link !== null) { link.href = '/runs/' + encodeURIComponent(live.runId); }
       }
     }
+    if (event.type === 'harness.thinking') { liveThinking(data); }
+    if (event.type === 'harness.tool_call') { liveTool(data, 'call'); }
+    if (event.type === 'harness.tool_result') { liveTool(data, 'result'); }
+    if (event.type === 'artifact.created') { liveArtifact(data); }
+    if (event.type === 'report.created') { liveReport(data); }
     if (event.type === 'run.failed') {
       liveStatus('failed');
       showError('live-error', '执行失败/阻塞：' + String(data.error || '未知错误'));
@@ -794,10 +882,188 @@ export const CHAT_JS = `(function () {
     }
   }
 
+  // ---- v1.5：run Tabs / 产物筛选 / 思考分块 / 工具卡片 -------------------
+  function initRunTabs() {
+    var tabs = document.querySelectorAll('#run-tabs .run-tab[data-tab]');
+    if (tabs.length === 0) { return; }
+    function activate(tabName) {
+      for (var index = 0; index < tabs.length; index++) {
+        var tab = tabs[index];
+        var isActive = tab.getAttribute('data-tab') === tabName;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      }
+      var panels = document.querySelectorAll('[data-tab-panel]');
+      for (var panelIndex = 0; panelIndex < panels.length; panelIndex++) {
+        var panel = panels[panelIndex];
+        panel.hidden = panel.getAttribute('data-tab-panel') !== tabName;
+      }
+    }
+    for (var index = 0; index < tabs.length; index++) {
+      (function (tab) {
+        tab.addEventListener('click', function () {
+          activate(tab.getAttribute('data-tab'));
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', '#' + tab.getAttribute('data-tab'));
+          }
+        });
+      })(tabs[index]);
+    }
+    var hash = String(window.location.hash || '').replace('#', '');
+    if (hash === 'artifacts' || hash === 'metrics' || hash === 'report' || hash === 'process') { activate(hash); }
+  }
+
+  function filterCards(cards, predicate) {
+    var visible = 0;
+    for (var index = 0; index < cards.length; index++) {
+      var card = cards[index];
+      var show = predicate(card);
+      card.hidden = !show;
+      if (show) { visible += 1; }
+    }
+    return visible;
+  }
+
+  function initArtifactFilters() {
+    var kind = byId('artifact-filter-kind');
+    var agent = byId('artifact-filter-agent');
+    var run = byId('artifact-filter-run');
+    var list = byId('artifact-list');
+    if (list === null) { return; }
+    function apply() {
+      var cards = list.querySelectorAll('.artifact-card');
+      var visible = filterCards(cards, function (card) {
+        var kindOk = kind === null || kind.value === '' || card.getAttribute('data-kind') === kind.value;
+        var agentOk = agent === null || agent.value === '' || card.getAttribute('data-agent') === agent.value;
+        var runOk = run === null || run.value === '' || card.getAttribute('data-run-id') === run.value;
+        return kindOk && agentOk && runOk;
+      });
+      var count = byId('artifact-count');
+      if (count !== null) { count.textContent = '共 ' + String(visible) + ' 个产物（已筛选）'; }
+      var empty = byId('artifact-list-empty');
+      if (empty !== null) { empty.hidden = visible > 0; }
+    }
+    if (kind !== null) { kind.addEventListener('change', apply); }
+    if (agent !== null) { agent.addEventListener('change', apply); }
+    if (run !== null) { run.addEventListener('change', apply); }
+    var reportAgent = byId('report-filter-agent');
+    var reportRun = byId('report-filter-run');
+    var reportList = byId('reports-list');
+    if (reportList !== null) {
+      function applyReports() {
+        var items = reportList.querySelectorAll('.report-item');
+        var visible = filterCards(items, function (item) {
+          var agentOk = reportAgent === null || reportAgent.value === '' || item.getAttribute('data-agent') === reportAgent.value;
+          var runOk = reportRun === null || reportRun.value === '' || item.getAttribute('data-run-id') === reportRun.value;
+          return agentOk && runOk;
+        });
+        var count = byId('report-count');
+        if (count !== null) { count.textContent = '共 ' + String(visible) + ' 份报告（已筛选）'; }
+        var empty = byId('reports-list-empty');
+        if (empty !== null) { empty.hidden = visible > 0; }
+      }
+      if (reportAgent !== null) { reportAgent.addEventListener('change', applyReports); }
+      if (reportRun !== null) { reportRun.addEventListener('change', applyReports); }
+    }
+  }
+
+  function liveThinking(data) {
+    var wrap = byId('live-thinking');
+    if (wrap === null) { return; }
+    var step = String(data.step || '0');
+    var block = wrap.querySelector('.live-thinking-block[data-step="' + step + '"]');
+    if (block === null) {
+      block = document.createElement('details');
+      block.className = 'live-thinking-block';
+      block.setAttribute('data-step', step);
+      block.open = true;
+      var summary = document.createElement('summary');
+      summary.textContent = '步骤 ' + step + ' · ' + String(data.agent_title || data.agent_role || 'agent') + ' 思考过程';
+      block.appendChild(summary);
+      var text = document.createElement('div');
+      text.className = 'live-thinking-text';
+      block.appendChild(text);
+      wrap.appendChild(block);
+    }
+    var target = block.querySelector('.live-thinking-text');
+    if (target !== null) {
+      target.textContent = target.textContent + (target.textContent === '' ? '' : '\\n') + String(data.text || data.chunk || '');
+      target.scrollTop = target.scrollHeight;
+    }
+  }
+
+  function liveTool(data, phase) {
+    var wrap = byId('live-tools');
+    if (wrap === null) { return; }
+    var callId = String(data.callId || data.call_id || '');
+    if (phase === 'call') {
+      var card = document.createElement('div');
+      card.className = 'live-tool';
+      card.setAttribute('data-call-id', callId);
+      card.setAttribute('data-status', 'running');
+      card.innerHTML = '';
+      var name = document.createElement('span');
+      name.className = 'live-tool-name';
+      name.textContent = String(data.tool || 'tool');
+      var args = document.createElement('span');
+      args.className = 'live-tool-args mono small muted';
+      args.textContent = String(data.input || data.args_summary || '');
+      var status = document.createElement('span');
+      status.className = 'live-tool-status';
+      status.textContent = '调用中…';
+      card.appendChild(name);
+      card.appendChild(args);
+      card.appendChild(status);
+      wrap.appendChild(card);
+      return;
+    }
+    var nodes = wrap.querySelectorAll('.live-tool');
+    for (var index = 0; index < nodes.length; index++) {
+      var node = nodes[index];
+      if (node.getAttribute('data-call-id') !== callId) { continue; }
+      node.setAttribute('data-status', String(data.status || 'ok'));
+      var statusEl = node.querySelector('.live-tool-status');
+      if (statusEl !== null) {
+        statusEl.textContent = (String(data.status) === 'ok' ? '成功' : '失败') + (data.duration_ms === undefined ? '' : ' · ' + String(data.duration_ms || 0) + 'ms') + ' · ' + String(data.result_preview || data.result_summary || '');
+      }
+      return;
+    }
+  }
+
+  function liveArtifact(rawData) {
+    var data = rawData.artifact || rawData;
+    var wrap = byId('live-artifacts');
+    if (wrap === null) { return; }
+    var empty = byId('live-artifacts-empty');
+    if (empty !== null) { empty.hidden = true; }
+    var link = document.createElement('a');
+    link.className = 'live-artifact run-link';
+    link.setAttribute('data-artifact-id', String(data.artifact_id || ''));
+    link.href = '/artifacts?run_id=' + encodeURIComponent(String(data.run_id || '')) + '#artifact-' + encodeURIComponent(String(data.artifact_id || ''));
+    link.textContent = '📄 产物已生成：' + String(data.title || data.rel_path || '') + '（' + String(data.kind || '') + '，' + String(data.size || 0) + ' B）';
+    wrap.appendChild(link);
+  }
+
+  function liveReport(rawData) {
+    var data = rawData.report || rawData;
+    var wrap = byId('live-artifacts');
+    if (wrap === null) { return; }
+    var empty = byId('live-artifacts-empty');
+    if (empty !== null) { empty.hidden = true; }
+    var link = document.createElement('a');
+    link.className = 'live-report run-link';
+    link.setAttribute('data-report-id', String(data.report_id || ''));
+    link.href = '/reports?run_id=' + encodeURIComponent(String(data.run_id || '')) + '#report-' + encodeURIComponent(String(data.report_id || ''));
+    link.textContent = '🧾 报告已生成：' + String(data.title || '');
+    wrap.appendChild(link);
+  }
+
   function init() {
     initChatCreate();
     initChatSession();
     initLiveRun();
+    initRunTabs();
+    initArtifactFilters();
     initLightbox();
     initMoney();
     initModels();

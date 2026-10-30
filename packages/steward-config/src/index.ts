@@ -11,6 +11,7 @@
 
 export type {
   AgentConfig,
+  AgentHarnessMeta,
   AgentModelBinding,
   AgentUpdate,
   ApiKeyResolution,
@@ -35,6 +36,9 @@ export type {
   FeatureToggle,
   FeatureUpdate,
   Features,
+  HarnessRoleSettings,
+  HarnessSettings,
+  HarnessSettingsUpdate,
   InvoiceConfig,
   InvoiceDefaultType,
   Language,
@@ -88,9 +92,13 @@ export {
   CONFIG_VERSION,
   FEATURE_NAMES,
   SUPERVISOR_TOKEN_LIMIT,
+  HARNESS_DEFAULT_MAX_TOKENS_PER_RUN,
+  HARNESS_DEFAULT_PROFILE,
+  HARNESS_DEFAULT_TIMEOUT_MS,
   defaultAgentModels,
   defaultAgents,
   defaultEpayConfig,
+  defaultHarnessSettings,
   defaultModelProviders,
   defaultModelRouting,
   defaultRuntimeSettings,
@@ -105,12 +113,18 @@ export {
 
 export {
   DEFAULT_CONDUCTOR_PROMPT,
+  HARNESS_AGENT_DIRECTIVE,
   PROMPT_SAFETY_KEYWORDS,
+  PROMPT_V3_UPDATED_AT,
+  PROMPT_V3_VERSION,
   SYSTEM_PROMPT_ROLES,
   buildDefaultOrchestratorSettings,
   buildDefaultSystemPrompts,
+  composeHarnessPrompt,
+  harnessArtifactRequirement,
   hasSafetyKeyword,
   validateSystemPromptText,
+  type PromptV3Entry,
   type SystemPromptRole,
 } from "./prompts.js";
 

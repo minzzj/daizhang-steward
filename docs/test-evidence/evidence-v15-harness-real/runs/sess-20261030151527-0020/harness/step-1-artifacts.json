@@ -1,0 +1,35 @@
+{
+  "session_id": "sess-20261030151527-0020",
+  "step": 1,
+  "role": "operator",
+  "artifacts": [
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-1-operator\\note.md",
+      "source_rel": "note.md",
+      "kind": "markdown",
+      "size": 7,
+      "sha256": "ea67f39f2a707e536439ee31e49fdd586b4a8437d3408f0466112d040cd06681"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-1-operator\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 1759,
+      "sha256": "9894337016c4b6f263f38f8fe4699320c8894972d5b2c265b676f25d20698668"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-1-operator\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 22703,
+      "sha256": "1d51eadaeda04bb78ad6d1c83722c27d875dd360cfccbf690b7e008541f25ec8"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-1-operator\\verify.log",
+      "source_rel": "verify.log",
+      "kind": "text",
+      "size": 508,
+      "sha256": "0f5cd6ef9e91ffa2cffbc642ee76435e2716fb6962dfb04f03c9b2f4ea477d49"
+    }
+  ]
+}

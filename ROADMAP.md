@@ -187,3 +187,12 @@ _Last updated: 2026-10-26 (v1.0.0 released — two-phase delivery complete; opti
 - 模型输出兜底（未实现动作不再阻断，自动生成交付物证据）
 - 系统总控扩展：文件/应用/服务/定时任务/受管安装卸载
 - 测试 339 条；控制台 E2E 31 步、338 检查、35 截图全绿
+
+
+## v1.5.1（2026-10-30）— DeepSeek Harness Agents + ChatGPT 式对话总控
+
+- 10 个业务智能体换成真实 DeepSeek Harness 代理（thinking/工具/产物/report.md/证据，实时可见）。
+- `/chat` 重做为对话式总控：一个入口控制全部，AI 自己查系统/执行任务，危险动作只给审批卡；内嵌思考/工具/产物/报告/数据/审批卡片。
+- 长期记忆 + 多会话；`steward ai` CLI。
+- 404/404 单元测试；有头 Chrome E2E（对话 8 步、回归 38 步，0 截图）全绿。
+- 证据：`docs/test-evidence/evidence-v15-harness-real/`、`docs/test-evidence/evidence-v15.1/`。

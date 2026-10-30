@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/steward-console/src/pages-admin.ts
  *
  * 专业版新增页面：项目列表 / 配置中心 / 智能体中心 / 后台 / 数据管理。
@@ -329,9 +329,28 @@ ${
 // 智能体中心 /agents
 // ---------------------------------------------------------------------------
 
+/** v1.5：每个智能体的 Harness 真实执行摘要（最近会话/tokens/工具/产物/报告）。 */
+export interface HarnessAgentSummary {
+  label: string;
+  session_id?: string;
+  run_id?: string;
+  recent_at?: string;
+  duration_ms?: number;
+  tokens?: number;
+  tools?: number;
+  artifacts?: number;
+  reports?: number;
+  /** v1.5 真实 harness 元数据（Lead 适配器提供；demo 为内置值）。 */
+  profile?: string;
+  workspace?: string;
+  tool_names?: string[];
+}
+
 export interface AgentsPageInput {
   agents: ConsoleAgentInfo[];
   mode: RunMode;
+  /** v1.5：role → Harness 摘要（缺省时卡片仅展示基础信息）。 */
+  harness?: Record<string, HarnessAgentSummary>;
   options: PageRenderOptions;
 }
 
@@ -343,7 +362,7 @@ const AGENT_STATUS_LABELS: Record<string, string> = {
   not_applicable: "该模式不适用",
 };
 
-function renderAgentCard(agent: ConsoleAgentInfo): string {
+function renderAgentCard(agent: ConsoleAgentInfo, harness?: HarnessAgentSummary): string {
   const notApplicable = agent.status === "not_applicable";
   const statusLabel = AGENT_STATUS_LABELS[agent.status] ?? agent.status;
   const logs = agent.logs
@@ -366,6 +385,30 @@ function renderAgentCard(agent: ConsoleAgentInfo): string {
       <span>自主等级 <b>${escapeHtml(AGENT_AUTONOMY_LABELS[agent.autonomy])}</b></span>
     </div>
     <ul class="agent-logs">${logs === "" ? "<li class=\"muted\">暂无日志</li>" : logs}</ul>
+    <div class="agent-harness" id="harness-${escapeAttr(agent.role)}" data-harness-role="${escapeAttr(agent.role)}">
+      <span class="agent-harness-badge" data-harness-badge>DeepSeek Harness 真实执行</span>
+      ${harness === undefined
+        ? '<span class="muted small">暂无 harness 会话记录（执行 run 后出现）</span>'
+        : `<div class="agent-harness-stats">
+            <span>会话 <b class="mono" data-harness-session>${escapeHtml(harness.session_id ?? "—")}</b></span>
+            <span>耗时 <b class="mono" data-harness-duration>${String(harness.duration_ms ?? 0)}ms</b></span>
+            <span>Token <b class="mono" data-harness-tokens>${(harness.tokens ?? 0).toLocaleString("zh-CN")}</b></span>
+            <span>工具 <b class="mono" data-harness-tools>${String(harness.tools ?? 0)}</b></span>
+            <span>产物 <b class="mono" data-harness-artifacts>${String(harness.artifacts ?? 0)}</b></span>
+            <span>报告 <b class="mono" data-harness-reports>${String(harness.reports ?? 0)}</b></span>
+          </div>
+          <div class="agent-harness-links">
+            ${harness.run_id === undefined ? "" : `<a class="run-link" href="/runs/${encodeURIComponent(harness.run_id)}" data-harness-run-link>查看 run 证据 →</a>`}
+            ${harness.session_id === undefined ? "" : `<a class="run-link" href="/chat/${encodeURIComponent(harness.session_id)}">实时会话 →</a>`}
+            <a class="run-link" href="/artifacts?agent=${encodeURIComponent(agent.role)}">该 agent 产物 →</a>
+            <a class="run-link" href="/reports?agent=${encodeURIComponent(agent.role)}">该 agent 报告 →</a>
+          </div>
+          <div class="agent-harness-meta muted small" data-harness-meta>
+            <span>profile <b class="mono">${escapeHtml(harness.profile ?? "deepseek-harness")}</b></span>
+            <span>workspace <b class="mono">${escapeHtml(harness.workspace ?? "runs/…/harness/")}</b></span>
+            ${(harness.tool_names ?? []).length === 0 ? "" : `<span>工具 <b class="mono">${escapeHtml((harness.tool_names ?? []).slice(0, 6).join(", "))}</b></span>`}
+          </div>`}
+    </div>
     <div class="agent-card-actions">
       <button class="agent-expand" type="button" data-agent-expand="${escapeAttr(agent.role)}">展开详情</button>
       <a class="run-link" href="/agents/${encodeURIComponent(agent.role)}" id="agent-link-${escapeAttr(agent.role)}">查看对话记录 →</a>
@@ -382,7 +425,7 @@ function renderAgentCard(agent: ConsoleAgentInfo): string {
 export function renderAgentsPage(input: AgentsPageInput): string {
   const content = `
 ${pageHeading("智能体中心", `共 ${String(input.agents.length)} 个智能体 · 当前模式：${RUN_MODE_LABELS[input.mode]} · 点击卡片可展开详情，或查看每个智能体的对话记录（/agents/:role）`)}
-<div class="agent-grid" id="agents-grid">${input.agents.map(renderAgentCard).join("")}</div>`;
+<div class="agent-grid" id="agents-grid">${input.agents.map((agent) => renderAgentCard(agent, input.harness?.[agent.role])).join("")}</div>`;
   return renderShell(input.options, "智能体中心", content);
 }
 

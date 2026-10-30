@@ -52,3 +52,8 @@
 3. 每个截图配场景说明，图片由 E2E 自动生成。
 4. 文档之间的链接与截图在发布前用脚本检查。
 5. 内部资料、本机绝对路径、真实个人信息不进仓库。
+
+## v1.5.1
+
+- [DeepSeek Harness 真实智能体](zh-CN/harness.md) / [Harness agents](en/harness.md)
+- [对话式总控与记忆](zh-CN/conversation.md) / [Conversational control & memory](en/conversation.md)

@@ -91,19 +91,60 @@ test("v2：manifest-v2 包含 11 个角色，sha256 与文件一致", () => {
   }
 });
 
-test("v2：配置中心默认提示词 = prompts/v2 内容（11 角色，专业版）", async () => {
-  const config = await import("../../dist/packages/steward-config/src/index.js");
-  const prompts = config.buildDefaultSystemPrompts(new Date("2026-10-26T00:00:00Z"));
-  assert.equal(prompts.length, 11);
-  const conductor = readFileSync(join(PROMPTS, "v2", "conductor.md"), "utf8").trim();
-  assert.equal(prompts.find((entry) => entry.role === "conductor").system_prompt, conductor);
-  for (const role of V2_ROLES) {
-    const file = readFileSync(join(PROMPTS, "v2", `${role}.md`), "utf8").trim();
-    const entry = prompts.find((item) => item.role === role);
-    assert.ok(entry, `缺少默认提示词：${role}`);
-    assert.equal(entry.system_prompt, file, `${role} 默认提示词与 v2 文件不一致`);
-    for (const keyword of ["证据", "审批", "不越界", "失败升级", "人工", "超时"]) {
-      assert.ok(entry.system_prompt.includes(keyword), `${role} 缺少安全关键词：${keyword}`);
+// ---------------------------------------------------------------------------
+// v1.5：prompts/v3（11 篇真实 Harness 代理提示词 + manifest-v3 哈希 + compose）
+// ---------------------------------------------------------------------------
+
+const V3_ROLES = ["supervisor", "conductor", "operator", "harness", "customer", "finance", "reviewer", "backend", "scout", "content", "research"];
+
+test("v3：manifest-v3 包含 11 个角色，sha256 与文件一致", () => {
+  const manifest = JSON.parse(readFileSync(join(PROMPTS, "manifest-v3.json"), "utf8"));
+  assert.equal(manifest.version, "3.0.0");
+  assert.deepEqual(manifest.prompts.map((entry) => entry.id).sort(), [...V3_ROLES].sort());
+  for (const entry of manifest.prompts) {
+    const content = readFileSync(join(PROMPTS, entry.file));
+    const actual = createHash("sha256").update(content).digest("hex");
+    assert.equal(actual, entry.sha256, `${entry.file} sha256 与 manifest-v3 不一致`);
+    const text = content.toString("utf8");
+    assert.match(text, /<!-- prompt: [a-z]+ \| version: 3\.0\.0/);
+    assert.ok(text.length > 1500, `${entry.id} 提示词过短`);
+    for (const keyword of ["计划", "工具", "产物", "report.md", "证据", "确认", "失败升级"]) {
+      assert.ok(text.includes(keyword), `${entry.id} 缺少关键词：${keyword}`);
     }
   }
+});
+
+test("v3：配置中心默认提示词 = prompts/v3 内容（11 角色，真实 Harness 代理版）", async () => {
+  const config = await import("../../dist/packages/steward-config/src/index.js");
+  assert.equal(config.PROMPT_V3_VERSION, "3.0.0");
+  const prompts = config.buildDefaultSystemPrompts(new Date("2026-10-30T00:00:00Z"));
+  assert.equal(prompts.length, 11);
+  const conductor = readFileSync(join(PROMPTS, "v3", "conductor.md"), "utf8").trim();
+  assert.equal(config.DEFAULT_CONDUCTOR_PROMPT, conductor, "DEFAULT_CONDUCTOR_PROMPT 应为 v3/conductor.md");
+  for (const role of V3_ROLES) {
+    const file = readFileSync(join(PROMPTS, "v3", `${role}.md`), "utf8").trim();
+    const entry = prompts.find((item) => item.role === role);
+    assert.ok(entry, `缺少默认提示词：${role}`);
+    assert.equal(entry.system_prompt, file, `${role} 默认提示词与 v3 文件不一致`);
+    assert.equal(entry.updated_at, config.PROMPT_V3_UPDATED_AT);
+    for (const keyword of ["计划", "工具", "产物", "report.md", "证据", "确认", "失败升级"]) {
+      assert.ok(entry.system_prompt.includes(keyword), `${role} 缺少 v3 关键词：${keyword}`);
+    }
+  }
+});
+
+test("v3：composeHarnessPrompt = v3 原文 + 简短统一指令 + 角色产物要求（不重复过重）", async () => {
+  const config = await import("../../dist/packages/steward-config/src/index.js");
+  for (const role of V3_ROLES) {
+    const file = readFileSync(join(PROMPTS, "v3", `${role}.md`), "utf8").trim();
+    const composed = config.composeHarnessPrompt(role);
+    assert.ok(composed.startsWith(file), `${role} compose 应以 v3 原文开头`);
+    assert.equal(composed.split("## Harness 统一执行指令（v1.5）").length - 1, 1, `${role} 统一指令只能出现一次`);
+    assert.equal(composed.split("## 角色专属产物要求（v1.5 Harness）").length - 1, 1, `${role} 产物要求只能出现一次`);
+    for (const keyword of ["工具", "产物", "report.md", "证据", "确认", "失败升级"]) {
+      assert.ok(composed.includes(keyword), `${role} compose 缺少关键词：${keyword}`);
+    }
+    assert.ok(composed.length < file.length * 2, `${role} compose 不得重复堆叠过重`);
+  }
+  assert.ok(config.HARNESS_AGENT_DIRECTIVE.length < 1_000, "统一指令应保持简短");
 });

@@ -14,6 +14,7 @@
 import { buildDefaultOrchestratorSettings } from "./prompts.js";
 import type {
   AgentConfig,
+  AgentHarnessMeta,
   AgentModelBinding,
   Autonomy,
   Budgets,
@@ -22,6 +23,8 @@ import type {
   FeatureName,
   FeatureToggle,
   Features,
+  HarnessRoleSettings,
+  HarnessSettings,
   InvoiceConfig,
   ManagedAppConfig,
   ModelProviderConfig,
@@ -339,24 +342,82 @@ interface AgentSeed {
   role: AgentRoleName;
   name: string;
   tools: string[];
+  /** v1.5：Harness 元数据（supervisor 不直接走 Harness 业务执行，可空）。 */
+  harness?: AgentHarnessMeta;
 }
+
+/** Harness 默认 profile/超时/token 上限（三模式一致）。 */
+export const HARNESS_DEFAULT_PROFILE = "headless";
+export const HARNESS_DEFAULT_TIMEOUT_MS = 300_000;
+export const HARNESS_DEFAULT_MAX_TOKENS_PER_RUN = 200_000;
 
 const AGENT_SEEDS: readonly AgentSeed[] = [
   {
     role: "supervisor",
     name: "系统总控",
     tools: ["system.*", "agents.*", "models.*", "prompts.*", "project.delegate", "logs.read"],
+    // supervisor 走系统动作层，不直接跑 Harness 业务执行 → 不配置 harness 元数据
   },
-  { role: "conductor", name: "总调度", tools: ["agent.dispatch", "budget.check", "task.plan", "approval.request"] },
-  { role: "operator", name: "办公执行", tools: ["browser.flow", "desktop.flow", "artifact.write"] },
-  { role: "harness", name: "编码代理", tools: ["harness.request", "patch.apply", "test.run"] },
-  { role: "customer", name: "客户沟通", tools: ["message.draft", "thread.reply", "evidence.attach"] },
-  { role: "finance", name: "财务", tools: ["ledger.record", "invoice.draft", "budget.check"] },
-  { role: "reviewer", name: "核查", tools: ["evidence.verify", "policy.check", "report.render"] },
-  { role: "backend", name: "后台运维", tools: ["data.backup", "data.reset", "log.rotate"] },
-  { role: "scout", name: "线索", tools: ["scout.score", "outreach.draft", "lead.import"] },
-  { role: "content", name: "内容", tools: ["content.plan", "copy.draft", "artifact.write"] },
-  { role: "research", name: "调研", tools: ["web.search", "source.summarize", "evidence.attach"] },
+  {
+    role: "conductor",
+    name: "总调度",
+    tools: ["agent.dispatch", "budget.check", "task.plan", "approval.request"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/conductor", tools: ["read", "glob", "grep"] },
+  },
+  {
+    role: "operator",
+    name: "办公执行",
+    tools: ["browser.flow", "desktop.flow", "artifact.write"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/operator", tools: ["read", "write", "edit", "bash", "browser"] },
+  },
+  {
+    role: "harness",
+    name: "编码代理",
+    tools: ["harness.request", "patch.apply", "test.run"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/harness", tools: ["read", "write", "edit", "bash", "test"] },
+  },
+  {
+    role: "customer",
+    name: "客户沟通",
+    tools: ["message.draft", "thread.reply", "evidence.attach"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/customer", tools: ["read", "write"] },
+  },
+  {
+    role: "finance",
+    name: "财务",
+    tools: ["ledger.record", "invoice.draft", "budget.check"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/finance", tools: ["read", "write"] },
+  },
+  {
+    role: "reviewer",
+    name: "核查",
+    tools: ["evidence.verify", "policy.check", "report.render"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/reviewer", tools: ["read", "glob", "grep"] },
+  },
+  {
+    role: "backend",
+    name: "后台运维",
+    tools: ["data.backup", "data.reset", "log.rotate"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/backend", tools: ["read", "write", "bash"] },
+  },
+  {
+    role: "scout",
+    name: "线索",
+    tools: ["scout.score", "outreach.draft", "lead.import"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/scout", tools: ["web_search", "web_fetch", "write"] },
+  },
+  {
+    role: "content",
+    name: "内容",
+    tools: ["content.plan", "copy.draft", "artifact.write"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/content", tools: ["read", "write"] },
+  },
+  {
+    role: "research",
+    name: "调研",
+    tools: ["web.search", "source.summarize", "evidence.attach"],
+    harness: { profile: HARNESS_DEFAULT_PROFILE, workspace: "workspace/research", tools: ["web_search", "web_fetch", "write"] },
+  },
 ];
 
 const AUTONOMY_BY_MODE: Record<RunMode, Record<string, Autonomy>> = {
@@ -408,15 +469,49 @@ export const SUPERVISOR_TOKEN_LIMIT = 1_000_000;
 /** 某模式的默认代理注册表（11 个角色：supervisor + conductor + 9 专项）。 */
 export function defaultAgents(mode: RunMode): AgentConfig[] {
   const autonomyMap = AUTONOMY_BY_MODE[mode];
-  return AGENT_SEEDS.map((seed) => ({
-    role: seed.role,
-    name: seed.name,
+  return AGENT_SEEDS.map((seed) => {
+    const agent: AgentConfig = {
+      role: seed.role,
+      name: seed.name,
+      enabled: true,
+      autonomy: autonomyMap[seed.role] ?? "readonly",
+      tools: [...seed.tools],
+      token_limit: seed.role === "supervisor" ? SUPERVISOR_TOKEN_LIMIT : AGENT_TOKEN_LIMIT[mode],
+      model_ref: mode === "enterprise" ? "deepseek-chat@v1" : "deepseek-chat@v1",
+    };
+    if (seed.harness !== undefined) {
+      agent.harness = {
+        profile: seed.harness.profile,
+        workspace: seed.harness.workspace,
+        tools: [...seed.harness.tools],
+      };
+    }
+    return agent;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// v1.5：Harness 真实执行设置（11 个角色；三模式默认一致，supervisor 强制不走 Harness）
+// ---------------------------------------------------------------------------
+
+/** 默认 Harness 设置（总开关开、headless、自动探测 dsh、11 角色各自 workspace）。 */
+export function defaultHarnessSettings(): HarnessSettings {
+  return {
     enabled: true,
-    autonomy: autonomyMap[seed.role] ?? "readonly",
-    tools: [...seed.tools],
-    token_limit: seed.role === "supervisor" ? SUPERVISOR_TOKEN_LIMIT : AGENT_TOKEN_LIMIT[mode],
-    model_ref: mode === "enterprise" ? "deepseek-chat@v1" : "deepseek-chat@v1",
-  }));
+    profile: HARNESS_DEFAULT_PROFILE,
+    dsh_bin: "",
+    timeout_ms: HARNESS_DEFAULT_TIMEOUT_MS,
+    max_concurrency: 2,
+    artifact_retention_days: 30,
+    report_required: true,
+    roles: AGENT_ROLES.map((role) => ({
+      role,
+      enabled: role !== "supervisor",
+      workspace: `workspace/${role}`,
+      timeout_ms: HARNESS_DEFAULT_TIMEOUT_MS,
+      max_tokens_per_run: HARNESS_DEFAULT_MAX_TOKENS_PER_RUN,
+    })),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -579,6 +674,7 @@ export function defaultsForMode(mode: RunMode, options: { now?: () => Date } = {
     orchestrator: buildDefaultOrchestratorSettings(mode, now),
     system_policy: defaultSystemPolicy(),
     runtime: defaultRuntimeSettings(mode),
+    harness: defaultHarnessSettings(),
     updated_at: now.toISOString(),
   };
 }

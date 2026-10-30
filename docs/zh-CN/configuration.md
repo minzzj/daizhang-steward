@@ -77,3 +77,7 @@ node dist/apps/cli/src/index.js agents --json             # 各智能体模型�
 - `steward data --action stats|reset`：运行时数据统计 / 清空（保留配置，删除前白名单校验、防路径穿越）。
 - 审计：配置变更、密钥引用变更、提示词变更、系统动作全部追加审计（不含明文密钥）。
 - 单机本地：只监听 `127.0.0.1`；写 API 需要 `X-Steward-Token`。
+
+## Harness 真实执行（v1.5.1）
+
+配置中心新增 `harness`：`enabled`（总开关，默认 true）、`profile`（headless）、`dsh_bin`（空=自动探测）、`timeout_ms`、`max_concurrency`、`artifact_retention_days`、`report_required`、`roles[]`（11 角色各自 enabled/workspace/timeout/max_tokens_per_run；supervisor 固定关闭）。控制台 /settings 可视化；无 dsh 时自动回退旧本地动作。详见 [harness.md](harness.md)。

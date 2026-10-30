@@ -79,6 +79,74 @@ export interface RuntimeCreateResult {
   session: ChatSession;
   run: ConsoleRunRecord;
 }
+export type HarnessArtifactKind = "html" | "markdown" | "json" | "text" | "image" | "code" | "data" | "other";
+
+export interface HarnessArtifactView {
+  id: string;
+  run_id: string;
+  session_id: string;
+  step?: number;
+  agent_role?: string;
+  rel_path: string;
+  kind: HarnessArtifactKind;
+  title: string;
+  mime: string;
+  size: number;
+  created_at: string;
+  preview_url?: string;
+  download_url?: string;
+  preview_text?: string;
+}
+
+export interface HarnessReportView {
+  id: string;
+  run_id: string;
+  session_id: string;
+  step?: number;
+  agent_role?: string;
+  title: string;
+  markdown: string;
+  created_at: string;
+}
+
+export interface RunMetricsView {
+  token_input: number;
+  token_output: number;
+  token_cache_read: number;
+  token_total: number;
+  steps: number;
+  duration_ms: number;
+  tool_calls: number;
+  tool_call_counts: Record<string, number>;
+  events: number;
+  model_modes: string[];
+  budget_used_cny: number;
+}
+
+export interface RuntimeArtifactFilter {
+  run_id?: string;
+  session_id?: string;
+  agent_role?: string;
+  kind?: string;
+}
+
+export interface RuntimeReportFilter {
+  run_id?: string;
+  session_id?: string;
+  agent_role?: string;
+}
+
+/** v1.5：单产物内容（真实适配器读取 run 目录文件；控制台不直接读文件）。 */
+export interface HarnessArtifactContent {
+  ok: boolean;
+  kind: "html" | "markdown" | "json" | "text" | "image" | "other";
+  content?: string;
+  mime?: string;
+  /** 绝对路径（仅用于审计/下载校验；server 必须校验位于 runs/ 对应 run 目录内）。 */
+  path?: string;
+  error?: string;
+}
+
 
 /** 订阅取消函数。 */
 export type RuntimeUnsubscribe = () => void;
@@ -98,8 +166,16 @@ export interface ConsoleRuntimeProvider {
   getSession(sessionId: string): ChatSession | null;
   listSessions(): ChatSession[];
   getRunDetail(runId: string): RunDetail | null;
-  getAgentTranscripts(role?: string): AgentTranscript[];
+  getAgentTranscripts(role?: string): AgentTranscript[];  // ---- v1.5 页面扩展：产物 / 报告 / 数据指标（真实 RunManager 适配器建议实现；缺省时页面显示「暂不可用」） ----
+  listArtifacts?(filter?: RuntimeArtifactFilter): MaybePromise<HarnessArtifactView[]>;
+  listReports?(filter?: RuntimeReportFilter): MaybePromise<HarnessReportView[]>;
+  getRunMetrics?(runId: string): MaybePromise<RunMetricsView | null>;
+  /** v1.5：读取产物内容（真实 harness 从 runs/<session>/harness/ 读取；demo 用内存内容）。 */
+  getArtifactContent?(id: string): MaybePromise<HarnessArtifactContent>;
+  /** v1.5：产物文件的绝对路径（下载用）；server 会校验路径位于 runs/ 且属于对应 run 目录内。 */
+  getArtifactFilePath?(id: string): string | null;
 }
+
 
 // ---------------------------------------------------------------------------
 // 工具：内联 SVG 证据占位（无外网请求）
@@ -186,7 +262,98 @@ interface RuntimeState {
   timer: ReturnType<typeof setTimeout> | null;
   listeners: Set<(event: ConsoleRuntimeEvent) => void>;
   approvalRisk?: string;
+  /** v1.5：该 run 的产物与报告（演示由确定性生成器提供）。 */
+  artifacts: HarnessArtifactView[];
+  reports: HarnessReportView[];
 }
+// ---------------------------------------------------------------------------
+// v1.5 演示产物 / 报告 / 工具事件（确定性生成；真实 harness 接入后由 run 目录真实文件替换）
+// ---------------------------------------------------------------------------
+
+const DEMO_TOOLS: Record<number, Array<{ tool: string; args: string; status: "ok" | "error"; duration: number }>> = {
+  1: [{ tool: "conductor.plan", args: '{ goal: "...", max_steps: 5 }', status: "ok", duration: 42 }],
+  2: [
+    { tool: "browser.open", args: '{ url: "http://127.0.0.1:4173/quote", headed: true }', status: "ok", duration: 318 },
+    { tool: "browser.click", args: '{ selector: "#quote-client" }', status: "ok", duration: 86 },
+    { tool: "screenshot.capture", args: '{ full_page: true }', status: "ok", duration: 121 },
+  ],
+  3: [
+    { tool: "code.loop", args: '{ task: "quote-page", max_rounds: 2 }', status: "ok", duration: 640 },
+    { tool: "patch.apply", args: '{ worktree: "isolated", files: 3 }', status: "ok", duration: 210 },
+    { tool: "test.run", args: '{ command: "npm test -- quote", headless: false }', status: "ok", duration: 480 },
+  ],
+  4: [{ tool: "evidence.read", args: '{ run_id: "<run>", kinds: ["screenshot","log","report"] }', status: "ok", duration: 95 }],
+  5: [{ tool: "approval.submit", args: '{ step: 5, risk: "high" }', status: "ok", duration: 60 }],
+};
+
+function demoArtifactsFor(runId: string, sessionId: string, goal: string, isCoding: boolean, createdAt: string): HarnessArtifactView[] {
+  const order = "报价单页面";
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8" /><title>${order}（演示产物）</title>
+<style>body{font-family:system-ui,sans-serif;margin:32px;color:#1d2738}h1{font-size:22px}table{border-collapse:collapse;width:100%;max-width:560px}td,th{border:1px solid #dde3ef;padding:8px 10px;text-align:left}th{background:#f1f4fa}.total{font-weight:800;color:#0f7a45}footer{margin-top:18px;font-size:12px;color:#8fa3bd}</style></head>
+<body><h1>${order}（演示产物 · 可直接预览）</h1>
+<p>客户：杭州示例科技有限公司 · 生成智能体：operator / harness</p>
+<table><thead><tr><th>项目</th><th>数量</th><th>单价（元）</th><th>小计（元）</th></tr></thead>
+<tbody><tr><td>官网改版首期</td><td>1</td><td>2,400.00</td><td>2,400.00</td></tr><tr><td>移动端适配</td><td>1</td><td>400.00</td><td>400.00</td></tr></tbody>
+<tfoot><tr><td colspan="3">合计</td><td class="total">2,800.00</td></tr></tfoot></table>
+<footer>本文件由演示 harness 生成；真实运行时为 run 目录中的真实产物。</footer></body></html>`;
+  const quoteJson = JSON.stringify(
+    { client: "杭州示例科技有限公司", currency: "CNY", items: [{ name: "官网改版首期", qty: 1, unit_price: 2400, amount: 2400 }, { name: "移动端适配", qty: 1, unit_price: 400, amount: 400 }], total: 2800 },
+    null,
+    2,
+  );
+  const chartSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="220" viewBox="0 0 420 220"><rect width="420" height="220" fill="#ffffff"/><text x="16" y="26" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#1d2738">报价金额分布（演示图表）</text><rect x="40" y="60" width="250" height="26" rx="6" fill="#3b5bfd"/><text x="300" y="79" font-family="system-ui,sans-serif" font-size="12" fill="#47536b">官网改版 2,400</text><rect x="40" y="100" width="42" height="26" rx="6" fill="#66e3d2"/><text x="92" y="119" font-family="system-ui,sans-serif" font-size="12" fill="#47536b">移动端 400</text><rect x="40" y="140" width="292" height="26" rx="6" fill="#0f7a45"/><text x="342" y="159" font-family="system-ui,sans-serif" font-size="12" fill="#47536b">合计 2,800</text><text x="16" y="200" font-family="system-ui,sans-serif" font-size="10" fill="#8fa3bd">demo artifact · 真实运行时由 harness 生成</text></svg>`;
+  const logText = `[info] harness run ${runId} start\n[info] operator: 打开真实浏览器（有头）\n[info] operator: 填写报价单并截图\n[info] harness: 生成页面与样式（隔离 worktree）\n[info] test.run: 验收通过（金额合计 2800.00）\n[info] reviewer: 证据链齐全\n[info] 真实文件中此日志位于 run 目录 console.log`;
+  const planMd = `# 执行计划（总调度）\n\n- 目标：${goal}\n- 模式：演示 / DeepSeek Harness 真实执行（占位）\n\n## 步骤\n\n1. 确认目标与验收标准\n2. 真实浏览器执行（operator）\n3. ${isCoding ? "写代码并跑测试（harness）" : "产出交付稿（content）"}\n4. 核查证据链（reviewer）\n5. 对外交付审批（conductor）\n`;
+  const codeText = `export function quoteTotal(items: Array<{ amount: number }>): number {\n  return items.reduce((sum, item) => sum + item.amount, 0);\n}\n\nexport const DEMO_QUOTE = {\n  client: "杭州示例科技有限公司",\n  total: 2800,\n};\n`;
+  const draftMd = `# 交付稿草稿（content）\n\n- 客户：杭州示例科技有限公司\n- 交付物：报价单页面 + 对比说明\n- 状态：草稿（未外发，需人工审批）\n`;
+  const base: Array<Omit<HarnessArtifactView, "id" | "run_id" | "session_id" | "created_at" | "preview_url" | "download_url">> = [
+    { rel_path: "artifacts/plan.md", kind: "markdown", title: "执行计划 plan.md", agent_role: "conductor", step: 1, mime: "text/markdown; charset=utf-8", size: Buffer.byteLength(planMd, "utf8"), preview_text: planMd },
+    { rel_path: "site/quote.html", kind: "html", title: "报价单页面 quote.html", agent_role: "operator", step: 2, mime: "text/html; charset=utf-8", size: Buffer.byteLength(html, "utf8"), preview_text: html },
+    { rel_path: "data/quote.json", kind: "json", title: "报价数据 quote.json", agent_role: "operator", step: 2, mime: "application/json; charset=utf-8", size: Buffer.byteLength(quoteJson, "utf8"), preview_text: quoteJson },
+    { rel_path: "charts/quote-chart.svg", kind: "image", title: "金额分布图 quote-chart.svg", agent_role: "operator", step: 2, mime: "image/svg+xml", size: Buffer.byteLength(chartSvg, "utf8"), preview_text: chartSvg },
+    { rel_path: "logs/run.log", kind: "text", title: "执行日志 run.log", agent_role: "operator", step: 2, mime: "text/plain; charset=utf-8", size: Buffer.byteLength(logText, "utf8"), preview_text: logText },
+    isCoding
+      ? { rel_path: "code/quote.ts", kind: "code", title: "页面逻辑 quote.ts", agent_role: "harness", step: 3, mime: "text/plain; charset=utf-8", size: Buffer.byteLength(codeText, "utf8"), preview_text: codeText }
+      : { rel_path: "content/draft.md", kind: "markdown", title: "交付稿草稿 draft.md", agent_role: "content", step: 3, mime: "text/markdown; charset=utf-8", size: Buffer.byteLength(draftMd, "utf8"), preview_text: draftMd },
+  ];
+  return base.map((item, index) => {
+    const id = `art-${runId}-${String(index + 1).padStart(2, "0")}`;
+    return {
+      ...item,
+      id,
+      run_id: runId,
+      session_id: sessionId,
+      created_at: createdAt,
+      preview_url: `/api/artifacts/${id}/preview`,
+      download_url: `/api/artifacts/${id}/download`,
+    };
+  });
+}
+
+function demoReportsFor(runId: string, sessionId: string, goal: string, isCoding: boolean, createdAt: string): HarnessReportView[] {
+  const step2 = `# 步骤 2 报告 — 真实浏览器执行（operator）\n\n- run：\`${runId}\`\n- 目标：${goal}\n\n## 做了什么\n\n1. 打开真实浏览器（有头）访问报价单页面\n2. 填写客户信息与金额明细并提交\n3. 截图留证（全页 + 结果页）\n\n## 结果\n\n- 状态：成功\n- 证据：截图 2 张、日志 1 份\n- Token：约 1,340\n`;
+  const step3 = isCoding
+    ? `# 步骤 3 报告 — 写代码 Harness（harness）\n\n- CodeTask：报价单页面骨架 + 金额计算\n- 隔离 worktree 生成统一补丁并应用\n- 真实浏览器验收 2 轮内转绿\n\n## 证据\n\n- 补丁：\`runs/${runId}/patch.diff\`（演示）\n- 测试：\`npm test -- quote\` 通过\n- Token：约 1,860\n`
+    : `# 步骤 3 报告 — 内容草稿（content）\n\n- 产出交付稿草稿（markdown）\n- 未外发，需人工审批后交付\n- Token：约 1,200\n`;
+  const summary = `# 运行汇总报告 — ${runId}\n\n## 目标\n\n${goal}\n\n## 结果\n\n- 状态：完成\n- 步骤：5/5\n- 产物：6 个（HTML/Markdown/JSON/SVG/文本/${isCoding ? "代码" : "草稿"}）\n- 报告：步骤报告 2 份 + 汇总 1 份\n\n## 证据\n\n- 截图 2 张（缩略图可点开大图）\n- 日志 \`runs/${runId}/console.log\`\n- 事件流 \`runs/${runId}/events.jsonl\`\n\n## 结论\n\n高风险步骤经人工审批后执行；风控/验证码一律停止交人（不绕过）。\n`;
+  const items: Array<{ step?: number; agent_role: string; title: string; markdown: string; id: string }> = [
+    { id: `rep-${runId}-step2`, step: 2, agent_role: "operator", title: "步骤 2 报告（operator）", markdown: step2 },
+    { id: `rep-${runId}-step3`, step: 3, agent_role: isCoding ? "harness" : "content", title: `步骤 3 报告（${isCoding ? "harness" : "content"}）`, markdown: step3 },
+    { id: `rep-${runId}-summary`, agent_role: "conductor", title: "运行汇总报告（conductor）", markdown: summary },
+  ];
+  return items.map((item) => ({
+    id: item.id,
+    run_id: runId,
+    session_id: sessionId,
+    ...(item.step === undefined ? {} : { step: item.step }),
+    agent_role: item.agent_role,
+    title: item.title,
+    markdown: item.markdown,
+    created_at: createdAt,
+  }));
+}
+
 
 export interface DemoRuntimeProviderOptions {
   /** 每步事件间隔（默认 150ms；E2E 要求 300ms 内出现思考中/执行中）。 */
@@ -243,6 +410,15 @@ export function createDemoRuntimeProvider(options: DemoRuntimeProviderOptions = 
   };
 
   const complete = (state: RuntimeState): void => {
+    const summaryReport = state.reports.find((item) => item.step === undefined);
+    if (summaryReport !== undefined) {
+      emit(state, "report.created", {
+        report_id: summaryReport.id,
+        title: summaryReport.title,
+        step: null,
+        agent_role: summaryReport.agent_role ?? null,
+      });
+    }
     state.record.status = "done";
     state.record.steps_done = state.record.steps_total;
     state.record.plan = (state.record.plan ?? []).map((step) => ({ ...step, status: "done" as const }));
@@ -290,6 +466,45 @@ export function createDemoRuntimeProvider(options: DemoRuntimeProviderOptions = 
       action: current.action,
       summary: current.summary,
     });
+    // v1.5：思考分块 + 工具调用/结果（SSE harness.thinking / harness.tool_call / harness.tool_result）
+    const thinkChunks = [
+      `分析步骤 ${String(current.step)}：${current.action}；先确认输入、约束与风险…`,
+      `制定执行动作：${current.summary}；校验预算与 Token 后再执行。`,
+    ];
+    for (let thinkIndex = 0; thinkIndex < thinkChunks.length; thinkIndex += 1) {
+      emit(state, "harness.thinking", {
+        step: current.step,
+        agent_role: current.agent_role,
+        agent_title: AGENT_TITLE[current.agent_role] ?? current.agent_role,
+        chunk_index: thinkIndex + 1,
+        chunk: thinkChunks[thinkIndex] ?? "",
+        model_mode: "local-demo",
+      });
+    }
+    const stepTools = DEMO_TOOLS[current.step] ?? [];
+    for (let toolIndex = 0; toolIndex < stepTools.length; toolIndex += 1) {
+      const tool = stepTools[toolIndex];
+      if (tool === undefined) continue;
+      const callId = `${record.run_id}-tool-${String(current.step)}-${String(toolIndex + 1)}`;
+      emit(state, "harness.tool_call", {
+        step: current.step,
+        agent_role: current.agent_role,
+        agent_title: AGENT_TITLE[current.agent_role] ?? current.agent_role,
+        tool: tool.tool,
+        args_summary: tool.args.replace("<run>", record.run_id),
+        call_id: callId,
+        status: "running",
+      });
+      emit(state, "harness.tool_result", {
+        step: current.step,
+        agent_role: current.agent_role,
+        tool: tool.tool,
+        call_id: callId,
+        status: tool.status,
+        duration_ms: tool.duration,
+        result_summary: tool.status === "ok" ? "成功（演示）" : "失败（演示）",
+      });
+    }
     const tokens = 620 + current.step * 180;
     const inputSummary =
       current.step === 1
@@ -324,6 +539,26 @@ export function createDemoRuntimeProvider(options: DemoRuntimeProviderOptions = 
     });
     record.token_used += tokens;
     emit(state, "step.completed", { step: current.step, status: "done", agent_role: current.agent_role });
+    // v1.5：本步骤产物 / 报告生成事件（SSE artifact.created / report.created）
+    for (const artifact of state.artifacts.filter((item) => item.step === current.step)) {
+      emit(state, "artifact.created", {
+        artifact_id: artifact.id,
+        rel_path: artifact.rel_path,
+        kind: artifact.kind,
+        size: artifact.size,
+        title: artifact.title,
+        step: artifact.step ?? null,
+        agent_role: artifact.agent_role ?? null,
+      });
+    }
+    for (const report of state.reports.filter((item) => item.step === current.step)) {
+      emit(state, "report.created", {
+        report_id: report.id,
+        title: report.title,
+        step: report.step ?? null,
+        agent_role: report.agent_role ?? null,
+      });
+    }
 
     if (current.requires_approval === true) {
       // 高风险步骤：暂停等待人工审批（SSE 立即推送审批卡）
@@ -467,6 +702,7 @@ export function createDemoRuntimeProvider(options: DemoRuntimeProviderOptions = 
     const runId = nextId("run-live");
     const sessionId = nextId("chat-live");
     const plan = buildRuntimePlan(goal);
+    const isCoding = CODING_PATTERN.test(goal);
     const session: ChatSession = {
       id: sessionId,
       title: goal.slice(0, 24) + (goal.length > 24 ? "…" : ""),
@@ -496,6 +732,8 @@ export function createDemoRuntimeProvider(options: DemoRuntimeProviderOptions = 
       mode,
       plan: plan.map((step) => ({ ...step })),
     };
+    const artifacts = demoArtifactsFor(runId, sessionId, goal, isCoding, iso(0));
+    const reports = demoReportsFor(runId, sessionId, goal, isCoding, iso(0));
     const state: RuntimeState = {
       record,
       session,
@@ -503,6 +741,8 @@ export function createDemoRuntimeProvider(options: DemoRuntimeProviderOptions = 
       seq: 0,
       timer: null,
       listeners: new Set(),
+      artifacts,
+      reports,
     };
     states.set(runId, state);
     // 发送即执行：立即推 run.created + conductor.thinking，随后生成计划并逐步推进
@@ -616,6 +856,78 @@ export function createDemoRuntimeProvider(options: DemoRuntimeProviderOptions = 
       const state = getState(runId);
       return state === null ? null : runDetailOf(state);
     },
+    listArtifacts: (filter) => {
+      const rows: HarnessArtifactView[] = [];
+      for (const state of states.values()) {
+        for (const artifact of state.artifacts) {
+          if (filter?.run_id !== undefined && artifact.run_id !== filter.run_id) continue;
+          if (filter?.session_id !== undefined && artifact.session_id !== filter.session_id) continue;
+          if (filter?.agent_role !== undefined && artifact.agent_role !== filter.agent_role) continue;
+          if (filter?.kind !== undefined && artifact.kind !== filter.kind) continue;
+          rows.push(clone(artifact));
+        }
+      }
+      return rows.sort((a, b) => b.created_at.localeCompare(a.created_at) || a.rel_path.localeCompare(b.rel_path));
+    },
+    listReports: (filter) => {
+      const rows: HarnessReportView[] = [];
+      for (const state of states.values()) {
+        for (const report of state.reports) {
+          if (filter?.run_id !== undefined && report.run_id !== filter.run_id) continue;
+          if (filter?.session_id !== undefined && report.session_id !== filter.session_id) continue;
+          if (filter?.agent_role !== undefined && report.agent_role !== filter.agent_role) continue;
+          rows.push(clone(report));
+        }
+      }
+      return rows.sort((a, b) => b.created_at.localeCompare(a.created_at) || a.title.localeCompare(b.title));
+    },
+    getRunMetrics: (runId) => {
+      const state = getState(runId);
+      if (state === null) return null;
+      const record = state.record;
+      const tokenTotal = record.token_used;
+      const tokenInput = Math.round(tokenTotal * 0.58);
+      const tokenOutput = Math.round(tokenTotal * 0.32);
+      const tokenCache = Math.max(0, tokenTotal - tokenInput - tokenOutput);
+      const toolEvents = state.events.filter((event) => event.type === "harness.tool_call");
+      const counts: Record<string, number> = {};
+      for (const event of toolEvents) {
+        const tool = String(event.data.tool ?? "tool");
+        counts[tool] = (counts[tool] ?? 0) + 1;
+      }
+      const startedMs = Date.parse(record.created_at);
+      const updatedMs = Date.parse(record.updated_at);
+      const duration = Number.isFinite(startedMs) && Number.isFinite(updatedMs) ? Math.max(120, updatedMs - startedMs) : record.steps_total * 150;
+      return {
+        token_input: tokenInput,
+        token_output: tokenOutput,
+        token_cache_read: tokenCache,
+        token_total: tokenTotal,
+        steps: record.steps_done,
+        duration_ms: duration,
+        tool_calls: toolEvents.length,
+        tool_call_counts: counts,
+        events: state.events.length,
+        model_modes: ["local-demo"],
+        budget_used_cny: Math.min(420, Math.round((record.steps_done / Math.max(1, record.steps_total)) * 420)),
+      };
+    },
+    getArtifactContent: (id) => {
+      for (const state of states.values()) {
+        const artifact = state.artifacts.find((item) => item.id === id);
+        if (artifact === undefined) continue;
+        const kind = artifact.kind === "code" ? "text" : artifact.kind === "data" ? "json" : artifact.kind === "other" ? "other" : artifact.kind;
+        return {
+          ok: true,
+          kind,
+          content: artifact.preview_text ?? "",
+          mime: artifact.mime,
+          path: `/runs/${artifact.session_id}/harness/${artifact.rel_path}`,
+        };
+      }
+      return { ok: false, kind: "text", error: `artifact not found: ${id}` };
+    },
+    getArtifactFilePath: () => null,
     getAgentTranscripts: (role) => {
       const all: AgentTranscript[] = [];
       for (const state of [...states.values()].sort((a, b) => b.record.created_at.localeCompare(a.record.created_at))) {

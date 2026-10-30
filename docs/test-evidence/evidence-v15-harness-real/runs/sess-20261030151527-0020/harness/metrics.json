@@ -1,0 +1,26 @@
+{
+  "session_id": "sess-20261030151527-0020",
+  "updated_at": "2026-10-30T15:20:11.840Z",
+  "harness": true,
+  "totals": {
+    "input_tokens": 92169,
+    "output_tokens": 41219,
+    "cache_read_tokens": 792320,
+    "total_tokens": 925708,
+    "steps": 4,
+    "tool_calls": 55,
+    "duration_ms": 281156,
+    "events": 281
+  },
+  "tool_call_counts": {
+    "glob": 5,
+    "pwsh": 27,
+    "write": 7,
+    "read": 12,
+    "edit": 1,
+    "grep": 3
+  },
+  "model_modes": [
+    "harness"
+  ]
+}

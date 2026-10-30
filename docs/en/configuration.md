@@ -45,3 +45,7 @@ Managed app allowlist, managed plugins directory, `allow_destructive`, `require_
 ## Data & security
 
 `steward data --action stats|reset` (whitelist, no path traversal, keeps config); all config/key/prompt/system-action changes are audited (no plaintext keys). Local-only: binds `127.0.0.1`, write APIs require `X-Steward-Token`.
+
+## Harness execution (v1.5.1)
+
+New `harness` config: `enabled` (default true), `profile` (headless), `dsh_bin` (empty = auto-detect), `timeout_ms`, `max_concurrency`, `artifact_retention_days`, `report_required`, `roles[]` (11 roles with enabled/workspace/timeout/max_tokens_per_run; supervisor always off). Editable in /settings; falls back to the previous local actions when dsh is unavailable. See [harness.md](harness.md).

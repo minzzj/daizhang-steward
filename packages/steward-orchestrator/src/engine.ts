@@ -15,8 +15,9 @@
  * 纯本地：受管系统动作只经注入接口执行（未注入则阻断，绝不假装执行）；项目动作写本地证据文件。
  */
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { appendFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, relative } from "node:path";
 
 import { OrchestratorNotFoundError, OrchestratorValidationError } from "./errors.js";
 import {
@@ -53,7 +54,12 @@ import type {
   ConfigBridge,
   CreateSessionInput,
   EvidenceItem,
+  AgentExecutor,
+  HarnessAgentRunInput,
+  HarnessAgentRunResult,
+  HarnessStreamEvent,
   LedgerSink,
+  ModelCallMode,
   ModelAdapter,
   ModelChatMessage,
   ModelChatResult,
@@ -126,7 +132,7 @@ function requireEnum<T extends string>(value: unknown, allowed: readonly T[], fi
 }
 
 function makeOutcome(
-  base: { ok: boolean; content: string; tokens: number; mode: "remote" | "local_fallback" },
+  base: { ok: boolean; content: string; tokens: number; mode: ModelCallMode },
   extra: { reason?: string; blocked?: boolean; aborted?: boolean } = {},
 ): ModelOutcome {
   const outcome: ModelOutcome = { ...base };
@@ -169,6 +175,8 @@ export class OrchestratorEngine {
   private readonly ledger: LedgerSink | undefined;
   private readonly systemActions: SystemActions | undefined;
   private readonly configBridge: ConfigBridge | undefined;
+  private readonly agentExecutor: AgentExecutor | undefined;
+  private readonly onHarnessEvent: ((sessionId: string, event: HarnessStreamEvent) => void) | undefined;
   private readonly sessions = new Map<string, OrchestratorSession>();
   private readonly abortControllers = new Map<string, AbortController>();
   private readonly auditEntries: AuditEntry[] = [];
@@ -211,6 +219,8 @@ export class OrchestratorEngine {
     this.ledger = deps.ledger;
     this.systemActions = deps.systemActions;
     this.configBridge = deps.configBridge;
+    this.agentExecutor = deps.agentExecutor;
+    this.onHarnessEvent = deps.onHarnessEvent;
 
     this.adapter =
       deps.adapter ??
@@ -336,7 +346,7 @@ export class OrchestratorEngine {
         ? parseSystemPlan(outcome.content, this.maxStepsPerRun)
         : parseConductorPlan(outcome.content, this.maxStepsPerRun);
       const usedFallback = parsed === null || outcome.mode === "local_fallback";
-      const planMode: "remote" | "local_fallback" = parsed === null ? "local_fallback" : outcome.mode;
+      const planMode: ModelCallMode = parsed === null ? "local_fallback" : outcome.mode;
       const plan: ConductorPlan =
         parsed ??
         (systemMode ? buildLocalSystemPlan(message, this.maxStepsPerRun) : buildLocalPlan(message, this.maxStepsPerRun));
@@ -742,6 +752,10 @@ export class OrchestratorEngine {
     this.abortControllers.set(session.id, controller);
     const evidenceDir = session.evidence_dir ?? join(this.root, session.id);
     try {
+      // v1.5：优先用真实 DeepSeek Harness 智能体执行（thinking/tool/产物/report），失败再回退本地动作+模型。
+      const harnessState = await this.tryHarnessStep(session, step, evidenceDir, controller.signal);
+      if (harnessState === "done") return true;
+      if (harnessState === "blocked") return false;
       const systemPrompt = this.safePrompt(
         () => this.resolver.getSystemPrompt(step.agent_role),
         `你是代掌的 ${step.agent_role} 智能体。执行计划步骤必须真实、留证、不越界；对外动作需人工确认。`,
@@ -920,6 +934,184 @@ export class OrchestratorEngine {
     }
   }
 
+  /** v1.5：调用注入的真实 Harness 智能体执行本步骤；返回 done/blocked/fallback。 */
+  private async tryHarnessStep(
+    session: OrchestratorSession,
+    step: PlanStep,
+    evidenceDir: string,
+    signal: AbortSignal,
+  ): Promise<"done" | "blocked" | "fallback"> {
+    const executor = this.agentExecutor;
+    if (executor === undefined) return "fallback";
+    let available = false;
+    try {
+      available = executor.available();
+    } catch {
+      available = false;
+    }
+    if (!available) return "fallback";
+    const harnessDir = join(evidenceDir, "harness");
+    // Harness 工作区放系统临时盘（C:），避免 exFAT 上 write/rename 工具异常；产物随后复制回 run 证据目录。
+    const workspaceDir = join(tmpdir(), "steward-harness", session.id, "step-" + step.step + "-" + step.agent_role);
+    mkdirSync(harnessDir, { recursive: true });
+    mkdirSync(workspaceDir, { recursive: true });
+    const eventsPath = join(harnessDir, "step-" + step.step + "-events.jsonl");
+    const task = "目标：" + session.goal + "\n步骤：" + step.summary + "\n动作：" + step.action;
+    const input: HarnessAgentRunInput = {
+      session_id: session.id,
+      step: step.step,
+      role: step.agent_role,
+      task,
+      workspace_dir: workspaceDir,
+      on_event: (event: HarnessStreamEvent) => {
+        appendFileSync(eventsPath, JSON.stringify(event) + "\n", "utf8");
+        try {
+          this.onHarnessEvent?.(session.id, event);
+        } catch {
+          /* 监听器异常不影响执行 */
+        }
+      },
+      signal,
+    };
+    let result: HarnessAgentRunResult;
+    try {
+      result = await executor.run(input);
+    } catch (error) {
+      this.recordAudit(session.id, "harness.error", "step:" + step.step, "error", error instanceof Error ? error.message : String(error));
+      return "fallback";
+    }
+    if (!result.ok) {
+      this.recordAudit(session.id, "harness.fallback", "step:" + step.step, "blocked", (result.error ?? "harness 未完成").slice(0, 200));
+      return "fallback";
+    }
+    // Token 预算（harness 真实 usage）；先落产物/报告/证据，再判定是否超限（超限也保留证据）。
+    const consumed = this.resolver.consumeTokens(Math.max(1, result.usage.total_tokens), { agentRole: step.agent_role, action: step.action });
+    const tokens = Math.max(1, result.usage.total_tokens);
+    // 复制产物到证据目录并生成清单
+    const artifactRefs: string[] = [];
+    const artifactViews: Array<Record<string, unknown>> = [];
+    for (const artifact of result.artifacts) {
+      const safeRel = artifact.rel_path.replaceAll("\\", "/").replace(/^\.\.\//, "");
+      const dest = join(evidenceDir, "artifacts", "step-" + step.step + "-" + step.agent_role, safeRel);
+      try {
+        mkdirSync(dirname(dest), { recursive: true });
+        cpSync(artifact.path, dest, { force: true });
+        const rel = relative(this.root, dest);
+        artifactRefs.push(rel);
+        artifactViews.push({ rel_path: rel, source_rel: artifact.rel_path, kind: artifact.kind, size: artifact.size, sha256: artifact.sha256 });
+      } catch {
+        /* 单个产物复制失败不影响主流程 */
+      }
+    }
+    const artifactsManifest = join(harnessDir, "step-" + step.step + "-artifacts.json");
+    writeFileSync(artifactsManifest, JSON.stringify({ session_id: session.id, step: step.step, role: step.agent_role, artifacts: artifactViews }, null, 2) + "\n", "utf8");
+    let reportRef: string | undefined;
+    try {
+      if (result.report_path && existsSync(result.report_path)) {
+        const reportDest = join(harnessDir, "step-" + step.step + "-report.md");
+        writeFileSync(reportDest, readFileSync(result.report_path));
+        reportRef = relative(this.root, reportDest);
+      }
+    } catch {
+      reportRef = undefined;
+    }
+    const summaryPath = join(harnessDir, "step-" + step.step + "-summary.json");
+    writeFileSync(summaryPath, JSON.stringify({
+      session_id: session.id,
+      step: step.step,
+      role: step.agent_role,
+      action: step.action,
+      ok: consumed.ok,
+      duration_ms: result.duration_ms,
+      usage: result.usage,
+      tool_calls: result.tool_calls,
+      thinking: result.thinking,
+      final_text: result.final_text,
+      artifacts: artifactViews,
+      report_ref: reportRef ?? null,
+      events_count: result.events_count,
+      model_mode: "harness",
+      harness: true,
+    }, null, 2) + "\n", "utf8");
+    // run 级 metrics 汇总
+    const metricsPath = join(harnessDir, "metrics.json");
+    let metrics: Record<string, unknown> = {};
+    try {
+      if (existsSync(metricsPath)) metrics = JSON.parse(readFileSync(metricsPath, "utf8")) as Record<string, unknown>;
+    } catch {
+      metrics = {};
+    }
+    const prev = (metrics.totals ?? {}) as Record<string, number>;
+    const toolCounts = { ...((metrics.tool_call_counts ?? {}) as Record<string, number>) };
+    for (const call of result.tool_calls) toolCounts[call.tool] = (toolCounts[call.tool] ?? 0) + 1;
+    const totals = {
+      input_tokens: (prev.input_tokens ?? 0) + result.usage.input_tokens,
+      output_tokens: (prev.output_tokens ?? 0) + result.usage.output_tokens,
+      cache_read_tokens: (prev.cache_read_tokens ?? 0) + result.usage.cache_read_tokens,
+      total_tokens: (prev.total_tokens ?? 0) + result.usage.total_tokens,
+      steps: (prev.steps ?? 0) + 1,
+      tool_calls: (prev.tool_calls ?? 0) + result.tool_calls.length,
+      duration_ms: (prev.duration_ms ?? 0) + result.duration_ms,
+      events: (prev.events ?? 0) + result.events_count,
+    };
+    writeFileSync(metricsPath, JSON.stringify({ session_id: session.id, updated_at: this.nowIso(), harness: true, totals, tool_call_counts: toolCounts, model_modes: ["harness"] }, null, 2) + "\n", "utf8");
+    const blockedEvidence = [...artifactRefs, ...(reportRef ? [reportRef] : []), relative(this.root, summaryPath), relative(this.root, metricsPath), relative(this.root, eventsPath)];
+    if (!consumed.ok) {
+      step.status = "blocked";
+      session.status = "blocked";
+      this.addTurn(session, {
+        agent_role: step.agent_role,
+        input_summary: "步骤 " + step.step + "：" + step.summary,
+        output_summary: "Harness 已完成但 Token 超限：" + String(consumed.reason ?? ""),
+        detail: "真实 Harness 已执行并落盘（产物/报告/思考/用量见证据），但 Token 预算判定超限，步骤阻断；证据仍保留供人工查看。",
+        tokens,
+        status: "blocked",
+        evidence_refs: blockedEvidence,
+        model_mode: "harness",
+      });
+      this.addMessage(session, { role: "system", kind: "error", text: "步骤 " + step.step + " Harness 已完成但 Token 超限：" + String(consumed.reason ?? "") });
+      this.recordAudit(session.id, "harness.blocked", "step:" + step.step, "blocked", String(consumed.reason ?? "tokens"));
+      return "blocked";
+    }
+    const thinkingPreview = result.thinking.join("\n").slice(0, 1200);
+    const toolPreview = result.tool_calls.slice(0, 12).map((call) => call.tool + "(" + JSON.stringify(call.input).slice(0, 120) + ")").join("; ");
+    const evidenceRefs = [...artifactRefs, ...(reportRef ? [reportRef] : []), relative(this.root, summaryPath), relative(this.root, metricsPath), relative(this.root, eventsPath)];
+    const inputSummary = "步骤 " + step.step + "：" + step.summary;
+    const outputSummary = (result.final_text || "Harness 执行完成").slice(0, 140);
+    const detail = [
+      "真实 Harness 执行（DeepSeek Harness headless，model_mode=harness）",
+      "角色：" + step.agent_role + "；动作：" + step.action,
+      "思考（节选）：" + (thinkingPreview || "（无）"),
+      "工具调用（" + result.tool_calls.length + "）：" + (toolPreview || "（无）"),
+      "产物（" + artifactRefs.length + "）：" + (artifactRefs.join("、") || "（无）"),
+      "报告：" + (reportRef ?? "（无）"),
+      "用量：input=" + result.usage.input_tokens + " output=" + result.usage.output_tokens + " cache_read=" + result.usage.cache_read_tokens + " total=" + result.usage.total_tokens,
+      "耗时：" + result.duration_ms + "ms；事件：" + result.events_count,
+      "最终结论：" + result.final_text,
+    ].join("\n");
+    this.addTurn(session, {
+      agent_role: step.agent_role,
+      input_summary: inputSummary,
+      output_summary: outputSummary,
+      detail,
+      tokens,
+      status: "done",
+      evidence_refs: evidenceRefs,
+      model_mode: "harness",
+    });
+    step.status = "done";
+    this.addMessage(session, {
+      role: "agent",
+      agent_role: step.agent_role,
+      kind: "result",
+      text: outputSummary,
+      summary: outputSummary.slice(0, 80),
+      model_mode: "harness",
+    });
+    this.recordAudit(session.id, "harness." + step.agent_role, "step:" + step.step, "ok", "tools=" + result.tool_calls.length + " artifacts=" + artifactRefs.length + " tokens=" + tokens);
+    this.markDoneIfComplete(session);
+    return "done";
+  }
   /** 执行一个 supervisor 系统动作步骤（经注入的 SystemActions/ConfigBridge；未确认不执行）。 */
   private async executeSystemStep(session: OrchestratorSession, step: PlanStep): Promise<boolean> {
     const plan = step.action_plan;
@@ -1291,7 +1483,7 @@ export class OrchestratorEngine {
 
   private addMessage(
     session: OrchestratorSession,
-    input: { role: ChatRole; kind: ChatKind; text: string; summary?: string; agent_role?: string; model_mode?: "remote" | "local_fallback" },
+    input: { role: ChatRole; kind: ChatKind; text: string; summary?: string; agent_role?: string; model_mode?: ModelCallMode },
   ): ChatMessage {
     const entry: ChatMessage = {
       id: `msg-${String(session.messages.length + 1).padStart(3, "0")}`,
@@ -1318,7 +1510,7 @@ export class OrchestratorEngine {
       tokens: number;
       status: AgentTurnStatus;
       evidence_refs: string[];
-      model_mode?: "remote" | "local_fallback";
+      model_mode?: ModelCallMode;
       interrupted?: boolean;
     },
   ): AgentTurn {

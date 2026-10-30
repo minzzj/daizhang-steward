@@ -10,6 +10,11 @@
 
 export type {
   ActionPlan,
+  AgentExecutor,
+  HarnessAgentRunInput,
+  HarnessAgentRunResult,
+  HarnessArtifactRef,
+  HarnessStreamEvent,
   ActionRisk,
   AgentConfigSummary,
   AgentTurn,

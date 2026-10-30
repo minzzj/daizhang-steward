@@ -13,6 +13,8 @@
  */
 
 import { randomBytes, timingSafeEqual } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { basename, isAbsolute, normalize, sep } from "node:path";
 import { createServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { BASE_CSS, CLIENT_JS } from "./assets.js";
@@ -66,8 +68,14 @@ import {
   type MoneyMethod,
 } from "./chat.js";
 import { createDemoSystemProvider, type ConsoleSystemProvider, type EpayConfig, type EpayMethod } from "./system.js";
+import { createDemoChatEngineProvider, type ConsoleChatEngineProvider, type ConsoleChatPart } from "./conversations.js";
+import { renderChatHomePage } from "./pages-chatgpt.js";
+import { GPT_CSS, GPT_JS } from "./assets-chatgpt.js";
 import { createDemoRuntimeProvider, type ConsoleRuntimeEvent, type ConsoleRuntimeProvider } from "./runtime.js";
 import { renderSystemPage } from "./pages-system.js";
+import { renderArtifactsCenterPage, renderReportsCenterPage } from "./pages-chat.js";
+import type { HarnessArtifactView, HarnessReportView, RunMetricsView, RuntimeArtifactFilter, RuntimeReportFilter } from "./runtime.js";
+import type { HarnessAgentSummary } from "./pages-admin.js";
 import type { MoneyPageInput } from "./pages-chat.js";
 
 export const CONSOLE_DEFAULT_HOST = "127.0.0.1";
@@ -104,6 +112,13 @@ export interface ConsoleServerOptions {
    * 缺省：自动启用内置演示实现；传 `null` 关闭 /system 与易支付 API。
    */
   systemProvider?: ConsoleSystemProvider | null;
+  /** v1.5.1：ChatGPT 式对话总控 provider（默认 createDemoChatEngineProvider；null 关闭 /chat 新界面）。 */
+  chatEngineProvider?: ConsoleChatEngineProvider | null;
+  /**
+   * v1.5.1：任务类消息是否自动创建演示 runtime run（真实 ChatEngine 自执行时设为 false，避免双跑）。
+   * 缺省 true（演示/兼容行为）。
+   */
+  autoCreateChatRuns?: boolean;
   /**
    * 运行时 provider（v1.4：发送即执行 + SSE 实时流）。
    * 缺省：自动启用内置 `createDemoRuntimeProvider()`；传 `null` 关闭 /api/chat/runs 与 SSE（页面 503）。
@@ -214,7 +229,72 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   // v1.4：运行时 provider（发送即执行 + SSE；默认启用内置演示实现；显式传 null 关闭）
   const runtimeProvider: ConsoleRuntimeProvider | undefined =
     options.runtimeProvider === null ? undefined : options.runtimeProvider ?? createDemoRuntimeProvider();
+  const chatEngineProvider: ConsoleChatEngineProvider | undefined =
+    options.chatEngineProvider === null ? undefined : options.chatEngineProvider ?? createDemoChatEngineProvider();
   let activeSseStreams = 0;
+
+  // v1.5：产物/报告/指标只读访问（runtime 可选方法；缺省返回空，页面显示「暂不可用」）
+  const listRuntimeArtifacts = async (filter?: RuntimeArtifactFilter): Promise<HarnessArtifactView[]> => {
+    if (runtimeProvider?.listArtifacts === undefined) return [];
+    try {
+      return await runtimeProvider.listArtifacts(filter);
+    } catch {
+      return [];
+    }
+  };
+  const listRuntimeReports = async (filter?: RuntimeReportFilter): Promise<HarnessReportView[]> => {
+    if (runtimeProvider?.listReports === undefined) return [];
+    try {
+      return await runtimeProvider.listReports(filter);
+    } catch {
+      return [];
+    }
+  };
+  const getRuntimeMetrics = async (runId: string): Promise<RunMetricsView | null> => {
+    if (runtimeProvider?.getRunMetrics === undefined) return null;
+    try {
+      return await runtimeProvider.getRunMetrics(runId);
+    } catch {
+      return null;
+    }
+  };
+  /** 每个智能体的 Harness 真实执行摘要（最近会话/tokens/工具/产物/报告）。 */
+  const buildHarnessSummaries = async (roles: string[]): Promise<Record<string, HarnessAgentSummary>> => {
+    const summaries: Record<string, HarnessAgentSummary> = {};
+    if (runtimeProvider === undefined || runtimeProvider.listRuns === undefined) return summaries;
+    const runs = await runtimeProvider.listRuns();
+    const artifacts = await listRuntimeArtifacts();
+    const reports = await listRuntimeReports();
+    for (const role of roles) {
+      const summary: HarnessAgentSummary = { label: "DeepSeek Harness 真实执行" };
+      for (const run of runs) {
+        const detail = runtimeProvider.getRunDetail === undefined ? null : runtimeProvider.getRunDetail(run.run_id);
+        if (detail === null) continue;
+        const agent = detail.agents.find((item) => item.agent_role === role);
+        if (agent === undefined) continue;
+        const events = runtimeProvider.eventLog === undefined ? [] : runtimeProvider.eventLog(run.run_id);
+        const toolEvents = events.filter((event) => event.type === "harness.tool_call" && String(event.data.agent_role ?? "") === role);
+        const startedMs = Date.parse(run.created_at);
+        const updatedMs = Date.parse(run.updated_at);
+        summary.session_id = run.session_id;
+        summary.run_id = run.run_id;
+        summary.recent_at = run.updated_at;
+        summary.duration_ms = Number.isFinite(startedMs) && Number.isFinite(updatedMs) ? Math.max(0, updatedMs - startedMs) : 0;
+        summary.tokens = agent.turns.reduce((sum, turn) => sum + turn.tokens, 0);
+        summary.tools = toolEvents.length;
+        summary.artifacts = artifacts.filter((item) => item.run_id === run.run_id && item.agent_role === role).length;
+        summary.reports = reports.filter((item) => item.run_id === run.run_id && item.agent_role === role).length;
+        summary.profile = "deepseek-harness@v1";
+        summary.workspace = `runs/${run.session_id}/harness/`;
+        const toolNames = [...new Set(toolEvents.map((event) => String(event.data.tool ?? "")).filter((name) => name !== ""))];
+        summary.tool_names = toolNames;
+        break;
+      }
+      summaries[role] = summary;
+    }
+    return summaries;
+  };
+
   const host = options.host ?? CONSOLE_DEFAULT_HOST;
   assertLoopbackHost(host);
   const port = options.port ?? CONSOLE_DEFAULT_PORT;
@@ -448,7 +528,7 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   // -------------------------------------------------------------------------
   // 页面路由
   // -------------------------------------------------------------------------
-  const handlePage = async (res: ServerResponse, pathname: string): Promise<number> => {
+  const handlePage = async (res: ServerResponse, pathname: string, requestUrl: URL): Promise<number> => {
     if (pathname === "/") {
       const [overview, summaryL0, ledger] = await Promise.all([
         provider.overview(),
@@ -509,8 +589,9 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     if (pathname === "/agents") {
       if (adminProvider === undefined) return adminUnavailablePage(res, "智能体中心");
       const [agents, config] = await Promise.all([adminProvider.getAgents(), adminProvider.getConfig()]);
+      const harness = await buildHarnessSummaries(agents.map((agent) => agent.role));
       const options = await pageOptions("agents");
-      return sendHtml(res, 200, renderAgentsPage({ agents, mode: config.profile.mode, options }));
+      return sendHtml(res, 200, renderAgentsPage({ agents, mode: config.profile.mode, harness, options }));
     }
     if (pathname === "/backend") {
       if (adminProvider === undefined) return adminUnavailablePage(res, "后台");
@@ -540,13 +621,14 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     }
     // ---- v1.2：对话 / 智能体对话记录 / run 证据 / 变现 ----
     if (pathname === "/chat") {
-      if (chatProvider === undefined && runtimeProvider === undefined) return chatUnavailablePage(res, "对话");
-      const chatSessions = chatProvider === undefined ? [] : await chatProvider.listSessions();
-      const liveSessions = runtimeProvider === undefined ? [] : runtimeProvider.listSessions();
-      const seen = new Set(chatSessions.map((session) => session.id));
-      const sessions = [...liveSessions.filter((session) => !seen.has(session.id)), ...chatSessions];
+      if (chatEngineProvider === undefined) return chatUnavailablePage(res, "对话");
+      const conversations = await chatEngineProvider.listConversations();
+      const queryConversation = requestUrl.searchParams.get("conversation");
+      const targetId = queryConversation ?? conversations[0]?.id;
+      const active = targetId === undefined ? null : await chatEngineProvider.getConversation(targetId);
+      const [memory, status] = await Promise.all([chatEngineProvider.listMemory(), chatEngineProvider.status()]);
       const options = await pageOptions("chat");
-      return sendHtml(res, 200, renderChatPage({ sessions, options }));
+      return sendHtml(res, 200, renderChatHomePage({ conversations, active, memory, status, options }));
     }
     if (pathname === "/money") {
       if (chatProvider === undefined) return chatUnavailablePage(res, "变现");
@@ -645,8 +727,10 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
           agentInfo = null;
         }
       }
+      const roleArtifacts = await listRuntimeArtifacts({ agent_role: role });
+      const roleReports = await listRuntimeReports({ agent_role: role });
       const options = await pageOptions("agents");
-      return sendHtml(res, 200, renderAgentRolePage({ role, title: chatAgentTitle(role), transcripts, agentInfo, runs, options }));
+      return sendHtml(res, 200, renderAgentRolePage({ role, title: chatAgentTitle(role), transcripts, agentInfo, runs, artifacts: roleArtifacts, reports: roleReports, options }));
     }
     const runDetailMatch = /^\/runs\/([^/]+)$/.exec(pathname);
     if (runDetailMatch !== null) {
@@ -654,7 +738,12 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       const options = await pageOptions("run");
       const liveRun = runtimeProvider === undefined ? null : runtimeProvider.getRunDetail(runId);
       if (liveRun !== null) {
-        return sendHtml(res, 200, renderRunDetailPage({ run: liveRun, options }));
+        const [runArtifacts, runReports, runMetrics] = await Promise.all([
+          listRuntimeArtifacts({ run_id: runId }),
+          listRuntimeReports({ run_id: runId }),
+          getRuntimeMetrics(runId),
+        ]);
+        return sendHtml(res, 200, renderRunDetailPage({ run: liveRun, artifacts: runArtifacts, reports: runReports, metrics: runMetrics, options }));
       }
       if (chatProvider === undefined) return chatUnavailablePage(res, "run 证据");
       const run = await chatProvider.getRunDetail(runId);
@@ -672,6 +761,30 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       ]);
       const options = await pageOptions("system");
       return sendHtml(res, 200, renderSystemPage({ status, supervisorMessages, epay, options }));
+    }
+    if (pathname === "/artifacts") {
+      const filter: RuntimeArtifactFilter = {};
+      const runFilter = requestUrl.searchParams.get("run_id");
+      if (runFilter !== null && runFilter !== "") filter.run_id = runFilter;
+      const kindFilter = requestUrl.searchParams.get("kind");
+      if (kindFilter !== null && kindFilter !== "") filter.kind = kindFilter;
+      const agentFilter = requestUrl.searchParams.get("agent");
+      if (agentFilter !== null && agentFilter !== "") filter.agent_role = agentFilter;
+      const artifacts = await listRuntimeArtifacts(filter);
+      const runs = runtimeProvider === undefined ? [] : (await runtimeProvider.listRuns()).map((run) => ({ run_id: run.run_id, goal: run.goal }));
+      const options = await pageOptions("artifacts");
+      return sendHtml(res, 200, renderArtifactsCenterPage({ artifacts, runs, options }));
+    }
+    if (pathname === "/reports") {
+      const filter: RuntimeReportFilter = {};
+      const runFilter = requestUrl.searchParams.get("run_id");
+      if (runFilter !== null && runFilter !== "") filter.run_id = runFilter;
+      const agentFilter = requestUrl.searchParams.get("agent");
+      if (agentFilter !== null && agentFilter !== "") filter.agent_role = agentFilter;
+      const reports = await listRuntimeReports(filter);
+      const runs = runtimeProvider === undefined ? [] : (await runtimeProvider.listRuns()).map((run) => ({ run_id: run.run_id, goal: run.goal }));
+      const options = await pageOptions("reports");
+      return sendHtml(res, 200, renderReportsCenterPage({ reports, runs, options }));
     }
     if (pathname.startsWith("/project/")) {
       const projectId = pathname.slice("/project/".length).trim();
@@ -998,6 +1111,263 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     return 200;
   };
 
+  // -------------------------------------------------------------------------
+  // v1.5.1：ChatGPT 式对话总控 API（会话 / 消息流 / SSE / 记忆 / 状态）
+  // -------------------------------------------------------------------------
+  const isChatEngineApiPath = (pathname: string): boolean =>
+    pathname.startsWith("/api/chat/conversations") || pathname === "/api/chat/memory" || pathname.startsWith("/api/chat/memory/") || pathname === "/api/chat/status";
+
+  const chatStreams = new Map<
+    string,
+    {
+      conversationId: string;
+      parts: ConsoleChatPart[];
+      done: boolean;
+      listeners: Set<(event: { part?: ConsoleChatPart; done: boolean; seq: number }) => void>;
+      runId?: string;
+      step?: number;
+      approvedAt?: string;
+      cancel: () => void;
+    }
+  >();
+  let chatStreamCounter = 0;
+
+  const broadcastChatStream = (hub: { parts: ConsoleChatPart[]; done: boolean; listeners: Set<(event: { part?: ConsoleChatPart; done: boolean; seq: number }) => void> }, part?: ConsoleChatPart): void => {
+    const event = { ...(part === undefined ? {} : { part }), done: hub.done, seq: hub.parts.length };
+    for (const listener of [...hub.listeners]) {
+      try {
+        listener(event);
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+  const handleChatEngineApi = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+    method: string,
+    pathname: string,
+    requestUrl: URL,
+  ): Promise<number | null> => {
+    if (!isChatEngineApiPath(pathname)) return null;
+    const engine = chatEngineProvider;
+    if (engine === undefined) {
+      return sendJson(res, 503, { ok: false, error: "chat_engine_unavailable", message: "对话总控需要 chatEngineProvider（默认 createDemoChatEngineProvider）" });
+    }
+    const isRead = method === "GET" || method === "HEAD";
+
+    // SSE：GET /api/chat/conversations/:id/stream?assistant_id=&since=（只读，无需 token）
+    const streamMatch = /^\/api\/chat\/conversations\/([^/]+)\/stream$/.exec(pathname);
+    if (streamMatch !== null) {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      const assistantId = requestUrl.searchParams.get("assistant_id") ?? "";
+      const rawSince = Number.parseInt(requestUrl.searchParams.get("since") ?? "0", 10);
+      const since = Number.isFinite(rawSince) ? rawSince : 0;
+      res.writeHead(200, baseHeaders({ "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform", Connection: "keep-alive", "X-Accel-Buffering": "no" }));
+      res.flushHeaders?.();
+      res.write(": connected\n\n");
+      const hub = chatStreams.get(assistantId);
+      let closed = false;
+      const listeners = hub === undefined ? null : hub.listeners;
+      const cleanup = (): void => {
+        if (closed) return;
+        closed = true;
+        if (listeners !== null) listeners.delete(listener);
+      };
+      const writeEvent = (event: { part?: ConsoleChatPart; done: boolean; seq: number }): void => {
+        if (closed) return;
+        try {
+          res.write(`id: ${String(event.seq)}\ndata: ${JSON.stringify({ seq: event.seq, part: event.part, done: event.done })}\n\n`);
+        } catch {
+          cleanup();
+        }
+      };
+      const listener = (event: { part?: ConsoleChatPart; done: boolean; seq: number }): void => writeEvent(event);
+      if (hub === undefined) {
+        writeEvent({ done: true, seq: 0 });
+        res.end();
+        return 200;
+      }
+      for (let index = since; index < hub.parts.length; index += 1) {
+        const part = hub.parts[index];
+        if (part !== undefined) writeEvent({ part, done: false, seq: index + 1 });
+      }
+      if (hub.done) {
+        writeEvent({ done: true, seq: hub.parts.length });
+        res.end();
+        return 200;
+      }
+      hub.listeners.add(listener);
+      const heartbeat = setInterval(() => {
+        if (closed) return;
+        try {
+          res.write(": heartbeat\n\n");
+        } catch {
+          cleanup();
+        }
+      }, 15000);
+      req.on("close", () => {
+        clearInterval(heartbeat);
+        cleanup();
+      });
+      res.on("error", () => {
+        clearInterval(heartbeat);
+        cleanup();
+      });
+      return 200;
+    }
+
+    if (pathname === "/api/chat/conversations") {
+      if (isRead) return sendJson(res, 200, { ok: true, data: await engine.listConversations() });
+      if (method !== "POST") return methodNotAllowed(res, ["GET", "HEAD", "POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const conversation = await engine.createConversation(readString(body.value.title, "新对话"));
+      return sendJson(res, 200, { ok: true, data: conversation });
+    }
+
+    const convMatch = /^\/api\/chat\/conversations\/([^/]+)(?:\/(messages|approvals))?$/.exec(pathname);
+    if (convMatch !== null) {
+      const conversationId = decodeURIComponent(convMatch[1] ?? "");
+      const action = convMatch[2];
+      if (action === undefined) {
+        if (isRead) {
+          const detail = await engine.getConversation(conversationId);
+          if (detail === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到对话：${conversationId}` });
+          return sendJson(res, 200, { ok: true, data: detail });
+        }
+        if (method === "PATCH") {
+          const auth = requireWriteAuth(req, res);
+          if (auth !== null) return auth;
+          const body = await readJsonBody(req);
+          if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+          const conversation = await engine.renameConversation(conversationId, readString(body.value.title, ""));
+          if (conversation === null) return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到对话：${conversationId}` });
+          return sendJson(res, 200, { ok: true, data: conversation });
+        }
+        if (method === "DELETE") {
+          const auth = requireWriteAuth(req, res);
+          if (auth !== null) return auth;
+          const deleted = await engine.deleteConversation(conversationId);
+          return sendJson(res, deleted ? 200 : 404, { ok: deleted, data: { deleted } });
+        }
+        return methodNotAllowed(res, ["GET", "HEAD", "PATCH", "DELETE"]);
+      }
+      if (action === "approvals") {
+        if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+        const auth = requireWriteAuth(req, res);
+        if (auth !== null) return auth;
+        const body = await readJsonBody(req);
+        if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+        const approvalId = readString(body.value.approval_id, "");
+        const decision = body.value.decision === "reject" ? "reject" : "approve";
+        let ok = false;
+        if (engine.decideApproval !== undefined) ok = await engine.decideApproval(conversationId, approvalId, decision);
+        for (const [, hub] of chatStreams) {
+          if (hub.conversationId !== conversationId) continue;
+          if (hub.runId === undefined) continue;
+          try {
+            await runtimeProvider?.approve?.(hub.runId, hub.step ?? 5, decision);
+          } catch {
+            /* runtime approval best-effort */
+          }
+          hub.approvedAt = new Date().toISOString();
+          break;
+        }
+        return sendJson(res, ok ? 200 : 400, { ok, data: { approval_id: approvalId, decision } });
+      }
+      // POST .../messages：创建用户消息 + 启动流（返回 assistant_id，再 GET SSE）
+      if (method !== "POST") return methodNotAllowed(res, ["POST"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const body = await readJsonBody(req);
+      if (!body.ok) return sendJson(res, body.status, { ok: false, error: "invalid_body", message: body.message });
+      const text = readString(body.value.text, "");
+      if (text === "") return sendJson(res, 400, { ok: false, error: "invalid_text", message: "消息不能为空" });
+      if (body.value.stream === false) {
+        try {
+          const messages = await engine.sendMessage(conversationId, text);
+          return sendJson(res, 200, { ok: true, data: messages });
+        } catch (error) {
+          return sendJson(res, 400, { ok: false, error: "send_failed", message: errorMessage(error) });
+        }
+      }
+      chatStreamCounter += 1;
+      const assistantId = `chat-stream-${String(chatStreamCounter).padStart(3, "0")}`;
+      const hub: {
+        conversationId: string;
+        parts: ConsoleChatPart[];
+        done: boolean;
+        listeners: Set<(event: { part?: ConsoleChatPart; done: boolean; seq: number }) => void>;
+        runId?: string;
+        step?: number;
+        approvedAt?: string;
+        cancel: () => void;
+      } = { conversationId, parts: [], done: false, listeners: new Set(), cancel: () => {} };
+      chatStreams.set(assistantId, hub);
+      // 若像任务请求：同时创建真实 runtime run，并注入“查看完整运行过程”链接（深度视图）
+      if (runtimeProvider !== undefined && options.autoCreateChatRuns !== false && /帮我|做|查|执行|跑|生成|整理|汇总|产物|报告|项目|页面|代码/.test(text)) {
+        try {
+          const result = await runtimeProvider.createAndStart({ goal: text, budget_cny: 3000, token_limit: 200_000, mode: "demo" });
+          hub.runId = result.run.run_id;
+          const pendingStep = result.run.pending_approval?.step;
+          if (pendingStep !== undefined) hub.step = pendingStep;
+          hub.parts.push({
+            type: "text",
+            text: "已创建一次真实运行，可查看完整实时过程与证据：",
+            run_link: { id: "chat-run-link", href: `/chat/${encodeURIComponent(result.session.id)}`, text: "查看完整运行过程与证据 →" },
+          });
+          broadcastChatStream(hub);
+        } catch {
+          /* runtime best-effort */
+        }
+      }
+      hub.cancel = engine.streamMessage(conversationId, text, (part) => {
+        if (part.type === "_done") {
+          hub.done = true;
+          broadcastChatStream(hub);
+          return;
+        }
+        hub.parts.push(part);
+        if (part.type === "approval") {
+          const stepValue = Number(part.step ?? hub.step ?? 5);
+          if (Number.isFinite(stepValue)) hub.step = stepValue;
+        }
+        broadcastChatStream(hub, part);
+      });
+      return sendJson(res, 200, {
+        ok: true,
+        data: {
+          conversation_id: conversationId,
+          user: { id: `user-local-${String(chatStreamCounter)}`, role: "user", at: new Date().toISOString(), parts: [{ type: "text", text }] },
+          assistant: { id: assistantId, role: "assistant", at: new Date().toISOString(), parts: [] },
+          stream: { assistant_id: assistantId, assistant_message_id: assistantId, url: `/api/chat/conversations/${encodeURIComponent(conversationId)}/stream?assistant_id=${encodeURIComponent(assistantId)}&since=0` },
+        },
+      });
+    }
+
+    if (pathname === "/api/chat/memory") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await engine.listMemory(requestUrl.searchParams.get("query") ?? undefined) });
+    }
+    const memoryMatch = /^\/api\/chat\/memory\/([^/]+)$/.exec(pathname);
+    if (memoryMatch !== null) {
+      if (method !== "DELETE") return methodNotAllowed(res, ["DELETE"]);
+      const auth = requireWriteAuth(req, res);
+      if (auth !== null) return auth;
+      const deleted = await engine.deleteMemory(decodeURIComponent(memoryMatch[1] ?? ""));
+      return sendJson(res, deleted ? 200 : 404, { ok: deleted, data: { deleted } });
+    }
+    if (pathname === "/api/chat/status") {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendJson(res, 200, { ok: true, data: await engine.status() });
+    }
+    return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到对话 API：${pathname}` });
+  };
+
   const handleChatApi = async (
 
     req: IncomingMessage,
@@ -1146,6 +1516,15 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
         if (run !== null) return sendJson(res, 200, { ok: true, data: run });
       }
       return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到 run：${runId}` });
+    }
+
+    const metricsMatch = /^\/api\/chat\/runs\/([^/]+)\/metrics$/.exec(pathname);
+    if (metricsMatch !== null) {
+      if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+      const runId = decodeURIComponent(metricsMatch[1] ?? "");
+      const metrics = await getRuntimeMetrics(runId);
+      if (metrics === null) return sendJson(res, 404, { ok: false, error: "metrics_not_found", message: `未找到 run 指标：${runId}` });
+      return sendJson(res, 200, { ok: true, data: metrics });
     }
 
     const runtimeActionMatch = /^\/api\/chat\/runs\/([^/]+)\/(approvals|interrupt|resume)$/.exec(pathname);
@@ -1471,6 +1850,201 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   };
 
   // -------------------------------------------------------------------------
+  // v1.5：产物 / 报告 API（只读；防路径穿越：仅按 provider 白名单 ID 查找）
+  // -------------------------------------------------------------------------
+
+  const isHarnessApiPath = (pathname: string): boolean =>
+    pathname === "/api/artifacts" ||
+    /^\/api\/artifacts\/[^/]+\/(preview|download|raw)$/.test(pathname) ||
+    pathname === "/api/reports" ||
+    /^\/api\/reports\/[^/]+$/.test(pathname);
+
+  const ARTIFACT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{1,160}$/;
+
+  const isSafeRelPath = (relPath: string): boolean => {
+    const text = String(relPath ?? "");
+    if (text === "" || text.length > 512) return false;
+    if (text.includes("..") || text.includes("\\") || text.startsWith("/") || text.includes("\0")) return false;
+    return /^[A-Za-z0-9._/-]+$/.test(text);
+  };
+
+  const findRuntimeArtifact = async (artifactId: string): Promise<HarnessArtifactView | null> => {
+    if (!ARTIFACT_ID_PATTERN.test(artifactId)) return null;
+    for (const artifact of await listRuntimeArtifacts()) {
+      if (artifact.id !== artifactId) continue;
+      if (!isSafeRelPath(artifact.rel_path)) continue;
+      return artifact;
+    }
+    return null;
+  };
+
+  const findRuntimeReport = async (reportId: string): Promise<HarnessReportView | null> => {
+    if (!ARTIFACT_ID_PATTERN.test(reportId)) return null;
+    for (const report of await listRuntimeReports()) {
+      if (report.id === reportId) return report;
+    }
+    return null;
+  };
+
+  const artifactContentType = (artifact: HarnessArtifactView): string => {
+    switch (artifact.kind) {
+      case "html":
+        return "text/html; charset=utf-8";
+      case "markdown":
+        return "text/markdown; charset=utf-8";
+      case "json":
+        return "application/json; charset=utf-8";
+      case "image":
+        return artifact.mime || "image/svg+xml";
+      default:
+        return artifact.mime || "text/plain; charset=utf-8";
+    }
+  };
+
+  const artifactFileName = (artifact: HarnessArtifactView): string => {
+    const base = artifact.rel_path.split("/").pop() ?? "artifact.txt";
+    return base.replace(/[^A-Za-z0-9._-]/g, "_") || "artifact.txt";
+  };
+
+  /** v1.5：下载/预览文件绝对路径安全校验——必须绝对路径、规范化后位于 runs/ 目录内、无路径穿越。 */
+  const isSafeHarnessPath = (filePath: string): boolean => {
+    if (typeof filePath !== "string" || filePath === "") return false;
+    if (!isAbsolute(filePath)) return false;
+    const normalized = normalize(filePath);
+    if (normalized.includes("..")) return false;
+    const segments = normalized.split(/[\\/]/);
+    if (!segments.includes("runs")) return false;
+    return segments.includes("harness");
+  };
+
+  /** 解析产物内容：优先真实 provider（getArtifactContent / getArtifactFilePath 白名单路径），否则演示 preview_text。 */
+  const resolveArtifactContent = async (
+    artifact: HarnessArtifactView,
+  ): Promise<{ content: string; mime: string; fileName: string; source: "provider_content" | "provider_file" | "inline" }> => {
+    if (runtimeProvider?.getArtifactContent !== undefined) {
+      try {
+        const result = await runtimeProvider.getArtifactContent(artifact.id);
+        if (result.ok && typeof result.content === "string") {
+          return { content: result.content, mime: result.mime ?? artifactContentType(artifact), fileName: artifactFileName(artifact), source: "provider_content" };
+        }
+      } catch {
+        /* fallback */
+      }
+    }
+    if (runtimeProvider?.getArtifactFilePath !== undefined) {
+      try {
+        const filePath = runtimeProvider.getArtifactFilePath(artifact.id);
+        if (filePath !== null && isSafeHarnessPath(filePath)) {
+          const content = await readFile(filePath, "utf8");
+          return { content, mime: artifactContentType(artifact), fileName: basename(filePath), source: "provider_file" };
+        }
+      } catch {
+        /* fallback */
+      }
+    }
+    return { content: artifact.preview_text ?? "", mime: artifactContentType(artifact), fileName: artifactFileName(artifact), source: "inline" };
+  };
+
+  const sendRawArtifact = async (res: ServerResponse, artifact: HarnessArtifactView, disposition: "inline" | "attachment"): Promise<number> => {
+    const resolved = await resolveArtifactContent(artifact);
+    const body = resolved.content;
+    const extra: Record<string, string> = {
+      "Content-Type": resolved.mime,
+      "Content-Length": String(Buffer.byteLength(body, "utf8")),
+    };
+    if (artifact.kind === "html") {
+      // 预览 iframe 为 sandbox（无脚本）；再叠加 CSP 禁止脚本/外部资源
+      extra["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; font-src 'none'; script-src 'none'; base-uri 'none'; form-action 'none'";
+    } else if (artifact.kind === "image") {
+      extra["Content-Security-Policy"] = "default-src 'none'";
+    }
+    if (disposition === "attachment") {
+      extra["Content-Disposition"] = `attachment; filename="${resolved.fileName.replace(/[^A-Za-z0-9._-]/g, "_")}"`;
+    }
+    res.writeHead(200, baseHeaders(extra));
+    res.end(body);
+    return 200;
+  };
+
+  const handleHarnessApi = async (
+    req: IncomingMessage,
+    res: ServerResponse,
+    method: string,
+    pathname: string,
+    requestUrl: URL,
+  ): Promise<number | null> => {
+    if (!isHarnessApiPath(pathname)) return null;
+    if (runtimeProvider === undefined) {
+      return sendJson(res, 503, {
+        ok: false,
+        error: "runtime_unavailable",
+        message: "产物/报告需要 runtimeProvider（createConsoleServer 默认启用 createDemoRuntimeProvider）",
+      });
+    }
+    const isRead = method === "GET" || method === "HEAD";
+    if (!isRead) return methodNotAllowed(res, ["GET", "HEAD"]);
+
+    if (pathname === "/api/artifacts") {
+      const filter: RuntimeArtifactFilter = {};
+      const runId = requestUrl.searchParams.get("run_id");
+      if (runId !== null && runId !== "") filter.run_id = runId;
+      const agentRole = requestUrl.searchParams.get("agent");
+      if (agentRole !== null && agentRole !== "") filter.agent_role = agentRole;
+      const kind = requestUrl.searchParams.get("kind");
+      if (kind !== null && kind !== "") filter.kind = kind;
+      return sendJson(res, 200, { ok: true, data: await listRuntimeArtifacts(filter) });
+    }
+
+    const artifactMatch = /^\/api\/artifacts\/([^/]+)\/(preview|download|raw)$/.exec(pathname);
+    if (artifactMatch !== null) {
+      const artifactId = decodeURIComponent(artifactMatch[1] ?? "");
+      const action = artifactMatch[2];
+      const artifact = await findRuntimeArtifact(artifactId);
+      if (artifact === null) {
+        return sendJson(res, 404, { ok: false, error: "artifact_not_found", message: `产物不存在或路径不安全：${artifactId}` });
+      }
+      if (action === "download") return await sendRawArtifact(res, artifact, "attachment");
+      if (action === "raw") return await sendRawArtifact(res, artifact, "inline");
+      // preview：默认返回 JSON；raw=1 直接返回内容（供 iframe/img 使用）
+      if (requestUrl.searchParams.get("raw") === "1") return await sendRawArtifact(res, artifact, "inline");
+      return sendJson(res, 200, {
+        ok: true,
+        data: {
+          id: artifact.id,
+          run_id: artifact.run_id,
+          session_id: artifact.session_id,
+          title: artifact.title,
+          kind: artifact.kind,
+          mime: artifactContentType(artifact),
+          size: artifact.size,
+          rel_path: artifact.rel_path,
+          preview_text: artifact.preview_text ?? "",
+          download_url: artifact.download_url ?? `/api/artifacts/${artifact.id}/download`,
+        },
+      });
+    }
+
+    if (pathname === "/api/reports") {
+      const filter: RuntimeReportFilter = {};
+      const runId = requestUrl.searchParams.get("run_id");
+      if (runId !== null && runId !== "") filter.run_id = runId;
+      const agentRole = requestUrl.searchParams.get("agent");
+      if (agentRole !== null && agentRole !== "") filter.agent_role = agentRole;
+      return sendJson(res, 200, { ok: true, data: await listRuntimeReports(filter) });
+    }
+
+    const reportMatch = /^\/api\/reports\/([^/]+)$/.exec(pathname);
+    if (reportMatch !== null) {
+      const reportId = decodeURIComponent(reportMatch[1] ?? "");
+      const report = await findRuntimeReport(reportId);
+      if (report === null) return sendJson(res, 404, { ok: false, error: "report_not_found", message: `报告不存在：${reportId}` });
+      return sendJson(res, 200, { ok: true, data: report });
+    }
+
+    return sendJson(res, 404, { ok: false, error: "not_found", message: `未找到产物/报告 API：${pathname}` });
+  };
+
+  // -------------------------------------------------------------------------
   // API 路由
   // -------------------------------------------------------------------------
   const handleApi = async (
@@ -1482,10 +2056,14 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
   ): Promise<number> => {
     const adminResult = await handleAdminApi(req, res, method, pathname, requestUrl);
     if (adminResult !== null) return adminResult;
+    const chatEngineResult = await handleChatEngineApi(req, res, method, pathname, requestUrl);
+    if (chatEngineResult !== null) return chatEngineResult;
     const chatResult = await handleChatApi(req, res, method, pathname, requestUrl);
     if (chatResult !== null) return chatResult;
     const systemResult = await handleSystemApi(req, res, method, pathname, requestUrl);
     if (systemResult !== null) return systemResult;
+    const harnessResult = await handleHarnessApi(req, res, method, pathname, requestUrl);
+    if (harnessResult !== null) return harnessResult;
 
     const isRead = method === "GET" || method === "HEAD";
     const readOnlyRoute =
@@ -1666,6 +2244,14 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
       return sendText(res, "text/javascript; charset=utf-8", CHAT_JS);
     }
+    if (pathname === "/assets/gpt.css") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/css; charset=utf-8", GPT_CSS);
+    }
+    if (pathname === "/assets/gpt.js") {
+      if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
+      return sendText(res, "text/javascript; charset=utf-8", GPT_JS);
+    }
     if (pathname === "/assets/system.css") {
       if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
       return sendText(res, "text/css; charset=utf-8", SYSTEM_CSS);
@@ -1693,7 +2279,7 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       return sendJson(res, 200, {
         ok: true,
         service: "steward-console",
-        version: "1.4.0",
+        version: "1.5.1",
         host,
         port,
         local_only: true,
@@ -1702,6 +2288,10 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
         system_enabled: systemProvider !== undefined,
         runtime_enabled: runtimeProvider !== undefined,
         sse_active_streams: activeSseStreams,
+        artifacts_enabled: runtimeProvider?.listArtifacts !== undefined,
+        reports_enabled: runtimeProvider?.listReports !== undefined,
+        metrics_enabled: runtimeProvider?.getRunMetrics !== undefined,
+        chat_engine_enabled: chatEngineProvider !== undefined,
         mode,
         halted: status !== null && status.halted === true,
         started_at: startedAt,
@@ -1711,7 +2301,7 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
     if (pathname.startsWith("/api/")) return handleApi(req, res, method, pathname, requestUrl);
 
     if (method !== "GET" && method !== "HEAD") return methodNotAllowed(res, ["GET", "HEAD"]);
-    return handlePage(res, pathname);
+    return handlePage(res, pathname, requestUrl);
   };
 
   const server = createServer((req, res) => {

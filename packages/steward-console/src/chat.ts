@@ -350,6 +350,8 @@ function qrPlaceholder(requestId: string, amount: number): string {
 
 // v1.4：发送即执行 + SSE 实时流运行时契约（在 runtime.ts 实现，从 chat 模块统一可达）。
 export * from "./runtime.js";
+// v1.5.1：ChatGPT 式对话总控契约（conversations.ts）。
+export * from "./conversations.js";
 
 // ---------------------------------------------------------------------------
 // 演示数据

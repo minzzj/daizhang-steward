@@ -1,0 +1,35 @@
+{
+  "session_id": "sess-20261030151527-0020",
+  "step": 2,
+  "role": "operator",
+  "artifacts": [
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-2-operator\\note.md",
+      "source_rel": "note.md",
+      "kind": "markdown",
+      "size": 7,
+      "sha256": "ea67f39f2a707e536439ee31e49fdd586b4a8437d3408f0466112d040cd06681"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-2-operator\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 2807,
+      "sha256": "dc4dc1e34c35972add287ceca99a4af35bb366093d48a56e3e6924f853b0123f"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-2-operator\\report.md",
+      "source_rel": "report.md",
+      "kind": "markdown",
+      "size": 21613,
+      "sha256": "da4a16684169d009db034e6c2b0b3ac5eb4796f7f9ff1c931861484c3b93155a"
+    },
+    {
+      "rel_path": "sess-20261030151527-0020\\artifacts\\step-2-operator\\verify.log",
+      "source_rel": "verify.log",
+      "kind": "text",
+      "size": 278,
+      "sha256": "910219de57b02a968ff255a391963d9b6d376308aa93ae24e3378ab062a74b33"
+    }
+  ]
+}

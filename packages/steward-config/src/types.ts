@@ -270,6 +270,19 @@ export interface PayoutAccountUpdate {
 
 export type Autonomy = "readonly" | "draft" | "approval_required" | "autonomous_limited";
 
+/**
+ * 单个 Agent 的 Harness（真实 DSH 执行）元数据（v1.5）。
+ * - `profile`：DSH profile 名（默认 headless）；
+ * - `workspace`：相对 runDir 的工作区子目录模板（默认 workspace/<role>）；
+ * - `tools`：该角色允许使用的 Harness 工具名（read/write/edit/bash/test/glob/grep/web_search/web_fetch/browser）。
+ * supervisor 不直接走 Harness 业务执行，默认不配置（可空）。
+ */
+export interface AgentHarnessMeta {
+  profile: string;
+  workspace: string;
+  tools: string[];
+}
+
 export interface AgentConfig {
   role: string;
   name: string;
@@ -278,6 +291,8 @@ export interface AgentConfig {
   tools: string[];
   token_limit: number;
   model_ref: string;
+  /** v1.5：Harness 元数据（工具/工作区/profile；旧 config 自动补齐）。 */
+  harness?: AgentHarnessMeta;
 }
 
 export interface AgentUpdate {
@@ -287,6 +302,7 @@ export interface AgentUpdate {
   tools?: string[];
   token_limit?: number;
   model_ref?: string;
+  harness?: AgentHarnessMeta;
 }
 
 // ---------------------------------------------------------------------------
@@ -478,6 +494,55 @@ export interface RuntimeSettingsUpdate {
   event_retention?: number;
 }
 
+// ---------------------------------------------------------------------------
+// 6.10) Harness 真实执行设置（v1.5 新增：各 agent 走真实 DeepSeek Harness）
+// ---------------------------------------------------------------------------
+
+/** 单个角色的 Harness 执行设置。 */
+export interface HarnessRoleSettings {
+  /** 角色名（11 个 agent 角色之一）。 */
+  role: string;
+  /** 是否走真实 Harness 执行（默认 true；supervisor 默认且强制 false，仅系统动作）。 */
+  enabled: boolean;
+  /** 相对 runDir 的工作区子目录模板（默认 "workspace/<role>"）。 */
+  workspace: string;
+  /** 单次 Harness run 超时（毫秒，默认 300000，10–1800000）。 */
+  timeout_ms: number;
+  /** 单次 Harness run token 上限（默认 200000，1000–2000000）。 */
+  max_tokens_per_run: number;
+}
+
+/** Harness 真实执行总设置（11 个角色各一条；密码/API key 不在此，使用本机 DSH 凭据）。 */
+export interface HarnessSettings {
+  /** 总开关（默认 true；无 dsh 时自动回退本地执行）。 */
+  enabled: boolean;
+  /** DSH profile（默认 "headless"）。 */
+  profile: string;
+  /** DSH 可执行文件（空 = 自动探测：STEWARD_DSH_BIN / node + APPDATA npm 全局路径）。 */
+  dsh_bin: string;
+  /** 默认超时（毫秒，默认 300000，10–1800000）。 */
+  timeout_ms: number;
+  /** 并发 Harness run 上限（1–4，默认 2）。 */
+  max_concurrency: number;
+  /** Harness 产物保留天数（1–365，默认 30）。 */
+  artifact_retention_days: number;
+  /** 每个 agent 必须产出 report.md（默认 true）。 */
+  report_required: boolean;
+  /** 11 个角色各一条。 */
+  roles: HarnessRoleSettings[];
+}
+
+export interface HarnessSettingsUpdate {
+  enabled?: boolean;
+  profile?: string;
+  dsh_bin?: string;
+  timeout_ms?: number;
+  max_concurrency?: number;
+  artifact_retention_days?: number;
+  report_required?: boolean;
+  roles?: HarnessRoleSettings[];
+}
+
 export interface ModelProviderRemovalResult {
   removed_provider_id: string;
   /** 原本绑定该服务商、已自动改绑到默认服务商的代理角色。 */
@@ -527,6 +592,8 @@ export interface StewardConfig {
   system_policy: SystemPolicyConfig;
   /** v1.4 新增：自动执行/审批策略等运行时设置（旧 config 自动补默认）。 */
   runtime: RuntimeSettings;
+  /** v1.5 新增：各 agent 真实 Harness 执行设置（旧 config 自动补默认）。 */
+  harness: HarnessSettings;
   updated_at: string;
 }
 

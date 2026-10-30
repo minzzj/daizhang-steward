@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "generated_at": "2026-10-30T15:23:27.687Z",
+  "runs": [
+    {
+      "run": {
+        "run_id": "run-20261030112328-0001",
+        "session_id": "sess-20261030112328-0012",
+        "goal": "帮我写一个简单的项目方案（单页 HTML 方案书），并给出验收说明",
+        "kind": "project",
+        "status": "done",
+        "created_at": "2026-10-30T11:23:28.950Z",
+        "updated_at": "2026-10-30T11:23:29.524Z",
+        "steps_total": 5,
+        "steps_done": 5,
+        "token_used": 385,
+        "event_seq": 35,
+        "current_step": 5
+      },
+      "reworks": 0,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    },
+    {
+      "run": {
+        "run_id": "run-20261030115244-0001",
+        "session_id": "sess-20261030115244-0013",
+        "goal": "帮我写一个简单的项目方案（单页 HTML 方案书），并给出验收说明",
+        "kind": "project",
+        "status": "done",
+        "created_at": "2026-10-30T11:52:44.364Z",
+        "updated_at": "2026-10-30T11:52:44.746Z",
+        "steps_total": 5,
+        "steps_done": 5,
+        "token_used": 385,
+        "event_seq": 35,
+        "current_step": 5
+      },
+      "reworks": 0,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    },
+    {
+      "run": {
+        "run_id": "run-20261030120632-0001",
+        "session_id": "sess-20261030120632-0014",
+        "goal": "帮我写一个简单的项目方案（单页 HTML 方案书），并给出验收说明",
+        "kind": "project",
+        "status": "blocked",
+        "created_at": "2026-10-30T12:06:32.015Z",
+        "updated_at": "2026-10-30T12:06:41.998Z",
+        "steps_total": 3,
+        "steps_done": 0,
+        "token_used": 673,
+        "event_seq": 29,
+        "current_step": 2,
+        "error": "步骤 2 本地动作失败：本地质检未通过：file_exists/has_html_tag/has_title/has_body"
+      },
+      "reworks": 1,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    },
+    {
+      "run": {
+        "run_id": "run-20261030122335-0001",
+        "session_id": "sess-20261030122335-0015",
+        "goal": "帮我写一个简单的项目方案（单页 HTML 方案书），并给出验收说明",
+        "kind": "project",
+        "status": "done",
+        "created_at": "2026-10-30T12:23:35.071Z",
+        "updated_at": "2026-10-30T12:23:46.036Z",
+        "steps_total": 4,
+        "steps_done": 4,
+        "token_used": 411,
+        "event_seq": 31,
+        "current_step": 4
+      },
+      "reworks": 0,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    },
+    {
+      "run": {
+        "run_id": "run-20261030123250-0001",
+        "session_id": "sess-20261030123250-0016",
+        "goal": "帮我写一个简单的项目方案（单页 HTML 方案书），并给出验收说明",
+        "kind": "project",
+        "status": "done",
+        "created_at": "2026-10-30T12:32:50.927Z",
+        "updated_at": "2026-10-30T12:33:01.712Z",
+        "steps_total": 5,
+        "steps_done": 5,
+        "token_used": 430,
+        "event_seq": 37,
+        "current_step": 5
+      },
+      "reworks": 0,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    },
+    {
+      "run": {
+        "run_id": "run-20261030140640-0001",
+        "session_id": "sess-20261030140640-0017",
+        "goal": "检查各个项目",
+        "kind": "project",
+        "status": "done",
+        "created_at": "2026-10-30T14:06:40.789Z",
+        "updated_at": "2026-10-30T14:06:52.244Z",
+        "steps_total": 5,
+        "steps_done": 5,
+        "token_used": 406,
+        "event_seq": 37,
+        "current_step": 5
+      },
+      "reworks": 0,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    },
+    {
+      "run": {
+        "run_id": "run-20261030140733-0002",
+        "session_id": "sess-20261030140733-0018",
+        "goal": "数据有什么异常没有",
+        "kind": "project",
+        "status": "done",
+        "created_at": "2026-10-30T14:07:33.375Z",
+        "updated_at": "2026-10-30T14:07:43.942Z",
+        "steps_total": 6,
+        "steps_done": 6,
+        "token_used": 440,
+        "event_seq": 43,
+        "current_step": 6
+      },
+      "reworks": 0,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    },
+    {
+      "run": {
+        "run_id": "run-20261030152318-0003",
+        "session_id": "sess-20261030152318-0019",
+        "goal": "查一下项目运行情况",
+        "kind": "project",
+        "status": "done",
+        "created_at": "2026-10-30T15:23:18.028Z",
+        "updated_at": "2026-10-30T15:23:27.681Z",
+        "steps_total": 5,
+        "steps_done": 5,
+        "token_used": 381,
+        "event_seq": 37,
+        "current_step": 5
+      },
+      "reworks": 0,
+      "project_started": true,
+      "plan_ready": true,
+      "rejected_by_human": false
+    }
+  ]
+}

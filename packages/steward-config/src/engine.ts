@@ -41,6 +41,7 @@ import { isValidApiKeyRef, maskApiKeyRef, resolveApiKeyRef, secretsFilePathFor, 
 import { TokenBudget } from "./token-budget.js";
 import type {
   AgentConfig,
+  AgentHarnessMeta,
   AgentModelBinding,
   AgentUpdate,
   ApiKeyResolution,
@@ -63,6 +64,9 @@ import type {
   FeatureName,
   FeatureToggle,
   Features,
+  HarnessRoleSettings,
+  HarnessSettings,
+  HarnessSettingsUpdate,
   InvoiceConfig,
   InvoiceDefaultType,
   LocalApiKeyResult,
@@ -154,6 +158,13 @@ const APPROVAL_MODES: readonly ApprovalMode[] = ["auto_low_risk", "auto_all", "m
 const RUNTIME_MAX_AUTO_STEPS_RANGE = { min: 10, max: 200 } as const;
 const RUNTIME_REWORK_LIMIT_RANGE = { min: 0, max: 3 } as const;
 const RUNTIME_EVENT_RETENTION_RANGE = { min: 100, max: 5_000 } as const;
+/** v1.5 Harness 设置范围（必须与契约一致）。 */
+const HARNESS_TIMEOUT_RANGE = { min: 10, max: 1_800_000 } as const;
+const HARNESS_MAX_TOKENS_RANGE = { min: 1_000, max: 2_000_000 } as const;
+const HARNESS_MAX_CONCURRENCY_RANGE = { min: 1, max: 4 } as const;
+const HARNESS_ARTIFACT_RETENTION_RANGE = { min: 1, max: 365 } as const;
+/** Harness 工作区模板：安全相对路径（允许 `/` 分隔，不允许绝对路径/..）。 */
+const HARNESS_WORKSPACE_PATTERN = /^(?!.*(?:^|\/)\.\.(?:\/|$))(?!\/)[A-Za-z0-9._\-/<>]+$/u;
 /** 安全相对路径（插件目录/密钥文件片段）：非空、非绝对、不含 ..。 */
 const SAFE_RELATIVE_PATH_PATTERN = /^(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._\-/\\]+$/u;
 
@@ -458,6 +469,12 @@ function normalizeAgent(raw: unknown, fallback?: AgentConfig): AgentConfig {
         : requireNonNegativeInt(raw.token_limit, "agents[].token_limit"),
     model_ref: raw.model_ref === undefined && fallback !== undefined ? fallback.model_ref : requireString(raw.model_ref, "agents[].model_ref"),
   };
+  // v1.5：Agent Harness 元数据（旧 config 缺 harness 时从默认值补齐；supervisor 可空）
+  if (raw.harness === undefined) {
+    if (fallback?.harness !== undefined) agent.harness = cloneJson(fallback.harness);
+  } else if (raw.harness !== null) {
+    agent.harness = normalizeAgentHarnessMeta(raw.harness, fallback?.harness);
+  }
   return agent;
 }
 
@@ -579,6 +596,118 @@ function normalizeRuntimeSettings(raw: unknown, base: RuntimeSettings): RuntimeS
         ? base.event_retention
         : requireIntInRange(source.event_retention, "runtime.event_retention", RUNTIME_EVENT_RETENTION_RANGE.min, RUNTIME_EVENT_RETENTION_RANGE.max),
   };
+}
+
+// ---------------------------------------------------------------------------
+// v1.5：Harness 真实执行设置 归一化（旧 config 缺 harness / roles 时补默认）
+// ---------------------------------------------------------------------------
+
+/** Agent 的 Harness 元数据归一化（profile/workspace/tools）。 */
+function normalizeAgentHarnessMeta(raw: unknown, fallback?: AgentHarnessMeta): AgentHarnessMeta {
+  if (!isRecord(raw)) throw new ConfigValidationError("agents[].harness 必须是对象", "INVALID_INPUT", "agents[].harness");
+  const meta: AgentHarnessMeta = {
+    profile: raw.profile === undefined && fallback !== undefined ? fallback.profile : requireString(raw.profile, "agents[].harness.profile"),
+    workspace: raw.workspace === undefined && fallback !== undefined ? fallback.workspace : requireString(raw.workspace, "agents[].harness.workspace"),
+    tools: raw.tools === undefined ? [...(fallback?.tools ?? [])] : requireStringArray(raw.tools, "agents[].harness.tools"),
+  };
+  if (meta.tools.length === 0) throw new ConfigValidationError("agents[].harness.tools 至少需要一项工具", "INVALID_INPUT", "agents[].harness.tools");
+  if (!HARNESS_WORKSPACE_PATTERN.test(meta.workspace)) {
+    throw new ConfigValidationError(`agents[].harness.workspace 必须是安全相对路径：${meta.workspace}`, "INVALID_INPUT", "agents[].harness.workspace");
+  }
+  return meta;
+}
+
+/** 单个角色的 Harness 设置归一化（role 必须合法；supervisor 强制 enabled=false）。 */
+function normalizeHarnessRoleSettings(raw: unknown, fallbackRole?: string, fallback?: HarnessRoleSettings): HarnessRoleSettings {
+  if (!isRecord(raw)) throw new ConfigValidationError("harness.roles[] 必须是对象", "INVALID_INPUT", "harness.roles");
+  const role = raw.role === undefined && fallbackRole !== undefined ? fallbackRole : requireString(raw.role, "harness.roles[].role");
+  if (!(AGENT_ROLES as readonly string[]).includes(role)) {
+    throw new ConfigValidationError(`harness.roles 角色非法：${role}（允许：${AGENT_ROLES.join("/")}）`, "INVALID_INPUT", "harness.roles[].role");
+  }
+  const settings: HarnessRoleSettings = {
+    role,
+    enabled: raw.enabled === undefined ? (fallback?.enabled ?? role !== "supervisor") : requireBoolean(raw.enabled, "harness.roles[].enabled"),
+    workspace:
+      raw.workspace === undefined && fallback !== undefined ? fallback.workspace : requireString(raw.workspace, "harness.roles[].workspace"),
+    timeout_ms:
+      raw.timeout_ms === undefined
+        ? (fallback?.timeout_ms ?? 300_000)
+        : requireIntInRange(raw.timeout_ms, "harness.roles[].timeout_ms", HARNESS_TIMEOUT_RANGE.min, HARNESS_TIMEOUT_RANGE.max),
+    max_tokens_per_run:
+      raw.max_tokens_per_run === undefined
+        ? (fallback?.max_tokens_per_run ?? 200_000)
+        : requireIntInRange(raw.max_tokens_per_run, "harness.roles[].max_tokens_per_run", HARNESS_MAX_TOKENS_RANGE.min, HARNESS_MAX_TOKENS_RANGE.max),
+  };
+  if (!HARNESS_WORKSPACE_PATTERN.test(settings.workspace)) {
+    throw new ConfigValidationError(`harness.roles[${role}].workspace 必须是安全相对路径：${settings.workspace}`, "INVALID_INPUT", "harness.roles[].workspace");
+  }
+  if (role === "supervisor" && settings.enabled) {
+    throw new ConfigValidationError("supervisor 不得走真实 Harness 执行（仅系统动作），enabled 必须为 false", "INVALID_INPUT", "harness.roles.supervisor.enabled");
+  }
+  return settings;
+}
+
+/** Harness 总设置归一化：缺字段补默认、roles 按角色合并并保证 11 角色齐全。 */
+function normalizeHarnessSettings(raw: unknown, base: HarnessSettings): HarnessSettings {
+  const source = raw === undefined ? {} : raw;
+  if (!isRecord(source)) throw new ConfigValidationError("harness 必须是对象", "INVALID_INPUT", "harness");
+  const settings: HarnessSettings = {
+    enabled: source.enabled === undefined ? base.enabled : requireBoolean(source.enabled, "harness.enabled"),
+    profile: source.profile === undefined ? base.profile : requireString(source.profile, "harness.profile"),
+    dsh_bin: source.dsh_bin === undefined ? base.dsh_bin : String(source.dsh_bin).trim(),
+    timeout_ms:
+      source.timeout_ms === undefined
+        ? base.timeout_ms
+        : requireIntInRange(source.timeout_ms, "harness.timeout_ms", HARNESS_TIMEOUT_RANGE.min, HARNESS_TIMEOUT_RANGE.max),
+    max_concurrency:
+      source.max_concurrency === undefined
+        ? base.max_concurrency
+        : requireIntInRange(source.max_concurrency, "harness.max_concurrency", HARNESS_MAX_CONCURRENCY_RANGE.min, HARNESS_MAX_CONCURRENCY_RANGE.max),
+    artifact_retention_days:
+      source.artifact_retention_days === undefined
+        ? base.artifact_retention_days
+        : requireIntInRange(
+            source.artifact_retention_days,
+            "harness.artifact_retention_days",
+            HARNESS_ARTIFACT_RETENTION_RANGE.min,
+            HARNESS_ARTIFACT_RETENTION_RANGE.max,
+          ),
+    report_required: source.report_required === undefined ? base.report_required : requireBoolean(source.report_required, "harness.report_required"),
+    roles: [],
+  };
+  if (settings.profile.trim() === "") throw new ConfigValidationError("harness.profile 不能为空", "INVALID_INPUT", "harness.profile");
+  if (settings.dsh_bin.includes("\n") || settings.dsh_bin.includes("\r")) {
+    throw new ConfigValidationError("harness.dsh_bin 不能包含换行", "INVALID_INPUT", "harness.dsh_bin");
+  }
+  const baseByRole = new Map(base.roles.map((entry) => [entry.role, entry]));
+  const roleMap = new Map<string, HarnessRoleSettings>();
+  for (const role of AGENT_ROLES) {
+    const fallback = baseByRole.get(role);
+    if (fallback !== undefined) roleMap.set(role, cloneJson(fallback));
+  }
+  if (source.roles !== undefined) {
+    if (!Array.isArray(source.roles)) throw new ConfigValidationError("harness.roles 必须是数组", "INVALID_INPUT", "harness.roles");
+    const seen = new Set<string>();
+    for (const item of source.roles) {
+      const roleGuess = isRecord(item) && typeof item.role === "string" ? item.role : undefined;
+      const fallback = roleGuess === undefined ? undefined : (roleMap.get(roleGuess) ?? baseByRole.get(roleGuess));
+      const normalized = normalizeHarnessRoleSettings(item, roleGuess, fallback);
+      if (seen.has(normalized.role)) throw new ConfigValidationError(`harness.roles 角色重复：${normalized.role}`, "INVALID_INPUT", "harness.roles");
+      seen.add(normalized.role);
+      roleMap.set(normalized.role, normalized);
+    }
+  }
+  // 缺 roles 时补全 11 个角色默认值（迁移）
+  for (const role of AGENT_ROLES) {
+    if (roleMap.has(role)) continue;
+    roleMap.set(role, normalizeHarnessRoleSettings({ role }, role, baseByRole.get(role)));
+  }
+  settings.roles = AGENT_ROLES.map((role) => {
+    const entry = roleMap.get(role);
+    if (entry === undefined) throw new ConfigValidationError(`harness.roles 缺少角色：${role}`, "INVALID_INPUT", "harness.roles");
+    return entry;
+  });
+  return settings;
 }
 
 // ---------------------------------------------------------------------------
@@ -796,6 +925,8 @@ function buildConfigFromUnknown(raw: unknown, fallbackMode: RunMode, now: () => 
     system_policy: normalizeSystemPolicy(raw.system_policy, base.system_policy),
     // v1.4 新增字段：旧 config 缺 runtime 时自动补该模式默认值（迁移，不丢已有字段）
     runtime: normalizeRuntimeSettings(raw.runtime, base.runtime),
+    // v1.5 新增字段：旧 config 缺 harness / roles / agent harness 元数据时自动补默认（迁移）
+    harness: normalizeHarnessSettings(raw.harness, base.harness),
     updated_at: raw.updated_at === undefined ? now().toISOString() : requireString(raw.updated_at, "updated_at"),
   };
   return config;
@@ -1208,6 +1339,90 @@ export function validateConfig(config: StewardConfig): ValidationResult {
     }
     if (runtime.full_auto === true && runtime.approval_mode === "manual") {
       issue(errors, "runtime.full_auto", "full_auto=true 时不能同时使用 approval_mode=manual（全自动与全人工审批冲突）");
+    }
+  }
+
+  // v1.5：Harness 真实执行设置（总开关/profile/dsh_bin/超时/并发/产物保留/11 角色）
+  const harness = config.harness;
+  if (!isRecord(harness)) {
+    issue(errors, "harness", "harness 配置缺失（旧 config 应在加载时自动补默认值）");
+  } else {
+    if (typeof harness.enabled !== "boolean") issue(errors, "harness.enabled", "harness.enabled 必须是布尔值");
+    if (typeof harness.profile !== "string" || harness.profile.trim() === "") issue(errors, "harness.profile", "harness.profile 不能为空");
+    if (typeof harness.dsh_bin !== "string") issue(errors, "harness.dsh_bin", "harness.dsh_bin 必须是字符串（空=自动探测）");
+    if (
+      typeof harness.timeout_ms !== "number" ||
+      !Number.isInteger(harness.timeout_ms) ||
+      harness.timeout_ms < HARNESS_TIMEOUT_RANGE.min ||
+      harness.timeout_ms > HARNESS_TIMEOUT_RANGE.max
+    ) {
+      issue(errors, "harness.timeout_ms", "harness.timeout_ms 必须是 10-1800000 的整数");
+    }
+    if (
+      typeof harness.max_concurrency !== "number" ||
+      !Number.isInteger(harness.max_concurrency) ||
+      harness.max_concurrency < HARNESS_MAX_CONCURRENCY_RANGE.min ||
+      harness.max_concurrency > HARNESS_MAX_CONCURRENCY_RANGE.max
+    ) {
+      issue(errors, "harness.max_concurrency", "harness.max_concurrency 必须是 1-4 的整数");
+    }
+    if (
+      typeof harness.artifact_retention_days !== "number" ||
+      !Number.isInteger(harness.artifact_retention_days) ||
+      harness.artifact_retention_days < HARNESS_ARTIFACT_RETENTION_RANGE.min ||
+      harness.artifact_retention_days > HARNESS_ARTIFACT_RETENTION_RANGE.max
+    ) {
+      issue(errors, "harness.artifact_retention_days", "harness.artifact_retention_days 必须是 1-365 的整数");
+    }
+    if (typeof harness.report_required !== "boolean") issue(errors, "harness.report_required", "harness.report_required 必须是布尔值");
+    const roleSettings = Array.isArray(harness.roles) ? harness.roles : [];
+    const roleSeen = new Set<string>();
+    for (const entry of roleSettings) {
+      if (typeof entry.role !== "string" || !(AGENT_ROLES as readonly string[]).includes(entry.role)) {
+        issue(errors, "harness.roles[].role", `Harness 角色非法：${String(entry.role)}（允许：${AGENT_ROLES.join("/")}）`);
+        continue;
+      }
+      if (roleSeen.has(entry.role)) issue(errors, "harness.roles", `Harness 角色重复：${entry.role}`);
+      roleSeen.add(entry.role);
+      if (typeof entry.enabled !== "boolean") issue(errors, `harness.roles[${entry.role}].enabled`, "enabled 必须是布尔值");
+      if (typeof entry.workspace !== "string" || entry.workspace.trim() === "" || !HARNESS_WORKSPACE_PATTERN.test(entry.workspace)) {
+        issue(errors, `harness.roles[${entry.role}].workspace`, "workspace 必须是安全相对路径（相对 runDir，不能为绝对路径/含 ..）");
+      }
+      if (
+        typeof entry.timeout_ms !== "number" ||
+        !Number.isInteger(entry.timeout_ms) ||
+        entry.timeout_ms < HARNESS_TIMEOUT_RANGE.min ||
+        entry.timeout_ms > HARNESS_TIMEOUT_RANGE.max
+      ) {
+        issue(errors, `harness.roles[${entry.role}].timeout_ms`, "timeout_ms 必须是 10-1800000 的整数");
+      }
+      if (
+        typeof entry.max_tokens_per_run !== "number" ||
+        !Number.isInteger(entry.max_tokens_per_run) ||
+        entry.max_tokens_per_run < HARNESS_MAX_TOKENS_RANGE.min ||
+        entry.max_tokens_per_run > HARNESS_MAX_TOKENS_RANGE.max
+      ) {
+        issue(errors, `harness.roles[${entry.role}].max_tokens_per_run`, "max_tokens_per_run 必须是 1000-2000000 的整数");
+      }
+      if (entry.role === "supervisor" && entry.enabled === true) {
+        issue(errors, "harness.roles.supervisor.enabled", "supervisor 不得走真实 Harness 执行（仅系统动作），enabled 必须为 false");
+      }
+    }
+    for (const role of AGENT_ROLES) {
+      if (!roleSeen.has(role)) issue(errors, "harness.roles", `harness.roles 缺少角色：${role}`);
+    }
+  }
+  // v1.5：Agent 的 Harness 元数据（可选；提供时校验 profile/workspace/tools）
+  for (const agent of agents) {
+    if (agent.harness === undefined) continue;
+    if (typeof agent.harness.profile !== "string" || agent.harness.profile.trim() === "") {
+      issue(errors, `agents.${agent.role}.harness.profile`, "harness.profile 不能为空");
+    }
+    if (typeof agent.harness.workspace !== "string" || agent.harness.workspace.trim() === "" || !HARNESS_WORKSPACE_PATTERN.test(agent.harness.workspace)) {
+      issue(errors, `agents.${agent.role}.harness.workspace`, "harness.workspace 必须是安全相对路径（不能为绝对路径/含 ..）");
+    }
+    if (!Array.isArray(agent.harness.tools) || agent.harness.tools.length === 0) {
+      issue(errors, `agents.${agent.role}.harness.tools`, "harness.tools 至少需要一项工具");
     }
   }
 
@@ -2327,6 +2542,64 @@ export class ConfigEngine {
       `auto_run=${next.auto_run}; approval_mode=${next.approval_mode}; full_auto=${next.full_auto}; max_auto_steps=${next.max_auto_steps}; rework_limit=${next.rework_limit}; event_retention=${next.event_retention}`,
     );
     return cloneJson(next);
+  }
+
+  // -------------------------------------------------------------------------
+  // v1.5：Harness 真实执行设置（各 agent 走真实 DeepSeek Harness；supervisor 仅系统动作）
+  // -------------------------------------------------------------------------
+
+  /** Harness 总设置（只读副本；密钥不在配置内，使用本机 DSH 凭据）。 */
+  getHarnessSettings(): HarnessSettings {
+    return cloneJson(this.state.harness);
+  }
+
+  /**
+   * 更新 Harness 设置（含 roles 按角色合并；缺省角色自动补默认）。
+   * 校验：profile 非空；timeout 10–1800000；max_concurrency 1–4；artifact_retention_days 1–365；
+   * roles 必须覆盖 11 个角色不重复；supervisor.enabled 强制 false；失败回滚并写审计 `harness.update`。
+   */
+  setHarnessSettings(patch: HarnessSettingsUpdate): HarnessSettings {
+    if (!isRecord(patch)) throw new ConfigValidationError("setHarnessSettings 需要对象", "INVALID_INPUT", "patch");
+    const previous = cloneJson(this.state.harness);
+    const merged = { ...this.state.harness, ...patch };
+    let next: HarnessSettings;
+    try {
+      next = normalizeHarnessSettings(merged, this.state.harness);
+    } catch (error) {
+      throw error instanceof ConfigValidationError ? error : new ConfigValidationError(String(error), "INVALID_INPUT", "harness");
+    }
+    this.state.harness = next;
+    const validation = validateConfig(this.state);
+    if (!validation.ok) {
+      this.state.harness = previous;
+      throw new ConfigValidationError(
+        `Harness 设置更新后校验失败：${validation.errors.map((item) => item.message).join("; ")}`,
+        "INVALID_INPUT",
+        "harness",
+      );
+    }
+    this.persistState();
+    this.recordAudit(
+      "harness.update",
+      "harness",
+      "ok",
+      `enabled=${next.enabled}; profile=${next.profile}; timeout_ms=${next.timeout_ms}; max_concurrency=${next.max_concurrency}; artifact_retention_days=${next.artifact_retention_days}; report_required=${next.report_required}; roles=${next.roles.filter((entry) => entry.enabled).length}/${next.roles.length}`,
+    );
+    return cloneJson(next);
+  }
+
+  /** 取某角色的 Harness 设置（未知角色抛错）。 */
+  getHarnessRole(role: string): HarnessRoleSettings {
+    const roleName = requireString(role, "role");
+    const entry = this.state.harness.roles.find((item) => item.role === roleName);
+    if (entry === undefined) {
+      throw new ConfigValidationError(
+        `未知 Harness 角色：${roleName}（允许：${AGENT_ROLES.join("/")}）`,
+        "INVALID_INPUT",
+        "role",
+      );
+    }
+    return cloneJson(entry);
   }
 
   // -------------------------------------------------------------------------

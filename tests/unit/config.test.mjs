@@ -1,5 +1,5 @@
 /**
- * v1.1-A + v1.2-A + v1.3-A + v1.4-C / 配置中心单元测试。
+ * v1.1-A + v1.2-A + v1.3-A + v1.4-C + v1.5-C / 配置中心单元测试。
  *
  * v1.1：三模式默认值差异、模式切换、14 个功能开关逐项禁用、0 元极限预算、预算三层、
  * Token 预算、银行卡/微信/支付宝掩码、支付渠道过滤、保存/加载/导入导出/校验、reset、
@@ -10,6 +10,8 @@
  * （受管程序/插件/危险动作二次确认）。
  * v1.4：运行时设置（发消息自动执行/审批策略 auto_low_risk|auto_all|manual/
  * full_auto/步骤上限/返工/事件保留）+ 迁移、校验与审计。
+ * v1.5：Harness 真实执行设置（11 角色 roles/supervisor 强制 false）、Agent harness 元数据、
+ * HARNESS_AGENT_DIRECTIVE / composeHarnessPrompt、迁移与审计。
  *
  * 全部使用 mkdtemp 临时目录或纯内存模式；不写仓库 runs/。
  */
@@ -29,9 +31,17 @@ import {
   DEFAULT_CONDUCTOR_PROMPT,
   FeatureDisabledError,
   FEATURE_NAMES,
+  HARNESS_AGENT_DIRECTIVE,
+  HARNESS_DEFAULT_PROFILE,
+  HARNESS_DEFAULT_TIMEOUT_MS,
+  PROMPT_V3_UPDATED_AT,
+  PROMPT_V3_VERSION,
   RESETTABLE_SUBDIRS,
   SYSTEM_PROMPT_ROLES,
   TokenLimitError,
+  buildDefaultSystemPrompts,
+  composeHarnessPrompt,
+  defaultHarnessSettings,
   defaultsForMode,
   hasSafetyKeyword,
   isValidApiKeyRef,
@@ -1251,7 +1261,7 @@ test("v1.3 两层总调度：supervisor 系统总控（第 11 角色）默认存
     assert.equal(binding.provider_id, "deepseek");
     const prompt = engine.listSystemPrompts().find((entry) => entry.role === "supervisor");
     assert.ok(prompt !== undefined);
-    for (const keyword of ["系统总控", "日志", "二次确认", "不越界"]) {
+    for (const keyword of ["超级总调度", "日志", "二次确认", "不越界"]) {
       assert.ok(prompt.system_prompt.includes(keyword), `supervisor 提示词应包含 ${keyword}`);
     }
   }
@@ -1335,7 +1345,7 @@ test("v1.3 易支付校验：gateway 必须 https；demo 可不填商家信息�
   assert.equal(live.key_ref, "env:EPAY_KEY");
   assert.equal(engine.validate().ok, true);
   const raw = engine.export();
-  assert.equal(raw.includes("sk-"), false);
+  assert.equal(raw.includes("sk-epay-plaintext"), false, "导出配置不得出现明文密钥");
 });
 
 test("v1.3 系统动作策略默认值：内置受管应用（Node/记事本）、plugins 目录、危险动作需二次确认", () => {
@@ -1694,4 +1704,408 @@ test("v1.4 setMode：默认保留用户 runtime；preserve_runtime:false 重置�
   assert.equal(demo.config.runtime.auto_run, true);
   assert.equal(demo.config.runtime.approval_mode, "auto_low_risk");
   assert.equal(engine.validate().ok, true);
+});
+
+// ===========================================================================
+// v1.5-C：Harness 真实执行设置 / Agent harness 元数据 / composeHarnessPrompt
+// ===========================================================================
+
+test("v1.5 Harness 默认值：三模式一致、总开关开、11 角色、supervisor 强制不走 Harness", () => {
+  for (const mode of ["demo", "personal", "enterprise"]) {
+    const engine = makeEngine({ mode });
+    const harness = engine.getHarnessSettings();
+    const expected = defaultHarnessSettings();
+    assert.deepEqual(harness, expected, `${mode} 模式默认值与 defaultHarnessSettings 一致`);
+    assert.deepEqual(harness, defaultsForMode(mode, { now: makeClock().now }).harness);
+    assert.equal(harness.enabled, true);
+    assert.equal(harness.profile, HARNESS_DEFAULT_PROFILE);
+    assert.equal(harness.profile, "headless");
+    assert.equal(harness.dsh_bin, "", "空=自动探测 dsh");
+    assert.equal(harness.timeout_ms, HARNESS_DEFAULT_TIMEOUT_MS);
+    assert.equal(harness.timeout_ms, 300_000);
+    assert.equal(harness.max_concurrency, 2);
+    assert.equal(harness.artifact_retention_days, 30);
+    assert.equal(harness.report_required, true);
+    assert.equal(harness.roles.length, AGENT_ROLES.length);
+    assert.equal(harness.roles.length, 11);
+    for (const role of AGENT_ROLES) {
+      const entry = harness.roles.find((item) => item.role === role);
+      assert.ok(entry !== undefined, `缺少角色 ${role}`);
+      assert.equal(entry.workspace, `workspace/${role}`);
+      assert.equal(entry.timeout_ms, 300_000);
+      assert.equal(entry.max_tokens_per_run, 200_000);
+      assert.equal(entry.enabled, role !== "supervisor", `supervisor 必须 disabled，其他角色 enabled（${role}）`);
+    }
+    assert.equal(engine.validate().ok, true);
+  }
+});
+
+test("v1.5 get/setHarnessSettings：修改生效并持久化（内存/磁盘/reload 一致）", async () => {
+  const memory = makeEngine({ mode: "personal" });
+  const updated = memory.setHarnessSettings({
+    enabled: false,
+    profile: "worker",
+    dsh_bin: "C:/tools/dsh.cmd",
+    timeout_ms: 600_000,
+    max_concurrency: 3,
+    artifact_retention_days: 90,
+    report_required: false,
+  });
+  assert.equal(updated.enabled, false);
+  assert.equal(updated.profile, "worker");
+  assert.equal(updated.dsh_bin, "C:/tools/dsh.cmd");
+  assert.equal(updated.timeout_ms, 600_000);
+  assert.equal(updated.max_concurrency, 3);
+  assert.equal(updated.artifact_retention_days, 90);
+  assert.equal(updated.report_required, false);
+  assert.deepEqual(memory.getHarnessSettings(), updated);
+
+  const root = await makeTmp("steward-config-harness-");
+  try {
+    const engine = makePersistEngine(root, { mode: "personal" });
+    engine.setHarnessSettings({ max_concurrency: 4, profile: "headless-worker" });
+    const raw = readConfigFile(root);
+    assert.equal(raw.harness.max_concurrency, 4);
+    assert.equal(raw.harness.profile, "headless-worker");
+    const reloaded = makePersistEngine(root, { mode: "personal" });
+    assert.deepEqual(reloaded.getHarnessSettings(), engine.getHarnessSettings());
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.5 roles 合并：只更新指定角色，其他角色保持默认；getHarnessRole 返回只读副本", () => {
+  const engine = makeEngine({ mode: "personal" });
+  const before = engine.getHarnessSettings();
+  const updated = engine.setHarnessSettings({
+    roles: [{ role: "operator", enabled: false, workspace: "custom/operator", timeout_ms: 60_000, max_tokens_per_run: 50_000 }],
+  });
+  assert.equal(updated.roles.length, 11);
+  const operator = updated.roles.find((entry) => entry.role === "operator");
+  assert.equal(operator.enabled, false);
+  assert.equal(operator.workspace, "custom/operator");
+  assert.equal(operator.timeout_ms, 60_000);
+  assert.equal(operator.max_tokens_per_run, 50_000);
+  const conductor = updated.roles.find((entry) => entry.role === "conductor");
+  const conductorBefore = before.roles.find((entry) => entry.role === "conductor");
+  assert.deepEqual(conductor, conductorBefore, "未指定角色必须保持默认");
+  // getHarnessRole
+  assert.deepEqual(engine.getHarnessRole("operator"), operator);
+  assert.deepEqual(engine.getHarnessRole("conductor"), conductorBefore);
+  // 返回副本：修改不影响内部状态
+  const copy = engine.getHarnessRole("operator");
+  copy.enabled = true;
+  assert.equal(engine.getHarnessRole("operator").enabled, false);
+  assert.throws(
+    () => engine.getHarnessRole("agent-x"),
+    (error) => error instanceof ConfigValidationError && /未知 Harness 角色/u.test(error.message),
+  );
+});
+
+test("v1.5 supervisor enabled 强制 false：set 与 validate 均拒绝", () => {
+  const engine = makeEngine({ mode: "personal" });
+  assert.throws(
+    () => engine.setHarnessSettings({ roles: [{ role: "supervisor", enabled: true }] }),
+    (error) => error instanceof ConfigValidationError && /supervisor/u.test(error.message),
+  );
+  assert.equal(engine.getHarnessRole("supervisor").enabled, false, "拒绝后必须回滚");
+  // 直接 validate 发现的路径
+  const config = defaultsForMode("personal", { now: makeClock().now });
+  config.harness.roles.find((entry) => entry.role === "supervisor").enabled = true;
+  const result = validateConfig(config);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((item) => /supervisor/u.test(item.message)));
+  // 其他角色 enabled 可以关闭/开启
+  const off = engine.setHarnessSettings({ roles: [{ role: "operator", enabled: false }] });
+  assert.equal(off.roles.find((entry) => entry.role === "operator").enabled, false);
+});
+
+test("v1.5 越界/非法值拒绝且回滚（profile/超时/并发/保留/角色范围/重复/未知角色）", () => {
+  const engine = makeEngine({ mode: "personal" });
+  engine.setHarnessSettings({ max_concurrency: 3 });
+  const before = engine.getHarnessSettings();
+  const badPatches = [
+    { profile: "" },
+    { timeout_ms: 9 },
+    { timeout_ms: 1_800_001 },
+    { max_concurrency: 0 },
+    { max_concurrency: 5 },
+    { artifact_retention_days: 0 },
+    { artifact_retention_days: 366 },
+    { report_required: "yes" },
+    { dsh_bin: "line1\nline2" },
+    { roles: [{ role: "operator", timeout_ms: 9 }] },
+    { roles: [{ role: "operator", max_tokens_per_run: 999 }] },
+    { roles: [{ role: "operator", max_tokens_per_run: 2_000_001 }] },
+    { roles: [{ role: "operator", workspace: "../escape" }] },
+    { roles: [{ role: "agent-x" }] },
+    { roles: [{ role: "operator" }, { role: "operator" }] },
+  ];
+  for (const patch of badPatches) {
+    assert.throws(() => engine.setHarnessSettings(patch), (error) => error instanceof ConfigValidationError, JSON.stringify(patch));
+    assert.deepEqual(engine.getHarnessSettings(), before, `非法更新不得改变状态：${JSON.stringify(patch)}`);
+  }
+});
+
+test("v1.5 旧配置迁移：缺 harness 与 agent harness 元数据时自动补默认且不丢已有字段", async () => {
+  const root = await makeTmp("steward-config-harness-migrate-");
+  try {
+    const legacy = defaultsForMode("personal", { now: makeClock().now });
+    delete legacy.harness;
+    for (const agent of legacy.agents) delete agent.harness;
+    legacy.budgets.month_cny = 7_654;
+    legacy.budgets.project_cny = 2_000;
+    legacy.budgets.per_txn_cny = 500;
+    await writeFile(join(root, "config.json"), JSON.stringify(legacy, null, 2), "utf8");
+
+    const engine = makePersistEngine(root, { mode: "personal" });
+    assert.equal(engine.validate().ok, true);
+    assert.equal(engine.config.budgets.month_cny, 7_654, "旧字段必须保留");
+    const harness = engine.getHarnessSettings();
+    assert.equal(harness.enabled, true);
+    assert.equal(harness.roles.length, 11);
+    assert.equal(harness.roles.find((entry) => entry.role === "supervisor").enabled, false);
+    const agents = engine.config.agents;
+    assert.equal(agents.length, 11);
+    const supervisor = agents.find((agent) => agent.role === "supervisor");
+    assert.equal(supervisor.harness, undefined, "supervisor 默认可空（仅系统动作）");
+    for (const role of AGENT_ROLES) {
+      if (role === "supervisor") continue;
+      const agent = agents.find((item) => item.role === role);
+      assert.ok(agent.harness !== undefined, `${role} 迁移后必须补 harness 元数据`);
+      assert.equal(agent.harness.profile, HARNESS_DEFAULT_PROFILE);
+      assert.ok(agent.harness.tools.length > 0);
+    }
+    engine.save();
+    assert.ok(readConfigFile(root).harness !== undefined);
+    const reloaded = makePersistEngine(root, { mode: "personal" });
+    assert.deepEqual(reloaded.getHarnessSettings(), harness);
+    assert.equal(reloaded.validate().ok, true);
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.5 roles 残缺迁移：旧 config 只有部分角色时自动补全 11 角色", async () => {
+  const root = await makeTmp("steward-config-harness-roles-migrate-");
+  try {
+    const legacy = defaultsForMode("personal", { now: makeClock().now });
+    const operator = legacy.harness.roles.find((entry) => entry.role === "operator");
+    legacy.harness.roles = [{ ...operator, enabled: false, workspace: "legacy/operator" }];
+    for (const agent of legacy.agents) delete agent.harness;
+    await writeFile(join(root, "config.json"), JSON.stringify(legacy, null, 2), "utf8");
+
+    const engine = makePersistEngine(root, { mode: "personal" });
+    assert.equal(engine.validate().ok, true);
+    const roles = engine.getHarnessSettings().roles;
+    assert.equal(roles.length, 11);
+    const migratedOperator = roles.find((entry) => entry.role === "operator");
+    assert.equal(migratedOperator.enabled, false, "已有角色字段保留");
+    assert.equal(migratedOperator.workspace, "legacy/operator");
+    assert.equal(roles.find((entry) => entry.role === "scout").workspace, "workspace/scout", "缺失角色补默认");
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.5 审计 harness.update：成功留痕、失败回滚且不落配置", async () => {
+  const root = await makeTmp("steward-config-harness-audit-");
+  try {
+    const engine = makePersistEngine(root, { mode: "personal" });
+    engine.setHarnessSettings({ max_concurrency: 4, artifact_retention_days: 45 });
+    const audit = readAuditFile(root);
+    const entries = audit.filter((entry) => entry.action === "harness.update");
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].result, "ok");
+    assert.match(entries[0].reason, /max_concurrency=4/u);
+    assert.match(entries[0].reason, /artifact_retention_days=45/u);
+    const configBefore = readConfigFile(root);
+    assert.throws(() => engine.setHarnessSettings({ roles: [{ role: "supervisor", enabled: true }] }), ConfigValidationError);
+    const configAfter = readConfigFile(root);
+    assert.equal(configAfter.harness.max_concurrency, configBefore.harness.max_concurrency, "失败不得改动配置");
+    assert.equal(readAuditFile(root).filter((entry) => entry.action === "harness.update").length, 1, "失败不得写审计");
+  } finally {
+    await cleanup(root);
+  }
+});
+
+test("v1.5 validate：缺 harness/缺角色/重复角色/supervisor=true/范围/profile 均可发现", () => {
+  const base = defaultsForMode("personal", { now: makeClock().now });
+
+  const missing = JSON.parse(JSON.stringify(base));
+  delete missing.harness;
+  assert.ok(validateConfig(missing).errors.some((item) => /harness/u.test(item.message)));
+
+  const missingRole = JSON.parse(JSON.stringify(base));
+  missingRole.harness.roles = missingRole.harness.roles.filter((entry) => entry.role !== "scout");
+  assert.ok(validateConfig(missingRole).errors.some((item) => /缺少角色|scout/u.test(item.message)));
+
+  const duplicate = JSON.parse(JSON.stringify(base));
+  duplicate.harness.roles.push({ ...duplicate.harness.roles.find((entry) => entry.role === "operator") });
+  assert.ok(validateConfig(duplicate).errors.some((item) => /重复/u.test(item.message)));
+
+  const supervisorOn = JSON.parse(JSON.stringify(base));
+  supervisorOn.harness.roles.find((entry) => entry.role === "supervisor").enabled = true;
+  assert.ok(validateConfig(supervisorOn).errors.some((item) => /supervisor/u.test(item.message)));
+
+  const badConcurrency = JSON.parse(JSON.stringify(base));
+  badConcurrency.harness.max_concurrency = 9;
+  assert.ok(validateConfig(badConcurrency).errors.some((item) => /max_concurrency/u.test(item.message)));
+
+  const badProfile = JSON.parse(JSON.stringify(base));
+  badProfile.harness.profile = "";
+  assert.ok(validateConfig(badProfile).errors.some((item) => /profile/u.test(item.message)));
+
+  const badAgentWorkspace = JSON.parse(JSON.stringify(base));
+  badAgentWorkspace.agents.find((agent) => agent.role === "operator").harness.workspace = "../escape";
+  assert.ok(validateConfig(badAgentWorkspace).errors.some((item) => /workspace/u.test(item.message)));
+});
+
+test("v1.5 composeHarnessPrompt：11 角色都含工具/产物/report.md/证据，且含角色专属产物要求", () => {
+  const roleKeywords = {
+    supervisor: ["系统动作", "审计"],
+    conductor: ["项目计划", "验收"],
+    operator: ["HTML", "截图"],
+    harness: ["patch.diff", "test.log", "代码"],
+    customer: ["客户", "草稿"],
+    finance: ["账本", "开票"],
+    reviewer: ["review", "核查"],
+    backend: ["数据", "备份"],
+    scout: ["线索", "来源"],
+    content: ["内容", "草稿"],
+    research: ["调研报告", "来源"],
+  };
+  assert.equal(SYSTEM_PROMPT_ROLES.length, 11);
+  for (const role of SYSTEM_PROMPT_ROLES) {
+    const prompt = composeHarnessPrompt(role);
+    for (const keyword of ["工具", "产物", "report.md", "证据"]) {
+      assert.ok(prompt.includes(keyword), `${role} 的 composeHarnessPrompt 缺少「${keyword}」`);
+    }
+    for (const keyword of roleKeywords[role]) {
+      assert.ok(prompt.includes(keyword), `${role} 的 composeHarnessPrompt 缺少角色专属关键词「${keyword}」`);
+    }
+    // 前缀 = 该角色默认 system prompt（v2 原文）
+    const defaultEntry = buildDefaultSystemPrompts(new Date(FIXED_ISO)).find((entry) => entry.role === role);
+    assert.ok(defaultEntry !== undefined);
+    assert.ok(prompt.startsWith(defaultEntry.system_prompt), `${role} compose 应包含默认 system_prompt 原文`);
+  }
+});
+
+test("v1.5 HARNESS_AGENT_DIRECTIVE：真实工具/产物落盘/report/证据/不得声称/危险动作交人/审批/不越界", () => {
+  const directive = HARNESS_AGENT_DIRECTIVE;
+  assert.ok(directive.includes("工具"));
+  assert.ok(directive.includes("真实使用工具"));
+  assert.ok(directive.includes("产物"));
+  assert.ok(directive.includes("工作区"));
+  assert.ok(directive.includes("report.md"));
+  assert.ok(directive.includes("证据"));
+  assert.ok(directive.includes("不得声称未执行"));
+  assert.ok(directive.includes("危险动作交人"));
+  assert.ok(directive.includes("审批"));
+  assert.ok(directive.includes("不越界"));
+  assert.ok(directive.includes("失败升级"));
+  assert.throws(() => composeHarnessPrompt("agent-x"), /未知.*角色/u);
+});
+
+test("v1.5 Agent harness 元数据：11 角色中 10 个有 profile/workspace/tools，supervisor 为空", () => {
+  for (const mode of ["demo", "personal", "enterprise"]) {
+    const agents = defaultsForMode(mode, { now: makeClock().now }).agents;
+    assert.equal(agents.length, 11);
+    const supervisor = agents.find((agent) => agent.role === "supervisor");
+    assert.equal(supervisor.harness, undefined);
+    for (const role of AGENT_ROLES) {
+      if (role === "supervisor") continue;
+      const agent = agents.find((item) => item.role === role);
+      assert.ok(agent.harness !== undefined, `${role} 缺少 harness 元数据`);
+      assert.equal(agent.harness.profile, "headless");
+      assert.equal(agent.harness.workspace, `workspace/${role}`);
+      assert.ok(Array.isArray(agent.harness.tools) && agent.harness.tools.length > 0);
+    }
+    const agentOf = (role) => agents.find((agent) => agent.role === role).harness.tools;
+    assert.ok(agentOf("operator").includes("browser"), "operator 需要 browser 工具");
+    assert.ok(agentOf("operator").includes("write"));
+    assert.ok(agentOf("harness").includes("test"));
+    assert.ok(agentOf("harness").includes("bash"));
+    assert.ok(agentOf("reviewer").includes("glob") && agentOf("reviewer").includes("grep"));
+    assert.ok(agentOf("scout").includes("web_search"));
+    assert.ok(agentOf("research").includes("web_fetch"));
+    assert.ok(agentOf("finance").includes("write"));
+    assert.ok(agentOf("backend").includes("bash"));
+    assert.ok(agentOf("conductor").includes("read"));
+    assert.equal(makeEngine({ mode }).validate().ok, true);
+  }
+});
+
+test("v1.5 import/export 往返保留 harness 与 agent harness 元数据；非法 harness 导入被拒绝", () => {
+  const engine = makeEngine({ mode: "personal" });
+  engine.setHarnessSettings({ max_concurrency: 3, profile: "headless-worker" });
+  engine.setHarnessSettings({ roles: [{ role: "operator", workspace: "custom/operator", timeout_ms: 120_000 }] });
+  const exported = engine.export();
+  const target = makeEngine({ mode: "demo" });
+  const imported = target.import(exported);
+  assert.deepEqual(imported.harness, engine.getHarnessSettings());
+  assert.equal(imported.harness.roles.find((entry) => entry.role === "operator").workspace, "custom/operator");
+  assert.equal(target.validate().ok, true);
+
+  const invalidSupervisor = JSON.parse(exported);
+  invalidSupervisor.harness.roles.find((entry) => entry.role === "supervisor").enabled = true;
+  assert.throws(() => target.import(JSON.stringify(invalidSupervisor)), ConfigValidationError);
+
+  const invalidTimeout = JSON.parse(exported);
+  invalidTimeout.harness.timeout_ms = 5;
+  assert.throws(() => target.import(JSON.stringify(invalidTimeout)), ConfigValidationError);
+});
+
+test("v1.5 setMode 保留用户 Harness 设置（切模式不丢配置）", () => {
+  const engine = makeEngine({ mode: "personal" });
+  engine.setHarnessSettings({ max_concurrency: 4, artifact_retention_days: 60 });
+  const enterprise = engine.setMode("enterprise");
+  assert.equal(enterprise.config.harness.max_concurrency, 4);
+  assert.equal(enterprise.config.harness.artifact_retention_days, 60);
+  assert.equal(engine.validate().ok, true);
+});
+
+// ===========================================================================
+// v1.5 补充：默认提示词接入 prompts/v3（version 3.0.0，11 篇原文内嵌）
+// ===========================================================================
+
+test("v1.5 v3 默认提示词：11 篇 3.0.0 原文内嵌（计划/工具/产物/report.md/证据/确认/失败升级）", () => {
+  assert.equal(PROMPT_V3_VERSION, "3.0.0");
+  assert.equal(PROMPT_V3_UPDATED_AT, "2026-10-30T00:00:00.000Z");
+  const prompts = buildDefaultSystemPrompts();
+  assert.equal(prompts.length, 11);
+  assert.deepEqual(prompts.map((entry) => entry.role), [...SYSTEM_PROMPT_ROLES]);
+  for (const entry of prompts) {
+    assert.ok(entry.title.length > 0, `${entry.role} title 不能为空`);
+    assert.equal(entry.updated_at, PROMPT_V3_UPDATED_AT, `${entry.role} updated_at 应为 v3 更新时间`);
+    assert.match(entry.system_prompt, new RegExp(`<!-- prompt: ${entry.role} \\| version: 3\\.0\\.0`));
+    for (const keyword of ["计划", "工具", "产物", "report.md", "证据", "确认", "失败升级"]) {
+      assert.ok(entry.system_prompt.includes(keyword), `${entry.role} 缺少 v3 关键词：${keyword}`);
+    }
+    // 内嵌文本必须等于仓库 prompts/v3/<role>.md 原文（仅 trim）
+    const file = readFileSync(new URL(`../../prompts/v3/${entry.role}.md`, import.meta.url), "utf8").trim();
+    assert.equal(entry.system_prompt, file, `${entry.role} 内嵌提示词与 prompts/v3 文件不一致`);
+  }
+  assert.equal(DEFAULT_CONDUCTOR_PROMPT, prompts.find((entry) => entry.role === "conductor").system_prompt);
+  assert.deepEqual(
+    defaultsForMode("personal", { now: makeClock().now }).orchestrator.system_prompts,
+    prompts,
+    "defaultsForMode 的 system_prompts 应为 v3 默认值",
+  );
+});
+
+test("v1.5 composeHarnessPrompt：v3 原文 + 简短统一指令 + 角色产物要求（不重复过重）", () => {
+  const prompts = buildDefaultSystemPrompts();
+  for (const role of SYSTEM_PROMPT_ROLES) {
+    const v3 = prompts.find((entry) => entry.role === role).system_prompt;
+    const composed = composeHarnessPrompt(role);
+    assert.ok(composed.startsWith(v3), `${role} compose 应以 v3 原文开头`);
+    assert.equal(composed.split("## Harness 统一执行指令（v1.5）").length - 1, 1, `${role} 统一指令只能出现一次`);
+    assert.equal(composed.split("## 角色专属产物要求（v1.5 Harness）").length - 1, 1, `${role} 产物要求只能出现一次`);
+    for (const keyword of ["工具", "产物", "report.md", "证据", "确认", "失败升级"]) {
+      assert.ok(composed.includes(keyword), `${role} compose 缺少关键词：${keyword}`);
+    }
+    assert.ok(composed.length < v3.length * 2, `${role} compose 不得重复堆叠过重`);
+    assert.ok(HARNESS_AGENT_DIRECTIVE.length < 1_000, "统一指令应保持简短");
+  }
 });

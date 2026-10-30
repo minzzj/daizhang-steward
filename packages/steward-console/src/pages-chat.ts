@@ -33,7 +33,7 @@ import {
 import type { ConsoleLedgerEntry } from "./provider.js";
 import { renderEpaySettingsSection } from "./pages-system.js";
 import type { EpayConfig } from "./system.js";
-import type { ConsoleRunRecord } from "./runtime.js";
+import type { ConsoleRunRecord, HarnessArtifactView, HarnessReportView, RunMetricsView } from "./runtime.js";
 
 function escapeAttr(value: unknown): string {
   return escapeHtml(value);
@@ -287,6 +287,11 @@ export function renderLiveRunPanel(run: ConsoleRunRecord): string {
     </span>
   </div>
   <p class="live-thought" id="live-thought">总调度思考中…（发送后立即自动执行，无需点开始）</p>
+  <div class="live-streams">
+    <div class="live-thinking-wrap"><h3>思考过程（实时分块，可折叠）<span class="hint">harness.thinking</span></h3><div class="live-thinking" id="live-thinking"></div></div>
+    <div class="live-tools-wrap"><h3>工具调用 / 结果<span class="hint">tool_call → tool_result</span></h3><div class="live-tools" id="live-tools"></div></div>
+    <div class="live-artifacts-wrap"><h3>产物 / 报告（生成即提示）<span class="hint">artifact.created / report.created</span></h3><div class="live-artifacts" id="live-artifacts"><p class="muted small" id="live-artifacts-empty">暂未生成；生成后此处出现查看/下载链接</p></div></div>
+  </div>
   <div class="live-plan-wrap">
     <h3>计划（实时点亮）<span class="hint">${String(plan.length)} 步</span></h3>
     <ol class="chat-plan live-plan" id="live-plan">${planRows}</ol>
@@ -415,12 +420,23 @@ export interface AgentRolePageInput {
   transcripts: AgentTranscript[];
   agentInfo?: ConsoleAgentInfo | null;
   runs: RunSummary[];
+  /** v1.5：该 agent 的产物/报告（真实 harness 记录）。 */
+  artifacts?: HarnessArtifactView[];
+  reports?: HarnessReportView[];
   options: PageRenderOptions;
 }
 
 export function renderAgentRolePage(input: AgentRolePageInput): string {
   const turns = input.transcripts.flatMap((transcript) => transcript.turns);
   const totalTokens = turns.reduce((sum, turn) => sum + turn.tokens, 0);
+  const agentArtifacts = input.artifacts ?? [];
+  const agentReports = input.reports ?? [];
+  const artifactList = agentArtifacts
+    .map((artifact) => `<li><a class="run-link" href="/artifacts?agent=${encodeURIComponent(input.role)}#artifact-${escapeAttr(artifact.id)}">${escapeHtml(artifact.title)}</a> <span class="mono small muted">${escapeHtml(artifact.rel_path)}</span> <span class="muted small">${escapeHtml(formatBytes(artifact.size))}</span></li>`)
+    .join("");
+  const reportList = agentReports
+    .map((report) => `<li><a class="run-link" href="/reports?agent=${encodeURIComponent(input.role)}">${escapeHtml(report.title)}</a> <span class="muted small">${escapeHtml(formatDateTime(report.created_at))}</span></li>`)
+    .join("");
   const turnRows = turns
     .map(
       (turn, index) => `<li class="agent-turn" data-seq="${String(turn.seq)}" id="agent-turn-${String(index + 1)}">
@@ -475,6 +491,18 @@ ${pageHeading(chatAgentTitle(input.role), `每个智能体、每一轮的详细�
   </section>
   <div class="grid grid-2">
     <section class="panel">
+      <h2>Harness 真实执行 — 产物 <span class="hint">${String(agentArtifacts.length)} 个</span></h2>
+      <p class="muted small">每项为真实 run 目录文件（演示为内置确定性生成）：<a href="/artifacts?agent=${encodeURIComponent(input.role)}">产物中心 →</a></p>
+      <ul class="list-clean" id="agent-role-artifacts">${artifactList === "" ? '<li class="muted">暂无产物（执行含该 agent 的 run 后出现）</li>' : artifactList}</ul>
+    </section>
+    <section class="panel">
+      <h2>Harness 真实执行 — 报告 <span class="hint">${String(agentReports.length)} 份</span></h2>
+      <p class="muted small">每步 report.md 与汇总报告：<a href="/reports?agent=${encodeURIComponent(input.role)}">报告中心 →</a></p>
+      <ul class="list-clean" id="agent-role-reports">${reportList === "" ? '<li class="muted">暂无报告（执行含该 agent 的 run 后出现）</li>' : reportList}</ul>
+    </section>
+  </div>
+  <div class="grid grid-2">
+    <section class="panel">
       <h2>相关 run</h2>
       <ul class="list-clean">${runLinks === "" ? '<li class="muted">暂无</li>' : runLinks}</ul>
     </section>
@@ -493,7 +521,144 @@ ${pageHeading(chatAgentTitle(input.role), `每个智能体、每一轮的详细�
 
 export interface RunDetailPageInput {
   run: RunDetail;
+  /** v1.5：该 run 的产物（真实文件；演示为确定性生成）。 */
+  artifacts?: HarnessArtifactView[];
+  /** v1.5：每步报告 + run 汇总报告。 */
+  reports?: HarnessReportView[];
+  /** v1.5：Token/工具/耗时等数据指标。 */
+  metrics?: RunMetricsView | null;
   options: PageRenderOptions;
+}
+
+const ARTIFACT_KIND_LABELS: Record<string, string> = {
+  html: "HTML",
+  markdown: "Markdown",
+  json: "JSON",
+  text: "文本",
+  image: "图片",
+  code: "代码",
+  data: "数据",
+  other: "其它",
+};
+
+function formatBytes(size: number): string {
+  const value = Number(size) || 0;
+  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  if (value >= 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${value} B`;
+}
+
+function artifactKindLabel(kind: string): string {
+  return ARTIFACT_KIND_LABELS[kind] ?? kind;
+}
+
+/** 产物卡片（列表/内联预览；下载链接同源；HTML 用 sandbox iframe、图片用 raw 预览、markdown 服务端渲染）。 */
+export function renderArtifactCard(artifact: HarnessArtifactView): string {
+  const previewText = artifact.preview_text ?? "";
+  let preview: string;
+  if (artifact.kind === "html") {
+    preview = `<iframe class="artifact-iframe" id="artifact-preview-${escapeAttr(artifact.id)}" src="${escapeAttr(`${artifact.preview_url ?? `/api/artifacts/${artifact.id}/preview`}?raw=1`)}" title="${escapeAttr(artifact.title)}（沙箱预览）" sandbox="" loading="lazy"></iframe>`;
+  } else if (artifact.kind === "markdown") {
+    preview = `<div class="artifact-md">${renderMarkdown(previewText)}</div>`;
+  } else if (artifact.kind === "image") {
+    preview = `<img class="artifact-image" src="${escapeAttr(`${artifact.preview_url ?? `/api/artifacts/${artifact.id}/preview`}?raw=1`)}" alt="${escapeAttr(artifact.title)}" loading="lazy" />`;
+  } else {
+    preview = `<pre class="artifact-pre mono">${escapeHtml(previewText.slice(0, 8000))}</pre>`;
+  }
+  return `<article class="artifact-card" id="artifact-${escapeAttr(artifact.id)}" data-artifact-id="${escapeAttr(artifact.id)}" data-kind="${escapeAttr(artifact.kind)}" data-agent="${escapeAttr(artifact.agent_role ?? "")}" data-run-id="${escapeAttr(artifact.run_id)}">
+    <header class="artifact-head">
+      <span class="artifact-kind kind-${escapeAttr(artifact.kind)}">${escapeHtml(artifactKindLabel(artifact.kind))}</span>
+      <b class="artifact-title">${escapeHtml(artifact.title)}</b>
+      <a class="artifact-download" data-download href="${escapeAttr(artifact.download_url ?? `/api/artifacts/${artifact.id}/download`)}">下载</a>
+    </header>
+    <div class="artifact-meta muted small">
+      <span class="mono">${escapeHtml(artifact.rel_path)}</span>
+      <span>${escapeHtml(formatBytes(artifact.size))}</span>
+      <span>${escapeHtml(chatAgentTitle(artifact.agent_role ?? "agent"))}</span>
+      ${artifact.step === undefined ? "" : `<span>步骤 ${String(artifact.step)}</span>`}
+      <span>${escapeHtml(formatDateTime(artifact.created_at))}</span>
+    </div>
+    <details class="artifact-preview" data-artifact-preview>
+      <summary>预览</summary>
+      ${preview}
+    </details>
+    <p class="muted small artifact-run muted">run <span class="mono">${escapeHtml(artifact.run_id)}</span></p>
+  </article>`;
+}
+
+function renderMetricsPanel(metrics: RunMetricsView | null | undefined, run: RunDetail): string {
+  if (metrics === null || metrics === undefined) {
+    return '<p class="empty-state" id="metrics-unavailable">该 runtime 未提供数据指标（真实 RunManager 接入后可用）</p>';
+  }
+  const tokenRows: Array<[string, number, string]> = [
+    ["输入 Token", metrics.token_input, "token-input"],
+    ["输出 Token", metrics.token_output, "token-output"],
+    ["缓存读取 Token", metrics.token_cache_read, "token-cache"],
+    ["Token 总计", metrics.token_total, "token-total"],
+  ];
+  const tokenTotal = Math.max(1, metrics.token_total);
+  const tokenCards = tokenRows
+    .map(
+      ([label, value, id]) => `<div class="metric-card" id="metric-${id}-card">
+        <div class="metric-label">${escapeHtml(label)}</div>
+        <div class="metric-value mono" id="metric-${id}">${value.toLocaleString("zh-CN")}</div>
+        <div class="metric-bar"><span style="width:${String(Math.min(100, Math.round((value / tokenTotal) * 100)))}%"></span></div>
+      </div>`,
+    )
+    .join("");
+  const toolCounts = Object.entries(metrics.tool_call_counts).sort((a, b) => b[1] - a[1]);
+  const maxTool = Math.max(1, ...toolCounts.map(([, count]) => count));
+  const toolRows = toolCounts
+    .map(
+      ([tool, count]) => `<tr data-tool="${escapeAttr(tool)}"><td class="mono">${escapeHtml(tool)}</td><td class="num mono">${String(count)}</td><td class="metric-bar-cell"><span class="metric-bar-inline" style="width:${String(Math.round((count / maxTool) * 100))}%"></span></td></tr>`,
+    )
+    .join("");
+  const budgetPercent = Math.min(100, Math.round((metrics.budget_used_cny / Math.max(1, metrics.budget_used_cny + 2800)) * 100));
+  return `<div class="metrics-grid" id="run-metrics">
+    <div class="metrics-cards">${tokenCards}</div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-label">步骤</div><div class="metric-value mono" id="metric-steps">${String(metrics.steps)}</div></div>
+      <div class="metric-card"><div class="metric-label">耗时（ms）</div><div class="metric-value mono" id="metric-duration">${String(metrics.duration_ms)}</div></div>
+      <div class="metric-card"><div class="metric-label">工具调用次数</div><div class="metric-value mono" id="metric-tool-calls">${String(metrics.tool_calls)}</div></div>
+      <div class="metric-card"><div class="metric-label">事件数</div><div class="metric-value mono" id="metric-events">${String(metrics.events)}</div></div>
+    </div>
+    <div class="metrics-tables">
+      <table class="data-table" id="metrics-tools"><thead><tr><th>工具</th><th style="text-align:right">调用次数</th><th>分布</th></tr></thead><tbody>${toolRows === "" ? '<tr><td colspan="3" class="muted">无工具调用</td></tr>' : toolRows}</tbody></table>
+      <div class="metrics-side">
+        <p>模型来源：<span class="mono" id="metrics-model-modes">${escapeHtml(metrics.model_modes.join(" / ") || "—")}</span></p>
+        <p>预算消耗：<b id="metric-budget">${escapeHtml(formatCny(metrics.budget_used_cny))}</b>（图示 ${String(budgetPercent)}%）</p>
+        <div class="metric-bar"><span style="width:${String(budgetPercent)}%"></span></div>
+        <p class="muted small">事件 ${String(metrics.events)} 条 · run 证据 ${String(run.evidence.length)} 份 · 步骤 ${String(metrics.steps)}/${String(run.events.filter((event) => event.phase === "action").length)}</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderReportsPanel(reports: HarnessReportView[], run: RunDetail): string {
+  const overall = `<section class="panel run-overall-report" id="run-overall-report">
+    <h2>run 汇总报告 <span class="hint">report.md 渲染</span></h2>
+    <div id="run-report">${renderMarkdown(run.report_md ?? "（无报告）")}</div>
+  </section>`;
+  if (reports.length === 0) {
+    return `${overall}<p class="empty-state" id="run-reports-empty">该 run 暂无分步报告（真实 harness 接入后出现 report.md）</p>`;
+  }
+  const rows = reports
+    .map(
+      (report) => `<article class="run-report-item" data-report-id="${escapeAttr(report.id)}" id="report-${escapeAttr(report.id)}">
+        <header class="run-report-head">
+          <b>${escapeHtml(report.title)}</b>
+          <span class="mono small muted">${escapeHtml(report.agent_role ?? "agent")}</span>
+          ${report.step === undefined ? '<span class="badge status-approved">run 汇总</span>' : `<span class="badge status-idle">步骤 ${String(report.step)}</span>`}
+          <span class="muted small">${escapeHtml(formatDateTime(report.created_at))}</span>
+        </header>
+        <details class="run-report-details" ${report.step === undefined ? "" : "open"}>
+          <summary>展开/收起报告（Markdown 渲染）</summary>
+          <div class="run-report-md">${renderMarkdown(report.markdown)}</div>
+        </details>
+      </article>`,
+    )
+    .join("");
+  return `${overall}<section class="panel" id="run-step-reports"><h2>分步报告 <span class="hint">${String(reports.length)} 份</span></h2>${rows}</section>`;
 }
 
 const PHASE_LABELS: Record<string, string> = {
@@ -565,6 +730,9 @@ function renderEvidence(evidence: EvidenceItem[]): string {
 
 export function renderRunDetailPage(input: RunDetailPageInput): string {
   const run = input.run;
+  const artifacts = input.artifacts ?? [];
+  const reports = input.reports ?? [];
+  const metrics = input.metrics ?? null;
   const logs = run.evidence.filter((item) => item.kind === "log" || item.kind === "json");
   const payloads = logs
     .map(
@@ -586,6 +754,7 @@ export function renderRunDetailPage(input: RunDetailPageInput): string {
       </article>`,
     )
     .join("");
+  const artifactCards = artifacts.map(renderArtifactCard).join("");
   const content = `
 ${pageHeading("Run 详情", run.run_id)}
 <div class="run-page" id="run-page">
@@ -593,32 +762,58 @@ ${pageHeading("Run 详情", run.run_id)}
     <span class="badge status-${run.status === "done" ? "approved" : run.status === "paused" ? "pending" : "running"}" id="run-status">${escapeHtml(run.status)}</span>
     <h2 id="run-goal">${escapeHtml(run.goal)}</h2>
     <span class="muted small">开始 ${escapeHtml(formatDateTime(run.started_at))}${run.finished_at === undefined ? "" : ` · 结束 ${escapeHtml(formatDateTime(run.finished_at))}`}</span>
-    ${run.session_id === undefined ? "" : `<a class="run-link" href="/chat/${encodeURIComponent(run.session_id)}" id="run-session-link">返回会话 →</a>`}
+    ${run.session_id === undefined ? "" : `<a class="run-link" href="/chat/${encodeURIComponent(run.session_id)}" id="run-session-link">返回实时会话 →</a>`}
   </div>
   <div class="run-stats" id="run-stats">
     <span>Token 已用 <b class="mono">${run.token_used.toLocaleString("zh-CN")}</b></span>
     <span>预算已用 <b>${escapeHtml(formatCny(run.budget_used_cny))}</b></span>
     <span>事件 <b>${String(run.events.length)}</b></span>
     <span>证据 <b>${String(run.evidence.length)}</b></span>
+    <span>产物 <b>${String(artifacts.length)}</b></span>
+    <span>报告 <b>${String(reports.length)}</b></span>
   </div>
-  <div class="run-grid">
-    <section class="panel">
-      <h2>全流程时间线 <span class="hint">计划 → 行动 → 观察 → 验证 → 留证</span></h2>
-      ${renderTimeline(run.events)}
-    </section>
-    <section class="panel">
-      <h2>运行报告 report.md <span class="hint">渲染视图</span></h2>
-      <div id="run-report">${renderMarkdown(run.report_md ?? "（无报告）")}</div>
-    </section>
+
+  <div class="run-tabs" id="run-tabs" role="tablist">
+    <button class="run-tab active" type="button" role="tab" data-tab="process" id="run-tab-process" aria-selected="true">过程</button>
+    <button class="run-tab" type="button" role="tab" data-tab="artifacts" id="run-tab-artifacts" aria-selected="false">产物 <span class="tab-count">${String(artifacts.length)}</span></button>
+    <button class="run-tab" type="button" role="tab" data-tab="metrics" id="run-tab-metrics" aria-selected="false">数据</button>
+    <button class="run-tab" type="button" role="tab" data-tab="report" id="run-tab-report" aria-selected="false">报告 <span class="tab-count">${String(reports.length)}</span></button>
   </div>
-  <section class="panel">
-    <h2>证据 <span class="hint">截图缩略图可点开大图 · 报告 · 日志 / JSON</span></h2>
-    ${renderEvidence(run.evidence)}
-    ${payloads === "" ? "" : `<div class="payloads" id="run-payloads">${payloads}</div>`}
+
+  <section class="run-tab-panel" data-tab-panel="process" id="run-panel-process">
+    <div class="run-grid">
+      <section class="panel">
+        <h2>全流程时间线（思考 / 工具 / 步骤 / 证据）</h2>
+        ${renderTimeline(run.events)}
+      </section>
+      <section class="panel">
+        <h2>各智能体对话摘要</h2>
+        <div class="run-agents" id="run-agents">${agents === "" ? '<p class="empty-state">暂无</p>' : agents}</div>
+      </section>
+    </div>
   </section>
-  <section class="panel">
-    <h2>各智能体对话摘要</h2>
-    <div class="run-agents" id="run-agents">${agents === "" ? '<p class="empty-state">暂无</p>' : agents}</div>
+
+  <section class="run-tab-panel" data-tab-panel="artifacts" id="run-panel-artifacts" hidden>
+    <section class="panel">
+      <h2>产物（真实文件）<span class="hint">${String(artifacts.length)} 个 · 预览 / 下载</span></h2>
+      <div class="artifact-grid" id="run-artifacts">${artifactCards === "" ? '<p class="empty-state" id="run-artifacts-empty">暂无产物（真实 harness 接入后出现 run 目录文件）</p>' : artifactCards}</div>
+    </section>
+    <section class="panel">
+      <h2>证据（截图 / 日志 / JSON）</h2>
+      ${renderEvidence(run.evidence)}
+      ${payloads === "" ? "" : `<div class="payloads" id="run-payloads">${payloads}</div>`}
+    </section>
+  </section>
+
+  <section class="run-tab-panel" data-tab-panel="metrics" id="run-panel-metrics" hidden>
+    <section class="panel">
+      <h2>数据指标 <span class="hint">Token 明细 / 工具调用分布 / 耗时 / 事件</span></h2>
+      ${renderMetricsPanel(metrics, run)}
+    </section>
+  </section>
+
+  <section class="run-tab-panel" data-tab-panel="report" id="run-panel-report" hidden>
+    ${renderReportsPanel(reports, run)}
   </section>
 </div>
 <div class="lightbox" id="evidence-lightbox" role="dialog" aria-modal="true" aria-label="证据大图" hidden>
@@ -851,3 +1046,86 @@ export function renderModelSettingsSection(input: ModelSettingsSectionInput): st
 
 /** 导入占位：避免未使用类型报错（noUnusedLocals 未开启，但保留说明）。 */
 export type { ConsoleChatProvider } from "./chat.js";
+
+// ---------------------------------------------------------------------------
+// /artifacts 产物中心 与 /reports 报告中心（v1.5）
+// ---------------------------------------------------------------------------
+
+export interface ArtifactsCenterPageInput {
+  artifacts: HarnessArtifactView[];
+  runs: Array<{ run_id: string; goal: string }>;
+  options: PageRenderOptions;
+}
+
+export function renderArtifactsCenterPage(input: ArtifactsCenterPageInput): string {
+  const roles = [...new Set(input.artifacts.map((item) => item.agent_role).filter((role): role is string => role !== undefined))];
+  const kinds = [...new Set(input.artifacts.map((item) => item.kind))];
+  const kindOptions = ["", ...kinds]
+    .map((kind) => `<option value="${escapeAttr(kind)}">${kind === "" ? "全部类型" : escapeHtml(artifactKindLabel(kind))}</option>`)
+    .join("");
+  const roleOptions = ["", ...roles]
+    .map((role) => `<option value="${escapeAttr(role)}">${role === "" ? "全部智能体" : escapeHtml(chatAgentTitle(role))}</option>`)
+    .join("");
+  const runOptions = ["", ...input.runs.map((run) => run.run_id)]
+    .map((runId) => `<option value="${escapeAttr(runId)}">${runId === "" ? "全部 run" : escapeHtml(runId)}</option>`)
+    .join("");
+  const totalSize = input.artifacts.reduce((sum, item) => sum + item.size, 0);
+  const cards = input.artifacts.map(renderArtifactCard).join("");
+  const content = `
+${pageHeading("产物中心", "所有 run 的真实文件：HTML / Markdown / JSON / 代码 / 数据 / 图片 · 预览 + 下载")}
+<section class="panel">
+  <div class="center-toolbar">
+    <label>类型 <select class="input" id="artifact-filter-kind">${kindOptions}</select></label>
+    <label>智能体 <select class="input" id="artifact-filter-agent">${roleOptions}</select></label>
+    <label>run <select class="input" id="artifact-filter-run">${runOptions}</select></label>
+    <span class="muted small" id="artifact-count">共 ${String(input.artifacts.length)} 个产物 · 合计 ${escapeHtml(formatBytes(totalSize))}</span>
+  </div>
+  <p class="muted small">安全边界：产物只能通过服务端白名单 ID 预览/下载（防路径穿越）；演示产物由内置 harness 确定性生成，真实运行时来自 run 目录。</p>
+  <div class="artifact-grid" id="artifact-list">${cards === "" ? '<p class="empty-state" id="artifact-list-empty">暂无产物（执行 run 后自动生成）</p>' : cards}</div>
+</section>`;
+  return renderShell(input.options, "产物中心", content);
+}
+
+export interface ReportsCenterPageInput {
+  reports: HarnessReportView[];
+  runs: Array<{ run_id: string; goal: string }>;
+  options: PageRenderOptions;
+}
+
+export function renderReportsCenterPage(input: ReportsCenterPageInput): string {
+  const roles = [...new Set(input.reports.map((item) => item.agent_role).filter((role): role is string => role !== undefined))];
+  const roleOptions = ["", ...roles]
+    .map((role) => `<option value="${escapeAttr(role)}">${role === "" ? "全部智能体" : escapeHtml(chatAgentTitle(role))}</option>`)
+    .join("");
+  const runOptions = ["", ...input.runs.map((run) => run.run_id)]
+    .map((runId) => `<option value="${escapeAttr(runId)}">${runId === "" ? "全部 run" : escapeHtml(runId)}</option>`)
+    .join("");
+  const rows = input.reports
+    .map(
+      (report) => `<article class="report-item" data-report-id="${escapeAttr(report.id)}" data-agent="${escapeAttr(report.agent_role ?? "")}" data-run-id="${escapeAttr(report.run_id)}" id="report-${escapeAttr(report.id)}">
+        <header class="report-item-head">
+          <b>${escapeHtml(report.title)}</b>
+          <span class="badge status-idle">${escapeHtml(chatAgentTitle(report.agent_role ?? "agent"))}</span>
+          ${report.step === undefined ? '<span class="badge status-approved">run 汇总</span>' : `<span class="badge status-pending">步骤 ${String(report.step)}</span>`}
+          <span class="muted small">${escapeHtml(formatDateTime(report.created_at))}</span>
+          <span class="mono small muted">${escapeHtml(report.run_id)}</span>
+        </header>
+        <details class="report-details">
+          <summary>展开报告（Markdown 渲染）</summary>
+          <div class="report-md">${renderMarkdown(report.markdown)}</div>
+        </details>
+      </article>`,
+    )
+    .join("");
+  const content = `
+${pageHeading("报告中心", "每步 agent 报告 + run 汇总报告 · 服务端渲染 Markdown · 显示生成时间与 agent 角色")}
+<section class="panel">
+  <div class="center-toolbar">
+    <label>智能体 <select class="input" id="report-filter-agent">${roleOptions}</select></label>
+    <label>run <select class="input" id="report-filter-run">${runOptions}</select></label>
+    <span class="muted small" id="report-count">共 ${String(input.reports.length)} 份报告</span>
+  </div>
+  <div class="report-list" id="reports-list">${rows === "" ? '<p class="empty-state" id="reports-list-empty">暂无报告（执行 run 后自动生成）</p>' : rows}</div>
+</section>`;
+  return renderShell(input.options, "报告中心", content);
+}

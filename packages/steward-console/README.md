@@ -1,9 +1,10 @@
-# packages/steward-console · 本地 Web 控制台（v1.4 专业版）
+# packages/steward-console · 本地 Web 控制台（v1.5 专业版）
 
-> 状态：**v1.4 已实现**（发送即执行 + SSE 实时流；含 v1.2/v1.3 的对话/证据/变现+易支付/模型提示词/系统总控）。
+> 状态：**v1.5 已实现**（产物中心 / 报告中心 / 数据指标 / 思考与工具实时流 / 每 agent Harness 真实执行记录；
+> 含 v1.4 发送即执行 + SSE、v1.2/v1.3 的对话/变现+易支付/模型提示词/系统总控）。
 > 零第三方依赖：Node 内置 `node:http` + 原生 HTML/CSS/JS；**只监听 127.0.0.1**；写操作需
 > `X-Steward-Token`；无 CDN / 外链 / 外网字体。真实浏览器 E2E：`tests/e2e-console/run.mjs`
-> （有头 Chrome，**31 步 / 338 检查 / 35 张证据截图**，输出 `measured_stop_ms` 与 `console_boot_ms`）。
+> （有头 Chrome，**38 步 / 407 检查 / 42 张证据截图**，输出 `measured_stop_ms` 与 `console_boot_ms`）。
 
 ## 1. 目录 / 文件
 
@@ -14,7 +15,7 @@
 | `src/admin.ts` | 管理契约 `ConsoleAdminProvider` + `createDemoAdminProvider()`（配置/智能体/后台/数据）；v1.3 增加 `supervisor` 角色与「超级总调度 / 项目总调度」标题 |
 | `src/chat.ts` | **v1.2 契约 `ConsoleChatProvider`** + `createDemoChatProvider()`：对话/计划/新建项目/打断恢复/审批、run 与证据、agent 轮次、变现请求、模型与提示词设置；`MoneyMethod` 含 **epay** |
 | `src/system.ts` | **v1.3 契约 `ConsoleSystemProvider`** + `createDemoSystemProvider()`：超级总调度对话、两层结构、受管程序/插件、日志、快捷命令、**危险动作二次确认**（风险+备份路径+确认 token）、**易支付**配置与跳转链接 |
-| `src/runtime.ts` | **v1.4 契约 `ConsoleRuntimeProvider`** + `createDemoRuntimeProvider()`：发送即执行、确定性自动推进（150ms/事件）、SSE 事件日志（回放+订阅）、审批暂停/打断/恢复、run 详情与 agent 轮次 |
+| `src/runtime.ts` | **v1.4 契约 `ConsoleRuntimeProvider`** + `createDemoRuntimeProvider()`：发送即执行、确定性自动推进（150ms/事件）、SSE 事件日志（回放+订阅）、审批暂停/打断/恢复、run 详情与 agent 轮次；**v1.5 扩展** `listArtifacts/listReports/getRunMetrics` + 新事件 `harness.thinking/tool_call/tool_result/artifact.created/report.created` |
 | `src/pages.ts` | 页面骨架（左侧固定导航 + 顶部状态栏）+ 总览/项目/账本/审批/月报/接管 |
 | `src/pages-admin.ts` | 项目列表 / 配置中心 / 智能体中心 / 后台 / 数据管理（配置中心内嵌模型、提示词、易支付分组） |
 | `src/pages-chat.ts` | 对话列表/会话详情、智能体对话记录、run 详情与证据、变现/易支付、模型与提示词分组 |
@@ -44,11 +45,11 @@ const handle = await createConsoleServer({
 - `host` 默认 `127.0.0.1`，只允许回环地址；`port` 默认 `4180`（0=随机，E2E 推荐）。
 - 写操作 token 随机 32hex，页面通过 `<meta name="steward-token">` 同源注入。
 - `chatProvider: null` / `systemProvider: null` / `runtimeProvider: null` 可显式关闭（对应页面/API 返回 503）。
-- `/health` 返回 `version:"1.4.0"`、`chat_enabled`、`system_enabled`、`runtime_enabled`、`sse_active_streams`、`mode`、`halted`。
+- `/health` 返回 `version:"1.5.0"`、`chat_enabled`、`system_enabled`、`runtime_enabled`、`sse_active_streams`、`artifacts_enabled`、`reports_enabled`、`metrics_enabled`、`mode`、`halted`。
 
 ## 3. 布局与导航
 
-左侧固定导航（v1.2/v1.3 新增 3 项）：
+左侧固定导航（v1.2/v1.3/v1.5 新增项）：**产物 / 报告**（v1.5，产物中心与报告中心）等。
 - **运营**：总览 / **对话** / 项目 / 账本 / 审批 / 月报 / 接管 / **变现**
 - **管理**：**系统** / 智能体 / 后台 / 配置 / 数据
 
@@ -64,7 +65,9 @@ const handle = await createConsoleServer({
 | `/chat/:id` | **会话详情** | 用户与总调度气泡（每轮简略摘要）、计划卡（步骤/负责 agent/需审批标记）、审批卡、**打断/恢复/开始执行**、跳 run |
 | `/agents` | 智能体中心 | 12 个智能体卡片（含 supervisor），展开详情，**每个 agent 可进对话记录** |
 | `/agents/:role` | **智能体对话记录** | 每轮输入/输出摘要、Token、状态、证据引用；相关 run；supervisor/conductor 记录也可看 |
-| `/runs/:id` | **run 详情** | 全流程时间线（计划→行动→观察→验证→留证）、**证据截图缩略图→点开大图（灯箱）**、report.md 渲染、日志/JSON 展开、各 agent 对话摘要 |
+| `/runs/:id` | **run 详情（v1.5 Tabs）** | **过程**（thinking 流 + tool_call/tool_result 时间线 + agent 摘要）/ **产物**（artifact 列表 + HTML iframe、Markdown 渲染、JSON/文本/图片预览 + 下载 + 证据灯箱 + 日志/JSON）/ **数据**（Token 输入/输出/缓存/总计、工具调用分布、耗时、事件、模型来源、预算）/ **报告**（run 汇总 + 每步 report.md 真实 Markdown 渲染） |
+| `/artifacts` | **产物中心（v1.5）** | 跨 run 真实文件（HTML/Markdown/JSON/代码/数据/图片）：按类型/agent/run 筛选，内联预览 + 下载（服务端白名单 ID，防路径穿越） |
+| `/reports` | **报告中心（v1.5）** | 跨 run 每步 agent 报告 + 汇总报告：Markdown 服务端渲染，显示生成时间与 agent 角色，按 agent/run 筛选 |
 | `/money` | **变现 / 收款** | 「为什么收不到钱」说明（演示渠道未接真实支付、**此前 ¥10 只是测试金额**）、收款账户/渠道摘要、**易支付设置**、创建收款请求（金额/客户/用途/渠道）、收款链接/二维码占位、**人工确认到账 → 账本收入** |
 | `/money/request/:id` | 收款页（演示） | 收款链接落地页：金额/客户/用途/渠道、二维码占位、demo 提示 |
 | `/system` | **系统总控** | 与**超级总调度（supervisor）**对话、**两层结构**（supervisor → 项目总调度 → 专项智能体）、受管程序（运行/停止/重启/删除）、插件（启用/禁用/删除）、各 agent 当前模型/Token、系统日志、快捷命令、**危险动作二次确认弹窗** |
@@ -299,18 +302,118 @@ const handle = await createConsoleServer({
 | `getSession/getRunDetail/getAgentTranscripts` | `OrchestratorEngine.getSession/getRunDetail/getAgentTranscripts`（真实证据路径替换演示 SVG） |
 
 适配器放 `apps/cli/src/`（如 `console-runtime.ts`：`createOrchestratorRuntimeProvider(engine): ConsoleRuntimeProvider`），`cmdConsole()` 传入 `runtimeProvider` 即可；SSE/页面/E2E 全部复用。
-## 15. 真实浏览器验收
+## 15. 产物 / 报告 / 数据 / 思考过程（v1.5）
+
+**用户诉求**：看不到明显的产物、数据、报告、思考过程。v1.5 把这些做成显著的一等页面与 Tab：
+
+### 15.1 `/runs/:id` 四个 Tab（默认「过程」）
+
+| Tab | 内容 |
+|---|---|
+| 过程 | 全流程时间线（计划/行动/观察/验证/留证/异常/接管）+ **thinking 流** + **tool_call/tool_result 工具卡片**（名称/参数摘要/状态/耗时）+ 各 agent 对话摘要 |
+| 产物 | 每个 run 的**真实文件列表**：名称/类型/大小/时间/所属 agent/步骤；**HTML 用 sandbox iframe 预览、Markdown 服务端渲染、JSON/文本/代码高亮 pre、图片缩略图**；一键下载；截图证据缩略图→灯箱；日志/JSON 证据展开 |
+| 数据 | Token 明细（输入/输出/缓存/总计 + CSS 条形图）、步骤数、耗时（ms）、工具调用次数与分布表、事件数、model_modes、预算消耗 |
+| 报告 | run 汇总 report.md + **每步 agent 报告**（Markdown 服务端渲染、可展开、显示生成时间/agent 角色/步骤号） |
+
+### 15.2 `/chat/:id` 实时增强（v1.5）
+
+- **thinking 分块流**：`harness.thinking` 按步骤累积到可折叠的「思考过程」面板（分块追加、可展开）；
+- **工具卡片**：`harness.tool_call` → 卡片（工具名 + 参数摘要 + 调用中…），`harness.tool_result` 更新为 ✅成功/失败 + 耗时 + 结果摘要；
+- **产物/报告即时提示**：`artifact.created` → “📄 产物已生成：xxx（下载/查看）”链接；`report.created` → 报告链接；
+- 原有计划点亮/审批卡/打断恢复/完成卡/SSE 断线恢复不变。
+
+### 15.3 新增 SSE 事件（v1.5，接在 14.2 表之后）
+
+| 事件 type | 含义 | 关键 data |
+|---|---|---|
+| `harness.thinking` | agent 思考分块 | step/agent_role/agent_title/chunk_index/chunk/model_mode |
+| `harness.tool_call` | 工具调用开始 | step/agent_role/tool/args_summary/call_id/status |
+| `harness.tool_result` | 工具调用结果 | step/agent_role/tool/call_id/status/duration_ms/result_summary |
+| `artifact.created` | 产物已生成 | artifact_id/rel_path/kind/size/title/step/agent_role |
+| `report.created` | 报告已生成 | report_id/title/step/agent_role |
+
+### 15.4 新增 API（只读，无需 token；产物安全边界）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/artifacts?run_id=&kind=&agent=` | 产物列表（跨 run 筛选） |
+| GET | `/api/artifacts/:id/preview` | 预览：默认 JSON（kind/title/mime/size/preview_text/download_url）；`?raw=1` 直接返回原文/图片（HTML 带 CSP + sandbox iframe） |
+| GET | `/api/artifacts/:id/download` | 下载（`Content-Disposition: attachment; filename=<basename>`） |
+| GET | `/api/reports?run_id=&agent=` | 报告列表（含 markdown） |
+| GET | `/api/reports/:id` | 单份报告详情 |
+| GET | `/api/chat/runs/:id/metrics` | Token/工具/耗时/事件/model_modes/预算指标 |
+
+**安全边界（防路径穿越）**：产物只能通过 **provider 返回的白名单 ID** 访问；`id` 必须匹配 `^[A-Za-z0-9][A-Za-z0-9._-]{1,160}$`；`rel_path` 禁止 `..`/反斜杠/绝对路径/NUL；下载文件名取 `basename` 并做 ASCII 白名单清洗；HTML 预览为 `sandbox`（无脚本）iframe + `Content-Security-Policy: default-src 'none'`。
+
+### 15.5 `/agents` Harness 真实执行感（v1.5）
+
+- 每个智能体卡片带 **「DeepSeek Harness 真实执行」** 徽章；
+- 展示该 agent **最近 harness 会话**：session_id、耗时(ms)、tokens、工具数、产物数、报告数；
+- 可点入 `run 证据 / 实时会话 / 该 agent 产物 / 该 agent 报告`；`/agents/:role` 详情页也展示该 agent 的产物与报告面板。
+
+### 15.6 Provider 扩展与真实 harness 映射
+
+`ConsoleRuntimeProvider` v1.5 可选方法（缺省时页面显示「暂不可用」，保持向后兼容）：
+
+```ts
+listArtifacts?(filter?: {run_id?; session_id?; agent_role?; kind?}): MaybePromise<HarnessArtifactView[]>;
+listReports?(filter?: {run_id?; session_id?; agent_role?}): MaybePromise<HarnessReportView[]>;
+getRunMetrics?(runId: string): MaybePromise<RunMetricsView | null>;
+// v1.5 真实 Harness 数据接口（Lead 适配器实现；控制台不直接读文件）
+getArtifactContent?(id: string): MaybePromise<{ ok: boolean; kind: "html"|"markdown"|"json"|"text"|"image"|"other"; content?: string; mime?: string; path?: string; error?: string }>;
+getArtifactFilePath?(id: string): string | null;   // 下载用绝对路径，server 校验必须位于 runs/ 对应 run 目录内
+```
+
+| Console | 真实来源（RunManager / Orchestrator / 文件系统） |
+|---|---|
+| `listArtifacts` | 扫描 run 目录 `artifacts/`、`site/`、`data/`、`charts/`、`code/`、`logs/` 等白名单子目录 → `{rel_path,size,kind,step,agent_role}`；访问 URL 由控制台生成（ID 白名单） |
+| `listReports` | run 目录 `reports/*.md` + 汇总 `report.md` → `HarnessReportView`（markdown 原文由服务端渲染） |
+| `getRunMetrics` | RunManager/Orchestrator 事件与账本：token 输入/输出/缓存（`TokenBudget`/usage 记录）、工具调用（`harness.tool_call` 事件计数）、耗时（run 开始/结束）、events 数、model_modes（remote/local_fallback）、budget_used_cny |
+| 新 SSE 事件 | RunManager 事件流透传（thinking chunk / tool call / tool result / artifact.created / report.created）；控制台 SSE handler 原样广播 |
+| `/agents` Harness 摘要 | 由 runtime `listRuns()+getRunDetail()+eventLog()+listArtifacts/listReports` 聚合；真实接入后可加缓存 |
+
+演示实现 `createDemoRuntimeProvider()` 在每步执行时确定性产生：2 条 thinking 分块、工具调用/结果（browser.open、code.loop、test.run、evidence.read…）、6 个产物（Markdown/HTML/JSON/SVG/文本/代码）、3 份报告（步骤 2/3 + 汇总），供 E2E 验证；真实接入后由 run 目录真实文件替换。
+### 15.7 真实 DeepSeek Harness 数据形态（v1.5，Lead 适配器契约）
+
+真实 Harness 每步把 thinking/tool/产物/报告落盘到 `runs/<sessionId>/harness/`，由 Lead 的 runtime Provider 映射为控制台数据；页面无需直接读文件。控制台已按以下形态渲染（同时兼容演示 provider 的旧字段）：
+
+**真实 SSE 事件 data（页面渲染用）**
+
+| type | data 形态 |
+|---|---|
+| `harness.thinking` | `{ step, agent_role, text, at }` |
+| `harness.tool_call` | `{ step, agent_role, tool, input, callId }` |
+| `harness.tool_result` | `{ step, agent_role, tool, callId, status, result_preview }` |
+| `artifact.created` | `{ artifact: HarnessArtifactView }` |
+| `report.created` | `{ report: HarnessReportView }` |
+
+前端同时兼容演示字段（thinking 的 `chunk`/`chunk_index`、tool 的 `args_summary`/`call_id`/`duration_ms`/`result_summary`、artifact/report 扁平字段），因此 demo 与真实数据共用同一套渲染。
+
+**真实数据目录（Lead 适配器读取并映射；页面不直接读文件）**
+
+| 文件 | 内容 |
+|---|---|
+| `runs/<sessionId>/harness/step-<n>-events.jsonl` | 每行 HarnessEvent：`{type, seq, at, data}`（thinking/tool_call/tool_result/artifact/report…） |
+| `runs/<sessionId>/harness/step-<n>-artifacts.json` | `{ step, role, artifacts: [{ rel_path, source_rel, kind, size, sha256 }] }` |
+| `runs/<sessionId>/harness/step-<n>-report.md` | agent 每步报告（Markdown） |
+| `runs/<sessionId>/harness/step-<n>-summary.json` | `{ thinking, tool_calls, usage, final_text, model_mode: "harness" }` |
+| `runs/<sessionId>/harness/metrics.json` | `{ totals: { input_tokens, output_tokens, cache_read_tokens, total_tokens, steps, tool_calls, duration_ms, events }, tool_call_counts, model_modes: ["harness"] }` |
+
+**映射建议**：`listArtifacts` 扫描 `harness/step-*-artifacts.json`（`rel_path` 加 `runs/<session>/harness/` 前缀得到绝对路径，ID 由适配器生成）；`listReports` 读取 `step-*-report.md` + 汇总；`getRunMetrics` 读 `metrics.json`（缺省字段回退事件计数）；`getArtifactContent` 读对应文件内容并返回 kind/mime；`getArtifactFilePath` 返回绝对路径（server 会校验：绝对路径、`normalize` 后包含 `runs/` 与 `harness/`、无 `..`，否则拒绝）；`/agents` 的 Harness 摘要由 `listRuns()+getRunDetail()+eventLog()+listArtifacts/listReports` 聚合，真实元数据（profile/workspace/tools）可放入 `HarnessAgentSummary` 在卡片展示。
+
+**安全**：产物 id 必须匹配白名单正则才能查找；预览/下载均通过服务端白名单 ID → 内容解析 → （真实路径时）`runs/` 内路径校验；HTML 预览使用 `sandbox` iframe + `CSP default-src 'none'`；下载名取 basename 并清洗。
+## 16. 真实浏览器验收
 
 ```bash
 npm run build
 node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-console-v13
 ```
 
-实测（有头 Chrome 156，2026-10-30）：**31/31 步、338/338 检查、35 张证据截图**、
-`measured_stop_ms=79`、`console_boot_ms=20`、`first_page_load_ms=410`、耗时 **31.9s**、退出码 0。
+实测（有头 Chrome 156，2026-10-30）：**38/38 步、407/407 检查、42 张证据截图**、
+`measured_stop_ms=84`、`console_boot_ms=21`、`first_page_load_ms=398`、耗时 **33.4s**、退出码 0。
 详见 [`tests/e2e-console/README.md`](../../tests/e2e-console/README.md)。
 
-## 16. 已知限制
+## 17. 已知限制
 
 - 演示 `chatProvider`/`systemProvider` 为**内存状态**（会话、程序/插件、epay 配置、危险动作只在本进程有效，
   重启回到默认）；真实 Orchestrator/SystemController/ConfigEngine/MoneyEngine 接入后持久化到 `.steward/`。
@@ -321,3 +424,28 @@ node tests/e2e-console/run.mjs --evidence-dir C:\daizhang-build\staging\e2e-cons
 - **v1.4 演示 runtime 为内存状态机**：run/事件在进程内，重启丢失；真实 RunManager 接入后事件应持久化（`events.jsonl`）并支持跨进程回放。
 - **SSE 为单进程内存广播**：多实例部署需换成 Redis/消息队列/反向代理广播（当前本地单机不涉及）；`/runs/:id` 页面为快照视图，实时流在 `/chat/:id`（可选用 SSE 增强）。
 - 演示 runtime 的高风险判定基于目标关键词（付款/对外/发布/删除/签约等），真实引擎应由风险策略/ActionPolicy 决定并强制审批。
+- **v1.5 演示产物/报告为确定性生成内容**（内置 HTML/Markdown/JSON/SVG/代码），真实 RunManager 接入后应扫描 run 目录真实文件替换；`/runs/:id` 的数据指标来自 runtime 提供（缺省显示「暂不可用」）。
+- 思考流为分块累积展示（真实模型 token 级流式需适配器逐 chunk 透传 `harness.thinking`）；工具卡片展示参数摘要与耗时，不展示敏感参数全文。
+
+## 18. ChatGPT 式对话总控（v1.5.1）
+
+`/chat` 重做为 **ChatGPT 式主入口**（一个入口控制全部）：
+
+- **布局**：左侧对话历史（新建/切换/重命名/删除 + 记忆入口）；中间消息流（用户/助手气泡、Markdown、代码块）；底部输入框（Enter 发送 / Shift+Enter 换行，发送后立即出现用户消息与「思考中…」）；右侧记忆抽屉（kind/content/tags/importance/time、搜索、删除、空态）。
+- **内嵌卡片**：thinking 折叠块、工具调用/结果（工具/参数/状态/耗时）、产物（HTML sandbox iframe / Markdown / JSON·text / 图片内联预览 + 下载）、报告（Markdown 渲染、可展开）、数据（Token/耗时/工具/步骤小表格）、审批卡（**内联批准/驳回**，同时驱动 runtime 审批）、错误卡。
+- **快捷 chips**：系统状态/运行列表/产物/报告/日志/配置/账本/智能体/记忆 → 点击即发送对应查询（走 ChatEngine 意图）。
+- **实时流**：`POST /api/chat/conversations/:id/messages`（返回 assistant_id）→ `GET /api/chat/conversations/:id/stream?assistant_id=&since=` SSE 逐段渲染；刷新恢复当前对话；多会话持久。
+- **数据源标识**：顶部显示「数据源：真实/演示/混合」（`Provider.status().data_source`），演示卡片标注「演示」。
+- **任务类消息**：同时创建真实 runtime run，并在对话内注入「查看完整运行过程与证据 →」链接（深度实时页 `/chat/:id`），旧 run 详情/产物/报告页面保留。
+
+### 18.1 API / Provider 契约
+
+- 页面：`GET /chat`（SSR 会话列表+当前对话+记忆+状态）；深度视图保留 `/chat/:id`、`/runs/:id`、`/artifacts`、`/reports`。
+- API：`GET/POST /api/chat/conversations`、`GET/PATCH/DELETE /api/chat/conversations/:id`、`POST /api/chat/conversations/:id/messages`（`{text,stream}`）、`POST /api/chat/conversations/:id/approvals`（`{approval_id,decision,step}`）、`GET /api/chat/conversations/:id/stream`（SSE）、`GET /api/chat/memory?query=`、`DELETE /api/chat/memory/:id`、`GET /api/chat/status`。写操作需 `X-Steward-Token`（SSE 只读）。
+- Provider（`src/conversations.ts`）：`ConsoleChatProvider`（别名 `ConsoleChatEngineProvider`）含 listConversations/createConversation/getConversation/renameConversation/deleteConversation/sendMessage/streamMessage/listMemory/deleteMemory/status + 可选 decideApproval；默认 `createDemoChatEngineProvider()`（确定性 10-15 段 parts、120ms/段、多会话、记忆、审批暂停/恢复）。
+- **接真实 ChatEngine 映射**：Lead 适配器实现上述方法即可注入 `createConsoleServer({ chatEngineProvider })`；`streamMessage` 按 ChatEngine 事件回调 onPart（text/thinking/tool_call/tool_result/artifact/report/data/approval），并维护会话/记忆持久化；`status().data_source` 返回真实运行数据源；`/agents`、产物/报告深度视图仍走 v1.5 runtime Provider。
+
+### 18.2 E2E（不保存截图）
+
+- 新增小 E2E：`node tests/e2e-console/chat-e2e.mjs --headless 1 --evidence-dir <dir>`（8 步 / 35 检查 / 约 8s / 退出码 0，**只输出 result.json 与断言，不保存 screenshots**）：/chat 加载 → 新建对话 → 发送后 300ms 内用户消息+思考中 → 内嵌 text/thinking/tool/artifact/report/data 卡片 → 多会话切换/重命名/删除 → 记忆搜索/删除 → 任务类查询（工具/产物卡+运行卡）→ 刷新恢复 → 无 JS 错误/无外链/写 API 无 token 401/同源 SSE。
+- 原 38 步 E2E 保留全绿并适配新 /chat（发送改用底部输入框，后续 SSE/打断/审批/run 证据断言通过内嵌运行卡进入深度实时页继续覆盖）：**38/38 步、413/413 检查、0 截图、31.6s、退出码 0**；`run.mjs` 默认不保存截图（`--screenshots` 可显式开启）。

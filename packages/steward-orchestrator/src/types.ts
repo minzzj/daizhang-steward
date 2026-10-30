@@ -79,7 +79,7 @@ export interface ModelChatInput {
   signal?: AbortSignal | undefined;
 }
 
-export type ModelCallMode = "remote" | "local_fallback";
+export type ModelCallMode = "remote" | "local_fallback" | "harness";
 
 export interface ModelChatResult {
   ok: boolean;
@@ -232,6 +232,55 @@ export interface LedgerSink {
   recordExpense(entry: LedgerExpenseEntry): unknown;
 }
 
+/** v1.5：Harness 流事件（thinking/tool/artifact 等，实时推送用）。 */
+export interface HarnessStreamEvent {
+  seq: number;
+  at: string;
+  type: string;
+  data: Record<string, unknown>;
+}
+
+/** v1.5：Harness 产物引用。 */
+export interface HarnessArtifactRef {
+  path: string;
+  rel_path: string;
+  kind: string;
+  size: number;
+  sha256: string;
+}
+
+/** v1.5：Harness Agent 单次执行入参/结果。 */
+export interface HarnessAgentRunInput {
+  session_id: string;
+  step: number;
+  role: string;
+  task: string;
+  workspace_dir: string;
+  timeout_ms?: number | undefined;
+  max_tokens?: number | undefined;
+  on_event: (event: HarnessStreamEvent) => void;
+  signal?: AbortSignal | undefined;
+}
+
+export interface HarnessAgentRunResult {
+  ok: boolean;
+  error?: string | undefined;
+  final_text: string;
+  report_path?: string | undefined;
+  artifacts: HarnessArtifactRef[];
+  usage: { input_tokens: number; output_tokens: number; cache_read_tokens: number; total_tokens: number };
+  thinking: string[];
+  tool_calls: Array<{ tool: string; input: Record<string, unknown> }>;
+  events_count: number;
+  duration_ms: number;
+}
+
+/** v1.5：真实 DeepSeek Harness 智能体执行器（由 apps/cli 适配 steward-harness-runtime）。 */
+export interface AgentExecutor {
+  available(): boolean;
+  run(input: HarnessAgentRunInput): Promise<HarnessAgentRunResult>;
+}
+
 export interface OrchestratorDeps {
   resolver: ModelResolver;
   /** 模型适配器；缺省 = OpenAICompatibleAdapter（真实 fetch；无 key 时引擎自动回退本地规则）。 */
@@ -254,6 +303,10 @@ export interface OrchestratorDeps {
   systemActions?: SystemActions | undefined;
   /** 配置中心桥（模型/提示词切换动作使用；未注入时写本地意图证据）。 */
   configBridge?: ConfigBridge | undefined;
+  /** v1.5：真实 Harness 智能体执行器（注入后优先真实代理执行；未注入/失败回退本地动作）。 */
+  agentExecutor?: AgentExecutor | undefined;
+  /** v1.5：Harness 事件实时回调（SSE/终端流）。 */
+  onHarnessEvent?: ((sessionId: string, event: HarnessStreamEvent) => void) | undefined;
 }
 
 // ---------------------------------------------------------------------------

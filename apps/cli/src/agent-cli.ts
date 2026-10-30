@@ -31,6 +31,7 @@ import {
 } from "../../../packages/steward-orchestrator/src/index.js";
 import { SystemController, newActionRequestId, type ManagedApp } from "../../../packages/steward-system/src/index.js";
 import { MoneyEngine } from "../../../packages/steward-money/src/index.js";
+import { createHarnessAgentExecutor, type HarnessExecutorHandle } from "./harness-executor.js";
 
 type Flags = Record<string, string | boolean>;
 export interface AgentArgs {
@@ -74,12 +75,13 @@ function buildManagedApps(root: string, config: ConfigEngine): ManagedApp[] {
   });
 }
 
-interface Runtime {
+export interface Runtime {
   root: string;
   config: ConfigEngine;
   orchestrator: OrchestratorEngine;
   system: SystemController;
   money: MoneyEngine;
+  harness: HarnessExecutorHandle;
 }
 
 export function createRuntime(root: string, options: { autoApprove?: boolean; kind?: SessionKind } = {}): Runtime {
@@ -234,6 +236,8 @@ export function createRuntime(root: string, options: { autoApprove?: boolean; ki
 
   const resolver = createModelResolverFromConfig(config as never);
 
+  const harness = createHarnessAgentExecutor(config);
+
   const orchestrator = new OrchestratorEngine({
     resolver,
     root: join(root, "runs"),
@@ -241,10 +245,11 @@ export function createRuntime(root: string, options: { autoApprove?: boolean; ki
     systemActions,
     configBridge,
     ledger,
+    ...(harness.executor ? { agentExecutor: harness.executor } : {}),
   });
   orchestratorRef = orchestrator;
 
-  return { root, config, orchestrator, system, money };
+  return { root, config, orchestrator, system, money, harness };
 }
 
 function sessionSummary(runtime: Runtime, session: OrchestratorSession) {

@@ -4,6 +4,7 @@
  * 用户痛点：发消息后不实时、还要手动点执行。
  * 现在：一个命令创建 Run 并自动执行到完成/暂停，实时打印事件；可审批/打断/恢复/查看。
  */
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { findRepoRoot } from "../../../packages/steward-core/src/index.js";
 import { RunManager, type RunRecord, type RuntimeEvent } from "../../../packages/steward-runtime/src/index.js";
@@ -63,6 +64,68 @@ function printRun(run: RunRecord): void {
   console.log(`  进度：${run.steps_done}/${run.steps_total} 步；Token：${run.token_used}`);
   if (run.pending_approval) console.log(`  ⏳ 待确认：步骤 ${run.pending_approval.step}（${run.pending_approval.risk ?? "risk?"}）${run.pending_approval.summary}`);
   if (run.error) console.log(`  错误：${run.error}`);
+}
+
+/** v1.5：实时 tail Harness 事件文件（thinking/tool/artifact），用于 CLI 实时显示。 */
+function startHarnessTail(repoRoot: string, sessionId: string, onEvent: (step: number, event: Record<string, unknown>) => void): () => void {
+  const dir = join(repoRoot, "runs", sessionId, "harness");
+  const offsets = new Map<string, number>();
+  let seenReports = new Set<string>();
+  const tick = () => {
+    if (!existsSync(dir)) return;
+    let names: string[] = [];
+    try { names = readdirSync(dir); } catch { return; }
+    for (const name of names) {
+      if (!/^step-\d+-events\.jsonl$/.test(name)) continue;
+      const step = Number(/^step-(\d+)-/.exec(name)?.[1] ?? 0);
+      const path = join(dir, name);
+      const offset = offsets.get(path) ?? 0;
+      let size = 0;
+      try { size = readFileSync(path).length; } catch { continue; }
+      if (size <= offset) continue;
+      let buf = "";
+      try { buf = readFileSync(path, "utf8").slice(offset); } catch { continue; }
+      offsets.set(path, size);
+      for (const line of buf.split("\n")) {
+        if (line.trim() === "") continue;
+        try { onEvent(step, JSON.parse(line) as Record<string, unknown>); } catch { /* ignore */ }
+      }
+    }
+    for (const name of names) {
+      if (!/^step-\d+-report\.md$/.test(name)) continue;
+      if (seenReports.has(name)) continue;
+      seenReports.add(name);
+      const step = Number(/^step-(\d+)-/.exec(name)?.[1] ?? 0);
+      onEvent(step, { type: "report.created", at: new Date().toISOString(), data: { report: name } });
+    }
+  };
+  const timer = setInterval(tick, 400);
+  tick();
+  return () => clearInterval(timer);
+}
+
+function readHarnessSummary(repoRoot: string, sessionId: string): { artifacts: unknown[]; metrics: Record<string, unknown> | null; reports: string[] } {
+  const dir = join(repoRoot, "runs", sessionId, "harness");
+  const artifacts: unknown[] = [];
+  const reports: string[] = [];
+  let metrics: Record<string, unknown> | null = null;
+  if (!existsSync(dir)) return { artifacts, metrics, reports };
+  let names: string[] = [];
+  try { names = readdirSync(dir); } catch { return { artifacts, metrics, reports }; }
+  for (const name of names) {
+    try {
+      if (/^step-\d+-artifacts\.json$/.test(name)) {
+        const parsed = JSON.parse(readFileSync(join(dir, name), "utf8")) as Record<string, unknown>;
+        const list = Array.isArray(parsed.artifacts) ? (parsed.artifacts as unknown[]) : [];
+        artifacts.push(...list);
+      } else if (/^step-\d+-report\.md$/.test(name)) {
+        reports.push(name);
+      } else if (name === "metrics.json") {
+        metrics = JSON.parse(readFileSync(join(dir, name), "utf8")) as Record<string, unknown>;
+      }
+    } catch { /* ignore */ }
+  }
+  return { artifacts, metrics, reports };
 }
 
 export async function cmdRuntime(parsed: RuntimeArgs): Promise<number> {
@@ -125,9 +188,25 @@ export async function cmdRuntime(parsed: RuntimeArgs): Promise<number> {
           console.error('用法：steward runtime --goal "帮我做一个报价单页面" [--json] [--manual]');
           return 2;
         }
+        const harnessEvents: Array<{ step: number; event: Record<string, unknown> }> = [];
         const subscribe = manager.subscribeAll((event) => {
           if (!json) printEvent(event);
         });
+        let stopHarnessTail: (() => void) | undefined;
+        const startTail = (sessionId: string) => {
+          stopHarnessTail = startHarnessTail(root, sessionId, (step, event) => {
+            harnessEvents.push({ step, event });
+            if (!json) {
+              const type = String(event.type ?? "harness");
+              const data = (event.data ?? {}) as Record<string, unknown>;
+              if (type === "thinking") console.log(`[harness:thinking] step${step} ${String(data.text ?? "").slice(0, 160)}`);
+              else if (type === "tool_call") console.log(`[harness:tool] step${step} ${String(data.tool ?? "")} ${JSON.stringify(data.input ?? {}).slice(0, 120)}`);
+              else if (type === "tool_result") console.log(`[harness:tool-result] step${step} ${String(data.tool ?? "")} ${String(data.status ?? "")}`);
+              else if (type === "final") console.log(`[harness:final] step${step} ${String(data.text ?? "").slice(0, 160)}`);
+              else if (type === "report.created") console.log(`[harness:report] step${step} ${String(data.report ?? "")}`);
+            }
+          });
+        };
         const created = await manager.createRun({
           goal: goal.trim(),
           ...(flagNum(parsed.flags, "budget", 0) > 0 ? { budget_cny: flagNum(parsed.flags, "budget", 0) } : {}),
@@ -143,10 +222,13 @@ export async function cmdRuntime(parsed: RuntimeArgs): Promise<number> {
           if (json) printJson({ ok: true, run: manager.getRun(created.run_id) });
           return 0;
         }
+        startTail(created.session_id);
         const finished = await manager.waitFor(created.run_id, ["done", "blocked", "failed", "paused", "awaiting_approval", "interrupted"], flagNum(parsed.flags, "timeout", 300_000));
+        stopHarnessTail?.();
         subscribe();
+        const harnessSummary = readHarnessSummary(root, finished.session_id);
         if (json) {
-          printJson({ ok: finished.status === "done", run: finished, events: manager.eventLog(created.run_id) });
+          printJson({ ok: finished.status === "done", run: finished, events: manager.eventLog(created.run_id), harness_events: harnessEvents, harness_artifacts: harnessSummary.artifacts, harness_reports: harnessSummary.reports, harness_metrics: harnessSummary.metrics });
         } else {
           console.log("— 执行结束 —");
           printRun(finished);
@@ -154,8 +236,14 @@ export async function cmdRuntime(parsed: RuntimeArgs): Promise<number> {
             console.log(`  审批/继续：steward runtime --action approve --run ${finished.run_id} --step <步骤号>`);
           }
           console.log(`  查看事件：steward runtime --action stream --run ${finished.run_id}`);
+          if (harnessSummary.artifacts.length > 0) {
+            console.log("  Harness 产物：");
+            for (const artifact of harnessSummary.artifacts as Array<Record<string, unknown>>) console.log(`    - ${String(artifact.rel_path ?? "")}（${String(artifact.kind ?? "")}，${String(artifact.size ?? 0)}B）`);
+          }
+          if (harnessSummary.reports.length > 0) console.log("  Harness 报告：" + harnessSummary.reports.join("、"));
         }
-        return finished.status === "done" ? 0 : finished.status === "awaiting_approval" ? 0 : 1;
+        const exitCode = finished.status === "done" ? 0 : finished.status === "awaiting_approval" ? 0 : 1;
+        process.exit(exitCode);
       }
       case "list": {
         const runs = manager.listRuns();
