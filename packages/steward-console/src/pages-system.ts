@@ -160,16 +160,20 @@ export function renderSystemPage(input: SystemPageInput): string {
     (item) => `<button type="button" class="quick-cmd" data-command="${escapeAttr(item.command)}" id="quick-${escapeAttr(item.label)}">${escapeHtml(item.label)}</button>`,
   ).join("");
   const content = `
-${pageHeading("系统总控", "与超级总调度对话 · 两层结构（supervisor → 项目总调度 → 专项智能体）· 程序/插件/模型/日志 · 危险动作二次确认")}
+${pageHeading("系统管理", "统一对话/调度入口在 AI 总控（/chat）· 本页专注系统管理：两层结构、受管程序/插件、各 agent 模型与 Token、全部日志、危险动作二次确认")}
 <div class="system-layout">
-  <section class="panel system-chat" id="system-chat-panel">
-    <h2>与超级总调度对话 <span class="hint">危险动作说明影响与风险；快捷命令见右侧</span></h2>
-    <div class="chat-messages" id="supervisor-messages">${renderSupervisorMessages(input.supervisorMessages)}</div>
-    <form class="chat-composer" id="supervisor-form" onsubmit="return false">
-      <input class="input" id="supervisor-input" type="text" placeholder="例如：重启模型网关；启用易支付插件；委派项目给项目总调度…" />
-      <button class="primary" type="submit" id="supervisor-send">发送命令</button>
-    </form>
-    <div class="quick-commands" id="supervisor-quick">${quickButtons}</div>
+    <section class="panel system-unified" id="system-unified-panel">
+    <h2>AI 总控（统一对话入口）</h2>
+    <p class="muted">对话 / 调度已统一到 AI 总控：一个输入框即可查系统、发任务、审批危险动作。本页只负责系统管理（两层结构、程序/插件、模型与 Token、日志、危险动作）。</p>
+    <p><a class="primary button" href="/chat" id="system-unified-link">打开 AI 总控对话 →</a></p>
+    <div class="quick-commands" id="system-quick-links">
+      <a class="quick-cmd" href="/chat?prompt=%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9F%E7%8A%B6%E6%80%81" id="quick-link-查看系统状态">查看系统状态</a>
+      <a class="quick-cmd" href="/chat?prompt=%E5%88%97%E5%87%BA%E6%9C%80%E8%BF%91%E7%9A%84%E8%BF%90%E8%A1%8C" id="quick-link-列出最近运行">列出最近运行</a>
+      <a class="quick-cmd" href="/chat?prompt=%E6%9F%A5%E7%9C%8B%E4%BA%A7%E7%89%A9" id="quick-link-查看产物">查看产物</a>
+      <a class="quick-cmd" href="/chat?prompt=%E6%9F%A5%E7%9C%8B%E6%8A%A5%E5%91%8A" id="quick-link-查看报告">查看报告</a>
+      <a class="quick-cmd" href="/chat?prompt=%E6%9F%A5%E7%9C%8B%E9%85%8D%E7%BD%AE" id="quick-link-查看配置">查看配置</a>
+      <a class="quick-cmd" href="/chat?prompt=%E6%9F%A5%E7%9C%8B%E8%B4%A6%E6%9C%AC" id="quick-link-查看账本">查看账本</a>
+    </div>
     <p class="alert alert-error" id="system-feedback" role="alert" hidden></p>
   </section>
 

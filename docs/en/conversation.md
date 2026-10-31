@@ -37,3 +37,10 @@ Dangerous actions require inline approval; the AI never signs/auto-pays/sends ex
 - Approval cards and errors are **always visible** (never collapsed);
 - Awaiting approval = paused (not failed); after approval the run continues and progress is pushed into the chat;
 - Pure queries no longer create artifact/report-level memory noise.
+
+## 8. Unified entry (v1.5.3)
+
+- Conversation / dispatch / project delegation / approval have exactly one entry: **AI controller `/chat`**;
+- `/system` is management-only (programs/plugins/models/tokens/logs) and no longer contains a second chat box;
+- Legacy `/chat/:id` is a read-only run-detail (historical) page; use `/runs/:id` for the new run detail;
+- System-page quick queries use `/chat?prompt=...`, which auto-sends the question and shows the final result.

@@ -380,6 +380,14 @@ export const GPT_JS = `(function () {
     var search = byId('memory-search');
     if (search !== null) search.addEventListener('keydown', function (event) { if (event.key !== 'Enter') return; event.preventDefault(); api('GET', '/api/chat/memory?query=' + encodeURIComponent(search.value.trim())).then(function (payload) { var list = byId('memory-list'); if (list === null) return; if (!payload.data.length) { list.innerHTML = '<p class="empty-state">没有匹配的记忆</p>'; return; } list.innerHTML = payload.data.map(function (mem) { return '<article class="gpt-memory-item" data-memory-id="' + esc(mem.id) + '"><div class="gpt-memory-head"><span class="badge status-idle">' + esc(mem.kind) + '</span><b>重要度 ' + mem.importance + '</b><button type="button" data-memory-delete="' + esc(mem.id) + '" title="删除记忆">🗑</button></div><p class="gpt-memory-content">' + esc(mem.content) + '</p></article>'; }).join(''); }); });
     document.addEventListener('click', function (event) { var target = event.target; if (!(target instanceof Element)) return; var del = target.closest('[data-memory-delete]'); if (del === null) return; var id = del.getAttribute('data-memory-delete'); api('DELETE', '/api/chat/memory/' + encodeURIComponent(id)).then(function () { del.closest('.gpt-memory-item').remove(); toast('记忆已删除', 'ok'); }).catch(function (error) { toast('删除失败：' + error.message, 'error'); }); });
+    var params = new URLSearchParams(window.location.search);
+    var prompt = params.get('prompt');
+    if (prompt !== null && prompt.trim() !== '') {
+      params.delete('prompt');
+      var query = params.toString();
+      window.history.replaceState(null, '', '/chat' + (query === '' ? '' : '?' + query));
+      setTimeout(function () { send(prompt.trim()); }, 120);
+    }
     refreshStatus();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();

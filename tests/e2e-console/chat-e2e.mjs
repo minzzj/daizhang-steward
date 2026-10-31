@@ -210,6 +210,15 @@ async function main() {
       check((await page.locator("#gpt-messages .gpt-msg").count()) >= 2, "刷新后历史消息仍可见"),
     ]);
 
+    await page.goto(`${baseUrl}/chat?prompt=${encodeURIComponent("查看系统状态")}`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#gpt-page", { timeout: STEP_TIMEOUT_MS });
+    await waitAssistantDone();
+    record("chat-quick-prompt", [
+      check(!page.url().includes("prompt="), "prompt 参数发送后从 URL 清理"),
+      check((await page.locator("#gpt-messages .gpt-msg").count()) >= 2, "?prompt= 自动发送并得到回复"),
+      check((await page.locator("[data-final-result]").count()) >= 1, "自动发送后显示最终结果"),
+    ]);
+
     const external = requestLog.filter((url) => {
       try { const parsed = new URL(url); return !(parsed.hostname === "127.0.0.1" && parsed.port === String(handle.port)); } catch { return false; }
     });

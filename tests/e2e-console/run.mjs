@@ -1432,7 +1432,7 @@ async function stepSseSanity(page, recorder, baseUrl, context) {
       if (health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined)) break;
       await page.waitForTimeout(300);
     }
-    checks.push(check(health !== null && health.version === "1.5.2", `health version=1.5.2（${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.3", `health version=1.5.3（${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.runtime_enabled === true, "health 标记 runtime_enabled=true"));
     checks.push(check(health !== null && health.artifacts_enabled === true && health.reports_enabled === true && health.metrics_enabled === true, "health 标记 artifacts/reports/metrics enabled"));
     checks.push(check(health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined), `离开页面后 SSE 订阅已清理（sse_active_streams=${String(health === null ? "?" : health.sse_active_streams)}）`));
@@ -1568,10 +1568,16 @@ async function stepSystemControl(page, recorder, baseUrl) {
   return recorder.step(page, "system-control", async () => {
     const checks = [];
     await page.goto(`${baseUrl}/system`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
-    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
-    const supMessages = await page.locator("#supervisor-messages .sup-message").count();
-    checks.push(check(supMessages >= 3, `与超级总调度对话记录可见（${supMessages} 条消息）`));
-    checks.push(check((await page.locator("#supervisor-messages").innerText()).includes("超级总调度"), "supervisor 自我介绍可见（两层结构/危险动作规则）"));
+    await page.waitForSelector("#system-unified-panel", { timeout: STEP_TIMEOUT_MS });
+
+    // v1.5.3：去重——系统页不再有独立的 supervisor 对话/调度入口，统一到 AI 总控 /chat
+    checks.push(check((await page.locator("#supervisor-input").count()) === 0, "功能去重：系统页无独立 supervisor 对话输入"));
+    const unifiedHref = await page.locator("#system-unified-link").getAttribute("href");
+    checks.push(check(unifiedHref === "/chat", `统一对话入口指向 AI 总控（${String(unifiedHref)}）`));
+    const promptHrefs = await page.locator("#system-quick-links a.quick-cmd").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href") ?? ""));
+    checks.push(check(promptHrefs.length >= 6, `系统页快捷查询链接 ≥6（${promptHrefs.length}）`));
+    checks.push(check(promptHrefs.every((href) => href.startsWith("/chat?prompt=")), "快捷查询均跳转 AI 总控并携带提示词"));
+
     checks.push(check(await page.locator("#layer-supervisor").isVisible() && await page.locator("#layer-conductor").isVisible(), "两层结构：L1 超级总调度 + L2 项目总调度 可见"));
     const layerAgents = await page.locator("#layer-agents .layer-agent").count();
     checks.push(check(layerAgents >= 10, `第 3 层专项智能体 ≥10（实际 ${layerAgents}）`));
@@ -1584,32 +1590,16 @@ async function stepSystemControl(page, recorder, baseUrl) {
     checks.push(check((await page.locator("#system-agent-models").innerText()).includes("超级总调度"), "模型列表含超级总调度"));
     const logs = await page.locator("#system-logs .log-item").count();
     checks.push(check(logs >= 3, `全部日志入口可见（${logs} 条日志）`));
-    const quick = await page.locator("#supervisor-quick .quick-cmd").count();
-    checks.push(check(quick >= 8, `快捷命令示例 ≥8（${quick} 个）`));
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(200);
     await recorder.capture(page, "system-overview-layers");
-
-    // supervisor 对话
-    await page.locator("#supervisor-input").fill("查看系统状态，并检查易支付配置");
-    await page.locator("#supervisor-send").click();
-    await page.waitForTimeout(900);
-    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
-    const supAfter = await page.locator("#supervisor-messages .sup-message").count();
-    checks.push(check(supAfter > supMessages, `发送命令后 supervisor 回复（${supMessages} → ${supAfter} 条）`));
-
-    // 快捷命令：重启模型网关（真实改状态 + 日志）
-    await page.locator("#quick-重启模型网关").click();
-    await page.waitForTimeout(1000);
-    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
-    checks.push(check((await page.locator("#system-logs").innerText()).includes("快捷命令"), "快捷命令执行后写入系统日志"));
 
     // 插件启用/禁用
     const scoutRow = page.locator("#plugin-plug-scout");
     const beforeEnabled = await scoutRow.getAttribute("data-plugin-enabled");
     await page.locator("#plugin-toggle-plug-scout").click();
     await page.waitForTimeout(900);
-    await page.waitForSelector("#system-chat-panel", { timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#system-unified-panel", { timeout: STEP_TIMEOUT_MS });
     const afterEnabled = await page.locator("#plugin-plug-scout").getAttribute("data-plugin-enabled");
     checks.push(check(beforeEnabled !== afterEnabled, `插件启用/禁用生效（${beforeEnabled} → ${afterEnabled}）`));
     return { checks };
@@ -1661,7 +1651,7 @@ async function stepV12Sanity(page, recorder, context) {
     checks.push(check(pageErrors.length === 0, `v1.2/v1.3 流程全程无页面 JS 错误（${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
 
     const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
-    checks.push(check(health !== null && health.version === "1.5.2", `health version=1.5.2（实际 ${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.3", `health version=1.5.3（实际 ${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.chat_enabled === true && health.system_enabled === true, "health 标记 chat_enabled/system_enabled=true"));
 
     const sessions = await fetch(`${baseUrl}/api/chat/sessions`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);

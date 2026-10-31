@@ -361,15 +361,16 @@ export function renderChatSessionPage(input: ChatSessionPageInput): string {
   if (session.status === "paused") actions.push('<button class="primary" type="button" id="chat-resume">恢复执行</button>');
   const transcriptsLink = `<a class="run-link" href="/agents/conductor" id="chat-conductor-link">查看总调度对话记录 →</a>`;
   const content = `
-${pageHeading("会话", session.title)}
+${pageHeading("运行详情（历史版）", "统一对话/调度入口在 AI 总控（/chat）；本页为历史运行视图，推荐使用 /runs/:id 新版详情")}
 <div class="chat-session-page" id="chat-session-page">
+  <p class="alert alert-info" id="session-dedupe-banner">功能去重：对话与调度统一在 <a href="/chat">AI 总控（/chat）</a>；本页仅展示历史运行记录；新版运行详情见 <a href="/runs/${encodeURIComponent(session.run_id ?? session.id)}">/runs/:id</a>。</p>
   <div class="chat-session-head">
     <div class="chat-session-headline">
       ${sessionStatusBadge(session.status)}
       <span class="chat-session-id mono small muted">${escapeHtml(session.id)}</span>
       <span class="badge status-idle">模式：${escapeHtml(session.mode)}</span>
     </div>
-    <div class="chat-session-actions">${actions.join("")}<a class="btn-link" href="/chat" id="chat-new-link">＋ 新建项目</a></div>
+    <div class="chat-session-actions">${actions.join("")}<a class="btn-link" href="/chat" id="chat-new-link">← AI 总控对话（统一入口）</a></div>
   </div>
   <div class="chat-session-params" id="chat-session-params">
     <div><span class="muted small">目标</span><b id="chat-goal-text">${escapeHtml(session.goal)}</b></div>
@@ -380,12 +381,12 @@ ${pageHeading("会话", session.title)}
   ${input.liveRun === undefined || input.liveRun === null ? "" : renderLiveRunPanel(input.liveRun)}
   ${isLive ? "" : `<div class="chat-main-grid">
     <section class="panel chat-flow-panel">
-      <h2>与总调度的对话 <span class="hint">每轮含简略摘要；${String(session.messages.length)} 条消息</span></h2>
+      <h2>历史对话记录（只读） <span class="hint">${String(session.messages.length)} 条消息；继续对话请用 AI 总控</span></h2>
       <div class="chat-messages" id="chat-messages">${session.messages.map(renderMessage).join("")}</div>
-      <form class="chat-composer" id="chat-composer" onsubmit="return false">
-        <input class="input" id="chat-input" type="text" placeholder="继续告诉总调度：调整约束 / 追问进度 / 审批说明…" />
-        <button class="primary" type="submit" id="chat-send">发送</button>
-      </form>
+      <div class="panel chat-legacy-note" id="chat-unified-redirect">
+        <p class="muted small">历史页面不再提供独立对话/调度入口（避免与 AI 总控重复）。</p>
+        <a class="btn-link" href="/chat" id="chat-continue-unified">在 AI 总控继续对话 →</a>
+      </div>
       ${approvalPanel}
       <p class="alert alert-error" id="chat-error" hidden></p>
     </section>
