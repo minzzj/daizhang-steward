@@ -38,6 +38,8 @@ Source-available · non-commercial · real browser & real desktop operations · 
 
 > **v1.3.0（2026-10-26）**：配置中心支持**多模型与 API 密钥**（一键同步、各智能体独立选模型、密钥只存引用）；新增**两层总调度**（系统总控 supervisor + 项目总调度 conductor）、**控制台对话/每轮摘要/证据灯箱/系统总控/变现&易支付**页面；CLI 新增 `chat` / `supervisor` / `project` / `system` / `money`；290/290 单测 + 真实浏览器 E2E 25 步全绿。详见 `docs/RELEASE_NOTES_v1.3.0.md` 与 `docs/zh-CN/{configuration,chat,system,money}.md`。
 
+> **v1.5.2（2026-10-31）**：**对话呈现修整**——`/chat` 默认只显示「你的输入 + 思考过程（折叠）+ 最终结果」，展开才看工具/数据/记忆；报告/产物在结果区；审批卡始终可见；等待审批不再报失败；系统动作审批闭环。412/412 单测 + 对话/回归 E2E 全绿（0 截图）。详见 `docs/RELEASE_NOTES_v1.5.2.md`。
+
 > **v1.5.1（2026-10-30）**：**每个智能体换成真实 DeepSeek Harness 代理**；**`/chat` 重做为 ChatGPT 式对话总控**（一个输入框控制全部，AI 自己查系统/执行任务，危险动作只给审批卡）；内嵌思考/工具/产物/报告/数据/审批卡片；新增**长期记忆与多会话**、`steward ai` CLI；**404/404 单测**、有头 Chrome E2E（0 截图）全绿。详见 `docs/RELEASE_NOTES_v1.5.1.md`。
 
 > **v1.4.0（2026-10-30）**：**发送即执行 + SSE 实时事件流**——在 `/chat` 输入目标发送后自动执行，实时看到思考/计划/每步/每轮摘要/审批，无需手动点「开始执行」；新增 `steward runtime` CLI、审批策略配置（`/settings` 自动执行与审批策略）、模型输出兜底（未实现动作不再阻断，自动生成 deliverable）、系统总控扩展（文件/应用/服务/定时任务/安装卸载）。339/339 单测 + 真实浏览器 E2E 31 步/338 检查全绿。详见 `docs/RELEASE_NOTES_v1.4.0.md` 与 `docs/zh-CN/runtime.md`。

@@ -1,0 +1,226 @@
+{
+  "suite": "chat-e2e",
+  "version": "1.5.1",
+  "ok": true,
+  "headless": true,
+  "screenshots": false,
+  "console": {
+    "url": "http://127.0.0.1:61061",
+    "port": 61061
+  },
+  "steps": [
+    {
+      "step": "chat-page",
+      "ok": true
+    },
+    {
+      "step": "chat-new-conversation",
+      "ok": true
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true
+    },
+    {
+      "step": "chat-multi-session",
+      "ok": true
+    },
+    {
+      "step": "chat-memory",
+      "ok": true
+    },
+    {
+      "step": "chat-task",
+      "ok": true
+    },
+    {
+      "step": "chat-refresh-recovery",
+      "ok": true
+    },
+    {
+      "step": "chat-sanity",
+      "ok": true
+    }
+  ],
+  "checks": [
+    {
+      "step": "chat-page",
+      "ok": true,
+      "message": "左侧对话历史可见"
+    },
+    {
+      "step": "chat-page",
+      "ok": true,
+      "message": "底部输入框可见"
+    },
+    {
+      "step": "chat-page",
+      "ok": true,
+      "message": "顶部快捷 chips ≥8"
+    },
+    {
+      "step": "chat-page",
+      "ok": true,
+      "message": "记忆面板含记忆条目"
+    },
+    {
+      "step": "chat-page",
+      "ok": true,
+      "message": "数据源标识可见（真实/演示/混合）"
+    },
+    {
+      "step": "chat-page",
+      "ok": true,
+      "message": "实时状态可见（运行中/等待审批）"
+    },
+    {
+      "step": "chat-new-conversation",
+      "ok": true,
+      "message": "新建对话并切换（http://127.0.0.1:61061/chat?conversation=conv-005）"
+    },
+    {
+      "step": "chat-new-conversation",
+      "ok": true,
+      "message": "对话列表新增一条"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "发送后立即出现用户消息（26ms）"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "出现「思考中…」/助手流式气泡"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "助手消息流式完成"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "内嵌 thinking 折叠卡"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "内嵌工具调用卡片"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "内嵌数据卡片（Token/工具/步骤）"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "内嵌报告卡片（按问题）"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "内嵌产物卡片（按问题）"
+    },
+    {
+      "step": "chat-send-thinking",
+      "ok": true,
+      "message": "助手文本 Markdown 渲染"
+    },
+    {
+      "step": "chat-multi-session",
+      "ok": true,
+      "message": "可切换历史对话"
+    },
+    {
+      "step": "chat-multi-session",
+      "ok": true,
+      "message": "切换后历史消息恢复（2 条）"
+    },
+    {
+      "step": "chat-multi-session",
+      "ok": true,
+      "message": "重命名对话生效"
+    },
+    {
+      "step": "chat-multi-session",
+      "ok": true,
+      "message": "删除对话后列表仍正常（3 → 2）"
+    },
+    {
+      "step": "chat-memory",
+      "ok": true,
+      "message": "记忆列表展示（5 条）"
+    },
+    {
+      "step": "chat-memory",
+      "ok": true,
+      "message": "记忆搜索生效（1 条）"
+    },
+    {
+      "step": "chat-memory",
+      "ok": true,
+      "message": "删除记忆生效"
+    },
+    {
+      "step": "chat-task",
+      "ok": true,
+      "message": "任务类查询生成运行卡（可进入深度实时页）"
+    },
+    {
+      "step": "chat-task",
+      "ok": true,
+      "message": "任务类出现工具卡片"
+    },
+    {
+      "step": "chat-task",
+      "ok": true,
+      "message": "任务类出现产物卡片"
+    },
+    {
+      "step": "chat-task",
+      "ok": true,
+      "message": "任务类出现报告卡片"
+    },
+    {
+      "step": "chat-refresh-recovery",
+      "ok": true,
+      "message": "刷新后当前对话保持（conv-005）"
+    },
+    {
+      "step": "chat-refresh-recovery",
+      "ok": true,
+      "message": "刷新后历史消息仍可见"
+    },
+    {
+      "step": "chat-sanity",
+      "ok": true,
+      "message": "无页面 JS 错误（0）"
+    },
+    {
+      "step": "chat-sanity",
+      "ok": true,
+      "message": "无外链请求（141 个请求全部同源）"
+    },
+    {
+      "step": "chat-sanity",
+      "ok": true,
+      "message": "写 API 无 token 被拒（实际 401）"
+    },
+    {
+      "step": "chat-sanity",
+      "ok": true,
+      "message": "使用同源 SSE 流（/api/chat/conversations/:id/stream）"
+    },
+    {
+      "step": "chat-sanity",
+      "ok": true,
+      "message": "ChatGPT 页面脚本同源加载"
+    }
+  ],
+  "failures": [],
+  "page_errors": [],
+  "durationMs": 8175,
+  "as_of": "2026-10-31T00:22:33.992Z"
+}

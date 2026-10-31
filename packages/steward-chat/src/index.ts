@@ -29,6 +29,7 @@ export type {
   ChatReportCard,
   ChatRole,
   ChatSendResult,
+  ChatThinkingSummary,
   ChatTools,
   MemoryKind,
 } from "./types.js";
@@ -49,3 +50,5 @@ export { extractMemoryCandidates, hasCjk, recallMemories, tokenizeForRecall } fr
 export type { ChatStoreOptions } from "./store.js";
 export { ChatStore, summarizeMessage } from "./store.js";
 export { ChatEngine } from "./engine.js";
+export type { ChatPhase } from "./phase.js";
+export { applyMessagePhases, mergeToolParts, splitPartsByPhase } from "./phase.js";

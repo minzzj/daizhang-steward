@@ -12,6 +12,13 @@ export interface ConsoleChatPart {
   [key: string]: unknown;
 }
 
+export interface ConsoleChatThinkingSummary {
+  steps: number;
+  tool_calls: number;
+  artifacts: number;
+  reports: number;
+}
+
 export interface ConsoleChatMessage {
   id: string;
   role: "user" | "assistant" | "system";
@@ -19,6 +26,10 @@ export interface ConsoleChatMessage {
   parts: ConsoleChatPart[];
   summary?: string;
   status?: string;
+  /** v1.5.2：最终结果文本（默认可见）；思考过程折叠。 */
+  result_text?: string;
+  /** v1.5.2：思考过程摘要（折叠标题）。 */
+  thinking_summary?: ConsoleChatThinkingSummary;
 }
 
 export interface ConsoleChatConversation {

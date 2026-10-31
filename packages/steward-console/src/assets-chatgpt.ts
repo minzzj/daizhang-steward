@@ -92,6 +92,15 @@ export const GPT_CSS = `/* ===== v1.5.1 ChatGPT 式对话 ===== */
 .gpt-memory-head button { margin-left: auto; border: none; background: transparent; cursor: pointer; color: var(--muted); }
 .gpt-memory-content { margin: 0 0 4px; line-height: 1.55; }
 .gpt-memory-tags { display: flex; gap: 6px; flex-wrap: wrap; font-size: 10px; color: var(--brand); }
+.gpt-thinking-group { border: 1px solid #dfe6f3; border-radius: 10px; background: #f8fafd; margin: 0 0 10px; padding: 8px 12px; }
+.gpt-thinking-group > summary { cursor: pointer; color: var(--muted); font-weight: 700; }
+.gpt-thinking-body { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.gpt-thinking-line { white-space: pre-wrap; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.gpt-result { margin: 2px 0 10px; }
+.gpt-result-label { font-size: 11px; font-weight: 800; color: #0f7a45; letter-spacing: .04em; margin-bottom: 4px; }
+.gpt-deliverables { display: flex; flex-direction: column; gap: 8px; margin: 6px 0; }
+.gpt-tool-detail { margin-top: 4px; }
+.gpt-tool-result-text { white-space: pre-wrap; word-break: break-all; font-size: 11px; color: var(--muted); }
 @media (max-width: 1200px) { .gpt-page { grid-template-columns: 200px minmax(0, 1fr); } .gpt-memory-drawer { display: none; } }
 `;
 
@@ -145,6 +154,75 @@ export const GPT_JS = `(function () {
     return text.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>').replace(new RegExp(FENCE_CHAR + '([^' + FENCE_CHAR + ']+)' + FENCE_CHAR, 'g'), '<code>$1</code>');
   }
   function fmtBytes(size) { var value = Number(size) || 0; if (value >= 1024 * 1024) return (value / 1048576).toFixed(1) + ' MB'; if (value >= 1024) return (value / 1024).toFixed(1) + ' KB'; return value + ' B'; }
+  function normalizeDisplayParts(parts, streaming) {
+    var merged = [];
+    for (var i = 0; i < parts.length; i += 1) {
+      var part = parts[i];
+      if (part.type === 'tool_result') {
+        var callId = String(part.callId || part.call_id || '');
+        var match = null;
+        for (var j = merged.length - 1; j >= 0; j -= 1) {
+          var item = merged[j];
+          if (item.type !== 'tool_call') continue;
+          var itemId = String(item.callId || item.call_id || '');
+          if ((callId !== '' && itemId === callId) || (callId === '' && String(item.tool || '') === String(part.tool || ''))) { match = item; break; }
+        }
+        if (match) {
+          match.status = part.status === 'error' ? 'error' : 'ok';
+          match.result_preview = part.result_preview || part.result_summary || '';
+          if (part.duration_ms !== undefined) match.duration_ms = part.duration_ms;
+          continue;
+        }
+      }
+      merged.push(Object.assign({}, part));
+    }
+    var textIndexes = [];
+    for (var t = 0; t < merged.length; t += 1) if (merged[t].type === 'text') textIndexes.push(t);
+    var lastText = textIndexes.length ? textIndexes[textIndexes.length - 1] : -1;
+    var display = { thinking: [], deliverables: [], results: [], approvals: [], errors: [], summary: { steps: 0, tool_calls: 0, artifacts: 0, reports: 0 } };
+    for (var index = 0; index < merged.length; index += 1) {
+      var current = merged[index];
+      if (current.type === 'approval') { display.approvals.push(current); continue; }
+      if (current.type === 'error') { display.errors.push(current); continue; }
+      if (current.type === 'artifact' || current.type === 'report') { display.deliverables.push(current); continue; }
+      var explicitResult = current.phase === 'result' || current.run_link !== undefined;
+      var inferredResult = !streaming && ((current.type === 'text' && index === lastText) || (current.type === 'markdown' && lastText < 0 && index === merged.length - 1));
+      if (explicitResult || inferredResult) display.results.push(current);
+      else display.thinking.push(current);
+    }
+    display.summary.steps = display.thinking.length;
+    display.summary.tool_calls = display.thinking.filter(function (item) { return item.type === 'tool_call'; }).length;
+    display.summary.artifacts = display.deliverables.filter(function (item) { return item.type === 'artifact'; }).length;
+    display.summary.reports = display.deliverables.filter(function (item) { return item.type === 'report'; }).length;
+    return display;
+  }
+
+  function renderThinkingBlock(display, streaming) {
+    if (display.thinking.length === 0 && !streaming) return '';
+    var summary = display.summary;
+    var bits = [];
+    if (summary.steps > 0) bits.push(summary.steps + ' 步');
+    if (summary.tool_calls > 0) bits.push('工具 ' + summary.tool_calls);
+    if (summary.artifacts > 0) bits.push('产物 ' + summary.artifacts);
+    if (summary.reports > 0) bits.push('报告 ' + summary.reports);
+    var body = display.thinking.map(function (item) { return item.type === 'thinking' ? '<div class="gpt-thinking-line">💭 ' + esc(String(item.text || '')) + '</div>' : renderPart(item); }).join('');
+    var title = streaming ? '正在思考…' : '思考过程' + (bits.length ? ' · ' + bits.join(' · ') : '');
+    return '<details class="gpt-thinking-group" data-thinking-group><summary>💭 ' + esc(title) + '（点击展开）</summary><div class="gpt-thinking-body">' + (body || '<p class="muted">正在收集过程…</p>') + '</div></details>';
+  }
+
+  function renderAssistantParts(parts, streaming) {
+    var display = normalizeDisplayParts(parts, streaming);
+    var html = renderThinkingBlock(display, streaming);
+    var results = display.results.map(renderPart).join('');
+    var hasResult = results !== '' || display.approvals.length > 0 || display.errors.length > 0;
+    if (hasResult) html += '<div class="gpt-result" data-final-result><div class="gpt-result-label">✅ 最终结果</div>' + results + '</div>';
+    var deliverables = display.deliverables.slice(0, 3).map(renderPart).join('');
+    if (deliverables !== '') html += '<div class="gpt-deliverables" data-deliverables>' + deliverables + (display.deliverables.length > 3 ? '<p class="muted small">另有 ' + (display.deliverables.length - 3) + ' 个交付物，已收起在思考过程中。</p>' : '') + '</div>';
+    html += display.approvals.map(renderPart).join('');
+    html += display.errors.map(renderPart).join('');
+    return html;
+  }
+
   function renderPart(part) {
     var type = String(part.type || 'text');
     if (type === 'text' || type === 'markdown') {
@@ -155,7 +233,12 @@ export const GPT_JS = `(function () {
       return '<div class="gpt-part gpt-part-text' + (looksMd ? ' gpt-md' : '') + '" data-part="text">' + (looksMd ? md(markdown) : '<p>' + esc(markdown) + '</p>') + link + '</div>';
     }
     if (type === 'thinking') { return '<details class="gpt-card gpt-thinking" data-card="thinking"><summary>💭 思考过程（点击展开）</summary><div class="gpt-thinking-text">' + esc(part.text || part.chunk || '') + '</div></details>'; }
-    if (type === 'tool_call') { return '<div class="gpt-card gpt-tool" data-card="tool" data-call-id="' + esc(part.callId || part.call_id || '') + '" data-status="running"><span class="gpt-tool-name">🔧 ' + esc(part.tool || 'tool') + '</span><span class="gpt-tool-args mono">' + esc(part.input || part.args_summary || '') + '</span><span class="gpt-tool-status">调用中…</span></div>'; }
+    if (type === 'tool_call') {
+      var toolStatus = String(part.status || 'running');
+      var toolOk = toolStatus === 'ok' || toolStatus === 'done' || toolStatus === 'completed';
+      var toolPreview = String(part.result_preview || part.result_summary || '');
+      return '<div class="gpt-card gpt-tool" data-card="tool" data-call-id="' + esc(part.callId || part.call_id || '') + '" data-status="' + esc(toolStatus) + '"><span class="gpt-tool-name">' + (toolOk ? '✅' : '🔧') + ' ' + esc(part.tool || 'tool') + '</span><span class="gpt-tool-args mono">' + esc(typeof part.input === 'string' ? part.input : JSON.stringify(part.input || {})) + '</span><span class="gpt-tool-status">' + (toolOk ? '完成' : '调用中…') + (part.duration_ms === undefined ? '' : ' · ' + String(part.duration_ms) + 'ms') + '</span>' + (toolPreview === '' ? '' : '<details class="gpt-tool-detail"><summary>结果</summary><div class="gpt-tool-result-text">' + esc(toolPreview.slice(0, 1200)) + '</div></details>') + '</div>';
+    }
     if (type === 'tool_result') { return '<div class="gpt-card gpt-tool-result" data-card="tool-result" data-status="' + esc(part.status || 'ok') + '"><span class="gpt-tool-name">✅ ' + esc(part.tool || 'tool') + '</span><span class="gpt-tool-args mono">' + esc(part.result_preview || part.result_summary || '') + '</span><span class="gpt-tool-status">' + esc(part.status || 'ok') + (part.duration_ms === undefined ? '' : ' · ' + String(part.duration_ms) + 'ms') + '</span></div>'; }
     if (type === 'artifact') {
       var artifact = part.artifact || part;
@@ -183,7 +266,7 @@ export const GPT_JS = `(function () {
       return '<div class="gpt-card gpt-data" data-card="data" data-kind="' + esc(part.kind || data.kind || 'data') + '"><header><span class="gpt-card-kind">📊 数据</span><b>' + esc(part.kind || data.kind || '数据') + '</b></header><table class="gpt-data-table"><tbody>' + (body || '<tr><td class="muted">（无数据）</td></tr>') + '</tbody></table></div>';
     }
     if (type === 'approval') {
-      return '<div class="gpt-card gpt-approval" data-card="approval" data-approval-id="' + esc(part.approval_id || '') + '" data-step="' + esc(part.step || '') + '" data-status="pending"><header><span class="gpt-card-kind">⚠️ 审批</span><b>高风险步骤等待人工审批</b><span class="gpt-demo">演示</span></header><p class="gpt-approval-risk">' + esc(part.risk || '高风险动作必须人工批准，AI 不绕过') + '</p><p class="gpt-meta">' + esc(part.summary || '') + '</p><div class="gpt-approval-actions"><button class="primary" type="button" data-approve>批准</button><button class="danger" type="button" data-reject>驳回</button></div></div>';
+      return '<div class="gpt-card gpt-approval" data-card="approval" data-approval-id="' + esc(part.approval_id || '') + '" data-step="' + esc(part.step || '') + '" data-status="pending"><header><span class="gpt-card-kind">⚠️ 审批</span><b>需要你确认后才会继续</b>' + (part.demo ? '<span class="gpt-demo">演示</span>' : '') + '</header><p class="gpt-approval-risk">' + esc(part.risk || '高风险动作必须人工批准，AI 不绕过') + '</p><p class="gpt-meta">' + esc(part.summary || '') + '</p><div class="gpt-approval-actions"><button class="primary" type="button" data-approve>批准</button><button class="danger" type="button" data-reject>驳回</button></div></div>';
     }
     if (type === 'error') { return '<div class="gpt-card gpt-error" data-card="error"><b>执行失败：</b>' + esc(part.message || '') + '</div>'; }
     return '<div class="gpt-part"><pre class="mono">' + esc(JSON.stringify(part).slice(0, 2000)) + '</pre></div>';
@@ -194,7 +277,7 @@ export const GPT_JS = `(function () {
     var empty = byId('gpt-empty'); if (empty !== null) empty.remove();
     var node = document.createElement('article');
     node.className = 'gpt-msg'; node.setAttribute('data-role', 'user'); node.setAttribute('data-message-id', 'local-user');
-    node.innerHTML = '<span class="gpt-avatar">我</span><div class="gpt-bubble"><div class="gpt-msg-meta"><b>我</b></div><div class="gpt-part gpt-part-text" data-part="text"><p>' + esc(text) + '</p></div></div>';
+    node.innerHTML = '<span class="gpt-avatar">你</span><div class="gpt-bubble"><div class="gpt-msg-meta"><b>你</b></div><div class="gpt-part gpt-part-text" data-part="text"><p>' + esc(text) + '</p></div></div>';
     list.appendChild(node); list.scrollTop = list.scrollHeight;
   }
   function createAssistantMessage() {
@@ -210,8 +293,14 @@ export const GPT_JS = `(function () {
   function stream(conversation, text) {
     var assistantNode = createAssistantMessage();
     var partsBox = assistantNode === null ? null : assistantNode.querySelector('.gpt-parts');
+    var parts = [];
     var typing = byId('typing-indicator'); if (typing !== null) typing.hidden = false;
     showError('');
+    function renderParts(streaming) {
+      if (partsBox === null) return;
+      partsBox.innerHTML = renderAssistantParts(parts, streaming);
+      var list = byId('gpt-messages'); if (list !== null) list.scrollTop = list.scrollHeight;
+    }
     return api('POST', '/api/chat/conversations/' + encodeURIComponent(conversation) + '/messages', { text: text, stream: true }).then(function (payload) {
       var info = payload.data || {};
       var streamInfo = info.stream || {};
@@ -222,6 +311,7 @@ export const GPT_JS = `(function () {
         done = true; source.close();
         if (typing !== null) typing.hidden = true;
         if (assistantNode !== null) { assistantNode.setAttribute('data-status', 'done'); var badge = assistantNode.querySelector('[data-streaming]'); if (badge !== null) badge.remove(); }
+        renderParts(false);
         refreshStatus();
       }
       source.onmessage = function (message) {
@@ -229,14 +319,13 @@ export const GPT_JS = `(function () {
         try { event = JSON.parse(message.data); } catch (e) { event = null; }
         if (event === null) return;
         if (event.done === true) { finish(); return; }
-        if (event.part && partsBox !== null) {
-          var wrapper = document.createElement('div');
-          wrapper.innerHTML = renderPart(event.part);
-          while (wrapper.firstChild) partsBox.appendChild(wrapper.firstChild);
-          var list = byId('gpt-messages'); if (list !== null) list.scrollTop = list.scrollHeight;
+        if (event.part) {
+          parts.push(event.part);
+          renderParts(true);
         }
       };
       source.onerror = function () { if (!done) { source.close(); source = new EventSource(url); } };
+      renderParts(true);
       return payload;
     }).catch(function (error) {
       if (typing !== null) typing.hidden = true;
@@ -245,6 +334,7 @@ export const GPT_JS = `(function () {
       throw error;
     });
   }
+
   function send(text) {
     var input = byId('composer-input');
     var value = String(text === undefined ? (input === null ? '' : input.value) : text).trim();

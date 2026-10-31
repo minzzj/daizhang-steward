@@ -104,14 +104,15 @@ export function analyzeIntent(text: string): ChatClassification & { entities: Ch
   const raw = typeof text === "string" ? text.trim() : "";
   const classification = classifyIntent(raw);
   const entities: ChatEntities = {};
-  const runMatch = /(run-[A-Za-z0-9-]{3,})/u.exec(raw);
+  const runMatch = /((?:run-|system:)[A-Za-z0-9-]{3,})/u.exec(raw);
   if (runMatch?.[1] !== undefined) entities.run_id = runMatch[1];
   const stepMatch = /第\s*(\d+)\s*步|步骤\s*(\d+)/u.exec(raw);
   const stepValue = stepMatch?.[1] ?? stepMatch?.[2];
   if (stepValue !== undefined) {
     const step = Number.parseInt(stepValue, 10);
-    if (Number.isFinite(step) && step > 0) entities.step = step;
+    if (Number.isFinite(step) && step >= 0) entities.step = step;
   }
+  if (entities.run_id !== undefined && entities.run_id.startsWith("system:") && entities.step === undefined) entities.step = 0;
   const artifactMatch = /(art-[A-Za-z0-9-]{1,})/u.exec(raw);
   if (artifactMatch?.[1] !== undefined) entities.artifact_id = artifactMatch[1];
   const reportMatch = /(rep-[A-Za-z0-9-]{1,})/u.exec(raw);

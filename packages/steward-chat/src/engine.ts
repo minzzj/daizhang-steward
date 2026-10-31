@@ -18,6 +18,7 @@
 import { randomBytes } from "node:crypto";
 
 import { ChatError } from "./errors.js";
+import { applyMessagePhases } from "./phase.js";
 import { analyzeIntent, classifyIntent } from "./intent.js";
 import { extractMemoryCandidates, recallMemories } from "./memory.js";
 import { ChatStore, summarizeMessage } from "./store.js";
@@ -30,6 +31,7 @@ import {
   type ChatConversationView,
   type ChatDataCard,
   type ChatEngineOptions,
+  type ChatGoalResult,
   type ChatIntent,
   type ChatMemoryEntry,
   type ChatMemoryFilter,
@@ -119,6 +121,7 @@ export class ChatEngine {
   private readonly dshEnabled: boolean;
   private readonly polish: ((text: string) => Promise<string>) | undefined;
   private idSeq = 0;
+  private toolCallSeq = 0;
 
   constructor(options: ChatEngineOptions) {
     if (!isRecord(options)) throw new ChatError("ChatEngine 需要 options 对象", "CONFIG", "options");
@@ -193,6 +196,49 @@ export class ChatEngine {
 
   deleteMemory(id: string): boolean {
     return this.store.deleteMemory(id);
+  }
+
+  /** v1.5.2：追加一条 assistant 消息（审批后续/后台通知用），自动分相并持久化。 */
+  appendAssistantMessage(conversationId: string, parts: ChatPart[], options: { model_mode?: ChatModelMode } = {}): ChatMessage {
+    const conversation = this.store.getConversation(conversationId);
+    if (conversation === null) throw new ChatError(`会话不存在：${String(conversationId)}`, "NOT_FOUND", "conversationId");
+    const message: ChatMessage = {
+      id: this.nextMessageId("assistant"),
+      conversation_id: conversationId,
+      role: "assistant",
+      at: this.nowIso(),
+      parts: parts.map((part) => clone(part)),
+      status: "done",
+      ...(options.model_mode !== undefined ? { model_mode: options.model_mode } : {}),
+    };
+    applyMessagePhases(message);
+    message.summary = summarizeMessage(message);
+    this.store.appendMessage(conversationId, message);
+    return clone(message);
+  }
+
+  private nextToolCallId(): string {
+    this.toolCallSeq += 1;
+    return `call-${String(this.toolCallSeq).padStart(4, "0")}`;
+  }
+
+  private queryThinkingLabel(intent: ChatIntent): string {
+    const labels: Record<string, string> = {
+      system: "正在查询系统状态（程序/插件/审批/Token）…",
+      runs: "正在查询最近的运行记录…",
+      run_detail: "正在查询运行详情与证据…",
+      artifacts: "正在查询产物文件…",
+      artifact_preview: "正在读取产物内容…",
+      reports: "正在查询报告…",
+      report_content: "正在读取报告内容…",
+      metrics: "正在查询 Token/用量数据…",
+      logs: "正在读取日志与审计…",
+      config: "正在读取配置摘要（密钥已脱敏）…",
+      ledger: "正在查询收款/账本…",
+      agents: "正在查询智能体与模型状态…",
+      memory: "正在检索长期记忆…",
+    };
+    return labels[intent] ?? "正在查询…";
   }
 
   /** 记忆召回（相关度 → 重要度 → 时间，最多 limit 条；默认 5）。 */
@@ -270,6 +316,7 @@ export class ChatEngine {
       pushPart({ type: "error", message: `处理消息失败：${errorMessage(error)}` });
       assistant.status = "error";
     }
+    applyMessagePhases(assistant);
     assistant.summary = summarizeMessage(assistant);
     this.store.updateMessage(conversation.id, assistant);
     this.rememberFromTurn({ userText: raw, analysis, assistant, outcome });
@@ -329,17 +376,19 @@ export class ChatEngine {
   ): Promise<void> {
     const entities = analysis.entities;
     const plan = this.buildQueryPlan(intent, entities);
-    pushPart({ type: "tool_call", tool: plan.method, input: plan.input });
+    const callId = this.nextToolCallId();
+    pushPart({ type: "thinking", text: this.queryThinkingLabel(intent), collapsed: true });
+    pushPart({ type: "tool_call", tool: plan.method, input: plan.input, callId, status: "running" });
     let result: ChatQueryResult;
     try {
       result = await plan.invoke();
     } catch (error) {
       const message = errorMessage(error);
-      pushPart({ type: "tool_result", tool: plan.method, ok: false, summary: message });
+      pushPart({ type: "tool_result", tool: plan.method, ok: false, summary: message, callId });
       pushPart({ type: "error", message: `查询失败：${message}` });
       return;
     }
-    pushPart({ type: "tool_result", tool: plan.method, ok: result.ok, summary: result.summary });
+    pushPart({ type: "tool_result", tool: plan.method, ok: result.ok, summary: result.summary, callId });
     if (result.summary.trim().length > 0) pushPart({ type: "text", text: result.summary });
     if (plan.note !== undefined) pushPart({ type: "text", text: plan.note });
     for (const part of Array.isArray(result.parts) ? result.parts : []) pushPart(part);
@@ -494,6 +543,10 @@ export class ChatEngine {
       pushPart(part);
     }
     if (!hasApproval) {
+      if (!result.ok) {
+        pushPart({ type: "error", message: `该动作无法执行：${result.summary}` });
+        return;
+      }
       const fallback: ChatDataCard = {
         title: "待人工确认（审批卡）",
         items: [
@@ -526,6 +579,23 @@ export class ChatEngine {
       });
       return;
     }
+    if (runId.startsWith("system:") && typeof this.tools.confirmSystemAction === "function") {
+      const callId = this.nextToolCallId();
+      pushPart({ type: "tool_call", tool: "confirmSystemAction", input: { approval_id: runId, decision }, callId, status: "running" });
+      let outcome: ChatQueryResult;
+      try {
+        outcome = await this.tools.confirmSystemAction(runId, decision);
+      } catch (error) {
+        pushPart({ type: "tool_result", tool: "confirmSystemAction", ok: false, summary: errorMessage(error), callId });
+        pushPart({ type: "error", message: `系统动作审批失败：${errorMessage(error)}` });
+        return;
+      }
+      pushPart({ type: "tool_result", tool: "confirmSystemAction", ok: outcome.ok, summary: outcome.summary, callId });
+      pushPart({ type: "text", text: outcome.summary });
+      for (const part of Array.isArray(outcome.parts) ? outcome.parts : []) pushPart(part);
+      if (!outcome.ok) pushPart({ type: "error", message: `审批未完成：${outcome.summary}` });
+      return;
+    }
     pushPart({ type: "tool_call", tool: "approve", input: { run_id: runId, step, decision } });
     let result: ChatQueryResult;
     try {
@@ -556,13 +626,20 @@ export class ChatEngine {
       text: `好的，我开始做：${clampChars(raw, 120)}。我会交给项目执行器自动执行，思考/步骤/产物/报告会实时出现在这条对话里${memoryHint}。`,
     });
     pushPart({ type: "tool_call", tool: "executeGoal", input: { goal: raw } });
-    let result: { ok: boolean; run_id?: string; session_id?: string; summary: string };
+    let result: ChatGoalResult;
     try {
       result = await this.tools.executeGoal(raw, (part) => pushPart(part, "local_fallback"));
     } catch (error) {
       pushPart({ type: "tool_result", tool: "executeGoal", ok: false, summary: errorMessage(error) });
       pushPart({ type: "error", message: `项目执行器调用失败：${errorMessage(error)}` });
       return {};
+    }
+    if (result.pending_approval !== undefined) {
+      pushPart({ type: "tool_result", tool: "executeGoal", ok: true, summary: "Run 已暂停，等待人工审批" });
+      pushPart({ type: "approval", approval: result.pending_approval });
+      pushPart({ type: "text", text: `已暂停，等待你审批第 ${result.pending_approval.step} 步：${result.pending_approval.summary}。批准后 Run 会继续执行。` });
+      this.pushMemoryCard(memories, pushPart);
+      return { ...(result.run_id === undefined ? {} : { runId: result.run_id }), ...(result.session_id === undefined ? {} : { sessionId: result.session_id }), taskSummary: result.summary };
     }
     pushPart({ type: "tool_result", tool: "executeGoal", ok: result.ok, summary: result.summary });
     if (!result.ok) {
@@ -664,7 +741,10 @@ export class ChatEngine {
         ...(input.outcome.sessionId === undefined ? {} : { sessionId: input.outcome.sessionId }),
         parts: input.assistant.parts,
       });
-      for (const candidate of candidates) this.addMemory(candidate);
+      // v1.5.2：纯查询不产生「产物/报告」级记忆（避免记忆噪音）；只保留偏好/项目/决策等。
+      const queryIntent = QUERY_INTENTS.has(input.analysis.intent);
+      const filtered = queryIntent ? candidates.filter((candidate) => candidate.kind !== "artifact" && candidate.kind !== "report" && candidate.kind !== "run") : candidates;
+      for (const candidate of filtered) this.addMemory(candidate);
     } catch {
       /* 记忆抽取失败不影响对话 */
     }

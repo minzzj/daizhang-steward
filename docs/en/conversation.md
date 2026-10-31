@@ -28,3 +28,12 @@ Simple queries are answered by rule/query tools without model calls; only task i
 ## Safety
 
 Dangerous actions require inline approval; the AI never signs/auto-pays/sends externally; local-only 127.0.0.1, write APIs require token; keys are never injected into Harness; all actions/approvals/tool calls are audited and recorded in the conversation.
+
+## 7. Presentation rules (v1.5.2)
+
+- By default only: **your input + collapsible thinking process + final result**;
+- Expanded thinking shows: thinking chunks, tool calls (single merged card with status/duration/result preview), query data, memory references;
+- Reports/artifacts are **deliverable cards** under the final result (max 3 shown; the rest collapsed);
+- Approval cards and errors are **always visible** (never collapsed);
+- Awaiting approval = paused (not failed); after approval the run continues and progress is pushed into the chat;
+- Pure queries no longer create artifact/report-level memory noise.

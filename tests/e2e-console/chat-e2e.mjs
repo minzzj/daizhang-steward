@@ -146,7 +146,7 @@ async function main() {
       check(userMs < 3000, `发送后立即出现用户消息（${String(userMs)}ms）`),
       check(typingVisible || streamingCount >= 1, "出现「思考中…」/助手流式气泡"),
       check(await waitAssistantDone(), "助手消息流式完成"),
-      check((await page.locator('.gpt-card[data-card="thinking"]').count()) >= 1, "内嵌 thinking 折叠卡"),
+      check((await page.locator('.gpt-thinking-group, .gpt-thinking-line, .gpt-card[data-card="thinking"]').count()) >= 1, "内嵌 thinking 折叠卡"),
       check((await page.locator('.gpt-card[data-card="tool"], .gpt-card[data-card="tool-result"]').count()) >= 1, "内嵌工具调用卡片"),
       check((await page.locator('.gpt-card[data-card="data"]').count()) >= 1, "内嵌数据卡片（Token/工具/步骤）"),
       check((await page.locator('.gpt-card[data-card="report"]').count()) >= 1, "内嵌报告卡片（按问题）"),

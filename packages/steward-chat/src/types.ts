@@ -54,17 +54,33 @@ export interface ChatApprovalCard {
   expires_at?: string;
 }
 
+/** v1.5.2：呈现分相——思考过程（折叠）/ 最终结果（可见）。 */
+export type ChatPhase = "thinking" | "result";
+
+export interface ChatThinkingSummary {
+  /** 思考区条目数（思考分块 + 工具 + 中间数据）。 */
+  steps: number;
+  tool_calls: number;
+  artifacts: number;
+  reports: number;
+}
+
+interface ChatPartBase {
+  /** v1.5.2：呈现分相；旧消息可缺省，由 applyMessagePhases 自动分类。 */
+  phase?: ChatPhase;
+}
+
 export type ChatPart =
-  | { type: "text"; text: string }
-  | { type: "markdown"; markdown: string; title?: string }
-  | { type: "thinking"; text: string; collapsed?: boolean }
-  | { type: "tool_call"; tool: string; input: Record<string, unknown>; status?: string }
-  | { type: "tool_result"; tool: string; ok: boolean; summary: string; data?: unknown }
-  | { type: "artifact"; artifact: ChatArtifactCard }
-  | { type: "report"; report: ChatReportCard }
-  | { type: "data"; data: ChatDataCard }
-  | { type: "approval"; approval: ChatApprovalCard }
-  | { type: "error"; message: string };
+  | ({ type: "text"; text: string } & ChatPartBase)
+  | ({ type: "markdown"; markdown: string; title?: string } & ChatPartBase)
+  | ({ type: "thinking"; text: string; collapsed?: boolean } & ChatPartBase)
+  | ({ type: "tool_call"; tool: string; input: Record<string, unknown>; status?: string; callId?: string; result_preview?: string; result_data?: unknown; duration_ms?: number } & ChatPartBase)
+  | ({ type: "tool_result"; tool: string; ok: boolean; summary: string; data?: unknown; callId?: string; duration_ms?: number } & ChatPartBase)
+  | ({ type: "artifact"; artifact: ChatArtifactCard } & ChatPartBase)
+  | ({ type: "report"; report: ChatReportCard } & ChatPartBase)
+  | ({ type: "data"; data: ChatDataCard } & ChatPartBase)
+  | ({ type: "approval"; approval: ChatApprovalCard } & ChatPartBase)
+  | ({ type: "error"; message: string } & ChatPartBase);
 
 export type ChatModelMode = "remote" | "local_fallback" | "harness" | "rule";
 
@@ -77,6 +93,10 @@ export interface ChatMessage {
   summary?: string;
   status?: "streaming" | "done" | "error";
   model_mode?: ChatModelMode;
+  /** v1.5.2：最终结果文本（默认可见；包含错误/等待审批时的提示）。 */
+  result_text?: string;
+  /** v1.5.2：思考过程摘要（折叠标题用）。 */
+  thinking_summary?: ChatThinkingSummary;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,6 +188,8 @@ export interface ChatGoalResult {
   run_id?: string;
   session_id?: string;
   summary: string;
+  /** v1.5.2：Run 在等待人工审批（不是失败；审批后继续）。 */
+  pending_approval?: ChatApprovalCard;
 }
 
 export interface ChatHarnessResult {
@@ -195,6 +217,8 @@ export interface ChatTools {
   harnessTask(task: string, onPart: (part: ChatPart) => void): Promise<ChatHarnessResult>;
   /** 审批：批准/驳回（run 的步骤）。 */
   approve(runId: string, step: number, decision: "approve" | "reject"): Promise<ChatQueryResult>;
+  /** v1.5.2：系统动作审批（plan → 人工确认 → execute；approvalId 形如 system:<requestId>）。 */
+  confirmSystemAction?(approvalId: string, decision: "approve" | "reject"): Promise<ChatQueryResult>;
   /** 已知危险动作（删程序/插件、付款）→ 返回审批卡而不是执行。 */
   systemActionPreview(action: string, target?: string): Promise<ChatQueryResult>;
 }

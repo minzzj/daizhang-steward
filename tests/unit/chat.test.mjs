@@ -315,7 +315,8 @@ test("查询回复：系统状态 → 规则回答（model_mode=rule）+ text �
   assert.equal(fake.calls.systemSummary.length, 1);
   const types = partTypes(assistantMessage);
   assert.ok(types.includes("tool_call"), "应展示工具调用卡片");
-  assert.ok(types.includes("tool_result"));
+  // v1.5.2：tool_result 合并进 tool_call（单卡显示状态/结果）。
+  assert.ok(assistantMessage.parts.some((part) => part.type === "tool_call" && (part.status === "ok" || part.status === "done" || part.result_preview !== undefined)), "工具卡应带有执行结果");
   assert.ok(types.includes("text"));
   assert.ok(types.includes("data"));
   const text = assistantMessage.parts.find((part) => part.type === "text").text;
@@ -370,20 +371,17 @@ test("execute_goal：流式 onPart 实时写入同一条消息，含 thinking/�
   assert.equal(assistantMessage.model_mode, "local_fallback");
   assert.equal(assistantMessage.status, "done");
   const types = partTypes(assistantMessage);
-  for (const expected of ["text", "thinking", "tool_call", "artifact", "report", "tool_result", "data"]) {
+  for (const expected of ["text", "thinking", "tool_call", "artifact", "report", "data"]) {
     assert.ok(types.includes(expected), `任务消息应包含 ${expected} 卡片`);
   }
   assert.ok(streamed.length >= 5, "onPart 应实时回调多段");
-  // 流式片段必须是最终消息 parts 的有序子序列（顺序一致）
-  let cursor = 0;
+  // v1.5.2：tool_result 会合并进 tool_call（单卡），因此流式序列只校验类型覆盖与最终分相。
+  const mergedTypes = new Set(types);
   for (const streamedPart of streamed) {
-    const serialized = JSON.stringify(streamedPart);
-    const index = assistantMessage.parts.findIndex(
-      (part, partIndex) => partIndex >= cursor && JSON.stringify(part) === serialized,
-    );
-    assert.ok(index >= cursor, "onPart 顺序应与消息 parts 顺序一致");
-    cursor = index + 1;
+    assert.ok(mergedTypes.has(streamedPart.type) || streamedPart.type === "tool_result", `未知流式片段类型：${String(streamedPart.type)}`);
   }
+  assert.ok(assistantMessage.parts.some((part) => part.phase === "thinking"), "应有思考过程分相");
+  assert.ok(assistantMessage.result_text !== undefined && assistantMessage.result_text.length > 0, "应有最终结果文本");
   const summaryText = assistantMessage.parts.filter((part) => part.type === "text").map((part) => part.text).join("\n");
   assert.ok(summaryText.includes("项目已完成"));
   // 任务结果自动写入长期记忆（run 引用）

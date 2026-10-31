@@ -107,7 +107,10 @@ export function renderChatPart(part: ConsoleChatPart): string {
     case "thinking":
       return `<details class="gpt-card gpt-thinking" data-card="thinking"><summary>💭 思考过程（点击展开）</summary><div class="gpt-thinking-text">${escapeHtml(String(part.text ?? part.chunk ?? ""))}</div></details>`;
     case "tool_call":
-      return `<div class="gpt-card gpt-tool" data-card="tool" data-call-id="${escapeAttr(String(part.callId ?? part.call_id ?? ""))}" data-status="running"><span class="gpt-tool-name">🔧 ${escapeHtml(String(part.tool ?? "tool"))}</span><span class="gpt-tool-args mono">${escapeHtml(String(part.input ?? part.args_summary ?? ""))}</span><span class="gpt-tool-status">调用中…</span></div>`;
+      const toolStatus = String(part.status ?? "running");
+      const toolOk = toolStatus === "ok" || toolStatus === "done" || toolStatus === "completed";
+      const preview = String(part.result_preview ?? part.result_summary ?? "");
+      return `<div class="gpt-card gpt-tool" data-card="tool" data-call-id="${escapeAttr(String(part.callId ?? part.call_id ?? ""))}" data-status="${escapeAttr(toolStatus)}"><span class="gpt-tool-name">${toolOk ? "✅" : "🔧"} ${escapeHtml(String(part.tool ?? "tool"))}</span><span class="gpt-tool-args mono">${escapeHtml(String(part.input ?? part.args_summary ?? ""))}</span><span class="gpt-tool-status">${toolOk ? "完成" : "调用中…"}${part.duration_ms === undefined ? "" : ` · ${String(part.duration_ms)}ms`}</span>${preview === "" ? "" : `<details class="gpt-tool-detail"><summary>结果</summary><div class="gpt-tool-result-text">${escapeHtml(preview.slice(0, 1200))}</div></details>`}</div>`;
     case "tool_result":
       return `<div class="gpt-card gpt-tool-result" data-card="tool-result" data-call-id="${escapeAttr(String(part.callId ?? part.call_id ?? ""))}" data-status="${escapeAttr(String(part.status ?? "ok"))}"><span class="gpt-tool-name">✅ ${escapeHtml(String(part.tool ?? "tool"))}</span><span class="gpt-tool-args mono">${escapeHtml(String(part.result_preview ?? part.result_summary ?? ""))}</span><span class="gpt-tool-status">${escapeHtml(String(part.status ?? "ok"))}${part.duration_ms === undefined ? "" : ` · ${String(part.duration_ms)}ms`}</span></div>`;
     case "artifact":
@@ -118,7 +121,7 @@ export function renderChatPart(part: ConsoleChatPart): string {
       return partData(part);
     case "approval":
       return `<div class="gpt-card gpt-approval" data-card="approval" data-approval-id="${escapeAttr(String(part.approval_id ?? ""))}" data-step="${escapeAttr(String(part.step ?? ""))}" data-status="pending">
-        <header><span class="gpt-card-kind">⚠️ 审批</span><b>高风险步骤等待人工审批</b><span class="gpt-demo">演示</span></header>
+        <header><span class="gpt-card-kind">⚠️ 审批</span><b>需要你确认后才会继续</b>${part.demo === true ? '<span class="gpt-demo">演示</span>' : ""}</header>
         <p class="gpt-approval-risk">${escapeHtml(String(part.risk ?? "高风险动作必须人工批准，AI 不绕过"))}</p>
         <p class="gpt-meta">${escapeHtml(String(part.summary ?? ""))}</p>
         <div class="gpt-approval-actions"><button class="primary" type="button" data-approve>批准</button><button class="danger" type="button" data-reject>驳回</button></div>
@@ -130,14 +133,103 @@ export function renderChatPart(part: ConsoleChatPart): string {
   }
 }
 
+type DisplayPhase = "thinking" | "result";
+interface NormalizedDisplay {
+  thinking: ConsoleChatPart[];
+  deliverables: ConsoleChatPart[];
+  results: ConsoleChatPart[];
+  approvals: ConsoleChatPart[];
+  errors: ConsoleChatPart[];
+  summary: { steps: number; tool_calls: number; artifacts: number; reports: number };
+}
+
+/** v1.5.2：默认视图 = 用户消息 + 思考过程（折叠）+ 最终结果；旧消息自动分类。 */
+function normalizeDisplayParts(parts: ConsoleChatPart[], streaming = false): NormalizedDisplay {
+  const merged: ConsoleChatPart[] = [];
+  for (const part of parts) {
+    if (part.type === "tool_result") {
+      const callId = String(part.callId ?? part.call_id ?? "");
+      const call = [...merged].reverse().find((item) => item.type === "tool_call" && ((callId !== "" && String(item.callId ?? item.call_id ?? "") === callId) || (callId === "" && String(item.tool ?? "") === String(part.tool ?? ""))));
+      if (call !== undefined) {
+        call.status = part.status === "error" ? "error" : "ok";
+        call.result_preview = part.result_preview ?? part.result_summary;
+        if (part.duration_ms !== undefined) call.duration_ms = part.duration_ms;
+        continue;
+      }
+    }
+    merged.push({ ...part });
+  }
+  const textIndexes = merged.map((part, index) => (part.type === "text" ? index : -1)).filter((index) => index >= 0);
+  const lastText = textIndexes.length > 0 ? (textIndexes[textIndexes.length - 1] as number) : -1;
+  const thinking: ConsoleChatPart[] = [];
+  const deliverables: ConsoleChatPart[] = [];
+  const results: ConsoleChatPart[] = [];
+  const approvals: ConsoleChatPart[] = [];
+  const errors: ConsoleChatPart[] = [];
+  for (let index = 0; index < merged.length; index += 1) {
+    const part = merged[index] as ConsoleChatPart;
+    if (part.type === "approval") { approvals.push(part); continue; }
+    if (part.type === "error") { errors.push(part); continue; }
+    if (part.type === "artifact" || part.type === "report") { deliverables.push(part); continue; }
+    const explicitResult = part.phase === "result" || part.run_link !== undefined;
+    const inferredResult = !streaming && ((part.type === "text" && index === lastText) || (part.type === "markdown" && lastText < 0 && index === merged.length - 1));
+    if (explicitResult || inferredResult) results.push(part);
+    else thinking.push(part);
+  }
+  return {
+    thinking,
+    deliverables,
+    results,
+    approvals,
+    errors,
+    summary: {
+      steps: thinking.length,
+      tool_calls: thinking.filter((part) => part.type === "tool_call").length,
+      artifacts: deliverables.filter((part) => part.type === "artifact").length,
+      reports: deliverables.filter((part) => part.type === "report").length,
+    },
+  };
+}
+
+function renderThinkingBlock(display: NormalizedDisplay, streaming: boolean): string {
+  if (display.thinking.length === 0 && !streaming) return "";
+  const summary = display.summary;
+  const bits = [
+    summary.steps > 0 ? String(summary.steps) + " 步" : "",
+    summary.tool_calls > 0 ? "工具 " + String(summary.tool_calls) : "",
+    summary.artifacts > 0 ? "产物 " + String(summary.artifacts) : "",
+    summary.reports > 0 ? "报告 " + String(summary.reports) : "",
+  ].filter((bit) => bit !== "").join(" · ");
+  const body = display.thinking.map((part) => part.type === "thinking" ? `<div class="gpt-thinking-line">💭 ${escapeHtml(String(part.text ?? ""))}</div>` : renderChatPart(part)).join("");
+  const title = streaming ? "正在思考…" : "思考过程" + (bits === "" ? "" : " · " + bits);
+  const empty = body === "" ? '<p class="muted">正在收集过程…</p>' : body;
+  return `<details class="gpt-thinking-group" data-thinking-group><summary>💭 ${escapeHtml(title)}（点击展开）</summary><div class="gpt-thinking-body">${empty}</div></details>`;
+}
+
+function renderAssistantBody(message: ConsoleChatMessage): string {
+  const streaming = message.status === "streaming";
+  const display = normalizeDisplayParts(message.parts, streaming);
+  const thinking = renderThinkingBlock(display, streaming);
+  const results = display.results.map(renderChatPart).join("");
+  const resultText = results === "" && message.result_text !== undefined ? `<div class="gpt-part gpt-part-text gpt-md gpt-result-text" data-result-text>${renderMarkdown(message.result_text)}</div>` : "";
+  const deliverables = display.deliverables.slice(0, 3).map(renderChatPart).join("");
+  const extra = display.deliverables.length > 3 ? `<p class="muted small">另有 ${String(display.deliverables.length - 3)} 个交付物，已收起在思考过程中。</p>` : "";
+  const approvals = display.approvals.map(renderChatPart).join("");
+  const errors = display.errors.map(renderChatPart).join("");
+  const hasResult = results !== "" || resultText !== "" || approvals !== "" || errors !== "";
+  const resultBlock = hasResult ? `<div class="gpt-result" data-final-result><div class="gpt-result-label">✅ 最终结果</div>${results}${resultText}</div>` : "";
+  const deliverableBlock = deliverables === "" ? "" : `<div class="gpt-deliverables" data-deliverables>${deliverables}${extra}</div>`;
+  return thinking + resultBlock + deliverableBlock + approvals + errors;
+}
+
 export function renderChatMessage(message: ConsoleChatMessage): string {
   const role = message.role === "user" ? "user" : message.role === "system" ? "system" : "assistant";
-  const avatar = role === "user" ? "我" : "◈";
+  const avatar = role === "user" ? "你" : "◈";
   return `<article class="gpt-msg" data-role="${escapeAttr(role)}" data-message-id="${escapeAttr(message.id)}" data-status="${escapeAttr(message.status ?? "done")}">
     <span class="gpt-avatar">${avatar}</span>
     <div class="gpt-bubble">
-      <div class="gpt-msg-meta"><b>${role === "user" ? "我" : "总调度助手"}</b><span class="muted small">${escapeHtml(formatDateTime(message.at))}</span>${message.status === "streaming" ? '<span class="gpt-streaming" data-streaming>思考中…</span>' : ""}</div>
-      ${message.parts.map(renderChatPart).join("")}
+      <div class="gpt-msg-meta"><b>${role === "user" ? "你" : "总调度助手"}</b><span class="muted small">${escapeHtml(formatDateTime(message.at))}</span>${message.status === "streaming" ? '<span class="gpt-streaming" data-streaming>思考中…</span>' : ""}</div>
+      ${role === "user" ? message.parts.map(renderChatPart).join("") : renderAssistantBody(message)}
     </div>
   </article>`;
 }

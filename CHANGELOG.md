@@ -13,6 +13,25 @@
 - 企业专属 UI（企业看板/工作流页面）
 - 真实银行/税务/CA/电子签章系统对接
 
+## [1.5.2] — 2026-10-31
+
+### Added
+- **消息分相**：`ChatPart.phase`（thinking/result）、`ChatMessage.result_text/thinking_summary`；`applyMessagePhases`/`mergeToolParts`/`splitPartsByPhase`；`/chat` 默认只显示"用户输入 + 思考过程（折叠）+ 最终结果"，展开思考才是工具/数据/记忆等详细内容。
+- **交付物/审批可见**：报告/产物卡片显示在结果区；审批卡与错误始终可见、不可折叠；运行深度链接可见。
+- **审批闭环**：等待审批（pending_approval）不再报失败，批准后继续执行并在对话中推送进展；系统动作审批走 `SystemController.plan → 确认 → execute`（一次性 token），支持批准/驳回。
+- **工具单卡**：tool_call + tool_result 合并成一张卡（状态/耗时/结果预览），修复"永远调用中…"。
+- **新增测试**：`tests/unit/chat-phase.test.mjs` 8 条（分相/合并/等待审批/系统审批/追加消息/记忆噪音）；总计 **412/412**。
+
+### Fixed
+- 用户消息"我 我"重复 → 头像/名称统一为"你"。
+- 纯查询不再批量产生产物/报告级记忆噪音。
+- 危险动作目标 id 归一化（"受管程序 demo-app"→`demo-app`），策略拒绝明确提示而非要求批准。
+- 系统审批卡不再伪造 run_id；演示标签仅用于演示数据。
+
+### Changed
+- 版本 1.5.2；控制台 health `1.5.2`。
+- 对话 E2E 8 步 + 回归 E2E 38 步全绿（0 截图）。
+
 ## [1.5.1] — 2026-10-30
 
 ### Added

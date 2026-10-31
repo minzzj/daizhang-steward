@@ -32,6 +32,8 @@ export interface RealChatToolsHandle {
   tools: ChatTools;
   runtime: Runtime;
   manager: RunManager;
+  /** v1.5.2：系统动作审批（plan → 人工确认 → execute）。approvalId 形如 system:<requestId>。 */
+  confirmSystemAction: (approvalId: string, decision: "approve" | "reject") => Promise<ChatQueryResult>;
 }
 
 const oneLine = (text: string, max = 120): string => {
@@ -109,6 +111,12 @@ export function createRealChatTools(options: RealChatToolsOptions): RealChatTool
     maxConcurrentRuns: 3,
   });
 
+  interface PendingSystemAction {
+    request: { id: string; action: string; target?: string; reason?: string; confirmation_token?: string };
+    label: string;
+    executable: boolean;
+  }
+  const pendingSystemActions = new Map<string, PendingSystemAction>();
   const runIdForSession = (sessionId: string): string | undefined => manager.listRuns().find((record) => record.session_id === sessionId)?.run_id;
   const sessionForRunId = (runId: string): string | undefined => (manager.getRun(runId) ?? manager.listRuns().find((item) => item.session_id === runId))?.session_id;
   const latestRun = (): RunRecord | null => manager.listRuns()[0] ?? null;
@@ -293,6 +301,22 @@ export function createRealChatTools(options: RealChatToolsOptions): RealChatTool
         }
       });
       const finished = await manager.waitFor(run.run_id, ["done", "blocked", "failed", "paused", "awaiting_approval", "interrupted"], 900_000);
+      const record = manager.getRun(run.run_id);
+      if (record !== null && (record.status === "awaiting_approval" || record.status === "paused") && record.pending_approval !== undefined) {
+        return {
+          ok: false,
+          run_id: run.run_id,
+          session_id: run.session_id,
+          summary: `Run ${run.run_id} 等待你审批第 ${record.pending_approval.step} 步：${record.pending_approval.summary}`,
+          pending_approval: {
+            run_id: run.run_id,
+            step: record.pending_approval.step,
+            risk: record.pending_approval.risk ?? "medium",
+            summary: record.pending_approval.summary,
+            reason: "高风险步骤需要你确认后才会继续执行。",
+          },
+        };
+      }
       unsubscribe();
       const artifacts = listHarnessArtifacts(runsRoot, { session_id: run.session_id, limit: 8 }, runIdForSession);
       for (const artifact of artifacts) {
@@ -379,40 +403,94 @@ export function createRealChatTools(options: RealChatToolsOptions): RealChatTool
       }
     },
     systemActionPreview: async (action, target) => {
+      const cleanTarget = (() => {
+        if (target === undefined) return undefined;
+        const stripped = target.replace(/^(受管)?(程序|应用|插件|文件|目录|进程)\s*/u, "").replace(/^id[:：]?\s*/iu, "").trim();
+        const idMatch = /([A-Za-z][A-Za-z0-9_-]{2,})/u.exec(stripped);
+        return (idMatch?.[1] ?? stripped) || undefined;
+      })();
       const actionText = `${action} ${target ?? ""}`;
-      const map: Record<string, { action: string; label: string }> = {
-        delete_program: { action: "app.remove", label: "删除受管程序" },
-        delete_plugin: { action: "plugin.remove", label: "删除受管插件" },
-        install_program: { action: "program.install", label: "安装受管程序" },
-        uninstall_program: { action: "program.uninstall", label: "卸载受管程序" },
-        open_app: { action: "app.open", label: "打开应用/URL" },
-        file_write: { action: "file.write", label: "写入文件" },
-        file_remove: { action: "file.remove", label: "删除文件" },
+      const genericApproval = (label: string, executable: boolean): ChatQueryResult => {
+        const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        pendingSystemActions.set(requestId, { request: { id: requestId, action: "app.list", ...(cleanTarget !== undefined ? { target: cleanTarget } : {}), reason: label }, label, executable });
+        return result("systemActionPreview", true, `已生成审批卡（未执行）：${label}`, [
+          { type: "approval", approval: { run_id: `system:${requestId}`, step: 0, risk: "high", summary: `${label}${target ? ` → ${target}` : ""}`, reason: executable ? "危险动作：需你确认后由 AI 在系统策略内执行。" : "该动作需要人工在对应系统/线下完成；AI 不代执行、不代签。" } },
+        ]);
       };
-      const genericApproval = (label: string): ChatQueryResult => result("systemActionPreview", true, `已生成审批卡（未执行）：${label}`, [
-        { type: "approval", approval: { run_id: `system:${Date.now()}`, step: 0, risk: "high", summary: `${label}${target ? ` → ${target}` : ""}`, reason: "危险动作，需要人工确认/签字；AI 不代替确认、不自动执行。" } },
-      ]);
       if (/付款|支付|转账|退款|签约|合同|用印|对外发布|批量发送|生产部署/.test(actionText)) {
-        return genericApproval(`危险动作：${actionText}`);
+        return genericApproval(`危险动作：${actionText}`, false);
       }
       const inferred = /删除|移除|卸载/.test(actionText)
         ? /插件/.test(actionText)
-          ? { action: "plugin.remove", label: "删除受管插件" }
+          ? { action: "plugin.remove" as const, label: "删除受管插件" }
           : /程序|应用|app/i.test(actionText)
-            ? { action: "app.remove", label: "删除受管程序" }
-            : { action: "file.remove", label: "删除文件" }
+            ? { action: "app.remove" as const, label: "删除受管程序" }
+            : { action: "file.remove" as const, label: "删除文件" }
         : /安装/.test(actionText)
-          ? { action: "program.install", label: "安装受管程序" }
+          ? { action: "program.install" as const, label: "安装受管程序" }
           : /打开/.test(actionText)
-            ? { action: "app.open", label: "打开应用/URL" }
+            ? { action: "app.open" as const, label: "打开应用/URL" }
             : undefined;
-      const mapped = map[action] ?? inferred;
-      if (!mapped) return genericApproval(`待确认动作：${actionText}`);
-      const plan = systemctl.plan({ id: `chat-${Date.now()}`, action: mapped.action as never, ...(target ? { target } : {}), reason: "对话式总控请求（需人工确认）" });
-      return result("systemActionPreview", plan.allowed, `危险动作「${mapped.label}」${plan.allowed ? "待人工确认" : "被策略拒绝"}：${plan.summary}`, [
-        { type: "approval", approval: { run_id: `system:${Date.now()}`, step: 0, risk: plan.risk, summary: `${mapped.label}${target ? ` → ${target}` : ""}（${plan.summary}）`, reason: "系统级危险动作，需要人工确认/签字；AI 不代替确认。" } },
-      ]);
+      const mapped = inferred ?? (() => {
+        const table: Record<string, { action: "app.remove" | "plugin.remove" | "program.install" | "app.open" | "file.remove" | "file.write"; label: string }> = {
+          delete_program: { action: "app.remove", label: "删除受管程序" },
+          delete_plugin: { action: "plugin.remove", label: "删除受管插件" },
+          install_program: { action: "program.install", label: "安装受管程序" },
+          open_app: { action: "app.open", label: "打开应用/URL" },
+          file_write: { action: "file.write", label: "写入文件" },
+          file_remove: { action: "file.remove", label: "删除文件" },
+        };
+        return table[action];
+      })();
+      if (mapped === undefined) return genericApproval(`待确认动作：${actionText}`, false);
+      const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const request = { id: requestId, action: mapped.action, ...(cleanTarget !== undefined ? { target: cleanTarget } : {}), reason: "对话式总控请求（需人工确认）", requested_by: "human:chat" };
+      try {
+        const plan = systemctl.plan(request as never);
+        if (!plan.allowed) {
+          return result("systemActionPreview", false, `危险动作「${mapped.label}」被策略拒绝：${plan.summary}`);
+        }
+        const confirmation = (plan as unknown as { confirmation_token?: string }).confirmation_token;
+        pendingSystemActions.set(requestId, { request: { ...request, ...(confirmation ? { confirmation_token: confirmation } : {}) }, label: mapped.label, executable: true });
+        return result("systemActionPreview", true, `危险动作「${mapped.label}」待人工确认：${plan.summary}`, [
+          { type: "approval", approval: { run_id: `system:${requestId}`, step: 0, risk: plan.risk, summary: `${mapped.label}${target ? ` → ${target}` : ""}（${plan.summary}）`, reason: "系统级危险动作：确认后由 AI 在系统策略内执行并留审计。" } },
+        ]);
+      } catch (error) {
+        return result("systemActionPreview", false, `生成审批卡失败：${error instanceof Error ? error.message : String(error)}`);
+      }
     },
   };
-  return { tools, runtime, manager };
+  const confirmSystemAction = async (approvalId: string, decision: "approve" | "reject"): Promise<ChatQueryResult> => {
+    const requestId = approvalId.startsWith("system:") ? approvalId.slice("system:".length) : approvalId;
+    const pending = pendingSystemActions.get(requestId);
+    if (pending === undefined) return result("confirmSystemAction", false, "审批已过期或不存在，请重新发起。");
+    if (decision === "reject") {
+      pendingSystemActions.delete(requestId);
+      return result("confirmSystemAction", true, `已驳回：${pending.label}`);
+    }
+    if (!pending.executable) {
+      pendingSystemActions.delete(requestId);
+      return result("confirmSystemAction", true, `已记录你的确认：${pending.label}。该动作需要人工在对应系统/线下完成，AI 不代执行、不代签。`, [
+        dataCard("审批记录", [{ label: "动作", value: pending.label }, { label: "状态", value: "已确认（人工执行）" }]),
+      ]);
+    }
+    try {
+      const receipt = await systemctl.execute(pending.request as never);
+      pendingSystemActions.delete(requestId);
+      const summary = String((receipt as unknown as { summary?: string }).summary ?? (receipt as unknown as { ok?: boolean }).ok ? "已执行" : "已执行");
+      return result("confirmSystemAction", true, `已执行并留审计：${summary}`, [
+        dataCard("系统动作回执", [
+          { label: "动作", value: pending.label },
+          { label: "结果", value: summary },
+          { label: "风险", value: String((receipt as unknown as { risk?: string }).risk ?? "") },
+          { label: "备份", value: String((receipt as unknown as { backup_path?: string }).backup_path ?? "无") },
+        ]),
+      ]);
+    } catch (error) {
+      pendingSystemActions.delete(requestId);
+      return result("confirmSystemAction", false, `执行失败（未执行/已过期）：${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+  tools.confirmSystemAction = confirmSystemAction;
+  return { tools, runtime, manager, confirmSystemAction };
 }

@@ -54,7 +54,7 @@ import { cmdAgent, cmdSystem } from "./agent-cli.js";
 import { cmdRuntime } from "./run-cli.js";
 import { cmdAi } from "./ai-cli.js";
 
-const VERSION = "1.5.1";
+const VERSION = "1.5.2";
 const REPO_SLUG = "github.com/minzzj/daizhang-steward";
 
 interface ParsedArgs {

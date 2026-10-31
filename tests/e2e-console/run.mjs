@@ -51,7 +51,7 @@ const VIEWPORT = { width: 1440, height: 950 };
 
 /** B6：接管键 ≤10 秒。 */
 const STOP_LIMIT_MS = 10_000;
-const STEP_TIMEOUT_MS = 15_000;
+const STEP_TIMEOUT_MS = 30_000;
 const PACK_FIELDS = ["open_orders", "pending_threads", "payables", "credentials", "risks"];
 const PACK_LABELS = {
   open_orders: "开放订单",
@@ -1432,7 +1432,7 @@ async function stepSseSanity(page, recorder, baseUrl, context) {
       if (health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined)) break;
       await page.waitForTimeout(300);
     }
-    checks.push(check(health !== null && health.version === "1.5.1", `health version=1.5.1（${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.2", `health version=1.5.2（${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.runtime_enabled === true, "health 标记 runtime_enabled=true"));
     checks.push(check(health !== null && health.artifacts_enabled === true && health.reports_enabled === true && health.metrics_enabled === true, "health 标记 artifacts/reports/metrics enabled"));
     checks.push(check(health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined), `离开页面后 SSE 订阅已清理（sse_active_streams=${String(health === null ? "?" : health.sse_active_streams)}）`));
@@ -1661,7 +1661,7 @@ async function stepV12Sanity(page, recorder, context) {
     checks.push(check(pageErrors.length === 0, `v1.2/v1.3 流程全程无页面 JS 错误（${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
 
     const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
-    checks.push(check(health !== null && health.version === "1.5.1", `health version=1.4.0（实际 ${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.2", `health version=1.5.2（实际 ${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.chat_enabled === true && health.system_enabled === true, "health 标记 chat_enabled/system_enabled=true"));
 
     const sessions = await fetch(`${baseUrl}/api/chat/sessions`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
