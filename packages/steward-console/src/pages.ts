@@ -193,8 +193,8 @@ const NAV_GROUPS: readonly NavGroup[] = [
     title: "运营",
     items: [
       { page: "dashboard", href: "/", label: "总览", icon: "▦" },
-      { page: "chat", href: "/chat", label: "对话", icon: "✉" },
-      { page: "projects", href: "/projects", label: "项目", icon: "▤" },
+      { page: "chat", href: "/chat", label: "AI 总控", icon: "✉" },
+      { page: "projects", href: "/projects", label: "项目调度", icon: "▤" },
       { page: "ledger", href: "/ledger", label: "账本", icon: "≡" },
       { page: "approvals", href: "/approvals", label: "审批", icon: "✓" },
       { page: "report", href: "/report", label: "月报", icon: "▥" },
@@ -205,8 +205,8 @@ const NAV_GROUPS: readonly NavGroup[] = [
   {
     title: "管理",
     items: [
-      { page: "system", href: "/system", label: "系统", icon: "◉" },
-      { page: "agents", href: "/agents", label: "智能体", icon: "◈" },
+      { page: "system", href: "/system", label: "系统管理", icon: "◉" },
+      { page: "agents", href: "/agents", label: "AI 团队", icon: "◈" },
       { page: "backend", href: "/backend", label: "后台", icon: "▣" },
       { page: "artifacts", href: "/artifacts", label: "产物", icon: "◨" },
       { page: "reports", href: "/reports", label: "报告", icon: "▧" },
@@ -269,7 +269,9 @@ export function renderShell(options: PageRenderOptions, title: string, content: 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="steward-token" content="${escapeAttr(options.token)}" />
-    <title>${escapeHtml(title)} · 代掌 Steward 本地控制台</title>
+    <title>${escapeHtml(title)} · 代掌 Steward · 本地 AI 公司操作系统</title>
+    <meta name="description" content="代掌 Steward（Daizhang Steward）是本地优先的 AI 公司操作系统（AI Company OS）：AI 总控对话调度多智能体团队（AI Agents），自动化完成真实工作（浏览器/桌面操作、编码、调研、报告、产物），过程可见（思考/工具/产物/报告），人类只负责审批与签字。关键词：AI 公司、AI 公司系统、AI 自动化、智能体、AI Agent、多智能体协作、自动化工作流、AI 员工、AI 总控、本地 AI、DeepSeek Harness、AI orchestration、autonomous agents、agentic workflow、multi-agent、workflow automation。" />
+    <meta name="keywords" content="AI公司,AI公司系统,AI操作系统,AI自动化,自动化工作流,多智能体,智能体团队,AI Agent,Agent自动化,AI员工,AI总控,本地AI,DeepSeek Harness,代掌,Steward,AI company,AI company OS,AI agents,agentic workflow,multi-agent,autonomous agents,workflow automation,local-first AI,AI orchestration" />
     <link rel="stylesheet" href="/assets/app.css" />
     <link rel="stylesheet" href="/assets/pro.css" />
     <link rel="stylesheet" href="/assets/chat.css" />
@@ -281,7 +283,7 @@ export function renderShell(options: PageRenderOptions, title: string, content: 
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <span class="brand-name">代掌 Steward</span>
-          <span class="brand-sub">LOCAL CONSOLE · v1.5</span>
+          <span class="brand-sub">LOCAL AI COMPANY OS · v1.5</span>
         </div>
         <nav class="sidebar-nav" id="sidebar-nav" aria-label="主导航">${renderNav(options.active)}</nav>
         <div class="sidebar-footer">
@@ -291,7 +293,7 @@ export function renderShell(options: PageRenderOptions, title: string, content: 
       </aside>
       <div class="app-main">
         <header class="topbar" id="topbar">
-          <span class="topbar-title">本地控制台</span>
+          <span class="topbar-title">AI 公司总控台</span>
           <span class="topbar-context" id="page-context">${escapeHtml(title)}</span>
           <div class="topbar-status">
             <span class="mode-badge mode-${escapeAttr(status.mode)}" id="status-mode">${escapeHtml(status.modeLabel)}</span>

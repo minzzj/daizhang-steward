@@ -425,9 +425,9 @@ function renderAgentCard(agent: ConsoleAgentInfo, harness?: HarnessAgentSummary)
 
 export function renderAgentsPage(input: AgentsPageInput): string {
   const content = `
-${pageHeading("智能体中心", `共 ${String(input.agents.length)} 个智能体 · 当前模式：${RUN_MODE_LABELS[input.mode]} · 点击卡片可展开详情，或查看每个智能体的对话记录（/agents/:role）`)}
+${pageHeading("AI 团队（智能体中心）", `共 ${String(input.agents.length)} 个 AI 员工/智能体（Agent） · 当前模式：${RUN_MODE_LABELS[input.mode]} · 点击卡片可展开详情，或查看每个智能体的对话记录（/agents/:role）`)}
 <div class="agent-grid" id="agents-grid">${input.agents.map((agent) => renderAgentCard(agent, input.harness?.[agent.role])).join("")}</div>`;
-  return renderShell(input.options, "智能体中心", content);
+  return renderShell(input.options, "AI 团队 · 智能体中心", content);
 }
 
 // ---------------------------------------------------------------------------

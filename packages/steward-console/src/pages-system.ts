@@ -220,7 +220,7 @@ ${pageHeading("系统管理", "统一对话/调度入口在 AI 总控（/chat）
     </div>
   </div>
 </div>`;
-  return renderShell(input.options, "系统总控", content);
+  return renderShell(input.options, "系统管理", content);
 }
 
 // ---------------------------------------------------------------------------

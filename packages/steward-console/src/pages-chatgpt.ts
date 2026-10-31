@@ -280,7 +280,7 @@ export function renderChatHomePage(input: ChatHomePageInput): string {
       <div class="gpt-chips" id="quick-chips">${chips}</div>
     </header>
     <div class="gpt-messages" id="gpt-messages">
-      ${messages === "" ? '<div class="gpt-empty" id="gpt-empty"><div class="gpt-empty-title">开始新的对话</div><p class="muted">告诉我你要做什么：查系统状态、看产物/报告、跑任务…<br/>也可以点上方快捷按钮（一个入口控制全部）。</p></div>' : messages}
+      ${messages === "" ? '<div class="gpt-empty" id="gpt-empty"><div class="gpt-empty-title">开始新的对话 · 调度你的 AI 公司</div><p class="muted">用一句话调度 AI 公司：查系统状态、看产物/报告、点名 AI 员工（Agent）执行任务、自动化跑项目…<br/>一个入口控制全部；AI 自己查、自己干，你只负责审批与签字。</p></div>' : messages}
     </div>
     <form class="gpt-composer" id="gpt-composer">
       <textarea id="composer-input" rows="2" placeholder="给总调度发消息…（Enter 发送；可先选智能体点名发送，独立上下文）"></textarea>
@@ -312,5 +312,5 @@ export function renderChatHomePage(input: ChatHomePageInput): string {
     <p class="muted small">当前对话召回的记忆会用于后续回复（演示：显示在记忆面板中）。</p>
   </aside>
 </div>`;
-  return renderShell(input.options, "对话", content);
+  return renderShell(input.options, "AI 总控", content);
 }

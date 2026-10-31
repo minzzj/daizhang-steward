@@ -985,7 +985,7 @@ async function stepChatOpen(page, recorder) {
     await page.locator("#nav-chat").click();
     await page.waitForSelector("#gpt-page", { timeout: STEP_TIMEOUT_MS });
     const checks = [];
-    checks.push(check(await page.locator("#nav-chat").isVisible(), "左侧导航出现「对话」入口"));
+    checks.push(check(await page.locator("#nav-chat").isVisible(), "左侧导航出现「AI 总控」入口"));
     checks.push(check(await page.locator("#nav-money").isVisible(), "左侧导航出现「变现」入口"));
     checks.push(check(await page.locator("#nav-system").isVisible(), "左侧导航出现「系统」入口"));
     const convCount = await page.locator("#conv-list .gpt-conv-item").count();
@@ -1443,7 +1443,7 @@ async function stepSseSanity(page, recorder, baseUrl, context) {
       if (health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined)) break;
       await page.waitForTimeout(300);
     }
-    checks.push(check(health !== null && health.version === "1.5.5", `health version=1.5.5（${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.6", `health version=1.5.6（${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.runtime_enabled === true, "health 标记 runtime_enabled=true"));
     checks.push(check(health !== null && health.artifacts_enabled === true && health.reports_enabled === true && health.metrics_enabled === true, "health 标记 artifacts/reports/metrics enabled"));
     checks.push(check(health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined), `离开页面后 SSE 订阅已清理（sse_active_streams=${String(health === null ? "?" : health.sse_active_streams)}）`));
@@ -1662,7 +1662,7 @@ async function stepV12Sanity(page, recorder, context) {
     checks.push(check(pageErrors.length === 0, `v1.2/v1.3 流程全程无页面 JS 错误（${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
 
     const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
-    checks.push(check(health !== null && health.version === "1.5.5", `health version=1.5.5（实际 ${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.6", `health version=1.5.6（实际 ${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.chat_enabled === true && health.system_enabled === true, "health 标记 chat_enabled/system_enabled=true"));
 
     const sessions = await fetch(`${baseUrl}/api/chat/sessions`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
@@ -1873,7 +1873,7 @@ async function main() {
       return {
         checks: [
           check(response !== null && response.status() === 200, `控制台首页 HTTP 200（实际 ${response === null ? "无响应" : response.status()}）`),
-          check((await page.title()).includes("本地控制台"), "页面标题含「本地控制台」"),
+          check((await page.title()).includes("AI 公司") && (await page.title()).includes("Steward"), `页面标题含「AI 公司操作系统 / Steward」（${await page.title()}）`),
           check(await page.locator("#sidebar").isVisible(), "专业版左侧导航已渲染"),
           check(await page.locator("#status-mode").isVisible(), "顶部状态栏已渲染"),
         ],

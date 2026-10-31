@@ -13,6 +13,15 @@
 - 企业专属 UI（企业看板/工作流页面）
 - 真实银行/税务/CA/电子签章系统对接
 
+## [1.5.6] — 2026-10-31
+
+### Changed
+- **名称与功能对齐（项目名不变）**：导航 `对话`→`AI 总控`、`系统`→`系统管理`、`智能体`→`AI 团队`、`项目`→`项目调度`；`/chat` 标题→`AI 总控`；`/agents` 标题→`AI 团队（智能体中心）`；顶栏→`AI 公司总控台`；品牌副标→`LOCAL AI COMPANY OS`；对话空态→`开始新的对话 · 调度你的 AI 公司`。
+- **搜索关键词 / 引流**：新增 `docs/zh-CN/overview.md`、`docs/en/overview.md`（关键词版项目简介）、`docs/SEO.md`（关键词地图 + GitHub About/Topics 建议）；README/README.zh-CN 顶部加入定位 + 中英关键词；`package.json` 增加 description/keywords；控制台页面加入 `<meta name=description/keywords>`。
+- GitHub 仓库 About 描述与 Topics 同步更新（AI 公司/AI 自动化/多智能体/AI Agent/工作流自动化/本地 AI/DeepSeek Harness 等）。
+
+### Tests
+- 单元测试 414/414；全量回归 E2E 38/38 步、415/415 检查；对话 E2E 10/10 步、42/42 检查（0 截图）。
 ## [1.5.5] — 2026-10-31
 
 ### Fixed

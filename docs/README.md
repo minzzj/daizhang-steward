@@ -4,8 +4,14 @@
 > Every doc ships in both Chinese (`zh-CN/`) and English (`en/`). Keep them in sync; if they differ,
 > the Chinese version prevails until the English one is corrected.
 
+
+> **代掌 Steward —— 本地优先的 AI 公司操作系统（AI Company OS）。**
+> 关键词：AI 公司、AI 自动化、AI 员工、AI 团队、多智能体（Multi-Agent）、AI Agent、Agent 自动化、AI 总控、自动化工作流、本地 AI、DeepSeek Harness、Steward。
+> 项目简介：[zh-CN/overview.md](zh-CN/overview.md) · [en/overview.md](en/overview.md) · 关键词地图：[SEO.md](SEO.md)
+
 | 文档 | 内容 |
 |---|---|
+| [zh-CN/overview.md](zh-CN/overview.md) · [en/overview.md](en/overview.md) | **项目简介（关键词版）**：AI 公司 OS 定位、AI 自动化/多智能体/AI 员工/Agent 关键词 → 功能对照 |
 | [zh-CN/architecture.md](zh-CN/architecture.md) · [en/architecture.md](en/architecture.md) | 总体架构、分层、运行形态、扩展点 |
 | [zh-CN/contracts.md](zh-CN/contracts.md) · [en/contracts.md](en/contracts.md) | 核心契约：BranchSpec / CodeTask / CodeResult / Lead / ApprovalCard / TakeoverPack / Event |
 | [zh-CN/threat-model.md](zh-CN/threat-model.md) · [en/threat-model.md](en/threat-model.md) | 威胁模型与默认拒绝清单 |
@@ -13,6 +19,7 @@
 | [zh-CN/runtime-prompts.md](zh-CN/runtime-prompts.md) · [en/runtime-prompts.md](en/runtime-prompts.md) | 运行时提示词的版本、测试与替换规则 |
 | [zh-CN/delivery-checklist.md](zh-CN/delivery-checklist.md) · [en/delivery-checklist.md](en/delivery-checklist.md) | 验收 × 证据映射（A1–A12 / B1–B8 / U1–U8；**两阶段交付完成：A1–A12 + B1–B8 全部通过，最终 v1.0.0 已发布（Latest）**） |
 | [zh-CN/enterprise.md](zh-CN/enterprise.md) · [en/enterprise.md](en/enterprise.md) | **P3 企业版**：企业增量总览、**30 条边界双模式标注表（完整 30 行）**、B8 双模式一致性、双人复核/组织审批链/用印（AI 不代签）/发票与申报草稿、安全边界与已知限制 |
+| [SEO.md](SEO.md) | 搜索关键词地图、GitHub About/Topics 建议（引流用） |
 | [test-evidence/README.md](test-evidence/README.md) | 测试证据归档规范；`test-result-*`（离线证据包）、M1–M4 / P1–P3 验收 evidence 包、`long-drill-*` + `evidence-long-drill-*`（P2 真实长跑）、发布验证记录（v0.5.0/v0.6.0/v0.8.0/**v1.0.0**） |
 | [media/promo/README.md](media/promo/README.md) | **v1.0.0 真实截图宣传片**：成片在 GitHub Release Assets（BGM/silent/poster），本目录含 README、STORYBOARD、FACTS、poster.jpg |
 | [RELEASE_NOTES_v0.5.0.md](RELEASE_NOTES_v0.5.0.md) · [v0.6.0](RELEASE_NOTES_v0.6.0.md) · [v0.8.0](RELEASE_NOTES_v0.8.0.md) · [**v1.0.0**](RELEASE_NOTES_v1.0.0.md) | 阶段一 / P1 / P2+P3 / **最终 v1.0.0（两阶段交付完成）** 发布说明（中英双语） |

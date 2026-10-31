@@ -1,5 +1,12 @@
 # 代掌 Steward
 
+> **本地优先的 AI 公司操作系统 / Local-first AI Company OS.**
+> 用 **AI 总控** 对话调度一支 **多智能体（AI Agents）团队**，自动化完成真实工作：浏览器/桌面操作、编码、调研、财务、客户沟通、内容、报告与产物；过程可见（思考/工具/产物/报告），人类只负责审批与签字。
+>
+> 🔎 **搜索关键词 / Keywords**：AI 公司、AI 公司系统、AI 操作系统、**AI 自动化**、自动化工作流、**AI 员工**、AI 团队、**多智能体**、智能体团队、**AI Agent**、Agent 自动化、AI 总控、任务自动化、办公自动化、本地 AI、私有化 AI、数字员工、DeepSeek Harness、代掌。English: **AI company, AI company OS, AI operating system, AI automation, workflow automation, AI agents, agentic workflow, multi-agent, autonomous agents, AI employee, AI workforce, AI orchestration, local-first AI, self-hosted AI, business automation, digital worker, DeepSeek Harness, Steward**.
+>
+> 📖 项目简介（关键词版）：[中文](docs/zh-CN/overview.md) · [English](docs/en/overview.md) · 关键词地图：[docs/SEO.md](docs/SEO.md)
+
 **可托管的 AI 经营代理 / A composable operating-AI steward.**
 Source-available · non-commercial · real browser & real desktop operations · evidence-first.
 
