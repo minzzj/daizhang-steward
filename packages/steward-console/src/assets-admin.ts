@@ -160,7 +160,7 @@ body { background: var(--bg); }
 
 /* ===== 智能体中心 ===== */
 .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
-.agent-card { display: flex; flex-direction: column; gap: 8px; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: #fff; box-shadow: var(--shadow); }
+.agent-card { cursor: pointer; display: flex; flex-direction: column; gap: 8px; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: #fff; box-shadow: var(--shadow); }
 .agent-card.not-applicable { opacity: 0.66; border-style: dashed; }
 .agent-card.disabled { background: #fafbfe; }
 .agent-head { display: flex; align-items: flex-start; gap: 10px; }
@@ -562,6 +562,27 @@ export const ADMIN_JS = `(function () {
     }
   }
 
+  // ---- 智能体卡片：整卡可点击展开（除了链接/按钮/输入元素） ----
+  function initAgentCards() {
+    document.addEventListener('click', function (event) {
+      var target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('a,button,input,select,textarea,label')) return;
+      var card = target.closest('.agent-card');
+      if (card === null) return;
+      var role = card.getAttribute('data-role');
+      var detail = role === null ? null : byId('agent-detail-' + role);
+      if (detail === null) return;
+      var expand = card.querySelector('[data-agent-expand]');
+      var open = detail.hidden;
+      detail.hidden = !open;
+      if (expand !== null) {
+        expand.textContent = open ? '收起详情' : '展开详情';
+        expand.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+    });
+  }
+
   // ---- 后台 -------------------------------------------------------------
   function initBackend() {
     var filter = byId('flow-filter');
@@ -631,6 +652,7 @@ export const ADMIN_JS = `(function () {
   function init() {
     initSettings();
     initAgents();
+    initAgentCards();
     initBackend();
     initData();
     refreshStatus();

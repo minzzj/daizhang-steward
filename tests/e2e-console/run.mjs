@@ -1271,6 +1271,17 @@ async function stepAgentsHarnessBadge(page, recorder, baseUrl) {
     checks.push(check((await withSession.locator('[data-harness-run-link]').count()) >= 1, "可点入查看 run 证据"));
     checks.push(check((await withSession.locator('a[href^="/artifacts?agent="]').count()) >= 1, "可查看该 agent 产物"));
     checks.push(check((await withSession.locator('a[href^="/reports?agent="]').count()) >= 1, "可查看该 agent 报告"));
+    // v1.5.5：整卡点击可展开详情（之前只有「展开详情」按钮有效，点卡片无反应）
+    await page.goto(`${baseUrl}/agents`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#agents-grid .agent-card", { timeout: STEP_TIMEOUT_MS });
+    const operatorCard = page.locator('.agent-card[data-role="operator"]').first();
+    const detailBefore = await page.locator("#agent-detail-operator:not([hidden])").count();
+    if (detailBefore === 0) await operatorCard.click({ position: { x: 14, y: 14 } });
+    await page.waitForTimeout(300);
+    const detailAfter = await page.locator("#agent-detail-operator:not([hidden])").count();
+    checks.push(check(detailBefore === 0 && detailAfter === 1, "智能体卡片整卡点击可展开详情"));
+    checks.push(check((await page.locator('#agents-grid a[href^="/chat?agent="]').count()) >= cards, "每个智能体有「点名发任务」入口"));
+    checks.push(check((await page.locator("#runtime-guard").count()) === 1 && (await page.locator("#runtime-guard").isHidden()), "运行时异常/更新提示存在且正常时隐藏"));
     // agent 详情页也展示 Harness 产物/报告
     await withSession.locator('a[href^="/agents/"]').first().click();
     await page.waitForSelector("#agent-role-page", { timeout: STEP_TIMEOUT_MS });
@@ -1432,7 +1443,7 @@ async function stepSseSanity(page, recorder, baseUrl, context) {
       if (health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined)) break;
       await page.waitForTimeout(300);
     }
-    checks.push(check(health !== null && health.version === "1.5.4", `health version=1.5.4（${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.5", `health version=1.5.5（${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.runtime_enabled === true, "health 标记 runtime_enabled=true"));
     checks.push(check(health !== null && health.artifacts_enabled === true && health.reports_enabled === true && health.metrics_enabled === true, "health 标记 artifacts/reports/metrics enabled"));
     checks.push(check(health !== null && (health.sse_active_streams === 0 || health.sse_active_streams === undefined), `离开页面后 SSE 订阅已清理（sse_active_streams=${String(health === null ? "?" : health.sse_active_streams)}）`));
@@ -1651,7 +1662,7 @@ async function stepV12Sanity(page, recorder, context) {
     checks.push(check(pageErrors.length === 0, `v1.2/v1.3 流程全程无页面 JS 错误（${pageErrors.length}）`, pageErrors.slice(0, 3).join(" | ")));
 
     const health = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);
-    checks.push(check(health !== null && health.version === "1.5.4", `health version=1.5.4（实际 ${health === null ? "无" : health.version}）`));
+    checks.push(check(health !== null && health.version === "1.5.5", `health version=1.5.5（实际 ${health === null ? "无" : health.version}）`));
     checks.push(check(health !== null && health.chat_enabled === true && health.system_enabled === true, "health 标记 chat_enabled/system_enabled=true"));
 
     const sessions = await fetch(`${baseUrl}/api/chat/sessions`, { signal: AbortSignal.timeout(3000) }).then((response) => response.json()).catch(() => null);

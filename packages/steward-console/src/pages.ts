@@ -312,6 +312,45 @@ ${content}
       </div>
     </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="runtime-guard" hidden role="alert" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;max-width:92vw;display:flex;gap:10px;align-items:center;padding:10px 14px;border:1px solid #f0b36a;border-radius:10px;background:#fff8ec;color:#7a4a00;box-shadow:0 8px 26px rgba(15,23,42,.18);font-size:13px">
+      <b>⚠ 控制台异常</b><span id="runtime-guard-text" style="max-width:64vw">页面脚本或连接异常。</span>
+      <button type="button" id="runtime-guard-reload" class="primary" style="padding:4px 12px;border-radius:7px;border:1px solid #e08a2e;background:#f59e0b;color:#fff;cursor:pointer">重新加载</button>
+    </div>
+    <script>
+    (function () {
+      var banner = document.getElementById('runtime-guard');
+      var text = document.getElementById('runtime-guard-text');
+      var reload = document.getElementById('runtime-guard-reload');
+      var baseline = null;
+      function show(message) {
+        if (banner === null || text === null) return;
+        text.textContent = message;
+        banner.hidden = false;
+      }
+      if (reload !== null) reload.addEventListener('click', function () { window.location.reload(); });
+      window.addEventListener('error', function (event) {
+        show('页面脚本错误：' + String(event.message || '未知') + '。点击重新加载。');
+      });
+      window.addEventListener('unhandledrejection', function (event) {
+        var reason = event.reason;
+        show('请求失败：' + String((reason && reason.message) || reason || '未知') + '。点击重新加载。');
+      });
+      function check() {
+        fetch('/health', { cache: 'no-store' }).then(function (response) {
+          if (!response.ok) throw new Error('health ' + response.status);
+          return response.json();
+        }).then(function (health) {
+          var key = String(health.version) + '|' + String(health.started_at);
+          if (baseline === null) { baseline = key; if (banner !== null) banner.hidden = true; return; }
+          if (key !== baseline) show('控制台已更新/重启（' + baseline + ' → ' + key + '）。点击重新加载。');
+        }).catch(function () {
+          if (baseline !== null) show('控制台连接中断：本地控制台可能已停止。请重新启动控制台后点击重新加载。');
+        });
+      }
+      setInterval(check, 6000);
+      setTimeout(check, 1200);
+    })();
+    </script>
     <script src="/assets/app.js" defer></script>
     <script src="/assets/admin.js" defer></script>
     <script src="/assets/chat.js" defer></script>

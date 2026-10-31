@@ -38,6 +38,8 @@ Source-available · non-commercial · real browser & real desktop operations · 
 
 > **v1.3.0（2026-10-26）**：配置中心支持**多模型与 API 密钥**（一键同步、各智能体独立选模型、密钥只存引用）；新增**两层总调度**（系统总控 supervisor + 项目总调度 conductor）、**控制台对话/每轮摘要/证据灯箱/系统总控/变现&易支付**页面；CLI 新增 `chat` / `supervisor` / `project` / `system` / `money`；290/290 单测 + 真实浏览器 E2E 25 步全绿。详见 `docs/RELEASE_NOTES_v1.3.0.md` 与 `docs/zh-CN/{configuration,chat,system,money}.md`。
 
+> **v1.5.5（2026-10-31）**：**点击无反应修复**——智能体卡片整卡可点击；全页面运行时守护（JS 错误/重启/断连提示 + 一键重载）。414/414 单测 + E2E 全绿（0 截图）。详见 `docs/RELEASE_NOTES_v1.5.5.md`。
+
 > **v1.5.4（2026-10-31）**：**点名发送 + 独立智能体上下文**——`/chat` 选智能体或 `@role` 点名，交给独立会话/工作区执行，总控上下文不进入（避免污染漂移）；`/agents` 新增「点名发任务」。414/414 单测 + E2E 全绿（0 截图）。详见 `docs/RELEASE_NOTES_v1.5.4.md`。
 
 > **v1.5.3（2026-10-31）**：**功能去重**——对话/调度统一到 AI 总控 `/chat`；系统页移除重复对话入口，改为系统管理 + 统一入口 + 快捷查询；历史 `/chat/:id` 降级为运行详情（只读）。412/412 单测 + 对话/回归 E2E 全绿（0 截图）。详见 `docs/RELEASE_NOTES_v1.5.3.md`。
