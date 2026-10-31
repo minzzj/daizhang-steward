@@ -150,6 +150,7 @@ export type ChatIntent =
   | "agents"
   | "execute_goal"
   | "harness_task"
+  | "agent_direct"
   | "approve"
   | "danger_action"
   | "chat"
@@ -170,6 +171,8 @@ export interface ChatEntities {
   action?: string;
   target?: string;
   query?: string;
+  /** v1.5.4：点名发送的目标智能体角色（@operator / 让财务…）。 */
+  agent_role?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -197,6 +200,14 @@ export interface ChatHarnessResult {
   summary: string;
 }
 
+/** v1.5.4：点名发送到独立智能体的执行结果（该智能体有独立上下文/会话）。 */
+export interface ChatAgentResult {
+  ok: boolean;
+  summary: string;
+  agent_role: string;
+  session_id?: string;
+}
+
 /** 由 Lead 注入的真实数据工具（控制台/CLI 提供实现；测试用 fake）。 */
 export interface ChatTools {
   systemSummary(): Promise<ChatQueryResult>;
@@ -215,6 +226,11 @@ export interface ChatTools {
   executeGoal(goal: string, onPart: (part: ChatPart) => void): Promise<ChatGoalResult>;
   /** 小任务/代码类：真实 DSH harness 跑一次（受 token/超时限制），onPart 实时回报。 */
   harnessTask(task: string, onPart: (part: ChatPart) => void): Promise<ChatHarnessResult>;
+  /**
+   * v1.5.4：点名发送——把任务交给指定智能体的独立会话/工作区执行。
+   * 总控对话上下文不进入该智能体；它的历史只保留在自己目录（避免上下文污染/漂移）。
+   */
+  runAgentTask?(role: string, task: string, onPart: (part: ChatPart) => void): Promise<ChatAgentResult>;
   /** 审批：批准/驳回（run 的步骤）。 */
   approve(runId: string, step: number, decision: "approve" | "reject"): Promise<ChatQueryResult>;
   /** v1.5.2：系统动作审批（plan → 人工确认 → execute；approvalId 形如 system:<requestId>）。 */

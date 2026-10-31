@@ -9,6 +9,7 @@
  */
 
 export type {
+  ChatAgentResult,
   ChatApprovalCard,
   ChatArtifactCard,
   ChatClassification,
@@ -44,7 +45,7 @@ export {
 export type { ChatErrorCode } from "./errors.js";
 export { ChatError } from "./errors.js";
 
-export { CHAT_DANGER_ACTIONS, analyzeIntent, classifyIntent } from "./intent.js";
+export { AGENT_ROLE_TITLES, CHAT_DANGER_ACTIONS, analyzeIntent, classifyIntent, detectAgentRole, stripAgentPrefix } from "./intent.js";
 export type { ExtractMemoryInput, MemoryCandidate } from "./memory.js";
 export { extractMemoryCandidates, hasCjk, recallMemories, tokenizeForRecall } from "./memory.js";
 export type { ChatStoreOptions } from "./store.js";

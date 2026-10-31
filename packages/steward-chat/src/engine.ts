@@ -19,7 +19,7 @@ import { randomBytes } from "node:crypto";
 
 import { ChatError } from "./errors.js";
 import { applyMessagePhases } from "./phase.js";
-import { analyzeIntent, classifyIntent } from "./intent.js";
+import { AGENT_ROLE_TITLES, analyzeIntent, classifyIntent, stripAgentPrefix } from "./intent.js";
 import { extractMemoryCandidates, recallMemories } from "./memory.js";
 import { ChatStore, summarizeMessage } from "./store.js";
 import {
@@ -336,6 +336,10 @@ export class ChatEngine {
   }): Promise<TaskOutcome> {
     const { analysis, raw, memories, pushPart } = input;
     const intent = analysis.intent;
+    if (intent === "agent_direct") {
+      await this.handleAgentTask(raw, analysis, memories, pushPart);
+      return {};
+    }
     if (QUERY_INTENTS.has(intent)) {
       await this.handleQuery(intent, analysis, pushPart);
       this.pushMemoryCard(memories, pushPart);
@@ -614,6 +618,47 @@ export class ChatEngine {
   // -------------------------------------------------------------------------
   // 任务类：项目执行器 / DSH harness
   // -------------------------------------------------------------------------
+
+  /** v1.5.4：点名发送——交给指定智能体的独立会话/工作区执行（总控上下文不进入该智能体）。 */
+  private async handleAgentTask(
+    raw: string,
+    analysis: ReturnType<typeof analyzeIntent>,
+    memories: ChatMemoryEntry[],
+    pushPart: PushPart,
+  ): Promise<void> {
+    const role = analysis.entities.agent_role ?? "conductor";
+    const title = AGENT_ROLE_TITLES[role] ?? role;
+    const task = stripAgentPrefix(raw, role);
+    if (typeof this.tools.runAgentTask !== "function") {
+      pushPart({ type: "error", message: `未接入独立智能体执行器，无法点名发送给 ${title}。` });
+      return;
+    }
+    pushPart({ type: "text", text: `收到，点名交给「${title}」处理（独立会话/工作区，总控对话上下文不会进入该智能体，避免上下文污染）。` });
+    const callId = this.nextToolCallId();
+    pushPart({ type: "tool_call", tool: "runAgentTask", input: { agent_role: role, task }, callId, status: "running" });
+    let result: { ok: boolean; summary: string; agent_role: string; session_id?: string };
+    try {
+      result = await this.tools.runAgentTask(role, task, (part) => pushPart(part, "harness"));
+    } catch (error) {
+      pushPart({ type: "tool_result", tool: "runAgentTask", ok: false, summary: errorMessage(error), callId });
+      pushPart({ type: "error", message: `「${title}」执行失败：${errorMessage(error)}` });
+      return;
+    }
+    pushPart({ type: "tool_result", tool: "runAgentTask", ok: result.ok, summary: result.summary, callId });
+    if (!result.ok) {
+      pushPart({ type: "error", message: `「${title}」执行失败：${result.summary}` });
+      return;
+    }
+    pushPart({ type: "text", text: result.summary });
+    pushPart({ type: "data", data: { title: `「${title}」独立执行结果`, items: [
+      { label: "智能体", value: `${title}（${role}）` },
+      { label: "上下文", value: "独立会话/工作区（隔离）" },
+      ...(result.session_id === undefined ? [] : [{ label: "会话", value: result.session_id }]),
+      { label: "结果", value: result.summary.slice(0, 120) },
+    ] } });
+    this.pushMemoryCard(memories, pushPart);
+    void task;
+  }
 
   private async handleExecuteGoal(
     raw: string,

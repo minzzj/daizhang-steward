@@ -5,10 +5,12 @@
  * - 任务类（流式）：executeGoal → RunManager（项目执行器）；harnessTask → 真实 DSH harness
  * - 危险动作：只返回审批卡，绝不执行
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ConfigEngine, composeHarnessPrompt, type HarnessSettings } from "../../../packages/steward-config/src/index.js";
-import type { ChatGoalResult, ChatHarnessResult, ChatPart, ChatQueryResult, ChatReportCard, ChatTools } from "../../../packages/steward-chat/src/index.js";
+import { AGENT_ROLE_TITLES } from "../../../packages/steward-chat/src/index.js";
+import type { ChatAgentResult, ChatGoalResult, ChatHarnessResult, ChatPart, ChatQueryResult, ChatReportCard, ChatTools } from "../../../packages/steward-chat/src/index.js";
 import { RunManager, type RunRecord } from "../../../packages/steward-runtime/src/index.js";
 import {
   type HarnessReportView,
@@ -55,6 +57,37 @@ const reportCard = (report: HarnessReportView): ChatReportCard => ({
 
 function dataCard(title: string, items: Array<{ label: string; value: string }>): ChatPart {
   return { type: "data", data: { title, items } };
+}
+
+const CHAT_AGENT_ROLES = new Set(["supervisor", "conductor", "operator", "harness", "customer", "finance", "reviewer", "backend", "scout", "content", "research"]);
+
+interface AgentHistoryEntry {
+  at: string;
+  task: string;
+  summary: string;
+}
+
+function loadAgentHistory(root: string, role: string): AgentHistoryEntry[] {
+  const file = join(root, ".steward", "chat", "agents", role, "history.json");
+  try {
+    if (!existsSync(file)) return [];
+    const parsed = JSON.parse(readFileSync(file, "utf8")) as unknown;
+    return Array.isArray(parsed) ? (parsed as AgentHistoryEntry[]).slice(-8) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAgentHistory(root: string, role: string, entry: AgentHistoryEntry): void {
+  const dir = join(root, ".steward", "chat", "agents", role);
+  try {
+    mkdirSync(dir, { recursive: true });
+    const history = loadAgentHistory(root, role);
+    history.push(entry);
+    writeFileSync(join(dir, "history.json"), JSON.stringify(history.slice(-8), null, 2) + "\n", "utf8");
+  } catch {
+    /* 历史保存失败不影响执行 */
+  }
 }
 
 export function createRealChatTools(options: RealChatToolsOptions): RealChatToolsHandle {
@@ -122,6 +155,90 @@ export function createRealChatTools(options: RealChatToolsOptions): RealChatTool
   const latestRun = (): RunRecord | null => manager.listRuns()[0] ?? null;
 
   const result = (tool: string, ok: boolean, summary: string, parts: ChatPart[] = []): ChatQueryResult => ({ tool, ok, summary, parts });
+
+  const runAgentTaskImpl = async (role: string, task: string, onPart: (part: ChatPart) => void): Promise<ChatAgentResult> => {
+    if (!CHAT_AGENT_ROLES.has(role)) {
+      onPart({ type: "error", message: `未知智能体：${role}` });
+      return { ok: false, summary: `未知智能体：${role}`, agent_role: role };
+    }
+    const title = AGENT_ROLE_TITLES[role] ?? role;
+    // 项目总调度 / 系统总控：转项目执行器（conductor 拆解后派给专项智能体，各自隔离）
+    if (role === "conductor" || role === "supervisor") {
+      const goal = await tools.executeGoal(task, onPart);
+      saveAgentHistory(root, role, { at: new Date().toISOString(), task, summary: goal.summary.slice(0, 500) });
+      return { ok: goal.ok, summary: goal.summary, agent_role: role, ...(goal.session_id !== undefined ? { session_id: goal.session_id } : {}) };
+    }
+    const harnessSettings = config.getHarnessSettings();
+    if (!harnessSettings.enabled) {
+      onPart({ type: "error", message: "Harness 已关闭（配置中心 harness.enabled=false），无法执行任务。" });
+      return { ok: false, summary: "Harness 未启用", agent_role: role };
+    }
+    const runner = runtime.harness.runner;
+    if (!runner.isAvailable()) {
+      onPart({ type: "error", message: "本机未检测到 DeepSeek Harness（dsh），无法执行任务。" });
+      return { ok: false, summary: "dsh 不可用", agent_role: role };
+    }
+    // 每个智能体独立工作区 + 独立历史（不读取总控对话上下文，避免污染/漂移）
+    const workspace = join(tmpdir(), "steward-chat-agents", role, `task-${Date.now()}`);
+    mkdirSync(workspace, { recursive: true });
+    const history = loadAgentHistory(root, role).slice(-4);
+    const historyBlock = history.length === 0 ? "" : `（你与该用户在独立会话中的最近记录，仅你可见）\n${history.map((entry) => `用户：${entry.task}\n你：${entry.summary}`).join("\n")}\n\n`;
+    const agentTask = `${historyBlock}本次任务：${task}`;
+    const tokenLimit = options.harnessTokenLimit ?? 2_000_000;
+    const controller = new AbortController();
+    let totalTokens = 0;
+    const timeout = setTimeout(() => controller.abort(), options.harnessTimeoutMs ?? 180_000);
+    onPart({ type: "thinking", text: `${title}（独立会话）开始处理任务…`, collapsed: true });
+    try {
+      const run = await runner.run({
+        role,
+        task: agentTask,
+        system_prompt: composeHarnessPrompt(role),
+        workspace_dir: workspace,
+        timeout_ms: options.harnessTimeoutMs ?? 180_000,
+        signal: controller.signal,
+        on_event: (event) => {
+          const data = event.data as Record<string, unknown>;
+          if (event.type === "thinking") onPart({ type: "thinking", text: String(data.text ?? "").slice(0, 800), collapsed: true });
+          else if (event.type === "tool_call") onPart({ type: "tool_call", tool: String(data.tool ?? ""), input: (data.input ?? {}) as Record<string, unknown>, status: "running" });
+          else if (event.type === "tool_result") onPart({ type: "tool_result", tool: String(data.tool ?? ""), ok: true, summary: String(data.result ?? "").slice(0, 300) });
+          else if (event.type === "final") onPart({ type: "text", text: String(data.text ?? "").slice(0, 800) });
+        },
+        on_usage: (usage) => {
+          totalTokens = usage.total_tokens;
+          if (usage.total_tokens > tokenLimit) controller.abort();
+        },
+      });
+      clearTimeout(timeout);
+      for (const artifact of run.artifacts.slice(0, 10)) {
+        const id = `${run.session_id ?? role}::${artifact.rel_path}`;
+        onPart({ type: "artifact", artifact: {
+          id,
+          title: artifact.rel_path.split(/[\\/]/).pop() ?? artifact.rel_path,
+          kind: artifact.kind === "markdown" ? "markdown" : artifact.kind === "html" ? "html" : artifact.kind === "json" ? "json" : artifact.kind === "image" ? "image" : "text",
+          size: artifact.size,
+          ...(run.session_id !== undefined ? { session_id: run.session_id } : {}),
+        } });
+      }
+      if (run.report_path !== undefined && existsSync(run.report_path)) {
+        onPart({ type: "report", report: { id: `${run.session_id ?? role}::report`, title: `${title} 报告`, agent_role: role, markdown: readFileSync(run.report_path, "utf8").slice(0, 20000), created_at: new Date().toISOString() } });
+      }
+      onPart(dataCard(`${title} 执行数据`, [
+        { label: "智能体", value: `${title}（${role}）` },
+        { label: "Token 总计", value: fmt(run.usage.total_tokens) },
+        { label: "工具调用", value: String(run.tool_calls.length) },
+        { label: "产物", value: String(run.artifacts.length) },
+        { label: "耗时", value: `${(run.duration_ms / 1000).toFixed(1)}s` },
+      ]));
+      const summary = run.ok ? run.final_text.slice(0, 500) : (run.error ?? "执行失败");
+      saveAgentHistory(root, role, { at: new Date().toISOString(), task, summary });
+      return { ok: run.ok, summary, agent_role: role, ...(run.session_id !== undefined ? { session_id: run.session_id } : {}) };
+    } catch (error) {
+      clearTimeout(timeout);
+      onPart({ type: "error", message: `${title} 执行失败：${error instanceof Error ? error.message : String(error)}` });
+      return { ok: false, summary: error instanceof Error ? error.message : String(error), agent_role: role };
+    }
+  };
 
   const tools: ChatTools = {
     systemSummary: async () => {
@@ -394,6 +511,7 @@ export function createRealChatTools(options: RealChatToolsOptions): RealChatTool
         return { ok: false, summary: error instanceof Error ? error.message : String(error) };
       }
     },
+    runAgentTask: runAgentTaskImpl,
     approve: async (runId, step, decision) => {
       try {
         await manager.approve(runId, step, decision === "approve" ? "approve" : "reject", "human:chat");

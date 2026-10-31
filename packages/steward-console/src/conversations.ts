@@ -160,7 +160,37 @@ export function createDemoChatEngineProvider(options: DemoChatEngineOptions = {}
   }
   store();
 
+  const AGENT_TITLES: Record<string, string> = {
+    supervisor: "系统总控",
+    conductor: "项目总调度",
+    operator: "办公执行",
+    harness: "编码代理",
+    customer: "客户沟通",
+    finance: "财务",
+    reviewer: "核查复核",
+    backend: "后台运维",
+    scout: "线索发现",
+    content: "内容创作",
+    research: "调研分析",
+  };
+
   const buildParts = (text: string): ConsoleChatPart[] => {
+    const agentMatch = /^@([a-z_]{3,})\s+([\s\S]*)$/.exec(text.trim());
+    if (agentMatch) {
+      const role = agentMatch[1] ?? "";
+      const task = (agentMatch[2] ?? "").trim() || text.trim();
+      const title = AGENT_TITLES[role] ?? role;
+      return [
+        { type: "thinking", text: `点名发送：目标智能体 ${title}（${role}），使用独立会话/工作区；总控对话上下文不会进入该智能体。` },
+        { type: "thinking", text: "加载该智能体独立历史（仅它自己可见）→ 执行任务 → 生成产物/报告。" },
+        { type: "text", markdown: `收到，已点名交给 **${title}**（独立上下文）处理：${task}` },
+        { type: "tool_call", tool: "runAgentTask", input: JSON.stringify({ agent_role: role, task }), callId: nextId("call"), status: "running" },
+        { type: "tool_result", tool: "runAgentTask", callId: nextId("call"), status: "ok", duration_ms: 88, result_preview: `${role} 独立会话执行完成（演示）` },
+        { type: "artifact", artifact: { id: "art-agent-out", title: `${role}-output.md`, kind: "markdown", size: 120, agent_role: role, demo: true, preview_text: `# ${title} 产出（演示）\n\n- 任务：${task}\n- 上下文：独立会话（隔离）\n- 结论：完成` } },
+        { type: "data", kind: "agent-run", data: { rows: [{ 智能体: `${title}（${role}）`, 上下文: "独立会话/工作区", 结果: "完成（演示）", 产物: "1 个" }] } },
+        { type: "text", markdown: `完成 ✅ **${title}** 已在独立上下文中处理完毕。可继续点名其它智能体，或让它继续跟进。` },
+      ];
+    }
     const highRisk = HIGH_RISK.test(text);
     const task = TASK.test(text);
     const parts: ConsoleChatPart[] = [

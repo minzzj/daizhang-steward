@@ -43,6 +43,12 @@ function makeTools(overrides = {}) {
       onPart({ type: "thinking", text: "harness 思考" });
       return { ok: true, summary: "harness 完成" };
     },
+    runAgentTask: async (role, task, onPart) => {
+      onPart({ type: "thinking", text: `${role} 独立会话思考…` });
+      onPart({ type: "tool_call", tool: "runAgentTask", input: { agent_role: role, task }, callId: "agent-1", status: "running" });
+      onPart({ type: "tool_result", tool: "runAgentTask", ok: true, summary: "完成", callId: "agent-1" });
+      return { ok: true, summary: `${role} 独立完成：${task}`, agent_role: role, session_id: `agent-${role}-` };
+    },
     approve: (runId, step, decision) => Promise.resolve({ tool: "approve", ok: true, summary: `已${decision} ${runId} 第 ${step} 步`, parts: [] }),
     systemActionPreview: (action) => Promise.resolve({ tool: "systemActionPreview", ok: true, summary: "系统动作待确认", parts: [
       { type: "approval", approval: { run_id: "system:req-1", step: 0, risk: "high", summary: action } },
@@ -196,6 +202,38 @@ test("系统动作审批：批准 system:req-1 走 confirmSystemAction（不调�
     assert.equal(approveCalls, 0, "系统审批不应调用 run approve");
     assert.equal(confirmCalls, 1, "应调用 confirmSystemAction");
     assert.ok(assistantMessage.result_text?.includes("系统动作"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("点名发送：@operator 路由到该智能体独立执行（runAgentTask），任务文本去掉点名前缀", async () => {
+  const calls = [];
+  const { engine, root } = makeEngine({
+    runAgentTask: async (role, task) => {
+      calls.push({ role, task });
+      return { ok: true, summary: `${role} 完成：${task}`, agent_role: role };
+    },
+  });
+  try {
+    const conversation = engine.createConversation();
+    const { assistantMessage } = await engine.send(conversation.id, "@operator 写一份周报");
+    assert.equal(calls.length, 1, "应调用 runAgentTask 一次");
+    assert.equal(calls[0].role, "operator");
+    assert.equal(calls[0].task, "写一份周报", "任务文本应去掉 @operator 前缀");
+    assert.ok(assistantMessage.parts.some((part) => part.type === "tool_call" && part.tool === "runAgentTask"));
+    assert.ok(assistantMessage.result_text?.includes("operator 完成"));
+    assert.ok(assistantMessage.parts.some((part) => part.type === "data" && part.data.title.includes("独立执行结果")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("点名别名：请财务看一下账本 → agent_direct/finance", () => {
+  const { engine, root } = makeEngine();
+  try {
+    const analysis = engine.classify("请财务看一下账本");
+    assert.equal(analysis.intent, "agent_direct");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

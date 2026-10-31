@@ -2279,7 +2279,7 @@ export async function createConsoleServer(options: ConsoleServerOptions): Promis
       return sendJson(res, 200, {
         ok: true,
         service: "steward-console",
-        version: "1.5.3",
+        version: "1.5.4",
         host,
         port,
         local_only: true,

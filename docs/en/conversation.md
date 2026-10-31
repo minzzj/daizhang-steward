@@ -44,3 +44,11 @@ Dangerous actions require inline approval; the AI never signs/auto-pays/sends ex
 - `/system` is management-only (programs/plugins/models/tokens/logs) and no longer contains a second chat box;
 - Legacy `/chat/:id` is a read-only run-detail (historical) page; use `/runs/:id` for the new run detail;
 - System-page quick queries use `/chat?prompt=...`, which auto-sends the question and shows the final result.
+
+## 9. Named dispatch & isolated agent context (v1.5.4)
+
+- Pick an agent in the `/chat` composer, or type `@operator task` / `finance: task` / `ask the coding agent ...`;
+- The task runs in that agent's **own session/workspace**; the controller conversation context is not passed in, and the agent's full transcript is not fed back (avoids context pollution/drift);
+- Naming conductor/supervisor routes to the project executor (conductor decomposes and dispatches; each specialist stays isolated);
+- Each `/agents` card offers "Named task →" (`/chat?agent=<role>` preselect);
+- Isolated history lives in `.steward/chat/agents/<role>/history.json` (local, gitignored).

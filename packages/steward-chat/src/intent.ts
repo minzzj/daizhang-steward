@@ -87,12 +87,126 @@ const RULES: readonly IntentRule[] = [
   },
 ];
 
+/** v1.5.4：智能体角色 + 中文别名（点名发送用）。 */
+export const AGENT_ROLE_TITLES: Record<string, string> = {
+  supervisor: "系统总控",
+  conductor: "项目总调度",
+  operator: "办公执行",
+  harness: "编码代理",
+  customer: "客户沟通",
+  finance: "财务",
+  reviewer: "核查复核",
+  backend: "后台运维",
+  scout: "线索发现",
+  content: "内容创作",
+  research: "调研分析",
+};
+
+const AGENT_ALIASES: Record<string, string> = {
+  supervisor: "supervisor",
+  系统总控: "supervisor",
+  超级总调度: "supervisor",
+  conductor: "conductor",
+  项目总调度: "conductor",
+  总调度: "conductor",
+  operator: "operator",
+  办公执行: "operator",
+  harness: "harness",
+  编码代理: "harness",
+  写代码: "harness",
+  customer: "customer",
+  客户沟通: "customer",
+  finance: "finance",
+  财务: "finance",
+  reviewer: "reviewer",
+  核查: "reviewer",
+  审核: "reviewer",
+  backend: "backend",
+  后台运维: "backend",
+  运维: "backend",
+  scout: "scout",
+  线索: "scout",
+  content: "content",
+  内容: "content",
+  research: "research",
+  调研: "research",
+};
+
+const AGENT_ROLES = new Set(Object.values(AGENT_ALIASES));
+const CJK_ALIAS_ENTRIES = Object.entries(AGENT_ALIASES).filter(([alias]) => /^[\u4e00-\u9fa5]+$/u.test(alias));
+
+function normalizeAgentKey(key: string): string | undefined {
+  const trimmed = key.trim().replace(/[：:，,。.!！?？]+$/u, "");
+  if (trimmed.length === 0) return undefined;
+  const lower = trimmed.toLowerCase();
+  if (AGENT_ROLES.has(lower)) return lower;
+  const exact = AGENT_ALIASES[trimmed];
+  if (exact !== undefined) return exact;
+  for (const [alias, role] of CJK_ALIAS_ENTRIES) {
+    if (trimmed.includes(alias)) return role;
+  }
+  return undefined;
+}
+
+/** 识别"点名发送"的目标智能体（@role / role: / 点名 X / 让/叫/请 X 去…）。 */
+export function detectAgentRole(text: string): string | undefined {
+  const raw = typeof text === "string" ? text.trim() : "";
+  if (raw.length === 0) return undefined;
+  const atStart = /^@([A-Za-z_]{3,})[\s:：,，]*(.*)$/u.exec(raw);
+  if (atStart !== null && atStart[1] !== undefined) {
+    const role = normalizeAgentKey(atStart[1]);
+    if (role !== undefined) return role;
+  }
+  const atAnywhere = /@([A-Za-z_]{3,})/u.exec(raw);
+  if (atAnywhere !== null && atAnywhere[1] !== undefined) {
+    const role = normalizeAgentKey(atAnywhere[1]);
+    if (role !== undefined) return role;
+  }
+  const asciiPrefix = /^([A-Za-z_]{3,})[\s:：,，]+/u.exec(raw);
+  if (asciiPrefix !== null && asciiPrefix[1] !== undefined) {
+    const role = normalizeAgentKey(asciiPrefix[1]);
+    if (role !== undefined) return role;
+  }
+  const cnPrefix = /^([\u4e00-\u9fa5]{2,6})[\s:：,，]+/u.exec(raw);
+  if (cnPrefix !== null && cnPrefix[1] !== undefined) {
+    const role = normalizeAgentKey(cnPrefix[1]);
+    if (role !== undefined) return role;
+  }
+  const named = /(?:点名|让|叫|请|交给|派给|安排)\s*([A-Za-z_]{3,}|[\u4e00-\u9fa5]{2,6})\s*(?:去|来|帮|处理|执行|做|看一下|看看|干)/u.exec(raw);
+  if (named !== null && named[1] !== undefined) {
+    const role = normalizeAgentKey(named[1]);
+    if (role !== undefined) return role;
+  }
+  const rolled = /(?:点名|交给|派给)\s*([A-Za-z_]{3,}|[\u4e00-\u9fa5]{2,6})/u.exec(raw);
+  if (rolled !== null && rolled[1] !== undefined) {
+    const role = normalizeAgentKey(rolled[1]);
+    if (role !== undefined) return role;
+  }
+  return undefined;
+}
+
+/** 去掉消息里"@role / role: / 点名 X 去"等前缀，得到真正的任务文本。 */
+export function stripAgentPrefix(text: string, role: string): string {
+  const raw = typeof text === "string" ? text.trim() : "";
+  const names = [role, ...Object.entries(AGENT_ALIASES).filter(([, value]) => value === role).map(([alias]) => alias)];
+  let out = raw;
+  for (const name of names.sort((left, right) => right.length - left.length)) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\const DANGER_ACTIONS: readonly string[] = ");
+    out = out.replace(new RegExp("^@" + escaped + "[\\s:：,，]*", "iu"), "");
+    out = out.replace(new RegExp("^" + escaped + "[\\s:：,，]+", "iu"), "");
+    out = out.replace(new RegExp("^(?:点名|交给|派给|让|叫|请|安排)\\s*" + escaped + "\\s*(?:去|来|帮|处理|执行|做|看一下|看看|干)?[\\s:：,，]*", "iu"), "");
+  }
+  out = out.replace(/^(?:去|来|帮|处理|执行|做|看一下|看看|干)\s*/u, "").trim();
+  return out.length > 0 ? out : raw;
+}
+
 const DANGER_ACTIONS: readonly string[] = ["删除", "卸载", "移除", "停用", "禁用", "付款", "支付", "转账", "打款", "签约", "发布", "外发", "授权"];
 
 /** 只返回契约要求的 {intent, confidence}。 */
 export function classifyIntent(text: string): ChatClassification {
   const raw = typeof text === "string" ? text.trim() : "";
   if (raw.length === 0) return { intent: "chat", confidence: 0.1 };
+  if (detectAgentRole(raw) !== undefined) return { intent: "agent_direct", confidence: 0.93 };
   for (const rule of RULES) {
     if (rule.test.test(raw)) return { intent: rule.intent, confidence: rule.confidence };
   }
@@ -104,6 +218,8 @@ export function analyzeIntent(text: string): ChatClassification & { entities: Ch
   const raw = typeof text === "string" ? text.trim() : "";
   const classification = classifyIntent(raw);
   const entities: ChatEntities = {};
+  const detectedRole = detectAgentRole(raw);
+  if (detectedRole !== undefined) entities.agent_role = detectedRole;
   const runMatch = /((?:run-|system:)[A-Za-z0-9-]{3,})/u.exec(raw);
   if (runMatch?.[1] !== undefined) entities.run_id = runMatch[1];
   const stepMatch = /第\s*(\d+)\s*步|步骤\s*(\d+)/u.exec(raw);
@@ -136,7 +252,8 @@ export function analyzeIntent(text: string): ChatClassification & { entities: Ch
     if (entities.action === undefined) entities.action = "危险动作";
   }
   entities.query = raw;
-  return { ...classification, entities };
+  const effectiveIntent = detectedRole !== undefined && classification.intent !== "approve" && classification.intent !== "danger_action" ? { intent: "agent_direct" as ChatIntent, confidence: 0.93 } : classification;
+  return { ...effectiveIntent, entities };
 }
 
 /** 危险动作关键词（供 README/控制台提示复用）。 */

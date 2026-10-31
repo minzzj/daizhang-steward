@@ -213,6 +213,19 @@ async function main() {
     await page.goto(`${baseUrl}/chat?prompt=${encodeURIComponent("查看系统状态")}`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
     await page.waitForSelector("#gpt-page", { timeout: STEP_TIMEOUT_MS });
     await waitAssistantDone();
+    await page.goto(`${baseUrl}/chat?agent=operator`, { waitUntil: "domcontentloaded", timeout: STEP_TIMEOUT_MS });
+    await page.waitForSelector("#composer-agent", { timeout: STEP_TIMEOUT_MS });
+    const presetAgent = await page.locator("#composer-agent").inputValue();
+    await page.locator("#composer-input").fill("写一份周报");
+    await page.locator("#composer-send").click();
+    await waitAssistantDone();
+    record("chat-agent-route", [
+      check(presetAgent === "operator", `?agent= 预选智能体（${presetAgent}）`),
+      check((await page.locator('#gpt-messages .gpt-msg[data-role="user"]').last().innerText()).includes("@operator"), "点名发送：用户消息携带 @operator"),
+      check((await page.locator('.gpt-card[data-card="tool"]').count()) >= 1, "点名执行出现工具卡片"),
+      check((await page.locator('[data-final-result]').count()) >= 1, "点名执行显示最终结果"),
+    ]);
+
     record("chat-quick-prompt", [
       check(!page.url().includes("prompt="), "prompt 参数发送后从 URL 清理"),
       check((await page.locator("#gpt-messages .gpt-msg").count()) >= 2, "?prompt= 自动发送并得到回复"),

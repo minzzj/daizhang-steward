@@ -411,6 +411,7 @@ function renderAgentCard(agent: ConsoleAgentInfo, harness?: HarnessAgentSummary)
     </div>
     <div class="agent-card-actions">
       <button class="agent-expand" type="button" data-agent-expand="${escapeAttr(agent.role)}">展开详情</button>
+      <a class="run-link" href="/chat?agent=${encodeURIComponent(agent.role)}" id="agent-chat-${escapeAttr(agent.role)}">点名发任务 →</a>
       <a class="run-link" href="/agents/${encodeURIComponent(agent.role)}" id="agent-link-${escapeAttr(agent.role)}">查看对话记录 →</a>
     </div>
     <div class="agent-detail" id="agent-detail-${escapeAttr(agent.role)}" hidden>

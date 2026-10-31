@@ -283,8 +283,22 @@ export function renderChatHomePage(input: ChatHomePageInput): string {
       ${messages === "" ? '<div class="gpt-empty" id="gpt-empty"><div class="gpt-empty-title">开始新的对话</div><p class="muted">告诉我你要做什么：查系统状态、看产物/报告、跑任务…<br/>也可以点上方快捷按钮（一个入口控制全部）。</p></div>' : messages}
     </div>
     <form class="gpt-composer" id="gpt-composer">
-      <textarea id="composer-input" rows="2" placeholder="给总调度发消息…（Enter 发送，Shift+Enter 换行）"></textarea>
+      <textarea id="composer-input" rows="2" placeholder="给总调度发消息…（Enter 发送；可先选智能体点名发送，独立上下文）"></textarea>
       <div class="gpt-composer-side">
+          <select class="input" id="composer-agent" title="点名发送：选择智能体后，消息会交给它的独立会话/工作区处理">
+          <option value="">自动调度（推荐）</option>
+          <option value="supervisor">系统总控</option>
+          <option value="conductor">项目总调度</option>
+          <option value="operator">办公执行</option>
+          <option value="harness">编码代理</option>
+          <option value="customer">客户沟通</option>
+          <option value="finance">财务</option>
+          <option value="reviewer">核查复核</option>
+          <option value="backend">后台运维</option>
+          <option value="scout">线索发现</option>
+          <option value="content">内容创作</option>
+          <option value="research">调研分析</option>
+          </select>
         <button class="primary" type="submit" id="composer-send">发送</button>
         <span class="gpt-typing" id="typing-indicator" hidden>思考中…</span>
       </div>
